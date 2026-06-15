@@ -153,39 +153,70 @@ function App() {
   };
 
   // 3. Sincronizar Metadatos con MusicBrainz
-  const fetchMusicBrainzData = async (index, e) => {
-    e.stopPropagation();
-    const song = filteredSongs[index];
-    const cleanTitle = song.title.replace(/[^a-zA-Z0-9 ]/g, "");
+const fetchMusicBrainzData = async (index, e) => {
+  e.stopPropagation();
+  const song = filteredSongs[index];
+  const cleanTitle = song.title.replace(/[^a-zA-Z0-9 ]/g, "");
 
-    try {
-      const response = await fetch(`https://musicbrainz.org/ws/2/recording/?query=recording:${encodeURIComponent(cleanTitle)}&fmt=json`);
-      const data = await response.json();
+  try {
+    // 1. Buscar la canción en MusicBrainz para obtener Artista, Género y el ID de Grabación (MBID)
+    const response = await fetch(`https://musicbrainz.org/ws/2/recording/?query=recording:${encodeURIComponent(cleanTitle)}&fmt=json`);
+    const data = await response.json();
 
-      if (data.recordings && data.recordings.length > 0) {
-        const match = data.recordings[0];
-        const artistName = match['artist-credit']?.[0]?.name || "Desconocido";
-        const genreName = match.tags?.[0]?.name || "Urbano";
-
-        const updated = [...filteredSongs];
-        updated[index] = { ...song, artist: artistName, genre: genreName };
-        setFilteredSongs(updated);
-        
-        // Actualizar también en la lista maestra
-        const masterIndex = songs.findIndex(s => s.filename === song.filename);
-        if (masterIndex !== -1) {
-          const updatedMaster = [...songs];
-          updatedMaster[masterIndex] = { ...song, artist: artistName, genre: genreName };
-          setSongs(updatedMaster);
-          extractCategories(updatedMaster);
+    if (data.recordings && data.recordings.length > 0) {
+      const match = data.recordings[0];
+      
+      // Datos encontrados en internet
+      const newTitle = match.title || song.title;
+      const artistName = match['artist-credit']?.[0]?.name || "Desconocido";
+      const genreName = match.tags?.[0]?.name || "Urbano";
+      
+      // Intentar rastrear si tiene una carátula asociada usando el ID de la versión (release)
+      let imageUrl = null;
+      const releaseId = match.releases?.[0]?.id;
+      if (releaseId) {
+        try {
+          const coverResponse = await fetch(`https://coverartarchive.org/release/${releaseId}`);
+          if (coverResponse.ok) {
+            const coverData = await coverResponse.json();
+            imageUrl = coverData.images?.[0]?.image || null; // URL de la imagen original
+          }
+        } catch (err) {
+          console.log("Este álbum no cuenta con carátula en CoverArtArchive");
         }
-      } else {
-        alert("No se encontraron coincidencias en la nube.");
       }
-    } catch (err) {
-      alert("Error consultando la API de MusicBrainz.");
+
+      // 2. Enviar los datos validados hacia el Backend para guardarlos EN EL DISCO DURO
+      const saveResponse = await fetch(`${API_URL}/api/songs/update-metadata`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: song.filename,
+          title: newTitle,
+          artist: artistName,
+          genre: genreName,
+          imageUrl: imageUrl
+        })
+      });
+
+      if (saveResponse.ok) {
+        alert(`¡Sincronización Completa!\n\nEl archivo físico fue editado:\nTítulo: ${newTitle}\nArtista: ${artistName}\nGénero: ${genreName}${imageUrl ? '\n📸 ¡Carátula descargada e inyectada!' : ''}`);
+        
+        // Refrescar toda la biblioteca para reflejar el cambio de nombre de inmediato
+        fetchSongs(true);
+      } else {
+        const errData = await saveResponse.json();
+        alert(`Error al guardar en disco: ${errData.error}`);
+      }
+
+    } else {
+      alert("No se encontraron coincidencias exactas en la nube para esta pista.");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Error de red al conectar con los servidores de metadatos.");
+  }
+};
 
   const handleDeleteSong = async (filename, e) => {
     e.stopPropagation();
