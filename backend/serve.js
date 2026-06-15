@@ -15,10 +15,12 @@ const MUSIC_DIR = path.join('C:', 'Users', 'rafael', 'Documents', 'musica'); // 
 
 app.use('/songs', express.static(MUSIC_DIR));
 
-// GET: Listar canciones con Metadatos (Soporta paginación / Lazy Load)
+// GET: Listar canciones con metadatos y detección de imágenes locales
 app.get('/api/songs', async (req, res) => {
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = parseInt(req.query.limit) || 30;
     const offset = parseInt(req.query.offset) || 0;
+
+    const { parseFile } = await import('music-metadata');
 
     fs.readdir(MUSIC_DIR, async (err, files) => {
         if (err) return res.status(500).json({ error: 'Error al leer la carpeta' });
@@ -27,31 +29,46 @@ app.get('/api/songs', async (req, res) => {
             ['.mp3', '.wav', '.m4a', '.ogg'].includes(path.extname(file).toLowerCase())
         );
 
-        // Segmento para Lazy Load
         const slicedFiles = musicFiles.slice(offset, offset + limit);
 
-        // Promesas para leer los metadatos de este lote en paralelo
         const songsWithMeta = await Promise.all(slicedFiles.map(async (file) => {
             const filePath = path.join(MUSIC_DIR, file);
+            const baseName = path.parse(file).name;
+            const imageFileName = `${baseName}.jpg`;
+            
+            // Comprobar si existe la imagen física en la carpeta
+            const hasImage = fs.existsSync(path.join(MUSIC_DIR, imageFileName));
+            // Si existe, creamos la URL pública para el frontend, si no, null
+            const imageUrl = hasImage ? `/songs/${encodeURIComponent(imageFileName)}` : null;
+
             try {
-                const metadata = await mm.parseFile(filePath);
+                const metadata = await parseFile(filePath, { skipCovers: true });
+                
+                let rawGenre = "Desconocido";
+                if (metadata.common.genre) {
+                    rawGenre = Array.isArray(metadata.common.genre) 
+                        ? metadata.common.genre[0] 
+                        : metadata.common.genre;
+                }
+
                 return {
                     filename: file,
-                    title: metadata.common.title || file.replace(/\.[^/.]+$/, ""),
+                    title: metadata.common.title || baseName,
                     artist: metadata.common.artist || "Desconocido",
                     album: metadata.common.album || "Desconocido",
-                    genre: metadata.common.genre?.[0] || "Desconocido",
-                    duration: metadata.format.duration || 0
+                    genre: rawGenre || "Desconocido",
+                    duration: metadata.format.duration || 0,
+                    imageUrl: imageUrl // <-- Enviamos la foto al frontend
                 };
-            } catch {
-                // Si falla al leer los tags, enviamos datos genéricos
+            } catch (err) {
                 return {
                     filename: file,
-                    title: file.replace(/\.[^/.]+$/, ""),
+                    title: baseName,
                     artist: "Desconocido",
                     album: "Desconocido",
                     genre: "Desconocido",
-                    duration: 0
+                    duration: 0,
+                    imageUrl: imageUrl
                 };
             }
         }));
@@ -63,65 +80,70 @@ app.get('/api/songs', async (req, res) => {
     });
 });
 
-
-
-
-// ... (Todo tu código anterior se mantiene igual) ...
-
-// PUT: Actualizar metadatos del archivo físico y descargar portada
+// PUT: Actualizar metadatos forzando strings limpios
 app.put('/api/songs/update-metadata', async (req, res) => {
     const { filename, title, artist, genre, imageUrl } = req.body;
     const filePath = path.join(MUSIC_DIR, filename);
 
     if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ error: 'El archivo de música no existe en el disco.' });
+        return res.status(404).json({ error: 'El archivo no existe.' });
     }
 
     try {
-        // 1. Preparar las etiquetas básicas
+        // Aseguramos que el género vaya limpio y capitalizado
+        const cleanGenre = genre ? String(genre).trim() : "Urbano";
+
         const tags = {
-            title: title,
-            artist: artist,
-            genre: genre
+            title: String(title).trim(),
+            artist: String(artist).trim(),
+            genre: cleanGenre
         };
 
-        // 2. Si MusicBrainz nos da una carátula, la descargamos y la incrustamos
         if (imageUrl) {
             const imagePath = path.join(MUSIC_DIR, `${path.parse(filename).name}.jpg`);
-            
             try {
-                // Descargar imagen de internet de forma local
                 await download.image({ url: imageUrl, dest: imagePath });
-                
-                // Añadir la imagen a los tags ID3 del MP3
                 tags.image = {
                     mime: "image/jpeg",
                     type: { id: 3, name: 'front cover' },
-                    description: 'Portada Autodescargada',
+                    description: 'Cover',
                     imageBuffer: fs.readFileSync(imagePath)
                 };
             } catch (imgError) {
-                console.log("No se pudo procesar la carátula, guardando solo texto...", imgError);
+                console.log("No se pudo incrustar la imagen.");
             }
         }
 
-        // 3. Escribir físicamente las etiquetas en el archivo MP3
+        // Escribir tags nativos ID3v2.3
         const success = NodeID3.write(tags, filePath);
         
         if (!success) {
-            return res.status(500).json({ error: 'Error al escribir las etiquetas ID3 en el archivo.' });
+            return res.status(500).json({ error: 'Error al escribir tags.' });
         }
 
+        // Devolvemos el objeto exactamente como quedó configurado
         res.json({ 
-            message: 'Archivo actualizado físicamente con éxito.', 
-            updatedSong: { filename, title, artist, genre } 
+            message: 'Guardado', 
+            updatedSong: { 
+                filename, 
+                title: tags.title, 
+                artist: tags.artist, 
+                genre: tags.genre,
+                duration: 0
+            } 
         });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Error interno al procesar el archivo.' });
+        res.status(500).json({ error: 'Error interno.' });
     }
 });
+
+
+
+
+
+
 
 // DELETE: Eliminar archivo del disco
 app.delete('/api/songs', (req, res) => {
