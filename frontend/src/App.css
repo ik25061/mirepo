@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 :root {
   --bg-pure: #030303;
   --bg-surface: #121212;
@@ -221,6 +225,12 @@ body {
     padding: 10px;
   }
 
+  .track-img {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+
   .track-details {
     min-width: 0;
     flex: 1 1 100%;
@@ -229,6 +239,14 @@ body {
   .track-actions {
     width: 100%;
     justify-content: flex-end;
+    display: flex;
+    gap: 8px;
+  }
+
+  .track-title,
+  .track-meta {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .ytm-player-bar {
