@@ -1,161 +1,270 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Trash2, Music } from 'lucide-react';
-import './App.css'; // Añadiremos estilos oscuros aquí abajo
+import { Play, Pause, SkipForward, SkipBack, Trash2, Music, Search, RefreshCw } from 'lucide-react';
+import './App.css';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = 'http://localhost:5000'; // Cambia por tu IP para el celular
+const CROSSFADE_TIME = 4; // Segundos de transición entre canciones
 
 function App() {
   const [songs, setSongs] = useState([]);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  
-  const audioRef = useRef(null);
+  const [sortBy, setSortBy] = useState('none'); // 'none', 'artist', 'genre'
 
-  // Cargar canciones al iniciar
-  const fetchSongs = async () => {
+  // Refs para Web Audio API (Crucial para Crossfade)
+  const audioContextRef = useRef(null);
+  const currentSourceRef = useRef(null);
+  const currentGainNodeRef = useRef(null);
+  const startTimeRef = useRef(0);
+  const songTimeoutRef = useRef(null);
+
+  // 1. Cargar Canciones (Lazy Load / Paginación)
+  const fetchSongs = async (reset = false) => {
+    const currentOffset = reset ? 0 : offset;
     try {
-      const response = await fetch(`${API_URL}/api/songs`);
+      const response = await fetch(`${API_URL}/api/songs?limit=15&offset=${currentOffset}`);
       const data = await response.json();
-      setSongs(data);
-    } catch (error) {
-      console.error("Error cargando canciones:", error);
+      
+      if (reset) {
+        setSongs(data.songs);
+        setOffset(15);
+      } else {
+        setSongs((prev) => [...prev, ...data.songs]);
+        setOffset((prev) => prev + 15);
+      }
+      setHasMore(data.hasMore);
+    } catch (err) {
+      console.error("Error cargando canciones", err);
     }
   };
 
   useEffect(() => {
-    fetchSongs();
+    fetchSongs(true);
   }, []);
 
-  // Controlar reproducción/pausa física del elemento <audio>
-  useEffect(() => {
-    if (!audioRef.current) return;
+  // 2. Motor de Audio con Crossfade (Web Audio API)
+  const playSongAudio = async (index, fadeOutCurrent = true) => {
+    if (index === null || !songs[index]) return;
 
-    if (isPlaying) {
-      audioRef.current.play().catch(() => setIsPlaying(false));
-    } else {
-      audioRef.current.pause();
+    // Inicializar el contexto de audio si no existe
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
     }
-  }, [isPlaying, currentSongIndex]);
+    const ctx = audioContextRef.current;
 
-  // Sincronizar controles multimedia del sistema operativo (Segundo plano real)
-  useEffect(() => {
-    if (currentSongIndex !== null && 'mediaSession' in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: songs[currentSongIndex].replace(/\.[^/.]+$/, ""), // Quitar extensión
-        artist: 'Reproductor Local',
-        album: 'Mi Biblioteca'
-      });
+    // Detener timeouts previos de transición
+    if (songTimeoutRef.current) clearTimeout(songTimeoutRef.current);
 
-      navigator.mediaSession.setActionHandler('play', () => setIsPlaying(true));
-      navigator.mediaSession.setActionHandler('pause', () => setIsPlaying(false));
-      navigator.mediaSession.setActionHandler('previoustrack', handlePrev);
-      navigator.mediaSession.setActionHandler('nexttrack', handleNext);
+    // Fade out de la canción que está sonando actualmente
+    if (fadeOutCurrent && currentGainNodeRef.current && currentSourceRef.current) {
+      const oldGain = currentGainNodeRef.current;
+      oldGain.gain.linearRampToValueAtTime(oldGain.gain.value, ctx.currentTime);
+      oldGain.gain.linearRampToValueAtTime(0, ctx.currentTime + CROSSFADE_TIME);
     }
-  }, [currentSongIndex, songs]);
 
-  const handlePlaySong = (index) => {
-    setCurrentSongIndex(index);
-    setIsPlaying(true);
+    try {
+      // Descargar el archivo de audio en buffer
+      const songUrl = `${API_URL}/songs/${encodeURIComponent(songs[index].filename)}`;
+      const response = await fetch(songUrl);
+      const arrayBuffer = await response.clone().arrayBuffer();
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+
+      // Crear nodos para la NUEVA canción
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+
+      const gainNode = ctx.createGain();
+      // Empezar en silencio si hay crossfade, si no, volumen normal
+      gainNode.gain.setValueAtTime(fadeOutCurrent ? 0 : 1, ctx.currentTime);
+      
+      source.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      // Aplicar Fade In a la nueva canción
+      if (fadeOutCurrent) {
+        gainNode.gain.linearRampToValueAtTime(1, ctx.currentTime + CROSSFADE_TIME);
+      }
+
+      // Guardar referencias globales de la canción activa
+      currentSourceRef.current = source;
+      currentGainNodeRef.current = gainNode;
+      setCurrentSongIndex(index);
+      setIsPlaying(true);
+
+      source.start(0);
+
+      // Programar el Crossfade automático X segundos antes de que termine
+      const duration = audioBuffer.duration;
+      const timeUntilCrossfade = (duration - CROSSFADE_TIME) * 1000;
+
+      songTimeoutRef.current = setTimeout(() => {
+        handleNext(true); // Activa la siguiente canción aplicando crossfade
+      }, Math.max(0, timeUntilCrossfade));
+
+    } catch (err) {
+      console.error("Error decodificando el audio:", err);
+      handleNext(false); // Saltar si hay error
+    }
   };
 
-  const handleNext = () => {
+  const handleNext = (useCrossfade = false) => {
     if (songs.length === 0) return;
-    setCurrentSongIndex((prevIndex) => (prevIndex + 1) % songs.length);
-    setIsPlaying(true);
+    const nextIndex = (currentSongIndex + 1) % songs.length;
+    playSongAudio(nextIndex, useCrossfade);
   };
 
   const handlePrev = () => {
     if (songs.length === 0) return;
-    setCurrentSongIndex((prevIndex) => (prevIndex - 1 + songs.length) % songs.length);
-    setIsPlaying(true);
+    const prevIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+    playSongAudio(prevIndex, false);
   };
 
-  // 🔴 FUNCIÓN CRÍTICA: Eliminar del disco duro
-  const handleDeleteSong = async (filename, index, e) => {
-    e.stopPropagation(); // Evita que se reproduzca la canción al hacer click en borrar
+  const togglePlayPause = () => {
+    if (!audioContextRef.current) return;
+    if (isPlaying) {
+      audioContextRef.current.suspend();
+      setIsPlaying(false);
+    } else {
+      audioContextRef.current.resume();
+      setIsPlaying(true);
+    }
+  };
 
-    const confirmDelete = window.confirm(`¿Estás seguro de que quieres eliminar PERMANENTEMENTE "${filename}" de tu computadora?`);
-    if (!confirmDelete) return;
+  // 3. Organizar y ordenar biblioteca
+  const getSortedSongs = () => {
+    let sorted = [...songs];
+    if (sortBy === 'artist') {
+      sorted.sort((a, b) => a.artist.localeCompare(b.artist));
+    } else if (sortBy === 'genre') {
+      sorted.sort((a, b) => a.genre.localeCompare(b.genre));
+    }
+    return sorted;
+  };
+
+  // 4. Buscar e integrar Metadatos de MusicBrainz API
+  const fetchMusicBrainzData = async (index, e) => {
+    e.stopPropagation();
+    const song = songs[index];
+    // Limpiar el nombre para mejorar la búsqueda
+    const cleanTitle = song.title.replace(/[^a-zA-Z0-9 ]/g, "");
 
     try {
-      const response = await fetch(`${API_URL}/api/songs`, {
+      // Consulta HTTP a la API abierta de MusicBrainz
+      const response = await fetch(`https://musicbrainz.org/ws/2/recording/?query=recording:${encodeURIComponent(cleanTitle)}&fmt=json`);
+      const data = await response.json();
+
+      if (data.recordings && data.recordings.length > 0) {
+        const bestMatch = data.recordings[0];
+        const artistName = bestMatch['artist-credit']?.[0]?.name || "Desconocido";
+        const genreName = bestMatch.tags?.[0]?.name || "General";
+
+        // Actualizar visualmente la canción en el estado
+        const updatedSongs = [...songs];
+        updatedSongs[index] = {
+          ...song,
+          artist: artistName,
+          genre: genreName
+        };
+        setSongs(updatedSongs);
+        alert(`¡Metadatos encontrados!\nArtista: ${artistName}\nGénero estimado: ${genreName}`);
+      } else {
+        alert("No se encontraron coincidencias exactas en MusicBrainz.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error al conectar con MusicBrainz.");
+    }
+  };
+
+  const handleDeleteSong = async (filename, index, e) => {
+    e.stopPropagation();
+    if (!window.confirm("¿Borrar permanentemente de la PC?")) return;
+    try {
+      const res = await fetch(`${API_URL}/api/songs`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename })
       });
-
-      if (response.ok) {
-        // Si la canción borrada estaba sonando, pararla o saltar a la siguiente
-        if (currentSongIndex === index) {
-          setIsPlaying(false);
-          setCurrentSongIndex(null);
-        }
-        // Recargar la lista desde el servidor
-        fetchSongs();
-      } else {
-        alert("No se pudo eliminar el archivo.");
-      }
-    } catch (error) {
-      console.error("Error al eliminar:", error);
-    }
+      if (res.ok) fetchSongs(true);
+    } catch (err) { console.error(err); }
   };
+
+  const sortedSongs = getSortedSongs();
 
   return (
     <div className="app-container">
-      {/* Sidebar / Lista de canciones */}
+      {/* Controles de Organización superiores */}
+      <div className="filter-bar">
+        <span>Organizar por:</span>
+        <button className={sortBy === 'none' ? 'active-filter' : ''} onClick={() => setSortBy('none')}>Original</button>
+        <button className={sortBy === 'artist' ? 'active-filter' : ''} onClick={() => setSortBy('artist')}>Artista</button>
+        <button className={sortBy === 'genre' ? 'active-filter' : ''} onClick={() => setSortBy('genre')}>Género</button>
+      </div>
+
       <div className="sidebar">
-        <h2>🎵 Mi Biblioteca</h2>
+        <h2>🎵 Mi Reproductor Inteligente</h2>
         <div className="song-list">
-          {songs.map((song, index) => (
+          {sortedSongs.map((song, index) => (
             <div 
-              key={song} 
+              key={song.filename + index} 
               className={`song-item ${currentSongIndex === index ? 'active' : ''}`}
-              onClick={() => handlePlaySong(index)}
+              onClick={() => playSongAudio(index, false)}
             >
               <Music size={18} className="icon" />
-              <span className="song-name">{song.replace(/\.[^/.]+$/, "")}</span>
-              <button 
-                className="delete-btn" 
-                onClick={(e) => handleDeleteSong(song, index, e)}
-                title="Eliminar de la computadora"
-              >
-                <Trash2 size={16} />
-              </button>
+              <div className="song-info-block">
+                <span className="song-name">{song.title}</span>
+                <span className="song-meta">{song.artist} • {song.genre}</span>
+              </div>
+              
+              <div className="actions">
+                <button 
+                  className="meta-btn" 
+                  onClick={(e) => fetchMusicBrainzData(index, e)} 
+                  title="Buscar metadatos en internet"
+                >
+                  <Search size={15} />
+                </button>
+                <button 
+                  className="delete-btn" 
+                  onClick={(e) => handleDeleteSong(song.filename, index, e)}
+                  title="Borrar de la PC"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
+
+        {/* Botón de Lazy Load */}
+        {hasMore && (
+          <button className="load-more-btn" onClick={() => fetchSongs(false)}>
+            <RefreshCw size={14} style={{ marginRight: '5px' }} /> Cargar más canciones
+          </button>
+        )}
       </div>
 
-      {/* Reproductor Inferior (Estilo Spotify) */}
+      {/* Reproductor Estilo Spotify */}
       <div className="player-bar">
         <div className="current-track-info">
           {currentSongIndex !== null ? (
             <>
-              <p className="player-title">{songs[currentSongIndex].replace(/\.[^/.]+$/, "")}</p>
-              <p className="player-sub">Archivo Local</p>
+              <p className="player-title">{songs[currentSongIndex].title}</p>
+              <p className="player-sub">{songs[currentSongIndex].artist} ({CROSSFADE_TIME}s Crossfade Activo)</p>
             </>
           ) : (
-            <p className="player-title">Ninguna canción seleccionada</p>
+            <p className="player-title">Modo Espera</p>
           )}
         </div>
 
         <div className="player-controls">
           <button onClick={handlePrev} className="control-btn"><SkipBack /></button>
-          <button onClick={() => setIsPlaying(!isPlaying)} className="play-btn">
+          <button onClick={togglePlayPause} className="play-btn">
             {isPlaying ? <Pause fill="black" /> : <Play fill="black" />}
           </button>
-          <button onClick={handleNext} className="control-btn"><SkipForward /></button>
-        </div>
-
-        <div className="hidden-audio">
-          {currentSongIndex !== null && (
-            <audio
-              ref={audioRef}
-              src={`${API_URL}/songs/${encodeURIComponent(songs[currentSongIndex])}`}
-              onEnded={handleNext}
-              controls
-            />
-          )}
+          <button onClick={() => handleNext(true)} className="control-btn"><SkipForward /></button>
         </div>
       </div>
     </div>

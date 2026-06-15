@@ -1,102 +1,67 @@
-:root {
-  background-color: #121212;
-  color: #ffffff;
-  font-family: system-ui, sans-serif;
+/* Filtros de organización */
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  padding: 15px 20px 0 20px;
+  align-items: center;
+  font-size: 14px;
+}
+.filter-bar button {
+  background-color: #282828;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+.filter-bar button.active-filter {
+  background-color: #1db954;
+  color: black;
+  font-weight: bold;
 }
 
-body { margin: 0; }
-
-.app-container {
+/* Bloque de texto de la canción */
+.song-info-block {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-}
-
-.sidebar {
   flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  margin-bottom: 90px; /* Espacio para la barra del reproductor */
+  overflow: hidden;
+}
+.song-meta {
+  font-size: 11px;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.song-item.active .song-meta {
+  color: #222;
 }
 
-h2 { border-bottom: 1px solid #282828; padding-bottom: 10px; }
+/* Botón de buscar metadatos */
+.actions { display: flex; gap: 5px; }
+.meta-btn {
+  background: none;
+  border: none;
+  color: #b3b3b3;
+  cursor: pointer;
+  padding: 8px;
+}
+.meta-btn:hover { color: #1db954; }
 
-.song-list { display: flex; flex-direction: column; gap: 8px; }
-
-.song-item {
+/* Botón de Cargar Más (Lazy Load) */
+.load-more-btn {
   display: flex;
   align-items: center;
-  padding: 10px 15px;
+  justify-content: center;
+  width: 100%;
+  margin-top: 15px;
   background-color: #181818;
+  border: 1px solid #282828;
+  color: white;
+  padding: 10px;
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.2s;
 }
-
-.song-item:hover { background-color: #282828; }
-.song-item.active { background-color: #1db954; color: black; }
-.song-item.active .delete-btn { color: black; }
-.song-item.active .delete-btn:hover { color: #cc0000; }
-
-.icon { margin-right: 12px; }
-.song-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.delete-btn {
-  background: none;
-  border: none;
-  color: #b3b3b3;
-  cursor: pointer;
-  padding: 5px;
-  transition: color 0.2s;
-}
-.delete-btn:hover { color: #ff4d4d; }
-
-/* Barra de reproducción inferior */
-.player-bar {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  height: 90px;
-  background-color: #181818;
-  border-top: 1px solid #282828;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-}
-
-.current-track-info { width: 30%; }
-.player-title { margin: 0; font-size: 14px; font-weight: 600; }
-.player-sub { margin: 3px 0 0 0; font-size: 12px; color: #b3b3b3; }
-
-.player-controls {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.control-btn {
-  background: none;
-  border: none;
-  color: #b3b3b3;
-  cursor: pointer;
-}
-.control-btn:hover { color: white; }
-
-.play-btn {
-  background-color: white;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-.play-btn:hover { transform: scale(1.05); }
-
-.hidden-audio audio {
-  height: 30px;
-  filter: invert(1); /* Hace que los controles por defecto combinen con el modo oscuro */
-}
+.load-more-btn:hover { background-color: #282828; }
