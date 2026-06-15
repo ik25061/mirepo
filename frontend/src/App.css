@@ -193,6 +193,62 @@ body {
   border: 1px solid #1f1f1f;
 }
 
+@media (max-width: 768px) {
+  .ytm-content {
+    padding: 16px;
+  }
+
+  .genre-tile {
+    min-height: 80px;
+  }
+
+  .artists-row {
+    gap: 12px;
+  }
+
+  .artist-circle-item {
+    min-width: 72px;
+  }
+
+  .avatar-placeholder {
+    width: 64px;
+    height: 64px;
+  }
+
+  .ytm-track-row {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .track-details {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .track-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .ytm-player-bar {
+    padding: 0 12px;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .ytm-player-left,
+  .ytm-player-center {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ytm-player-left {
+    gap: 10px;
+  }
+}
+
 .ytm-track-row {
   display: flex;
   align-items: center;
@@ -216,6 +272,22 @@ body {
   justify-content: center;
   margin-right: 15px;
   color: var(--text-muted);
+  overflow: hidden;
+}
+
+.track-img-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.track-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ytm-track-row.playing .track-img { color: var(--yt-red); }
