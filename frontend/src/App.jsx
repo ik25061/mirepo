@@ -18,11 +18,11 @@ function App() {
   const [artists, setArtists] = useState([]);
   const [activeFilter, setActiveFilter] = useState({ type: 'all', value: null });
 
-  // Refs de Web Audio API para Crossfade
-  const audioContextRef = useRef(null);
-  const currentSourceRef = useRef(null);
-  const currentGainNodeRef = useRef(null);
-  const songTimeoutRef = useRef(null);
+  // Refs de audio HTML para reproducción y control de tiempo
+  const audioRef = useRef(new Audio());
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // 1. Cargar canciones de la PC (Lazy Load)
   const fetchSongs = async (reset = false, preserveFilter = false) => {
@@ -60,6 +60,38 @@ function App() {
     fetchSongs(true);
   }, []);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleLoadedMetadata = () => setDuration(audio.duration || 0);
+    const handleEnded = () => handleNext();
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [filteredSongs]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!hasMore || loadingMore) return;
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 160) {
+        setLoadingMore(true);
+        fetchSongs(false, activeFilter.type !== 'all').finally(() => {
+          setLoadingMore(false);
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loadingMore, activeFilter]);
+
 const extractCategories = (allSongs) => {
     const uniqueGenres = [...new Set(allSongs.map(s => s.genre))].filter(g => g !== "Desconocido");
     
@@ -94,80 +126,46 @@ const extractCategories = (allSongs) => {
   };
 
   // 2. Motor de Audio con Crossfade (Web Audio API)
-  const playSongAudio = async (index, fadeOutCurrent = true) => {
+  const playSongAudio = async (index) => {
     if (index === null || !filteredSongs[index]) return;
 
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    const ctx = audioContextRef.current;
-    if (songTimeoutRef.current) clearTimeout(songTimeoutRef.current);
+    const song = filteredSongs[index];
+    const songUrl = `${API_URL}/songs/${encodeURIComponent(song.filename)}`;
+    const audio = audioRef.current;
 
-    // Fade out suave de la canción anterior si está activa
-    if (fadeOutCurrent && currentGainNodeRef.current && currentSourceRef.current) {
-      const oldGain = currentGainNodeRef.current;
-      oldGain.gain.linearRampToValueAtTime(oldGain.gain.value, ctx.currentTime);
-      oldGain.gain.linearRampToValueAtTime(0, ctx.currentTime + CROSSFADE_TIME);
+    if (audio.src !== songUrl) {
+      audio.src = songUrl;
     }
 
     try {
-      const songUrl = `${API_URL}/songs/${encodeURIComponent(filteredSongs[index].filename)}`;
-      const response = await fetch(songUrl);
-      const arrayBuffer = await response.clone().arrayBuffer();
-      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-
-      const source = ctx.createBufferSource();
-      source.buffer = audioBuffer;
-
-      const gainNode = ctx.createGain();
-      gainNode.gain.setValueAtTime(fadeOutCurrent ? 0 : 1, ctx.currentTime);
-      
-      source.connect(gainNode);
-      gainNode.connect(ctx.destination);
-
-      if (fadeOutCurrent) {
-        gainNode.gain.linearRampToValueAtTime(1, ctx.currentTime + CROSSFADE_TIME);
-      }
-
-      currentSourceRef.current = source;
-      currentGainNodeRef.current = gainNode;
+      await audio.play();
       setCurrentSongIndex(index);
       setIsPlaying(true);
-
-      source.start(0);
-
-      // Programar Crossfade automático al final del track
-      const timeUntilCrossfade = (audioBuffer.duration - CROSSFADE_TIME) * 1000;
-      songTimeoutRef.current = setTimeout(() => {
-        handleNext(true);
-      }, Math.max(0, timeUntilCrossfade));
-
     } catch (err) {
-      console.error("Error decodificando audio:", err);
-      handleNext(false);
+      console.error('Error reproduciendo audio:', err);
+      setIsPlaying(false);
     }
   };
 
-  const handleNext = (useCrossfade = false) => {
+  const handleNext = () => {
     if (filteredSongs.length === 0) return;
     const nextIndex = (currentSongIndex + 1) % filteredSongs.length;
-    playSongAudio(nextIndex, useCrossfade);
+    playSongAudio(nextIndex);
   };
 
   const handlePrev = () => {
     if (filteredSongs.length === 0) return;
     const prevIndex = (currentSongIndex - 1 + filteredSongs.length) % filteredSongs.length;
-    playSongAudio(prevIndex, false);
+    playSongAudio(prevIndex);
   };
 
   const togglePlayPause = () => {
-    if (!audioContextRef.current) return;
+    const audio = audioRef.current;
     if (isPlaying) {
-      audioContextRef.current.suspend();
+      audio.pause();
       setIsPlaying(false);
     } else {
-      audioContextRef.current.resume();
-      setIsPlaying(true);
+      audio.play().then(() => setIsPlaying(true)).catch(err => console.error(err));
     }
   };
 
@@ -297,8 +295,8 @@ const fetchMusicBrainzData = async (index, e) => {
             ))}
           </div>
 
-          {hasMore && activeFilter.type === 'all' && (
-            <button className="ytm-load-more" onClick={() => fetchSongs(false)}>Cargar más música</button>
+          {loadingMore && (
+            <div className="ytm-load-more">Cargando más música...</div>
           )}
         </section>
       </main>
@@ -308,7 +306,7 @@ const fetchMusicBrainzData = async (index, e) => {
       <div className="ytm-player-left">
           {currentSongIndex !== null ? (
             <>
-              <div className="player-thumbnail animate-spin-slow">
+              <div className="player-thumbnail">
                 {filteredSongs[currentSongIndex].imageUrl ? (
                   <img src={`${API_URL}${filteredSongs[currentSongIndex].imageUrl}`} alt="cover" className="player-cover-img" />
                 ) : (
@@ -318,6 +316,22 @@ const fetchMusicBrainzData = async (index, e) => {
               <div className="player-track-info">
                 <div className="scroll-title">{filteredSongs[currentSongIndex].title}</div>
                 <span>{filteredSongs[currentSongIndex].artist}</span>
+                <div className="player-progress-wrapper">
+                  <span>{formatTime(currentTime)}</span>
+                  <input
+                    className="player-progress"
+                    type="range"
+                    min="0"
+                    max={duration || 0}
+                    value={currentTime}
+                    onChange={(e) => {
+                      const audio = audioRef.current;
+                      audio.currentTime = Number(e.target.value);
+                      setCurrentTime(Number(e.target.value));
+                    }}
+                  />
+                  <span>{formatTime(duration)}</span>
+                </div>
               </div>
             </>
           ) : (
@@ -330,7 +344,7 @@ const fetchMusicBrainzData = async (index, e) => {
           <button onClick={togglePlayPause} className="ytm-play-trigger">
             {isPlaying ? <Pause size={24} fill="black" color="black" /> : <Play size={24} fill="black" color="black" />}
           </button>
-          <button onClick={() => handleNext(true)} className="player-icon-btn"><SkipForward size={22} /></button>
+          <button onClick={handleNext} className="player-icon-btn"><SkipForward size={22} /></button>
         </div>
       </footer>
     </div>
