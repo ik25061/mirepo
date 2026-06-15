@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Trash2, Search, Music, Disc, User, Radio } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Trash2, Search, Music, Disc, User, Radio, Clock } from 'lucide-react';
 import './App.css';
 
-const API_URL = 'http://localhost:5000'; // Cambia por tu IP (ej: 192.168.1.X) para usarlo en el celular
-const CROSSFADE_TIME = 4;
+const API_URL = 'http://localhost:5000'; 
 
 function App() {
   const [songs, setSongs] = useState([]);
@@ -13,18 +12,23 @@ function App() {
   const [currentSongIndex, setCurrentSongIndex] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   
-  // Estados para las nuevas secciones estilo YT Music
   const [genres, setGenres] = useState([]);
   const [artists, setArtists] = useState([]);
   const [activeFilter, setActiveFilter] = useState({ type: 'all', value: null });
 
-  // Refs de audio HTML para reproducción y control de tiempo
   const audioRef = useRef(new Audio());
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // 1. Cargar canciones de la PC (Lazy Load)
+  // Formateador de tiempo universal (sirve para la barra y las pistas individuales)
+  const formatTime = (secs) => {
+    if (isNaN(secs) || secs === null || secs === 0) return "0:00";
+    const minutes = Math.floor(secs / 60);
+    const seconds = Math.floor(secs % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
   const fetchSongs = async (reset = false, preserveFilter = false) => {
     const currentOffset = reset ? 0 : offset;
     try {
@@ -43,11 +47,17 @@ function App() {
       setSongs(newSongs);
       setHasMore(data.hasMore);
       
-      // Extraer géneros y artistas únicos para los bloques de la pantalla de inicio
       extractCategories(newSongs);
 
       if (preserveFilter && activeFilter.type !== 'all') {
-        setFilteredSongs(newSongs.filter(song => song[activeFilter.type] === activeFilter.value));
+        // Modificación del filtro para que busque si el género seleccionado está incluido en la lista de géneros de la canción
+        if (activeFilter.type === 'genre') {
+          setFilteredSongs(newSongs.filter(song => 
+            song.genre.toLowerCase().split(/[\/,]/).map(g => g.trim()).includes(activeFilter.value.toLowerCase())
+          ));
+        } else {
+          setFilteredSongs(newSongs.filter(song => song[activeFilter.type] === activeFilter.value));
+        }
       } else {
         setFilteredSongs(newSongs);
       }
@@ -75,7 +85,7 @@ function App() {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [filteredSongs]);
+  }, [filteredSongs, currentSongIndex]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -90,16 +100,32 @@ function App() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore, loadingMore, activeFilter]);
+  }, [hasMore, loadingMore, activeFilter, songs]);
 
-const extractCategories = (allSongs) => {
-    const uniqueGenres = [...new Set(allSongs.map(s => s.genre))].filter(g => g !== "Desconocido");
+  // Soporta múltiples géneros divididos por "/" o por ","
+  const extractCategories = (allSongs) => {
+    const genreSet = new Set();
     
-    // Mapeamos los artistas vinculando la primera foto que encontremos de ellos
+    allSongs.forEach(song => {
+      if (song.genre && song.genre !== "Desconocido" && song.genre !== "Urbano") {
+        // Dividimos géneros por barra o coma (ej: "house / funk" -> ["house", "funk"])
+        const individualGenres = song.genre.split(/[\/,]/);
+        individualGenres.forEach(g => {
+          const cleanG = g.trim();
+          if (cleanG) {
+            // Capitalizamos la primera letra de cada género de forma estética
+            genreSet.add(cleanG.charAt(0).toUpperCase() + cleanG.slice(1).toLowerCase());
+          }
+        });
+      }
+    });
+
+    // Si la lista está vacía añadimos uno genérico básico
+    if (genreSet.size === 0) genreSet.add("Urbano");
+
     const artistMap = {};
     allSongs.forEach(song => {
       if (song.artist && song.artist !== "Desconocido") {
-        // Si no está registrado o si encontramos una canción de él que sí tiene foto, la guardamos
         if (!artistMap[song.artist] || (!artistMap[song.artist].imageUrl && song.imageUrl)) {
           artistMap[song.artist] = {
             name: song.artist,
@@ -109,23 +135,29 @@ const extractCategories = (allSongs) => {
       }
     });
 
-    setGenres(uniqueGenres);
-    setArtists(Object.values(artistMap)); // Ahora 'artists' es un array de objetos {name, imageUrl}
+    setGenres([...genreSet]);
+    setArtists(Object.values(artistMap)); 
   };
 
-  // Filtrar la lista al tocar una categoría
   const handleFilter = (type, value) => {
     if (activeFilter.type === type && activeFilter.value === value) {
       setActiveFilter({ type: 'all', value: null });
       setFilteredSongs(songs);
     } else {
       setActiveFilter({ type, value });
-      const filtered = songs.filter(song => song[type] === value);
-      setFilteredSongs(filtered);
+      if (type === 'genre') {
+        // Filtrar si la pista contiene el género dentro de su cadena múltiple
+        const filtered = songs.filter(song => 
+          song.genre.toLowerCase().split(/[\/,]/).map(g => g.trim()).includes(value.toLowerCase())
+        );
+        setFilteredSongs(filtered);
+      } else {
+        const filtered = songs.filter(song => song[type] === value);
+        setFilteredSongs(filtered);
+      }
     }
   };
 
-  // 2. Motor de Audio con Crossfade (Web Audio API)
   const playSongAudio = async (index) => {
     if (index === null || !filteredSongs[index]) return;
 
@@ -169,37 +201,54 @@ const extractCategories = (allSongs) => {
     }
   };
 
-  // 3. Sincronizar Metadatos con MusicBrainz
-const fetchMusicBrainzData = async (index, e) => {
-  e.stopPropagation();
-  const song = filteredSongs[index];
+  const fetchMusicBrainzData = async (index, e) => {
+    e.stopPropagation();
+    const song = filteredSongs[index];
 
-  try {
-    // Llamar al backend para sincronizar con MusicBrainz
-    const response = await fetch(`${API_URL}/api/songs/sync-metadata`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename: song.filename })
-    });
+    try {
+      const response = await fetch(`${API_URL}/api/songs/sync-metadata`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: song.filename })
+      });
 
-    if (response.ok) {
-      const result = await response.json();
-      const { updatedSong } = result;
+      if (response.ok) {
+        const result = await response.json();
+        const { updatedSong } = result;
 
-      alert(`✅ ¡Sincronización Completa!\n\n🎵 Título: ${updatedSong.title}\n🎤 Artista: ${updatedSong.artist}\n📀 Género: ${updatedSong.genre}`);
-      
-      // Recargar lista y mantener filtro para que artistas/genres se actualicen
-      fetchSongs(true, activeFilter.type !== 'all');
+        alert(`✅ ¡Sincronización Completa!\n\n🎵 Título: ${updatedSong.title}\n🎤 Artista: ${updatedSong.artist}\n📀 Género: ${updatedSong.genre}`);
+        
+        setSongs((prevSongs) => {
+          const updatedMaster = prevSongs.map((s) => 
+            s.filename === song.filename || s.filename === updatedSong.filename
+              ? { ...s, filename: updatedSong.filename, title: updatedSong.title, artist: updatedSong.artist, genre: updatedSong.genre, imageUrl: updatedSong.imageUrl }
+              : s
+          );
+          extractCategories(updatedMaster);
+          return updatedMaster;
+        });
 
-    } else {
-      const errData = await response.json();
-      alert(`❌ Error: ${errData.error}`);
+        setFilteredSongs((prevFiltered) => 
+          prevFiltered.map((s) => 
+            s.filename === song.filename || s.filename === updatedSong.filename
+              ? { ...s, filename: updatedSong.filename, title: updatedSong.title, artist: updatedSong.artist, genre: updatedSong.genre, imageUrl: updatedSong.imageUrl }
+              : s
+          )
+        );
+
+        setTimeout(() => {
+          fetchSongs(true, activeFilter.type !== 'all');
+        }, 600);
+
+      } else {
+        const errData = await response.json();
+        alert(`❌ Error: ${errData.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ Error de red al sincronizar metadatos.");
     }
-  } catch (err) {
-    console.error(err);
-    alert("❌ Error de red al sincronizar con MusicBrainz");
-  }
-};
+  };
 
   const handleDeleteSong = async (filename, e) => {
     e.stopPropagation();
@@ -216,13 +265,12 @@ const fetchMusicBrainzData = async (index, e) => {
 
   return (
     <div className="ytm-container">
-      {/* Barra de Navegación Superior */}
       <header className="ytm-header">
         <div className="logo"><Radio color="#ff0000" fill="#ff0000" size={24} /> <span>YouTube Music</span><span className="badge">Local</span></div>
       </header>
 
       <main className="ytm-content">
-        {/* SECCIÓN 1: GÉNEROS (Sustituye a Populares) */}
+        {/* SECCIÓN 1: GÉNEROS MÚLTIPLES */}
         <section className="ytm-section">
           <h2>Géneros</h2>
           <div className="tiles-grid">
@@ -239,7 +287,7 @@ const fetchMusicBrainzData = async (index, e) => {
           </div>
         </section>
 
-      {/* SECCIÓN 2: ARTISTAS (Con foto real o avatar por defecto) */}
+        {/* SECCIÓN 2: ARTISTAS */}
         <section className="ytm-section">
           <h2>Artistas</h2>
           <div className="artists-row">
@@ -262,7 +310,7 @@ const fetchMusicBrainzData = async (index, e) => {
           </div>
         </section>
 
-        {/* SECCIÓN 3: LISTA DE CANCIONES (Filtrada o Completa) */}
+        {/* SECCIÓN 3: TRACKS CON TIEMPOS */}
         <section className="ytm-section tracks-section">
           <div className="section-header">
             <h2>{activeFilter.type !== 'all' ? `Resultados: ${activeFilter.value}` : 'Todas las canciones'}</h2>
@@ -274,7 +322,7 @@ const fetchMusicBrainzData = async (index, e) => {
               <div 
                 key={song.filename + index} 
                 className={`ytm-track-row ${currentSongIndex === index ? 'playing' : ''}`}
-                onClick={() => playSongAudio(index, false)}
+                onClick={() => playSongAudio(index)}
               >
                 <div className="track-img">
                   {song.imageUrl ? (
@@ -285,10 +333,13 @@ const fetchMusicBrainzData = async (index, e) => {
                 </div>
                 <div className="track-details">
                   <span className="track-title">{song.title}</span>
-                  <span className="track-meta">{song.artist} • {song.genre}</span>
+                  <span className="track-meta">
+                    {song.artist} • {song.genre} 
+                    {song.duration > 0 && ` • ${formatTime(song.duration)}`}
+                  </span>
                 </div>
                 <div className="track-actions">
-                  <button className="ytm-btn" onClick={(e) => fetchMusicBrainzData(index, e)} title="Sincronizar metadatos con MusicBrainz"><Search size={16} /></button>
+                  <button className="ytm-btn" onClick={(e) => fetchMusicBrainzData(index, e)} title="Sincronizar metadatos"><Search size={16} /></button>
                   <button className="ytm-btn delete" onClick={(e) => handleDeleteSong(song.filename, e)} title="Borrar de la PC"><Trash2 size={16} /></button>
                 </div>
               </div>
@@ -301,10 +352,10 @@ const fetchMusicBrainzData = async (index, e) => {
         </section>
       </main>
 
-      {/* REPRODUCTOR FLOTANTE ESTILO YOUTUBE MUSIC */}
+      {/* REPRODUCTOR FLOTANTE PREMIUM Y RESPONSIVE */}
       <footer className="ytm-player-bar">
-      <div className="ytm-player-left">
-          {currentSongIndex !== null ? (
+        <div className="ytm-player-left">
+          {currentSongIndex !== null && filteredSongs[currentSongIndex] ? (
             <>
               <div className="player-thumbnail">
                 {filteredSongs[currentSongIndex].imageUrl ? (
@@ -317,7 +368,7 @@ const fetchMusicBrainzData = async (index, e) => {
                 <div className="scroll-title">{filteredSongs[currentSongIndex].title}</div>
                 <span>{filteredSongs[currentSongIndex].artist}</span>
                 <div className="player-progress-wrapper">
-                  <span>{formatTime(currentTime)}</span>
+                  <span style={{ fontSize: '11px', color: '#aaa', minWidth: '25px' }}>{formatTime(currentTime)}</span>
                   <input
                     className="player-progress"
                     type="range"
@@ -330,7 +381,7 @@ const fetchMusicBrainzData = async (index, e) => {
                       setCurrentTime(Number(e.target.value));
                     }}
                   />
-                  <span>{formatTime(duration)}</span>
+                  <span style={{ fontSize: '11px', color: '#aaa', minWidth: '25px' }}>{formatTime(duration)}</span>
                 </div>
               </div>
             </>
