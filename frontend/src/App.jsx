@@ -55,11 +55,25 @@ function App() {
     fetchSongs(true);
   }, []);
 
-  const extractCategories = (allSongs) => {
+const extractCategories = (allSongs) => {
     const uniqueGenres = [...new Set(allSongs.map(s => s.genre))].filter(g => g !== "Desconocido");
-    const uniqueArtists = [...new Set(allSongs.map(s => s.artist))].filter(a => a !== "Desconocido");
+    
+    // Mapeamos los artistas vinculando la primera foto que encontremos de ellos
+    const artistMap = {};
+    allSongs.forEach(song => {
+      if (song.artist && song.artist !== "Desconocido") {
+        // Si no está registrado o si encontramos una canción de él que sí tiene foto, la guardamos
+        if (!artistMap[song.artist] || (!artistMap[song.artist].imageUrl && song.imageUrl)) {
+          artistMap[song.artist] = {
+            name: song.artist,
+            imageUrl: song.imageUrl ? `${API_URL}${song.imageUrl}` : null
+          };
+        }
+      }
+    });
+
     setGenres(uniqueGenres);
-    setArtists(uniqueArtists);
+    setArtists(Object.values(artistMap)); // Ahora 'artists' es un array de objetos {name, imageUrl}
   };
 
   // Filtrar la lista al tocar una categoría
@@ -186,7 +200,7 @@ const fetchMusicBrainzData = async (index, e) => {
         }
       }
 
-      // 2. Enviar los datos validados hacia el Backend para guardarlos EN EL DISCO DURO
+// 2. Enviar los datos validados hacia el Backend
       const saveResponse = await fetch(`${API_URL}/api/songs/update-metadata`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -200,10 +214,38 @@ const fetchMusicBrainzData = async (index, e) => {
       });
 
       if (saveResponse.ok) {
-        alert(`¡Sincronización Completa!\n\nEl archivo físico fue editado:\nTítulo: ${newTitle}\nArtista: ${artistName}\nGénero: ${genreName}${imageUrl ? '\n📸 ¡Carátula descargada e inyectada!' : ''}`);
+        const result = await saveResponse.json();
+        const serverSong = result.updatedSong;
+
+        alert(`¡Sincronización Completa!\n\nGuardado en disco:\nTítulo: ${serverSong.title}\nArtista: ${serverSong.artist}\nGénero: ${serverSong.genre}`);
         
-        // Refrescar toda la biblioteca para reflejar el cambio de nombre de inmediato
-        fetchSongs(true);
+        // 🔥 SOLUCIÓN REACT INMEDIATA: Actualizar estados locales sin pedir un fetch completo
+        setSongs((prevSongs) => {
+          const updatedMaster = prevSongs.map((s) => 
+            s.filename === song.filename ? { ...s, title: serverSong.title, artist: serverSong.artist, genre: serverSong.genre } : s
+          );
+          
+          // Forzar la regeneración inmediata de los bloques superiores (Géneros / Artistas)
+          const uniqueGenres = [...new Set(updatedMaster.map(s => s.genre))].filter(g => g !== "Desconocido");
+          const uniqueArtists = [...new Set(updatedMaster.map(s => s.artist))].filter(a => a !== "Desconocido");
+          setGenres(uniqueGenres);
+          setArtists(uniqueArtists);
+          
+          return updatedMaster;
+        });
+
+        setFilteredSongs((prevFiltered) => 
+          prevFiltered.map((s) => 
+            s.filename === song.filename ? { ...s, title: serverSong.title, artist: serverSong.artist, genre: serverSong.genre } : s
+          )
+        );
+
+        // Pequeño delay de cortesía para el sistema de archivos de la PC antes de sincronizar fondo
+        setTimeout(() => {
+          // Si el filtro activo era justamente el viejo, limpiamos la vista
+          setActiveFilter({ type: 'all', value: null });
+        }, 300);
+
       } else {
         const errData = await saveResponse.json();
         alert(`Error al guardar en disco: ${errData.error}`);
@@ -256,20 +298,24 @@ const fetchMusicBrainzData = async (index, e) => {
           </div>
         </section>
 
-        {/* SECCIÓN 2: ARTISTAS (Sustituye a Morning Boost) */}
+      {/* SECCIÓN 2: ARTISTAS (Con foto real o avatar por defecto) */}
         <section className="ytm-section">
           <h2>Artistas</h2>
           <div className="artists-row">
             {artists.map(artist => (
               <div 
-                key={artist} 
-                className={`artist-circle-item ${activeFilter.value === artist ? 'active' : ''}`}
-                onClick={() => handleFilter('artist', artist)}
+                key={artist.name} 
+                className={`artist-circle-item ${activeFilter.value === artist.name ? 'active' : ''}`}
+                onClick={() => handleFilter('artist', artist.name)}
               >
                 <div className="avatar-placeholder">
-                  <User size={28} />
+                  {artist.imageUrl ? (
+                    <img src={artist.imageUrl} alt={artist.name} className="artist-avatar-img" />
+                  ) : (
+                    <User size={28} />
+                  )}
                 </div>
-                <span>{artist}</span>
+                <span>{artist.name}</span>
               </div>
             ))}
           </div>
@@ -310,10 +356,16 @@ const fetchMusicBrainzData = async (index, e) => {
 
       {/* REPRODUCTOR FLOTANTE ESTILO YOUTUBE MUSIC */}
       <footer className="ytm-player-bar">
-        <div className="ytm-player-left">
+      <div className="ytm-player-left">
           {currentSongIndex !== null ? (
             <>
-              <div className="player-thumbnail animate-spin-slow"><Disc size={20} color="#ff0000" /></div>
+              <div className="player-thumbnail animate-spin-slow">
+                {filteredSongs[currentSongIndex].imageUrl ? (
+                  <img src={`${API_URL}${filteredSongs[currentSongIndex].imageUrl}`} alt="cover" className="player-cover-img" />
+                ) : (
+                  <Disc size={20} color="#ff0000" />
+                )}
+              </div>
               <div className="player-track-info">
                 <div className="scroll-title">{filteredSongs[currentSongIndex].title}</div>
                 <span>{filteredSongs[currentSongIndex].artist}</span>
