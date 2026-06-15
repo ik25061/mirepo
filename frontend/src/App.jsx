@@ -25,7 +25,7 @@ function App() {
   const songTimeoutRef = useRef(null);
 
   // 1. Cargar canciones de la PC (Lazy Load)
-  const fetchSongs = async (reset = false) => {
+  const fetchSongs = async (reset = false, preserveFilter = false) => {
     const currentOffset = reset ? 0 : offset;
     try {
       const response = await fetch(`${API_URL}/api/songs?limit=30&offset=${currentOffset}`);
@@ -41,11 +41,16 @@ function App() {
       }
       
       setSongs(newSongs);
-      setFilteredSongs(newSongs);
       setHasMore(data.hasMore);
       
       // Extraer géneros y artistas únicos para los bloques de la pantalla de inicio
       extractCategories(newSongs);
+
+      if (preserveFilter && activeFilter.type !== 'all') {
+        setFilteredSongs(newSongs.filter(song => song[activeFilter.type] === activeFilter.value));
+      } else {
+        setFilteredSongs(newSongs);
+      }
     } catch (err) {
       console.error("Error al obtener canciones:", err);
     }
@@ -170,93 +175,31 @@ const extractCategories = (allSongs) => {
 const fetchMusicBrainzData = async (index, e) => {
   e.stopPropagation();
   const song = filteredSongs[index];
-  const cleanTitle = song.title.replace(/[^a-zA-Z0-9 ]/g, "");
 
   try {
-    // 1. Buscar la canción en MusicBrainz para obtener Artista, Género y el ID de Grabación (MBID)
-    const response = await fetch(`https://musicbrainz.org/ws/2/recording/?query=recording:${encodeURIComponent(cleanTitle)}&fmt=json`);
-    const data = await response.json();
+    // Llamar al backend para sincronizar con MusicBrainz
+    const response = await fetch(`${API_URL}/api/songs/sync-metadata`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: song.filename })
+    });
 
-    if (data.recordings && data.recordings.length > 0) {
-      const match = data.recordings[0];
+    if (response.ok) {
+      const result = await response.json();
+      const { updatedSong } = result;
+
+      alert(`✅ ¡Sincronización Completa!\n\n🎵 Título: ${updatedSong.title}\n🎤 Artista: ${updatedSong.artist}\n📀 Género: ${updatedSong.genre}`);
       
-      // Datos encontrados en internet
-      const newTitle = match.title || song.title;
-      const artistName = match['artist-credit']?.[0]?.name || "Desconocido";
-      const genreName = match.tags?.[0]?.name || "Urbano";
-      
-      // Intentar rastrear si tiene una carátula asociada usando el ID de la versión (release)
-      let imageUrl = null;
-      const releaseId = match.releases?.[0]?.id;
-      if (releaseId) {
-        try {
-          const coverResponse = await fetch(`https://coverartarchive.org/release/${releaseId}`);
-          if (coverResponse.ok) {
-            const coverData = await coverResponse.json();
-            imageUrl = coverData.images?.[0]?.image || null; // URL de la imagen original
-          }
-        } catch (err) {
-          console.log("Este álbum no cuenta con carátula en CoverArtArchive");
-        }
-      }
-
-// 2. Enviar los datos validados hacia el Backend
-      const saveResponse = await fetch(`${API_URL}/api/songs/update-metadata`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: song.filename,
-          title: newTitle,
-          artist: artistName,
-          genre: genreName,
-          imageUrl: imageUrl
-        })
-      });
-
-      if (saveResponse.ok) {
-        const result = await saveResponse.json();
-        const serverSong = result.updatedSong;
-
-        alert(`¡Sincronización Completa!\n\nGuardado en disco:\nTítulo: ${serverSong.title}\nArtista: ${serverSong.artist}\nGénero: ${serverSong.genre}`);
-        
-        // 🔥 SOLUCIÓN REACT INMEDIATA: Actualizar estados locales sin pedir un fetch completo
-        setSongs((prevSongs) => {
-          const updatedMaster = prevSongs.map((s) => 
-            s.filename === song.filename ? { ...s, title: serverSong.title, artist: serverSong.artist, genre: serverSong.genre } : s
-          );
-          
-          // Forzar la regeneración inmediata de los bloques superiores (Géneros / Artistas)
-          const uniqueGenres = [...new Set(updatedMaster.map(s => s.genre))].filter(g => g !== "Desconocido");
-          const uniqueArtists = [...new Set(updatedMaster.map(s => s.artist))].filter(a => a !== "Desconocido");
-          setGenres(uniqueGenres);
-          setArtists(uniqueArtists);
-          
-          return updatedMaster;
-        });
-
-        setFilteredSongs((prevFiltered) => 
-          prevFiltered.map((s) => 
-            s.filename === song.filename ? { ...s, title: serverSong.title, artist: serverSong.artist, genre: serverSong.genre } : s
-          )
-        );
-
-        // Pequeño delay de cortesía para el sistema de archivos de la PC antes de sincronizar fondo
-        setTimeout(() => {
-          // Si el filtro activo era justamente el viejo, limpiamos la vista
-          setActiveFilter({ type: 'all', value: null });
-        }, 300);
-
-      } else {
-        const errData = await saveResponse.json();
-        alert(`Error al guardar en disco: ${errData.error}`);
-      }
+      // Recargar lista y mantener filtro para que artistas/genres se actualicen
+      fetchSongs(true, activeFilter.type !== 'all');
 
     } else {
-      alert("No se encontraron coincidencias exactas en la nube para esta pista.");
+      const errData = await response.json();
+      alert(`❌ Error: ${errData.error}`);
     }
   } catch (err) {
     console.error(err);
-    alert("Error de red al conectar con los servidores de metadatos.");
+    alert("❌ Error de red al sincronizar con MusicBrainz");
   }
 };
 
@@ -335,13 +278,19 @@ const fetchMusicBrainzData = async (index, e) => {
                 className={`ytm-track-row ${currentSongIndex === index ? 'playing' : ''}`}
                 onClick={() => playSongAudio(index, false)}
               >
-                <div className="track-img"><Music size={16} /></div>
+                <div className="track-img">
+                  {song.imageUrl ? (
+                    <img src={`${API_URL}${song.imageUrl}`} alt={song.title} className="track-img-thumb" />
+                  ) : (
+                    <div className="track-img-placeholder"><Music size={16} /></div>
+                  )}
+                </div>
                 <div className="track-details">
                   <span className="track-title">{song.title}</span>
                   <span className="track-meta">{song.artist} • {song.genre}</span>
                 </div>
                 <div className="track-actions">
-                  <button className="ytm-btn" onClick={(e) => fetchMusicBrainzData(index, e)} title="Sincronizar metadatos"><Search size={16} /></button>
+                  <button className="ytm-btn" onClick={(e) => fetchMusicBrainzData(index, e)} title="Sincronizar metadatos con MusicBrainz"><Search size={16} /></button>
                   <button className="ytm-btn delete" onClick={(e) => handleDeleteSong(song.filename, e)} title="Borrar de la PC"><Trash2 size={16} /></button>
                 </div>
               </div>
