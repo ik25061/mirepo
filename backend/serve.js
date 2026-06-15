@@ -3,6 +3,8 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const mm = require('music-metadata'); // Para leer artista, género, etc.
+const NodeID3 = require('node-id3');
+const download = require('image-downloader');
 
 const app = express();
 app.use(cors());
@@ -59,6 +61,66 @@ app.get('/api/songs', async (req, res) => {
             hasMore: offset + limit < musicFiles.length
         });
     });
+});
+
+
+
+
+// ... (Todo tu código anterior se mantiene igual) ...
+
+// PUT: Actualizar metadatos del archivo físico y descargar portada
+app.put('/api/songs/update-metadata', async (req, res) => {
+    const { filename, title, artist, genre, imageUrl } = req.body;
+    const filePath = path.join(MUSIC_DIR, filename);
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'El archivo de música no existe en el disco.' });
+    }
+
+    try {
+        // 1. Preparar las etiquetas básicas
+        const tags = {
+            title: title,
+            artist: artist,
+            genre: genre
+        };
+
+        // 2. Si MusicBrainz nos da una carátula, la descargamos y la incrustamos
+        if (imageUrl) {
+            const imagePath = path.join(MUSIC_DIR, `${path.parse(filename).name}.jpg`);
+            
+            try {
+                // Descargar imagen de internet de forma local
+                await download.image({ url: imageUrl, dest: imagePath });
+                
+                // Añadir la imagen a los tags ID3 del MP3
+                tags.image = {
+                    mime: "image/jpeg",
+                    type: { id: 3, name: 'front cover' },
+                    description: 'Portada Autodescargada',
+                    imageBuffer: fs.readFileSync(imagePath)
+                };
+            } catch (imgError) {
+                console.log("No se pudo procesar la carátula, guardando solo texto...", imgError);
+            }
+        }
+
+        // 3. Escribir físicamente las etiquetas en el archivo MP3
+        const success = NodeID3.write(tags, filePath);
+        
+        if (!success) {
+            return res.status(500).json({ error: 'Error al escribir las etiquetas ID3 en el archivo.' });
+        }
+
+        res.json({ 
+            message: 'Archivo actualizado físicamente con éxito.', 
+            updatedSong: { filename, title, artist, genre } 
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno al procesar el archivo.' });
+    }
 });
 
 // DELETE: Eliminar archivo del disco
