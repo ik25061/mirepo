@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // ⚠️ CONFIGURACIÓN: Tu carpeta de música
-const MUSIC_DIR = path.join('C:', 'Users', 'rafael', 'Documents', 'musica'); // Cambia esto a tu carpeta de música
+const MUSIC_DIR = path.join('C:', 'Users', 'rafael', 'Music'); // Cambia esto a tu carpeta de música
 
 app.use('/songs', express.static(MUSIC_DIR));
 
