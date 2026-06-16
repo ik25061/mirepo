@@ -147,6 +147,12 @@ export function NowPlayingScreen({
           <p className="truncate" style={{ fontSize: 14, color: "#a7a7a7", marginTop: 2 }}>
             {track.artist}
           </p>
+          {(track.album && track.album !== "Desconocido") || track.year ? (
+            <p className="truncate" style={{ fontSize: 12, color: "#727272", marginTop: 1 }}>
+              {track.album && track.album !== "Desconocido" ? track.album : ""}
+              {track.year ? ` • ${track.year}` : ""}
+            </p>
+          ) : null}
         </div>
         <button
           onClick={() => onLike(track.id)}

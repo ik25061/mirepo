@@ -43,6 +43,7 @@ function serverToTrack(song) {
     title: song.title,
     artist: song.artist,
     album: song.album || "Desconocido",
+    year: song.year || null,
     duration: song.duration || 0,
     url: `${API_URL}/songs/${encodeURIComponent(song.filename)}`,
     cover: song.imageUrl ? `${API_URL}${song.imageUrl}` : undefined,
@@ -231,7 +232,9 @@ export default function App() {
       
       if (response.ok) {
         const result = await response.json();
-        alert(`✅ Sincronización completa!\n\n🎵 Título: ${result.updatedSong.title}\n🎤 Artista: ${result.updatedSong.artist}\n📀 Género: ${result.updatedSong.genre}`);
+        const albumText = result.updatedSong.album || "Desconocido";
+        const yearText = result.updatedSong.year || "";
+        alert(`✅ Sincronización completa!\n\n🎵 Título: ${result.updatedSong.title}\n🎤 Artista: ${result.updatedSong.artist}\n📀 Álbum: ${albumText}${yearText ? `\n📅 Año: ${yearText}` : ''}\n🏷️ Género: ${result.updatedSong.genre}`);
         
         // Refrescar lista completa
         await fetchSongsFromServer();
@@ -245,13 +248,15 @@ export default function App() {
                 ...t,
                 title: result.updatedSong.title,
                 artist: result.updatedSong.artist,
+                album: result.updatedSong.album || t.album,
+                year: result.updatedSong.year || t.year,
                 genre: result.updatedSong.genre,
                 filename: updatedFilename,
                 id: updatedFilename,
                 cover: result.updatedSong.hasAlbumImage 
-                  ? `${API_URL}/songs/album/${encodeURIComponent(updatedFilename.replace(/\.[^.]+$/, ''))}.jpg`
+                  ? `${API_URL}/songs/album_art/${encodeURIComponent(updatedFilename.replace(/\.[^.]+$/, ''))}.jpg`
                   : result.updatedSong.hasArtistImage
-                    ? `${API_URL}/songs/artista/${encodeURIComponent(updatedFilename.replace(/\.[^.]+$/, ''))}.jpg`
+                    ? `${API_URL}/songs/artist_art/${encodeURIComponent(updatedFilename.replace(/\.[^.]+$/, ''))}_artist.jpg`
                     : t.cover,
               };
             }

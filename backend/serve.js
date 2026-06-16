@@ -315,6 +315,7 @@ const syncDatabase = async () => {
         title: metadata.common.title || baseName,
         artist: metadata.common.artist || "Desconocido",
         album: metadata.common.album || "Desconocido",
+        year: metadata.common.year || null,
         genre: genresArray,
         duration: metadata.format.duration || 0,
         imageUrl: imageUrl,
@@ -326,6 +327,7 @@ const syncDatabase = async () => {
         title: baseName,
         artist: "Desconocido",
         album: "Desconocido",
+        year: null,
         genre: ["Desconocido"],
         duration: 0,
         imageUrl: imageUrl,
@@ -555,13 +557,28 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
       }
     }
 
-    // 7. Escribir tags en el archivo
+    // 7. Obtener el año del álbum desde Last.fm
+    let albumYear = null;
+    if (albumName !== "Desconocido") {
+      const albumInfo = await getAlbumInfo(albumName, artist);
+      if (albumInfo && albumInfo.releaseDate) {
+        // Parsear año del releaseDate
+        const yearMatch = albumInfo.releaseDate.match(/(\d{4})/);
+        if (yearMatch) {
+          albumYear = parseInt(yearMatch[1], 10);
+          tagsID3.year = albumYear;
+          console.log(`📅 Año del álbum: ${albumYear}`);
+        }
+      }
+    }
+
+    // 8. Escribir tags en el archivo
     const success = NodeID3.write(tagsID3, filePath);
     if (!success) {
       return res.status(500).json({ error: 'Error al escribir tags.' });
     }
 
-    // 8. Sincronizar base de datos
+    // 9. Sincronizar base de datos
     await syncDatabase();
 
     res.json({
@@ -571,6 +588,7 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
         title: title,
         artist: newArtist,
         album: newAlbum,
+        year: albumYear,
         genre: genres,
         hasAlbumImage: hasAlbumImage,
         hasArtistImage: hasArtistImage

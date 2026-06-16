@@ -104,6 +104,12 @@ export function PlayerBar({
           <div className="min-w-0">
             <p className="text-white truncate" style={{ fontSize: 14, fontWeight: 600 }}>{track.title}</p>
             <p className="text-muted-foreground truncate" style={{ fontSize: 12 }}>{track.artist}</p>
+            {(track.album && track.album !== "Desconocido") || track.year ? (
+              <p className="text-muted-foreground truncate" style={{ fontSize: 10, marginTop: 1, opacity: 0.7 }}>
+                {track.album && track.album !== "Desconocido" ? track.album : ""}
+                {track.year ? ` • ${track.year}` : ""}
+              </p>
+            ) : null}
           </div>
         ) : (
           <div>

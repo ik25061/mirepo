@@ -26,6 +26,12 @@ export function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOpen }) {
         <p style={{ fontSize: 12, color: "#a7a7a7" }} className="truncate">
           {track.artist}
         </p>
+        {(track.album && track.album !== "Desconocido") || track.year ? (
+          <p style={{ fontSize: 10, color: "#727272", marginTop: 1 }} className="truncate">
+            {track.album && track.album !== "Desconocido" ? track.album : ""}
+            {track.year ? ` • ${track.year}` : ""}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
