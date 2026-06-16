@@ -1,5 +1,5 @@
 // components/MobileHomeView.jsx
-import { Upload, FolderOpen, Music2, Play } from "lucide-react";
+import { Upload, FolderOpen, Music2, Play, Disc, User } from "lucide-react";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -13,15 +13,38 @@ export function MobileHomeView({
 }) {
   const recentPairs = tracks.slice(0, 6);
   const likedTracks = tracks.filter((t) => likedIds.has(t.id));
+  
+  // Obtener géneros únicos
+  const genres = [...new Set(tracks.flatMap(t => {
+    if (Array.isArray(t.genre)) return t.genre;
+    if (typeof t.genre === 'string') return t.genre.split(/[\/,]/).map(g => g.trim());
+    return [];
+  }))].filter(g => g && g !== "Desconocido").slice(0, 6);
+  
+  // Obtener artistas únicos con sus imágenes
+  const artistMap = {};
+  tracks.forEach(t => {
+    if (t.artist && t.artist !== "Desconocido") {
+      if (!artistMap[t.artist]) {
+        artistMap[t.artist] = { 
+          name: t.artist, 
+          cover: t.cover || t.imageUrl || null 
+        };
+      }
+    }
+  });
+  const artists = Object.values(artistMap).slice(0, 6);
 
   return (
     <div className="flex flex-col h-full overflow-y-auto" style={{ background: "#121212" }}>
-      <div className="px-4 pt-12 pb-4">
-        <h1 className="text-white" style={{ fontSize: 22, fontWeight: 800 }}>
+      {/* Header - con padding mejorado */}
+      <div className="px-4 pt-12 pb-2">
+        <h1 className="text-white" style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.5px" }}>
           {getGreeting()}
         </h1>
       </div>
 
+      {/* Quick picks */}
       {recentPairs.length > 0 ? (
         <div className="px-4 mb-4">
           <div className="grid grid-cols-2 gap-2">
@@ -41,10 +64,11 @@ export function MobileHomeView({
         </div>
       )}
 
+      {/* Botones de acción - con más padding */}
       {tracks.length > 0 && (
-        <div className="px-4 mb-4 flex gap-2">
+        <div className="px-4 mb-4 flex gap-3">
           <label
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full cursor-pointer hover:bg-white/10 transition-colors"
             style={{ background: "#282828", fontSize: 13, color: "#fff", fontWeight: 600 }}
           >
             <Upload size={14} />
@@ -54,7 +78,7 @@ export function MobileHomeView({
           </label>
           <button
             onClick={onLoadFolder}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full hover:bg-white/10 transition-colors"
             style={{ background: "#282828", fontSize: 13, color: "#fff", fontWeight: 600 }}
           >
             <FolderOpen size={14} />
@@ -63,12 +87,14 @@ export function MobileHomeView({
         </div>
       )}
       
-      {tracks.length > 0 && <div className="px-4 mb-4" style={{ borderTop: "1px solid #282828" }} />}
+      {tracks.length > 0 && <div className="px-4 mb-2" style={{ borderTop: "1px solid #282828" }} />}
 
+      {/* Toda tu música */}
       {tracks.length >= 3 && (
         <Section title="Toda tu música" tracks={tracks} currentTrack={currentTrack} onPlay={onPlay} />
       )}
 
+      {/* Canciones que te gustan */}
       {likedTracks.length > 0 && (
         <Section
           title="Canciones que te gustan"
@@ -81,7 +107,17 @@ export function MobileHomeView({
         />
       )}
 
-      <div style={{ height: 16 }} />
+      {/* NUEVA SECCIÓN: Géneros */}
+      {genres.length > 0 && (
+        <GenreSection genres={genres} tracks={tracks} currentTrack={currentTrack} onPlay={onPlay} />
+      )}
+
+      {/* NUEVA SECCIÓN: Artistas */}
+      {artists.length > 0 && (
+        <ArtistSection artists={artists} tracks={tracks} currentTrack={currentTrack} onPlay={onPlay} />
+      )}
+
+      <div style={{ height: 80 }} />
     </div>
   );
 }
@@ -97,8 +133,12 @@ function QuickCard({ track, isCurrent, onPlay }) {
         className="flex-shrink-0 flex items-center justify-center"
         style={{ width: 56, height: 56, background: "#383838" }}
       >
-        {track.cover ? (
-          <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
+        {track.cover || track.imageUrl ? (
+          <img 
+            src={track.cover || track.imageUrl} 
+            alt={track.title} 
+            className="w-full h-full object-cover" 
+          />
         ) : (
           <Music2 size={18} style={{ color: "#a7a7a7" }} />
         )}
@@ -145,8 +185,12 @@ function AlbumCard({ track, isCurrent, onPlay }) {
         className="relative flex items-center justify-center rounded-xl overflow-hidden"
         style={{ width: 140, height: 140, background: "#282828" }}
       >
-        {track.cover ? (
-          <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
+        {track.cover || track.imageUrl ? (
+          <img 
+            src={track.cover || track.imageUrl} 
+            alt={track.title} 
+            className="w-full h-full object-cover" 
+          />
         ) : (
           <Music2 size={40} style={{ color: "#535353" }} />
         )}
@@ -168,6 +212,142 @@ function AlbumCard({ track, isCurrent, onPlay }) {
         </p>
         <p className="truncate" style={{ fontSize: 11, color: "#a7a7a7" }}>{track.artist}</p>
       </div>
+    </div>
+  );
+}
+
+// ===== NUEVA SECCIÓN: GÉNEROS =====
+function GenreSection({ genres, tracks, currentTrack, onPlay }) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center justify-between px-4 mb-3">
+        <h2 className="text-white" style={{ fontSize: 16, fontWeight: 700 }}>Géneros</h2>
+        <button style={{ fontSize: 12, color: "#a7a7a7", fontWeight: 600 }}>Ver todo</button>
+      </div>
+      <div className="flex gap-3 px-4 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+        {genres.map((genre) => {
+          // Buscar una canción de este género para mostrar portada
+          const genreTrack = tracks.find(t => {
+            if (Array.isArray(t.genre)) return t.genre.includes(genre);
+            if (typeof t.genre === 'string') return t.genre.split(/[\/,]/).map(g => g.trim()).includes(genre);
+            return false;
+          });
+          return (
+            <GenreCard
+              key={genre}
+              genre={genre}
+              track={genreTrack}
+              onPlay={() => {
+                // Reproducir primera canción del género
+                const firstTrack = tracks.find(t => {
+                  if (Array.isArray(t.genre)) return t.genre.includes(genre);
+                  if (typeof t.genre === 'string') return t.genre.split(/[\/,]/).map(g => g.trim()).includes(genre);
+                  return false;
+                });
+                if (firstTrack) {
+                  const idx = tracks.indexOf(firstTrack);
+                  onPlay(firstTrack, idx);
+                }
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function GenreCard({ genre, track, onPlay }) {
+  return (
+    <div
+      className="flex-shrink-0 flex flex-col gap-2 cursor-pointer group"
+      style={{ width: 140 }}
+      onClick={onPlay}
+    >
+      <div
+        className="relative flex items-center justify-center rounded-xl overflow-hidden"
+        style={{ width: 140, height: 140, background: "#282828" }}
+      >
+        {track?.cover || track?.imageUrl ? (
+          <img 
+            src={track.cover || track.imageUrl} 
+            alt={genre} 
+            className="w-full h-full object-cover" 
+          />
+        ) : (
+          <Disc size={50} style={{ color: "#535353" }} />
+        )}
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.4)" }}
+        >
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#fff", textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}>
+            {genre}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== NUEVA SECCIÓN: ARTISTAS =====
+function ArtistSection({ artists, tracks, currentTrack, onPlay }) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center justify-between px-4 mb-3">
+        <h2 className="text-white" style={{ fontSize: 16, fontWeight: 700 }}>Artistas</h2>
+        <button style={{ fontSize: 12, color: "#a7a7a7", fontWeight: 600 }}>Ver todo</button>
+      </div>
+      <div className="flex gap-4 px-4 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+        {artists.map((artist) => (
+          <ArtistCard
+            key={artist.name}
+            artist={artist}
+            onPlay={() => {
+              // Reproducir primera canción del artista
+              const firstTrack = tracks.find(t => t.artist === artist.name);
+              if (firstTrack) {
+                const idx = tracks.indexOf(firstTrack);
+                onPlay(firstTrack, idx);
+              }
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ArtistCard({ artist, onPlay }) {
+  return (
+    <div
+      className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group"
+      style={{ width: 100 }}
+      onClick={onPlay}
+    >
+      <div
+        className="relative flex items-center justify-center rounded-full overflow-hidden"
+        style={{ width: 90, height: 90, background: "#282828" }}
+      >
+        {artist.cover ? (
+          <img 
+            src={artist.cover} 
+            alt={artist.name} 
+            className="w-full h-full object-cover" 
+          />
+        ) : (
+          <User size={40} style={{ color: "#535353" }} />
+        )}
+        <div
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ background: "rgba(0,0,0,0.4)" }}
+        >
+          <Play size={24} fill="#fff" style={{ color: "#fff" }} />
+        </div>
+      </div>
+      <p className="text-center truncate" style={{ fontSize: 12, fontWeight: 600, color: "#fff", maxWidth: 90 }}>
+        {artist.name}
+      </p>
     </div>
   );
 }

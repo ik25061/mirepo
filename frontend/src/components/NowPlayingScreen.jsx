@@ -1,7 +1,7 @@
 // components/NowPlayingScreen.jsx
 import { useEffect, useRef, useState } from "react";
 import {
-  ChevronDown, MoreHorizontal, Heart, Play, Pause,
+  ChevronDown, Heart, Play, Pause,
   SkipBack, SkipForward, Shuffle, Repeat, Volume2, Music2,
   Search, Trash2,
 } from "lucide-react";
@@ -68,10 +68,12 @@ export function NowPlayingScreen({
       className="flex flex-col h-full"
       style={{
         background: "linear-gradient(180deg, #2d1b4e 0%, #1a1a2e 40%, #0d0d0d 100%)",
+        padding: "16px 20px 20px 20px",
       }}
     >
-      <div className="flex items-center justify-between px-8 pt-12 pb-4">
-        <button onClick={onClose} className="p-2">
+      {/* Top bar - SIN tres puntos */}
+      <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
+        <button onClick={onClose} className="p-2 -ml-2">
           <ChevronDown size={24} style={{ color: "#fff" }} />
         </button>
         <div className="text-center">
@@ -79,7 +81,8 @@ export function NowPlayingScreen({
             Reproduciendo ahora
           </p>
         </div>
-        <div className="flex items-center" style={{ gap: 8 }}>
+        {/* Botones con más separación */}
+        <div className="flex items-center" style={{ gap: 16 }}>
           {onSync && (
             <button
               onClick={(e) => { e.stopPropagation(); onSync(track); }}
@@ -87,7 +90,7 @@ export function NowPlayingScreen({
               title="Sincronizar metadatos con MusicBrainz"
               style={{ color: "#a7a7a7" }}
             >
-              <Search size={20} />
+              <Search size={22} />
             </button>
           )}
           {onDelete && (
@@ -97,21 +100,19 @@ export function NowPlayingScreen({
               title="Eliminar canción"
               style={{ color: "#ff4444" }}
             >
-              <Trash2 size={20} />
+              <Trash2 size={22} />
             </button>
           )}
-          <button className="p-2" style={{ color: "#fff" }}>
-            <MoreHorizontal size={22} />
-          </button>
         </div>
       </div>
 
-      <div className="flex items-center justify-center px-8 py-6">
+      {/* Album art */}
+      <div className="flex items-center justify-center" style={{ padding: "12px 0" }}>
         <div
           className="relative flex items-center justify-center overflow-hidden"
           style={{
-            width: "min(72vw, 300px)",
-            height: "min(72vw, 300px)",
+            width: "min(68vw, 280px)",
+            height: "min(68vw, 280px)",
             borderRadius: "50%",
             background: "#282828",
             boxShadow: isPlaying
@@ -137,7 +138,8 @@ export function NowPlayingScreen({
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-6 pb-4">
+      {/* Track info + like */}
+      <div className="flex items-center justify-between" style={{ padding: "8px 0" }}>
         <div className="min-w-0 flex-1">
           <h2 className="text-white truncate" style={{ fontSize: 20, fontWeight: 700 }}>
             {track.title}
@@ -151,11 +153,12 @@ export function NowPlayingScreen({
           className="ml-4 flex-shrink-0 p-2"
           style={{ color: isLiked ? "#1db954" : "#a7a7a7" }}
         >
-          <Heart size={22} fill={isLiked ? "currentColor" : "none"} />
+          <Heart size={24} fill={isLiked ? "currentColor" : "none"} />
         </button>
       </div>
 
-      <div className="px-6 pb-4">
+      {/* Progress bar */}
+      <div style={{ padding: "8px 0" }}>
         <div
           ref={progressRef}
           onClick={seekTo}
@@ -185,21 +188,22 @@ export function NowPlayingScreen({
             />
           </div>
         </div>
-        <div className="flex justify-between mt-1">
+        <div className="flex justify-between" style={{ marginTop: 4 }}>
           <span style={{ fontSize: 11, color: "#a7a7a7" }}>{formatTime(currentTime)}</span>
           <span style={{ fontSize: 11, color: "#a7a7a7" }}>{formatTime(duration)}</span>
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-8 pb-6">
+      {/* Main controls */}
+      <div className="flex items-center justify-between" style={{ padding: "12px 8px" }}>
         <button
           onClick={() => setShuffle(!shuffle)}
           style={{ color: shuffle ? "#1db954" : "#a7a7a7" }}
         >
-          <Shuffle size={20} />
+          <Shuffle size={22} />
         </button>
 
-        <button onClick={onPrev} style={{ color: "#fff" }}>
+        <button onClick={onPrev} style={{ color: "#fff", padding: "4px 8px" }}>
           <SkipBack size={32} fill="currentColor" />
         </button>
 
@@ -207,20 +211,20 @@ export function NowPlayingScreen({
           onClick={onPlayPause}
           className="flex items-center justify-center rounded-full"
           style={{
-            width: 64,
-            height: 64,
+            width: 68,
+            height: 68,
             background: "#fff",
             boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
           }}
         >
           {isPlaying ? (
-            <Pause size={26} fill="#000" style={{ color: "#000" }} />
+            <Pause size={28} fill="#000" style={{ color: "#000" }} />
           ) : (
-            <Play size={26} fill="#000" style={{ color: "#000", marginLeft: 3 }} />
+            <Play size={28} fill="#000" style={{ color: "#000", marginLeft: 3 }} />
           )}
         </button>
 
-        <button onClick={onNext} style={{ color: "#fff" }}>
+        <button onClick={onNext} style={{ color: "#fff", padding: "4px 8px" }}>
           <SkipForward size={32} fill="currentColor" />
         </button>
 
@@ -228,11 +232,12 @@ export function NowPlayingScreen({
           onClick={() => setRepeat(!repeat)}
           style={{ color: repeat ? "#1db954" : "#a7a7a7" }}
         >
-          <Repeat size={20} />
+          <Repeat size={22} />
         </button>
       </div>
 
-      <div className="flex items-center gap-3 px-8 pb-8">
+      {/* Volume */}
+      <div className="flex items-center gap-3" style={{ padding: "8px 4px 4px 4px" }}>
         <Volume2 size={16} style={{ color: "#a7a7a7", flexShrink: 0 }} />
         <input
           type="range"

@@ -42,9 +42,10 @@ export function MobileLibraryView({
           </button>
         </div>
 
+        {/* Buscador - con más padding inferior */}
         <div
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl mb-4"
-          style={{ background: "#282828" }}
+          className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
+          style={{ background: "#282828", marginBottom: 16 }}
         >
           <Search size={15} style={{ color: "#a7a7a7", flexShrink: 0 }} />
           <input
@@ -57,12 +58,13 @@ export function MobileLibraryView({
           />
         </div>
 
-        <div className="flex gap-2 overflow-x-auto mb-2" style={{ scrollbarWidth: "none" }}>
+        {/* Botones de filtro - con más separación */}
+        <div className="flex gap-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {chips.map((chip) => (
             <button
               key={chip.id}
               onClick={() => setFilter(chip.id)}
-              className="flex-shrink-0 px-4 py-1.5 rounded-full transition-colors"
+              className="flex-shrink-0 px-5 py-2 rounded-full transition-colors"
               style={{
                 background: filter === chip.id ? "#1db954" : "#282828",
                 color: filter === chip.id ? "#000" : "#fff",
@@ -74,10 +76,10 @@ export function MobileLibraryView({
             </button>
           ))}
           <label
-            className="flex-shrink-0 flex items-center gap-1 px-4 py-1.5 rounded-full cursor-pointer"
+            className="flex-shrink-0 flex items-center gap-2 px-5 py-2 rounded-full cursor-pointer transition-colors hover:bg-white/10"
             style={{ background: "#282828", color: "#fff", fontSize: 13, fontWeight: 500 }}
           >
-            <Upload size={12} />
+            <Upload size={14} />
             Agregar
             <input type="file" accept="audio/*" multiple className="hidden"
               onChange={(e) => e.target.files && onLoadFiles(e.target.files)} />
@@ -193,37 +195,34 @@ export function MobileLibraryView({
                     </p>
                   </div>
 
-                  {/* Botones de acción: Like, Sync, Delete */}
-                  <div className="flex items-center" style={{ gap: 12 }}>
+                  <div className="flex items-center" style={{ gap: 8 }}>
                     <button
                       onClick={() => onLike(track.id)}
                       className="flex-shrink-0"
-                      style={{ color: isLiked ? "#1db954" : "#535353", padding: "10px" }}
+                      style={{ color: isLiked ? "#1db954" : "#535353", padding: "8px" }}
                     >
                       <Heart size={20} fill={isLiked ? "currentColor" : "none"} />
                     </button>
                     
-                    {/* Botón Sincronizar (Lupa) */}
                     {onSync && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onSync(track); }}
                         className="rounded-full hover:bg-white/10 transition-colors flex-shrink-0"
                         title="Sincronizar metadatos"
-                        style={{ padding: "10px" }}
+                        style={{ padding: "8px" }}
                       >
-                        <Search size={20} style={{ color: "#a7a7a7" }} />
+                        <Search size={18} style={{ color: "#a7a7a7" }} />
                       </button>
                     )}
                     
-                    {/* Botón Eliminar (Papelera) */}
                     {onDelete && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onDelete(track); }}
                         className="rounded-full hover:bg-red-500/10 transition-colors flex-shrink-0"
                         title="Eliminar canción"
-                        style={{ padding: "10px" }}
+                        style={{ padding: "8px" }}
                       >
-                        <Trash2 size={20} style={{ color: "#ff4444" }} />
+                        <Trash2 size={18} style={{ color: "#ff4444" }} />
                       </button>
                     )}
                   </div>
