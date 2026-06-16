@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Trash2, Search, Music, Disc, User, Radio, Clock } from 'lucide-react';
 import './App.css';
 
-const API_URL = 'http://localhost:5000'; 
+const API_URL = 'http://172.16.12.4:5000';
 
 function App() {
   const [songs, setSongs] = useState([]);
@@ -15,13 +15,16 @@ function App() {
   const [genres, setGenres] = useState([]);
   const [artists, setArtists] = useState([]);
   const [activeFilter, setActiveFilter] = useState({ type: 'all', value: null });
+  
+  // Estado para edición manual
+  const [editingSong, setEditingSong] = useState(null);
+  const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', album: '' });
 
   const audioRef = useRef(new Audio());
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // Formateador de tiempo universal (sirve para la barra y las pistas individuales)
   const formatTime = (secs) => {
     if (isNaN(secs) || secs === null || secs === 0) return "0:00";
     const minutes = Math.floor(secs / 60);
@@ -31,8 +34,15 @@ function App() {
 
   const fetchSongs = async (reset = false, preserveFilter = false) => {
     const currentOffset = reset ? 0 : offset;
+    let url = `${API_URL}/api/songs?limit=30&offset=${currentOffset}`;
+    
+    // Si hay filtro activo, agregarlo a la URL
+    if (activeFilter.type !== 'all' && activeFilter.value) {
+      url += `&${activeFilter.type}=${encodeURIComponent(activeFilter.value)}`;
+    }
+    
     try {
-      const response = await fetch(`${API_URL}/api/songs?limit=30&offset=${currentOffset}`);
+      const response = await fetch(url);
       const data = await response.json();
       
       let newSongs = [];
@@ -45,30 +55,36 @@ function App() {
       }
       
       setSongs(newSongs);
+      setFilteredSongs(newSongs);
       setHasMore(data.hasMore);
       
-      extractCategories(newSongs);
-
-      if (preserveFilter && activeFilter.type !== 'all') {
-        // Modificación del filtro para que busque si el género seleccionado está incluido en la lista de géneros de la canción
-        if (activeFilter.type === 'genre') {
-          setFilteredSongs(newSongs.filter(song => 
-            song.genre.toLowerCase().split(/[\/,]/).map(g => g.trim()).includes(activeFilter.value.toLowerCase())
-          ));
-        } else {
-          setFilteredSongs(newSongs.filter(song => song[activeFilter.type] === activeFilter.value));
-        }
-      } else {
-        setFilteredSongs(newSongs);
+      // Extraer categorías después de obtener canciones
+      if (reset) {
+        await fetchCategories();
       }
     } catch (err) {
       console.error("Error al obtener canciones:", err);
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const [genresRes, artistsRes] = await Promise.all([
+        fetch(`${API_URL}/api/genres`),
+        fetch(`${API_URL}/api/artists`)
+      ]);
+      const genresData = await genresRes.json();
+      const artistsData = await artistsRes.json();
+      setGenres(genresData);
+      setArtists(artistsData.map(name => ({ name, imageUrl: null })));
+    } catch (err) {
+      console.error("Error al obtener categorías:", err);
+    }
+  };
+
   useEffect(() => {
     fetchSongs(true);
-  }, []);
+  }, [activeFilter]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -102,60 +118,14 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hasMore, loadingMore, activeFilter, songs]);
 
-  // Soporta múltiples géneros divididos por "/" o por ","
-  const extractCategories = (allSongs) => {
-    const genreSet = new Set();
-    
-    allSongs.forEach(song => {
-      if (song.genre && song.genre !== "Desconocido" && song.genre !== "Urbano") {
-        // Dividimos géneros por barra o coma (ej: "house / funk" -> ["house", "funk"])
-        const individualGenres = song.genre.split(/[\/,]/);
-        individualGenres.forEach(g => {
-          const cleanG = g.trim();
-          if (cleanG) {
-            // Capitalizamos la primera letra de cada género de forma estética
-            genreSet.add(cleanG.charAt(0).toUpperCase() + cleanG.slice(1).toLowerCase());
-          }
-        });
-      }
-    });
-
-    // Si la lista está vacía añadimos uno genérico básico
-    if (genreSet.size === 0) genreSet.add("Urbano");
-
-    const artistMap = {};
-    allSongs.forEach(song => {
-      if (song.artist && song.artist !== "Desconocido") {
-        if (!artistMap[song.artist] || (!artistMap[song.artist].imageUrl && song.imageUrl)) {
-          artistMap[song.artist] = {
-            name: song.artist,
-            imageUrl: song.imageUrl ? `${API_URL}${song.imageUrl}` : null
-          };
-        }
-      }
-    });
-
-    setGenres([...genreSet]);
-    setArtists(Object.values(artistMap)); 
-  };
-
   const handleFilter = (type, value) => {
     if (activeFilter.type === type && activeFilter.value === value) {
       setActiveFilter({ type: 'all', value: null });
-      setFilteredSongs(songs);
     } else {
       setActiveFilter({ type, value });
-      if (type === 'genre') {
-        // Filtrar si la pista contiene el género dentro de su cadena múltiple
-        const filtered = songs.filter(song => 
-          song.genre.toLowerCase().split(/[\/,]/).map(g => g.trim()).includes(value.toLowerCase())
-        );
-        setFilteredSongs(filtered);
-      } else {
-        const filtered = songs.filter(song => song[type] === value);
-        setFilteredSongs(filtered);
-      }
     }
+    setOffset(0);
+    fetchSongs(true);
   };
 
   const playSongAudio = async (index) => {
@@ -218,27 +188,9 @@ function App() {
 
         alert(`✅ ¡Sincronización Completa!\n\n🎵 Título: ${updatedSong.title}\n🎤 Artista: ${updatedSong.artist}\n📀 Género: ${updatedSong.genre}`);
         
-        setSongs((prevSongs) => {
-          const updatedMaster = prevSongs.map((s) => 
-            s.filename === song.filename || s.filename === updatedSong.filename
-              ? { ...s, filename: updatedSong.filename, title: updatedSong.title, artist: updatedSong.artist, genre: updatedSong.genre, imageUrl: updatedSong.imageUrl }
-              : s
-          );
-          extractCategories(updatedMaster);
-          return updatedMaster;
-        });
-
-        setFilteredSongs((prevFiltered) => 
-          prevFiltered.map((s) => 
-            s.filename === song.filename || s.filename === updatedSong.filename
-              ? { ...s, filename: updatedSong.filename, title: updatedSong.title, artist: updatedSong.artist, genre: updatedSong.genre, imageUrl: updatedSong.imageUrl }
-              : s
-          )
-        );
-
-        setTimeout(() => {
-          fetchSongs(true, activeFilter.type !== 'all');
-        }, 600);
+        // Refrescar lista completa
+        await fetchSongs(true);
+        await fetchCategories();
 
       } else {
         const errData = await response.json();
@@ -247,6 +199,48 @@ function App() {
     } catch (err) {
       console.error(err);
       alert("❌ Error de red al sincronizar metadatos.");
+    }
+  };
+
+  const handleEditClick = (song, e) => {
+    e.stopPropagation();
+    setEditingSong(song);
+    setEditForm({
+      title: song.title,
+      artist: song.artist,
+      genre: song.genre,
+      album: song.album
+    });
+  };
+
+  const handleSaveMetadata = async () => {
+    if (!editingSong) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/songs/local-metadata`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: editingSong.filename,
+          title: editForm.title,
+          artist: editForm.artist,
+          genre: editForm.genre,
+          album: editForm.album
+        })
+      });
+
+      if (response.ok) {
+        alert('✅ Metadatos actualizados correctamente');
+        await fetchSongs(true);
+        await fetchCategories();
+        setEditingSong(null);
+      } else {
+        const error = await response.json();
+        alert(`❌ Error: ${error.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('❌ Error de red al actualizar metadatos');
     }
   };
 
@@ -259,7 +253,10 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename })
       });
-      if (res.ok) fetchSongs(true);
+      if (res.ok) {
+        await fetchSongs(true);
+        await fetchCategories();
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -270,7 +267,7 @@ function App() {
       </header>
 
       <main className="ytm-content">
-        {/* SECCIÓN 1: GÉNEROS MÚLTIPLES */}
+        {/* SECCIÓN 1: GÉNEROS */}
         <section className="ytm-section">
           <h2>Géneros</h2>
           <div className="tiles-grid">
@@ -310,11 +307,11 @@ function App() {
           </div>
         </section>
 
-        {/* SECCIÓN 3: TRACKS CON TIEMPOS */}
+        {/* SECCIÓN 3: TRACKS */}
         <section className="ytm-section tracks-section">
           <div className="section-header">
             <h2>{activeFilter.type !== 'all' ? `Resultados: ${activeFilter.value}` : 'Todas las canciones'}</h2>
-            {activeFilter.type !== 'all' && <button onClick={() => { setFilteredSongs(songs); setActiveFilter({ type: 'all', value: null }); }} className="clear-filter">Ver todas</button>}
+            {activeFilter.type !== 'all' && <button onClick={() => handleFilter('all', null)} className="clear-filter">Ver todas</button>}
           </div>
           
           <div className="ytm-track-list">
@@ -340,6 +337,7 @@ function App() {
                 </div>
                 <div className="track-actions">
                   <button className="ytm-btn" onClick={(e) => fetchMusicBrainzData(index, e)} title="Sincronizar metadatos"><Search size={16} /></button>
+                  <button className="ytm-btn" onClick={(e) => handleEditClick(song, e)} title="Editar metadatos">✏️</button>
                   <button className="ytm-btn delete" onClick={(e) => handleDeleteSong(song.filename, e)} title="Borrar de la PC"><Trash2 size={16} /></button>
                 </div>
               </div>
@@ -352,7 +350,7 @@ function App() {
         </section>
       </main>
 
-      {/* REPRODUCTOR FLOTANTE PREMIUM Y RESPONSIVE */}
+      {/* REPRODUCTOR FLOTANTE */}
       <footer className="ytm-player-bar">
         <div className="ytm-player-left">
           {currentSongIndex !== null && filteredSongs[currentSongIndex] ? (
@@ -398,6 +396,43 @@ function App() {
           <button onClick={handleNext} className="player-icon-btn"><SkipForward size={22} /></button>
         </div>
       </footer>
+
+      {/* MODAL DE EDICIÓN */}
+      {editingSong && (
+        <div className="modal-overlay" onClick={() => setEditingSong(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Editar metadatos</h3>
+            <input 
+              type="text" 
+              placeholder="Título" 
+              value={editForm.title}
+              onChange={(e) => setEditForm({...editForm, title: e.target.value})}
+            />
+            <input 
+              type="text" 
+              placeholder="Artista" 
+              value={editForm.artist}
+              onChange={(e) => setEditForm({...editForm, artist: e.target.value})}
+            />
+            <input 
+              type="text" 
+              placeholder="Género" 
+              value={editForm.genre}
+              onChange={(e) => setEditForm({...editForm, genre: e.target.value})}
+            />
+            <input 
+              type="text" 
+              placeholder="Álbum" 
+              value={editForm.album}
+              onChange={(e) => setEditForm({...editForm, album: e.target.value})}
+            />
+            <div className="modal-buttons">
+              <button onClick={handleSaveMetadata}>Guardar</button>
+              <button onClick={() => setEditingSong(null)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

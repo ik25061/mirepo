@@ -13,13 +13,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ⚠️ CONFIGURACIÓN: Tu carpeta de música
 const MUSIC_DIR = path.join('C:', 'Users', 'rafael', 'Music');
+const DB_PATH = path.join(__dirname, 'songs_db.json');
 
 app.use('/songs', express.static(MUSIC_DIR));
 
 // ====== FUNCIONES AUXILIARES ======
-// Buscar artista en MusicBrainz y obtener información
 const searchMusicBrainz = async (query) => {
     return new Promise((resolve) => {
         const url = `https://musicbrainz.org/ws/2/recording/?query=${encodeURIComponent(query)}&fmt=json&limit=5`;
@@ -37,12 +36,9 @@ const searchMusicBrainz = async (query) => {
     });
 };
 
-// Buscar imagen del artista en Wikimedia Commons
 const searchArtistImage = async (artistName) => {
     return new Promise((resolve) => {
-        const query = encodeURIComponent(artistName + ' musician');
         const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(artistName)}&prop=pageimages&pithumbsize=500&format=json`;
-        
         https.get(url, { headers: { 'User-Agent': 'MusicPlayer/1.0' } }, (res) => {
             let data = '';
             res.on('data', (chunk) => { data += chunk; });
@@ -64,7 +60,6 @@ const searchArtistImage = async (artistName) => {
     });
 };
 
-// Descargar imagen desde URL
 const downloadImage = async (imageUrl, dest) => {
     return new Promise((resolve, reject) => {
         const file = fs.createWriteStream(dest);
@@ -81,7 +76,6 @@ const downloadImage = async (imageUrl, dest) => {
     });
 };
 
-// Convertir audio a MP3 y borrar el original
 const convertToMp3 = async (sourcePath) => {
     const ext = path.extname(sourcePath).toLowerCase();
     if (ext === '.mp3') return sourcePath;
@@ -108,85 +102,160 @@ const convertToMp3 = async (sourcePath) => {
     });
 };
 
-// Limpiar nombre para archivo
-const cleanFileName = (name) => {
-    return name.replace(/[<>:"/\\|?*]/g, '').substring(0, 100).trim();
+// ====== BASE DE DATOS JSON CON SOPORTE PARA MÚLTIPLES GÉNEROS ======
+const syncDatabase = async () => {
+    console.log("🔄 Sincronizando base de datos de canciones...");
+    const { parseFile } = await import('music-metadata');
+    const files = fs.readdirSync(MUSIC_DIR);
+    const musicFiles = files.filter(file => 
+        ['.mp3', '.wav', '.m4a', '.ogg', '.flac', '.aac'].includes(path.extname(file).toLowerCase())
+    );
+
+    const songsList = [];
+
+    for (const file of musicFiles) {
+        const filePath = path.join(MUSIC_DIR, file);
+        const baseName = path.parse(file).name;
+        const imageFileName = `${baseName}.jpg`;
+        const artistImageFileName = `${baseName}_artist.jpg`;
+        
+        const hasImage = fs.existsSync(path.join(MUSIC_DIR, imageFileName));
+        const hasArtistImage = fs.existsSync(path.join(MUSIC_DIR, artistImageFileName));
+        const imageUrl = hasImage ? `/songs/${encodeURIComponent(imageFileName)}` : 
+                        hasArtistImage ? `/songs/${encodeURIComponent(artistImageFileName)}` : null;
+
+        try {
+            const metadata = await parseFile(filePath, { skipCovers: true });
+            
+            // Soporte para múltiples géneros
+            let genresArray = ["Desconocido"];
+            if (metadata.common.genre) {
+                if (Array.isArray(metadata.common.genre)) {
+                    genresArray = metadata.common.genre;
+                } else if (typeof metadata.common.genre === 'string') {
+                    genresArray = metadata.common.genre.split(/[\/,]/).map(g => g.trim());
+                }
+            }
+            genresArray = genresArray.filter(g => g && g !== "");
+            if (genresArray.length === 0) genresArray = ["Desconocido"];
+
+            songsList.push({
+                filename: file,
+                title: metadata.common.title || baseName,
+                artist: metadata.common.artist || "Desconocido",
+                album: metadata.common.album || "Desconocido",
+                genre: genresArray, // Ahora es un array
+                duration: metadata.format.duration || 0,
+                imageUrl: imageUrl,
+                lastUpdated: new Date().toISOString()
+            });
+        } catch (err) {
+            songsList.push({
+                filename: file,
+                title: baseName,
+                artist: "Desconocido",
+                album: "Desconocido",
+                genre: ["Desconocido"],
+                duration: 0,
+                imageUrl: imageUrl,
+                lastUpdated: new Date().toISOString()
+            });
+        }
+    }
+
+    fs.writeFileSync(DB_PATH, JSON.stringify(songsList, null, 2));
+    console.log(`✅ Base de datos sincronizada: ${songsList.length} canciones`);
+    return songsList;
 };
 
-// GET: Listar canciones con metadatos y detección de imágenes locales
+// ====== ENDPOINTS ======
+
 app.get('/api/songs', async (req, res) => {
     const limit = parseInt(req.query.limit) || 30;
     const offset = parseInt(req.query.offset) || 0;
+    const genre = req.query.genre;
+    const album = req.query.album;
+    const artist = req.query.artist;
 
-    const { parseFile } = await import('music-metadata');
+    if (!fs.existsSync(DB_PATH)) {
+        await syncDatabase();
+    }
 
-    fs.readdir(MUSIC_DIR, async (err, files) => {
-        if (err) return res.status(500).json({ error: 'Error al leer la carpeta' });
+    let songs = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
 
-        const musicFiles = files.filter(file => 
-            ['.mp3', '.wav', '.m4a', '.ogg', '.flac', '.aac', '.wma', '.alac', '.aiff'].includes(path.extname(file).toLowerCase())
-        );
-
-        const slicedFiles = musicFiles.slice(offset, offset + limit);
-
-        const songsWithMeta = await Promise.all(slicedFiles.map(async (file) => {
-            const filePath = path.join(MUSIC_DIR, file);
-            const baseName = path.parse(file).name;
-            const imageFileName = `${baseName}.jpg`;
-            const artistImageFileName = `${baseName}_artist.jpg`;
-            
-            // Buscar imágenes (portada o foto del artista)
-            const hasImage = fs.existsSync(path.join(MUSIC_DIR, imageFileName));
-            const hasArtistImage = fs.existsSync(path.join(MUSIC_DIR, artistImageFileName));
-            
-            const imageUrl = hasImage ? `/songs/${encodeURIComponent(imageFileName)}` : 
-                            hasArtistImage ? `/songs/${encodeURIComponent(artistImageFileName)}` : null;
-
-            try {
-                const metadata = await parseFile(filePath, { skipCovers: true });
-                
-                let rawGenre = "Desconocido";
-                if (metadata.common.genre) {
-                    rawGenre = Array.isArray(metadata.common.genre) 
-                        ? metadata.common.genre[0] 
-                        : metadata.common.genre;
-                }
-
-                return {
-                    filename: file,
-                    title: metadata.common.title || baseName,
-                    artist: metadata.common.artist || "Desconocido",
-                    album: metadata.common.album || "Desconocido",
-                    genre: rawGenre || "Desconocido",
-                    duration: metadata.format.duration || 0,
-                    imageUrl: imageUrl
-                };
-            } catch (err) {
-                const hasAnyImage = fs.existsSync(path.join(MUSIC_DIR, imageFileName)) || 
-                                   fs.existsSync(path.join(MUSIC_DIR, artistImageFileName));
-                const imageUrl = hasImage ? `/songs/${encodeURIComponent(imageFileName)}` : 
-                                hasArtistImage ? `/songs/${encodeURIComponent(artistImageFileName)}` : null;
-                
-                return {
-                    filename: file,
-                    title: baseName,
-                    artist: "Desconocido",
-                    album: "Desconocido",
-                    genre: "Desconocido",
-                    duration: 0,
-                    imageUrl: imageUrl
-                };
+    // Filtrar por género (soporta múltiples)
+    if (genre) {
+        songs = songs.filter(s => {
+            if (Array.isArray(s.genre)) {
+                return s.genre.some(g => g.toLowerCase() === genre.toLowerCase());
+            } else if (typeof s.genre === 'string') {
+                return s.genre.toLowerCase().split(/[\/,]/).map(g => g.trim()).includes(genre.toLowerCase());
             }
-        }));
-
-        res.json({
-            songs: songsWithMeta,
-            hasMore: offset + limit < musicFiles.length
+            return false;
         });
+    }
+    
+    if (album) {
+        songs = songs.filter(s => s.album.toLowerCase() === album.toLowerCase());
+    }
+    
+    if (artist) {
+        songs = songs.filter(s => s.artist.toLowerCase() === artist.toLowerCase());
+    }
+
+    const sliced = songs.slice(offset, offset + limit);
+    res.json({
+        songs: sliced,
+        total: songs.length,
+        hasMore: offset + limit < songs.length
     });
 });
 
-// PUT: Sincronizar con MusicBrainz y descargar metadatos/imágenes
+app.post('/api/sync-db', async (req, res) => {
+    try {
+        const songs = await syncDatabase();
+        res.json({ message: `Sincronizado: ${songs.length} canciones`, songs });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/genres', (req, res) => {
+    if (!fs.existsSync(DB_PATH)) return res.json([]);
+    const songs = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
+    const genreSet = new Set();
+    songs.forEach(song => {
+        let genres = [];
+        if (Array.isArray(song.genre)) {
+            genres = song.genre;
+        } else if (typeof song.genre === 'string') {
+            genres = song.genre.split(/[\/,]/).map(g => g.trim());
+        }
+        
+        genres.forEach(g => {
+            if (g && g !== "Desconocido") {
+                genreSet.add(g.charAt(0).toUpperCase() + g.slice(1).toLowerCase());
+            }
+        });
+    });
+    res.json([...genreSet]);
+});
+
+app.get('/api/albums', (req, res) => {
+    if (!fs.existsSync(DB_PATH)) return res.json([]);
+    const songs = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
+    const albums = [...new Set(songs.map(s => s.album).filter(a => a !== "Desconocido"))];
+    res.json(albums);
+});
+
+app.get('/api/artists', (req, res) => {
+    if (!fs.existsSync(DB_PATH)) return res.json([]);
+    const songs = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
+    const artists = [...new Set(songs.map(s => s.artist).filter(a => a !== "Desconocido"))];
+    res.json(artists);
+});
+
+// PUT: Sincronizar con MusicBrainz (con soporte para múltiples géneros)
 app.put('/api/songs/sync-metadata', async (req, res) => {
     const { filename } = req.body;
     const originalFilePath = path.join(MUSIC_DIR, filename);
@@ -215,14 +284,18 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
         const newTitle = recording.title || title;
         const newArtist = recording['artist-credit']?.[0]?.name || "Desconocido";
         
-        // Extraer género de tags
-        let newGenre = "Urbano";
+        // Obtener múltiples géneros
+        let newGenres = ["Urbano"];
         if (recording.tags && recording.tags.length > 0) {
-            const topTag = recording.tags.sort((a, b) => (b.count || 0) - (a.count || 0))[0];
-            newGenre = topTag.name || "Urbano";
+            newGenres = recording.tags
+                .sort((a, b) => (b.count || 0) - (a.count || 0))
+                .slice(0, 3)
+                .map(tag => tag.name)
+                .filter(name => name && name !== "");
         }
+        if (newGenres.length === 0) newGenres = ["Urbano"];
 
-        console.log(`✅ Encontrado: ${newArtist} - ${newTitle} (${newGenre})`);
+        console.log(`✅ Encontrado: ${newArtist} - ${newTitle} (${newGenres.join(", ")})`);
 
         // Obtener imagen del álbum
         let albumImageUrl = null;
@@ -250,19 +323,16 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
             }
         }
 
-        // Obtener imagen del artista
         let artistImageUrl = await searchArtistImage(newArtist);
         console.log(`🎭 Imagen del artista: ${artistImageUrl ? 'Encontrada' : 'No encontrada'}`);
 
-        // Actualizar tags ID3
         const baseName = path.parse(filename).name;
         const tags = {
             title: newTitle,
             artist: newArtist,
-            genre: newGenre
+            genre: newGenres.join(" / ") // Guardar como string separado por /
         };
 
-        // Descargar y embeber portada del álbum si existe
         if (albumImageUrl) {
             try {
                 const albumImagePath = path.join(MUSIC_DIR, `${baseName}.jpg`);
@@ -280,7 +350,6 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
             }
         }
 
-        // Descargar imagen del artista separadamente
         if (artistImageUrl) {
             try {
                 const artistImagePath = path.join(MUSIC_DIR, `${baseName}_artist.jpg`);
@@ -291,11 +360,12 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
             }
         }
 
-        // Escribir tags
         const success = NodeID3.write(tags, filePath);
         if (!success) {
             return res.status(500).json({ error: 'Error al escribir tags.' });
         }
+
+        await syncDatabase();
 
         res.json({
             message: 'Sincronización completada',
@@ -303,7 +373,7 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
                 filename: convertedFilename,
                 title: newTitle,
                 artist: newArtist,
-                genre: newGenre,
+                genre: newGenres, // Enviar como array al frontend
                 hasAlbumImage: !!albumImageUrl,
                 hasArtistImage: !!artistImageUrl
             }
@@ -312,6 +382,62 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
     } catch (error) {
         console.error("Error en sincronización:", error);
         res.status(500).json({ error: 'Error interno en sincronización.' });
+    }
+});
+
+// PUT: Editar metadatos localmente (soporta múltiples géneros)
+app.put('/api/songs/local-metadata', async (req, res) => {
+    const { filename, title, artist, genre, album } = req.body;
+    const filePath = path.join(MUSIC_DIR, filename);
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'El archivo no existe.' });
+    }
+
+    try {
+        const cleanTitle = title ? String(title).trim() : "Título desconocido";
+        const cleanArtist = artist ? String(artist).trim() : "Artista desconocido";
+        const cleanAlbum = album ? String(album).trim() : "Desconocido";
+        
+        // Procesar género (puede venir como array o string)
+        let cleanGenre = "Desconocido";
+        if (genre) {
+            if (Array.isArray(genre)) {
+                cleanGenre = genre.join(" / ");
+            } else {
+                cleanGenre = String(genre).trim();
+            }
+        }
+
+        const tags = {
+            title: cleanTitle,
+            artist: cleanArtist,
+            genre: cleanGenre,
+            album: cleanAlbum
+        };
+
+        const success = NodeID3.write(tags, filePath);
+        
+        if (!success) {
+            return res.status(500).json({ error: 'Error al escribir los tags ID3.' });
+        }
+
+        await syncDatabase();
+
+        res.json({ 
+            message: '✅ Metadatos actualizados correctamente',
+            updatedSong: { 
+                filename, 
+                title: cleanTitle, 
+                artist: cleanArtist, 
+                genre: cleanGenre.split(" / "),
+                album: cleanAlbum
+            } 
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno al actualizar metadatos.' });
     }
 });
 
@@ -325,7 +451,14 @@ app.put('/api/songs/update-metadata', async (req, res) => {
     }
 
     try {
-        const cleanGenre = genre ? String(genre).trim() : "Urbano";
+        let cleanGenre = "Urbano";
+        if (genre) {
+            if (Array.isArray(genre)) {
+                cleanGenre = genre.join(" / ");
+            } else {
+                cleanGenre = String(genre).trim();
+            }
+        }
 
         const tags = {
             title: String(title).trim(),
@@ -354,13 +487,15 @@ app.put('/api/songs/update-metadata', async (req, res) => {
             return res.status(500).json({ error: 'Error al escribir tags.' });
         }
 
+        await syncDatabase();
+
         res.json({ 
             message: 'Guardado', 
             updatedSong: { 
                 filename, 
                 title: tags.title, 
                 artist: tags.artist, 
-                genre: tags.genre,
+                genre: cleanGenre.split(" / "),
                 duration: 0
             } 
         });
@@ -371,14 +506,7 @@ app.put('/api/songs/update-metadata', async (req, res) => {
     }
 });
 
-
-
-
-
-
-
-// DELETE: Eliminar archivo del disco
-app.delete('/api/songs', (req, res) => {
+app.delete('/api/songs', async (req, res) => {
     const { filename } = req.body;
     const filePath = path.join(MUSIC_DIR, filename);
     if (!filePath.startsWith(MUSIC_DIR)) return res.status(403).json({ error: 'Denegado' });
@@ -386,13 +514,14 @@ app.delete('/api/songs', (req, res) => {
     try {
         fs.unlinkSync(filePath);
         
-        // Intentar eliminar archivos de imagen asociados
         const baseName = path.parse(filename).name;
         const albumImagePath = path.join(MUSIC_DIR, `${baseName}.jpg`);
         const artistImagePath = path.join(MUSIC_DIR, `${baseName}_artist.jpg`);
         
         if (fs.existsSync(albumImagePath)) fs.unlinkSync(albumImagePath);
         if (fs.existsSync(artistImagePath)) fs.unlinkSync(artistImagePath);
+        
+        await syncDatabase();
         
         res.json({ message: 'Eliminado' });
     } catch (err) {

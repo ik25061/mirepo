@@ -526,4 +526,73 @@ body {
     padding-top: 10px;
     gap: 30px; /* Más espacio para los dedos en pantallas táctiles */
   }
+}/* ==========================================================================
+   MODAL DE EDICIÓN
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--bg-surface);
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  border: 1px solid #333;
+}
+
+.modal-content h3 {
+  margin: 0 0 16px 0;
+  color: var(--yt-red);
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  background-color: var(--bg-card);
+  border: 1px solid #333;
+  color: var(--text-main);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.modal-content input:focus {
+  outline: none;
+  border-color: var(--yt-red);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.modal-buttons button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.modal-buttons button:first-child {
+  background-color: var(--yt-red);
+  color: white;
+}
+
+.modal-buttons button:last-child {
+  background-color: #333;
+  color: var(--text-main);
 }
