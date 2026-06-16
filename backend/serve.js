@@ -15,6 +15,13 @@ app.use(express.json());
 
 const MUSIC_DIR = path.join('C:', 'Users', 'rafael', 'Music');
 const DB_PATH = path.join(__dirname, 'songs_db.json');
+const ALBUM_ART_DIR = path.join(MUSIC_DIR, 'album');
+const ARTIST_IMG_DIR = path.join(MUSIC_DIR, 'artista');
+
+// Ensure subdirectories exist
+[ALBUM_ART_DIR, ARTIST_IMG_DIR].forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
 
 app.use('/songs', express.static(MUSIC_DIR));
 
@@ -116,13 +123,27 @@ const syncDatabase = async () => {
     for (const file of musicFiles) {
         const filePath = path.join(MUSIC_DIR, file);
         const baseName = path.parse(file).name;
-        const imageFileName = `${baseName}.jpg`;
-        const artistImageFileName = `${baseName}_artist.jpg`;
-        
-        const hasImage = fs.existsSync(path.join(MUSIC_DIR, imageFileName));
-        const hasArtistImage = fs.existsSync(path.join(MUSIC_DIR, artistImageFileName));
-        const imageUrl = hasImage ? `/songs/${encodeURIComponent(imageFileName)}` : 
-                        hasArtistImage ? `/songs/${encodeURIComponent(artistImageFileName)}` : null;
+
+        // Buscar imágenes en orden de prioridad:
+        // 1. album/{basename}.jpg (nueva ubicación para portadas de álbum)
+        // 2. artista/{basename}.jpg (nueva ubicación para imágenes de artista)
+        // 3. {basename}.jpg (ubicación legacy)
+        // 4. {basename}_artist.jpg (ubicación legacy)
+        const albumArtPath = path.join(ALBUM_ART_DIR, `${baseName}.jpg`);
+        const artistImgPath = path.join(ARTIST_IMG_DIR, `${baseName}.jpg`);
+        const legacyAlbumPath = path.join(MUSIC_DIR, `${baseName}.jpg`);
+        const legacyArtistPath = path.join(MUSIC_DIR, `${baseName}_artist.jpg`);
+
+        let imageUrl = null;
+        if (fs.existsSync(albumArtPath)) {
+            imageUrl = `/songs/album/${encodeURIComponent(baseName)}.jpg`;
+        } else if (fs.existsSync(artistImgPath)) {
+            imageUrl = `/songs/artista/${encodeURIComponent(baseName)}.jpg`;
+        } else if (fs.existsSync(legacyAlbumPath)) {
+            imageUrl = `/songs/${encodeURIComponent(baseName)}.jpg`;
+        } else if (fs.existsSync(legacyArtistPath)) {
+            imageUrl = `/songs/${encodeURIComponent(baseName)}_artist.jpg`;
+        }
 
         try {
             const metadata = await parseFile(filePath, { skipCovers: true });
@@ -144,7 +165,7 @@ const syncDatabase = async () => {
                 title: metadata.common.title || baseName,
                 artist: metadata.common.artist || "Desconocido",
                 album: metadata.common.album || "Desconocido",
-                genre: genresArray, // Ahora es un array
+                genre: genresArray,
                 duration: metadata.format.duration || 0,
                 imageUrl: imageUrl,
                 lastUpdated: new Date().toISOString()
@@ -255,7 +276,7 @@ app.get('/api/artists', (req, res) => {
     res.json(artists);
 });
 
-// PUT: Sincronizar con MusicBrainz (con soporte para múltiples géneros)
+// PUT: Sincronizar con MusicBrainz
 app.put('/api/songs/sync-metadata', async (req, res) => {
     const { filename } = req.body;
     const originalFilePath = path.join(MUSIC_DIR, filename);
@@ -297,7 +318,9 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
 
         console.log(`✅ Encontrado: ${newArtist} - ${newTitle} (${newGenres.join(", ")})`);
 
-        // Obtener imagen del álbum
+        const baseName = path.parse(filename).name;
+
+        // Obtener imagen del álbum → guardar en /album/
         let albumImageUrl = null;
         const releaseId = recording.releases?.[0]?.id;
         if (releaseId) {
@@ -323,19 +346,21 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
             }
         }
 
+        // Obtener imagen del artista → guardar en /artista/
         let artistImageUrl = await searchArtistImage(newArtist);
         console.log(`🎭 Imagen del artista: ${artistImageUrl ? 'Encontrada' : 'No encontrada'}`);
 
-        const baseName = path.parse(filename).name;
         const tags = {
             title: newTitle,
             artist: newArtist,
-            genre: newGenres.join(" / ") // Guardar como string separado por /
+            genre: newGenres.join(" / ")
         };
 
+        // Descargar portada del álbum en /album/
         if (albumImageUrl) {
             try {
-                const albumImagePath = path.join(MUSIC_DIR, `${baseName}.jpg`);
+                if (!fs.existsSync(ALBUM_ART_DIR)) fs.mkdirSync(ALBUM_ART_DIR, { recursive: true });
+                const albumImagePath = path.join(ALBUM_ART_DIR, `${baseName}.jpg`);
                 await downloadImage(albumImageUrl, albumImagePath);
                 const imageBuffer = fs.readFileSync(albumImagePath);
                 tags.image = {
@@ -344,17 +369,19 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
                     description: 'Album Cover',
                     imageBuffer: imageBuffer
                 };
-                console.log("✅ Portada del álbum descargada");
+                console.log("✅ Portada del álbum descargada en /album/");
             } catch (imgErr) {
                 console.log("⚠️ No se pudo descargar portada del álbum:", imgErr.message);
             }
         }
 
+        // Descargar imagen del artista en /artista/
         if (artistImageUrl) {
             try {
-                const artistImagePath = path.join(MUSIC_DIR, `${baseName}_artist.jpg`);
+                if (!fs.existsSync(ARTIST_IMG_DIR)) fs.mkdirSync(ARTIST_IMG_DIR, { recursive: true });
+                const artistImagePath = path.join(ARTIST_IMG_DIR, `${baseName}.jpg`);
                 await downloadImage(artistImageUrl, artistImagePath);
-                console.log("✅ Foto del artista descargada");
+                console.log("✅ Foto del artista descargada en /artista/");
             } catch (imgErr) {
                 console.log("⚠️ No se pudo descargar foto del artista:", imgErr.message);
             }
@@ -373,7 +400,7 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
                 filename: convertedFilename,
                 title: newTitle,
                 artist: newArtist,
-                genre: newGenres, // Enviar como array al frontend
+                genre: newGenres,
                 hasAlbumImage: !!albumImageUrl,
                 hasArtistImage: !!artistImageUrl
             }
@@ -385,7 +412,7 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
     }
 });
 
-// PUT: Editar metadatos localmente (soporta múltiples géneros)
+// PUT: Editar metadatos localmente
 app.put('/api/songs/local-metadata', async (req, res) => {
     const { filename, title, artist, genre, album } = req.body;
     const filePath = path.join(MUSIC_DIR, filename);
@@ -506,26 +533,55 @@ app.put('/api/songs/update-metadata', async (req, res) => {
     }
 });
 
+// DELETE: Enviar a la papelera en vez de eliminar permanentemente
 app.delete('/api/songs', async (req, res) => {
     const { filename } = req.body;
     const filePath = path.join(MUSIC_DIR, filename);
     if (!filePath.startsWith(MUSIC_DIR)) return res.status(403).json({ error: 'Denegado' });
 
     try {
-        fs.unlinkSync(filePath);
+        // Enviar el archivo de música a la papelera
+        const { trash } = await import('trash');
+        await trash(filePath);
         
         const baseName = path.parse(filename).name;
-        const albumImagePath = path.join(MUSIC_DIR, `${baseName}.jpg`);
-        const artistImagePath = path.join(MUSIC_DIR, `${baseName}_artist.jpg`);
         
-        if (fs.existsSync(albumImagePath)) fs.unlinkSync(albumImagePath);
-        if (fs.existsSync(artistImagePath)) fs.unlinkSync(artistImagePath);
+        // Enviar imágenes asociadas a la papelera (nuevas ubicaciones y legacy)
+        const possibleImages = [
+            path.join(ALBUM_ART_DIR, `${baseName}.jpg`),
+            path.join(ARTIST_IMG_DIR, `${baseName}.jpg`),
+            path.join(MUSIC_DIR, `${baseName}.jpg`),
+            path.join(MUSIC_DIR, `${baseName}_artist.jpg`),
+        ];
+        
+        for (const imgPath of possibleImages) {
+            if (fs.existsSync(imgPath)) {
+                await trash(imgPath);
+            }
+        }
         
         await syncDatabase();
         
-        res.json({ message: 'Eliminado' });
+        res.json({ message: 'Enviado a la papelera' });
     } catch (err) {
-        res.status(500).json({ error: 'No se pudo borrar: ' + err.message });
+        // Fallback: si trash falla, intentar con unlinkSync
+        try {
+            fs.unlinkSync(filePath);
+            const baseName = path.parse(filename).name;
+            const possibleImages = [
+                path.join(ALBUM_ART_DIR, `${baseName}.jpg`),
+                path.join(ARTIST_IMG_DIR, `${baseName}.jpg`),
+                path.join(MUSIC_DIR, `${baseName}.jpg`),
+                path.join(MUSIC_DIR, `${baseName}_artist.jpg`),
+            ];
+            for (const imgPath of possibleImages) {
+                if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
+            }
+            await syncDatabase();
+            res.json({ message: 'Eliminado (fallback)' });
+        } catch (fallbackErr) {
+            res.status(500).json({ error: 'No se pudo borrar: ' + fallbackErr.message });
+        }
     }
 });
 

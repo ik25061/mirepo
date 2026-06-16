@@ -1,440 +1,409 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Trash2, Search, Music, Disc, User, Radio, Clock } from 'lucide-react';
-import './App.css';
+// App.jsx
+import { useCallback, useEffect, useRef, useState } from "react";
+import { BottomNav } from "./components/BottomNav";
+import { MiniPlayer } from "./components/MiniPlayer";
+import { NowPlayingScreen } from "./components/NowPlayingScreen";
+import { MobileHomeView } from "./components/MobileHomeView";
+import { MobileLibraryView } from "./components/MobileLibraryView";
+import { MobileSearchView } from "./components/MobileSearchView";
+import "./App.css";
 
 const API_URL = 'http://172.16.12.4:5000';
 
-function App() {
-  const [songs, setSongs] = useState([]);
-  const [filteredSongs, setFilteredSongs] = useState([]);
-  const [offset, setOffset] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [currentSongIndex, setCurrentSongIndex] = useState(null);
+function parseFilename(filename) {
+  const name = filename.replace(/\.[^.]+$/, "");
+  const dashIdx = name.indexOf(" - ");
+  if (dashIdx !== -1) {
+    return {
+      artist: name.slice(0, dashIdx).trim(),
+      title: name.slice(dashIdx + 3).trim(),
+      album: "Desconocido",
+    };
+  }
+  return { title: name, artist: "Artista desconocido", album: "Desconocido" };
+}
+
+function fileToTrack(file) {
+  const { title, artist, album } = parseFilename(file.name);
+  const url = URL.createObjectURL(file);
+  return {
+    id: `${file.name}-${file.lastModified}`,
+    title,
+    artist,
+    album,
+    duration: 0,
+    url,
+    file,
+  };
+}
+
+function serverToTrack(song) {
+  return {
+    id: song.filename,
+    title: song.title,
+    artist: song.artist,
+    album: song.album || "Desconocido",
+    duration: song.duration || 0,
+    url: `${API_URL}/songs/${encodeURIComponent(song.filename)}`,
+    cover: song.imageUrl ? `${API_URL}${song.imageUrl}` : undefined,
+    genre: song.genre,
+    filename: song.filename,
+  };
+}
+
+export default function App() {
+  const [tracks, setTracks] = useState([]);
+  const [queue, setQueue] = useState([]);
+  const [queueIndex, setQueueIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
-  
-  const [genres, setGenres] = useState([]);
-  const [artists, setArtists] = useState([]);
-  const [activeFilter, setActiveFilter] = useState({ type: 'all', value: null });
-  
-  // Estado para edición manual
-  const [editingSong, setEditingSong] = useState(null);
-  const [editForm, setEditForm] = useState({ title: '', artist: '', genre: '', album: '' });
+  const [likedIds, setLikedIds] = useState(new Set());
+  const [activeView, setActiveView] = useState("home");
+  const [showNowPlaying, setShowNowPlaying] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const audioRef = useRef(new Audio());
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const audioRef = useRef(null);
 
-  const formatTime = (secs) => {
-    if (isNaN(secs) || secs === null || secs === 0) return "0:00";
-    const minutes = Math.floor(secs / 60);
-    const seconds = Math.floor(secs % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
-
-  const fetchSongs = async (reset = false, preserveFilter = false) => {
-    const currentOffset = reset ? 0 : offset;
-    let url = `${API_URL}/api/songs?limit=30&offset=${currentOffset}`;
-    
-    // Si hay filtro activo, agregarlo a la URL
-    if (activeFilter.type !== 'all' && activeFilter.value) {
-      url += `&${activeFilter.type}=${encodeURIComponent(activeFilter.value)}`;
-    }
-    
+  // ===== FETCH SONGS FROM SERVER =====
+  const fetchSongsFromServer = useCallback(async () => {
     try {
-      const response = await fetch(url);
+      setLoading(true);
+      const response = await fetch(`${API_URL}/api/songs?limit=100`);
+      if (!response.ok) throw new Error('Error fetching songs');
       const data = await response.json();
-      
-      let newSongs = [];
-      if (reset) {
-        newSongs = data.songs;
-        setOffset(30);
-      } else {
-        newSongs = [...songs, ...data.songs];
-        setOffset((prev) => prev + 30);
-      }
-      
-      setSongs(newSongs);
-      setFilteredSongs(newSongs);
-      setHasMore(data.hasMore);
-      
-      // Extraer categorías después de obtener canciones
-      if (reset) {
-        await fetchCategories();
-      }
+      const tracksWithUrls = data.songs.map(serverToTrack);
+      setTracks(tracksWithUrls);
     } catch (err) {
-      console.error("Error al obtener canciones:", err);
+      console.error('Error fetching songs:', err);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const [genresRes, artistsRes] = await Promise.all([
-        fetch(`${API_URL}/api/genres`),
-        fetch(`${API_URL}/api/artists`)
-      ]);
-      const genresData = await genresRes.json();
-      const artistsData = await artistsRes.json();
-      setGenres(genresData);
-      setArtists(artistsData.map(name => ({ name, imageUrl: null })));
-    } catch (err) {
-      console.error("Error al obtener categorías:", err);
-    }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchSongs(true);
-  }, [activeFilter]);
+    fetchSongsFromServer();
+  }, [fetchSongsFromServer]);
+
+  // ===== AUDIO SETUP =====
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+    }
+  }, []);
+
+  const currentTrack = queue[queueIndex] ?? null;
 
   useEffect(() => {
     const audio = audioRef.current;
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleLoadedMetadata = () => setDuration(audio.duration || 0);
-    const handleEnded = () => handleNext();
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
-
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
-    };
-  }, [filteredSongs, currentSongIndex]);
+    if (!audio || !currentTrack) return;
+    audio.src = currentTrack.url;
+    audio.load();
+    audio.play().catch(() => {});
+  }, [currentTrack?.id]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (!hasMore || loadingMore) return;
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 160) {
-        setLoadingMore(true);
-        fetchSongs(false, activeFilter.type !== 'all').finally(() => {
-          setLoadingMore(false);
-        });
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) audio.play().catch(() => {});
+    else audio.pause();
+  }, [isPlaying]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onMeta = () => {
+      if (currentTrack) {
+        const dur = audio.duration;
+        setTracks((prev) => prev.map((t) => t.id === currentTrack.id ? { ...t, duration: dur } : t));
+        setQueue((prev) => prev.map((t) => t.id === currentTrack.id ? { ...t, duration: dur } : t));
       }
     };
+    audio.addEventListener("loadedmetadata", onMeta);
+    return () => audio.removeEventListener("loadedmetadata", onMeta);
+  }, [currentTrack]);
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore, loadingMore, activeFilter, songs]);
-
-  const handleFilter = (type, value) => {
-    if (activeFilter.type === type && activeFilter.value === value) {
-      setActiveFilter({ type: 'all', value: null });
-    } else {
-      setActiveFilter({ type, value });
-    }
-    setOffset(0);
-    fetchSongs(true);
-  };
-
-  const playSongAudio = async (index) => {
-    if (index === null || !filteredSongs[index]) return;
-
-    const song = filteredSongs[index];
-    const songUrl = `${API_URL}/songs/${encodeURIComponent(song.filename)}`;
+  useEffect(() => {
     const audio = audioRef.current;
-
-    if (audio.src !== songUrl) {
-      audio.src = songUrl;
-    }
-
-    try {
-      await audio.play();
-      setCurrentSongIndex(index);
+    if (!audio) return;
+    const onEnded = () => {
+      setQueueIndex((i) => (i + 1 < queue.length ? i + 1 : 0));
       setIsPlaying(true);
-    } catch (err) {
-      console.error('Error reproduciendo audio:', err);
-      setIsPlaying(false);
-    }
-  };
+    };
+    audio.addEventListener("ended", onEnded);
+    return () => audio.removeEventListener("ended", onEnded);
+  }, [queue.length]);
 
-  const handleNext = () => {
-    if (filteredSongs.length === 0) return;
-    const nextIndex = (currentSongIndex + 1) % filteredSongs.length;
-    playSongAudio(nextIndex);
-  };
+  // ===== PLAYBACK CONTROLS =====
+  const playTrack = useCallback((track, indexInTracks) => {
+    setQueue(tracks);
+    setQueueIndex(indexInTracks);
+    setIsPlaying(true);
+  }, [tracks]);
 
-  const handlePrev = () => {
-    if (filteredSongs.length === 0) return;
-    const prevIndex = (currentSongIndex - 1 + filteredSongs.length) % filteredSongs.length;
-    playSongAudio(prevIndex);
-  };
+  const handleNext = useCallback(() => {
+    setQueueIndex((i) => (i + 1 < queue.length ? i + 1 : 0));
+    setIsPlaying(true);
+  }, [queue.length]);
 
-  const togglePlayPause = () => {
+  const handlePrev = useCallback(() => {
     const audio = audioRef.current;
-    if (isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
+    if (audio && audio.currentTime > 3) {
+      audio.currentTime = 0;
     } else {
-      audio.play().then(() => setIsPlaying(true)).catch(err => console.error(err));
+      setQueueIndex((i) => (i - 1 >= 0 ? i - 1 : queue.length - 1));
     }
-  };
+    setIsPlaying(true);
+  }, [queue.length]);
 
-  const fetchMusicBrainzData = async (index, e) => {
-    e.stopPropagation();
-    const song = filteredSongs[index];
+  const handlePlayPause = useCallback(() => {
+    if (!currentTrack) return;
+    setIsPlaying((p) => !p);
+  }, [currentTrack]);
 
+  const handleLike = useCallback((id) => {
+    setLikedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  // ===== DELETE SONG (envía a la papelera y salta a la siguiente) =====
+  const handleDeleteSong = useCallback(async (track) => {
+    if (!window.confirm(`¿Enviar "${track.title}" a la papelera?`)) return;
+    try {
+      const response = await fetch(`${API_URL}/api/songs`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: track.filename || track.id })
+      });
+      if (response.ok) {
+        // Obtener índice antes de eliminar para saber si era la canción actual
+        const isCurrentTrack = currentTrack?.id === track.id;
+        
+        // Actualizar la lista de tracks
+        setTracks(prev => {
+          const updated = prev.filter(t => t.id !== track.id);
+          return updated;
+        });
+        
+        if (isCurrentTrack) {
+          // Saltar a la siguiente canción
+          setQueue(queue => {
+            const deletedIdx = queue.findIndex(t => t.id === track.id);
+            if (deletedIdx === -1) return queue;
+            const newQueue = queue.filter(t => t.id !== track.id);
+            if (newQueue.length === 0) {
+              setQueueIndex(-1);
+              setIsPlaying(false);
+              return [];
+            }
+            // Si la canción eliminada estaba antes o en el índice actual, ajustar
+            setQueueIndex(prevIdx => {
+              if (deletedIdx < prevIdx) return prevIdx - 1;
+              if (deletedIdx === prevIdx) return Math.min(prevIdx, newQueue.length - 1);
+              return prevIdx;
+            });
+            setIsPlaying(true);
+            return newQueue;
+          });
+        }
+        
+        await fetchSongsFromServer();
+      } else {
+        const error = await response.json();
+        alert(`❌ Error al eliminar: ${error.error}`);
+      }
+    } catch (err) {
+      console.error('Error deleting song:', err);
+      alert('❌ Error de red al eliminar la canción');
+    }
+  }, [currentTrack, fetchSongsFromServer]);
+
+  // ===== SYNC METADATA (actualiza la vista actual también) =====
+  const handleSyncMetadata = useCallback(async (track) => {
     try {
       const response = await fetch(`${API_URL}/api/songs/sync-metadata`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: song.filename })
+        body: JSON.stringify({ filename: track.filename || track.id })
       });
-
+      
       if (response.ok) {
         const result = await response.json();
-        const { updatedSong } = result;
-
-        alert(`✅ ¡Sincronización Completa!\n\n🎵 Título: ${updatedSong.title}\n🎤 Artista: ${updatedSong.artist}\n📀 Género: ${updatedSong.genre}`);
+        alert(`✅ Sincronización completa!\n\n🎵 Título: ${result.updatedSong.title}\n🎤 Artista: ${result.updatedSong.artist}\n📀 Género: ${result.updatedSong.genre}`);
         
         // Refrescar lista completa
-        await fetchSongs(true);
-        await fetchCategories();
-
-      } else {
-        const errData = await response.json();
-        alert(`❌ Error: ${errData.error}`);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("❌ Error de red al sincronizar metadatos.");
-    }
-  };
-
-  const handleEditClick = (song, e) => {
-    e.stopPropagation();
-    setEditingSong(song);
-    setEditForm({
-      title: song.title,
-      artist: song.artist,
-      genre: song.genre,
-      album: song.album
-    });
-  };
-
-  const handleSaveMetadata = async () => {
-    if (!editingSong) return;
-
-    try {
-      const response = await fetch(`${API_URL}/api/songs/local-metadata`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: editingSong.filename,
-          title: editForm.title,
-          artist: editForm.artist,
-          genre: editForm.genre,
-          album: editForm.album
-        })
-      });
-
-      if (response.ok) {
-        alert('✅ Metadatos actualizados correctamente');
-        await fetchSongs(true);
-        await fetchCategories();
-        setEditingSong(null);
+        await fetchSongsFromServer();
+        
+        // Si la canción sincronizada es la actual, actualizar también la queue
+        if (currentTrack?.id === track.id || currentTrack?.id === track.filename) {
+          const updatedFilename = result.updatedSong.filename;
+          setQueue(prev => prev.map(t => {
+            if (t.id === track.id || t.id === track.filename) {
+              return {
+                ...t,
+                title: result.updatedSong.title,
+                artist: result.updatedSong.artist,
+                genre: result.updatedSong.genre,
+                filename: updatedFilename,
+                id: updatedFilename,
+                cover: result.updatedSong.hasAlbumImage 
+                  ? `${API_URL}/songs/album/${encodeURIComponent(updatedFilename.replace(/\.[^.]+$/, ''))}.jpg`
+                  : result.updatedSong.hasArtistImage
+                    ? `${API_URL}/songs/artista/${encodeURIComponent(updatedFilename.replace(/\.[^.]+$/, ''))}.jpg`
+                    : t.cover,
+              };
+            }
+            return t;
+          }));
+        }
       } else {
         const error = await response.json();
         alert(`❌ Error: ${error.error}`);
       }
     } catch (err) {
-      console.error(err);
-      alert('❌ Error de red al actualizar metadatos');
+      console.error('Error syncing metadata:', err);
+      alert('❌ Error de red al sincronizar');
     }
-  };
+  }, [fetchSongsFromServer, currentTrack]);
 
-  const handleDeleteSong = async (filename, e) => {
-    e.stopPropagation();
-    if (!window.confirm("¿Eliminar archivo permanentemente del disco duro de la PC?")) return;
+  // ===== LOAD FILES (local) =====
+  const handleLoadFiles = useCallback((files) => {
+    const newTracks = Array.from(files)
+      .filter((f) => f.type.startsWith("audio/") || /\.(mp3|flac|wav|ogg|aac|m4a|opus|wma)$/i.test(f.name))
+      .map(fileToTrack);
+    setTracks((prev) => {
+      const ids = new Set(prev.map((t) => t.id));
+      return [...prev, ...newTracks.filter((t) => !ids.has(t.id))];
+    });
+  }, []);
+
+  const handleLoadFolder = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/songs`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename })
-      });
-      if (res.ok) {
-        await fetchSongs(true);
-        await fetchCategories();
+      if (typeof window.showDirectoryPicker !== "undefined") {
+        const dirHandle = await window.showDirectoryPicker();
+        const files = [];
+        async function walk(handle) {
+          for await (const entry of handle.values()) {
+            if (entry.kind === "file") {
+              const file = await entry.getFile();
+              if (/\.(mp3|flac|wav|ogg|aac|m4a|opus|wma)$/i.test(file.name)) files.push(file);
+            } else if (entry.kind === "directory") {
+              await walk(entry);
+            }
+          }
+        }
+        await walk(dirHandle);
+        const newTracks = files.map(fileToTrack);
+        setTracks((prev) => {
+          const ids = new Set(prev.map((t) => t.id));
+          return [...prev, ...newTracks.filter((t) => !ids.has(t.id))];
+        });
+      } else {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "audio/*";
+        input.multiple = true;
+        input.webkitdirectory = true;
+        input.onchange = () => { if (input.files) handleLoadFiles(input.files); };
+        input.click();
       }
-    } catch (err) { console.error(err); }
-  };
+    } catch (_) {}
+  }, [handleLoadFiles]);
+
+  // ===== RENDER =====
+  if (showNowPlaying) {
+    return (
+      <div className="fixed inset-0" style={{ zIndex: 50 }}>
+        <NowPlayingScreen
+          track={currentTrack}
+          isPlaying={isPlaying}
+          onPlayPause={handlePlayPause}
+          onNext={handleNext}
+          onPrev={handlePrev}
+          onLike={handleLike}
+          likedIds={likedIds}
+          audioRef={audioRef}
+          onClose={() => setShowNowPlaying(false)}
+          onSync={handleSyncMetadata}
+          onDelete={handleDeleteSong}
+        />
+      </div>
+    );
+  }
+
+  function renderView() {
+    const commonProps = {
+      tracks,
+      currentTrack,
+      isPlaying,
+      likedIds,
+      onPlay: playTrack,
+      onLike: handleLike,
+      onLoadFiles: handleLoadFiles,
+      onLoadFolder: handleLoadFolder,
+      onDelete: handleDeleteSong,
+      onSync: handleSyncMetadata,
+    };
+
+    if (activeView === "home") {
+      return <MobileHomeView {...commonProps} />;
+    }
+    if (activeView === "search") {
+      return <MobileSearchView tracks={tracks} currentTrack={currentTrack} onPlay={playTrack} />;
+    }
+    if (activeView === "library" || activeView === "nowplaying") {
+      return <MobileLibraryView {...commonProps} />;
+    }
+    return null;
+  }
 
   return (
-    <div className="ytm-container">
-      <header className="ytm-header">
-        <div className="logo"><Radio color="#ff0000" fill="#ff0000" size={24} /> <span>YouTube Music</span><span className="badge">Local</span></div>
-      </header>
-
-      <main className="ytm-content">
-        {/* SECCIÓN 1: GÉNEROS */}
-        <section className="ytm-section">
-          <h2>Géneros</h2>
-          <div className="tiles-grid">
-            {genres.map(genre => (
-              <div 
-                key={genre} 
-                className={`genre-tile ${activeFilter.value === genre ? 'active' : ''}`}
-                onClick={() => handleFilter('genre', genre)}
-              >
-                <Disc size={32} className="tile-icon" />
-                <span>{genre}</span>
-              </div>
-            ))}
+    <div
+      className="flex flex-col"
+      style={{
+        height: "100dvh",
+        maxWidth: 480,
+        margin: "0 auto",
+        background: "#121212",
+        color: "#fff",
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <p style={{ color: "#a7a7a7" }}>Cargando música...</p>
           </div>
-        </section>
+        ) : (
+          renderView()
+        )}
+      </div>
 
-        {/* SECCIÓN 2: ARTISTAS */}
-        <section className="ytm-section">
-          <h2>Artistas</h2>
-          <div className="artists-row">
-            {artists.map(artist => (
-              <div 
-                key={artist.name} 
-                className={`artist-circle-item ${activeFilter.value === artist.name ? 'active' : ''}`}
-                onClick={() => handleFilter('artist', artist.name)}
-              >
-                <div className="avatar-placeholder">
-                  {artist.imageUrl ? (
-                    <img src={artist.imageUrl} alt={artist.name} className="artist-avatar-img" />
-                  ) : (
-                    <User size={28} />
-                  )}
-                </div>
-                <span>{artist.name}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* SECCIÓN 3: TRACKS */}
-        <section className="ytm-section tracks-section">
-          <div className="section-header">
-            <h2>{activeFilter.type !== 'all' ? `Resultados: ${activeFilter.value}` : 'Todas las canciones'}</h2>
-            {activeFilter.type !== 'all' && <button onClick={() => handleFilter('all', null)} className="clear-filter">Ver todas</button>}
-          </div>
-          
-          <div className="ytm-track-list">
-            {filteredSongs.map((song, index) => (
-              <div 
-                key={song.filename + index} 
-                className={`ytm-track-row ${currentSongIndex === index ? 'playing' : ''}`}
-                onClick={() => playSongAudio(index)}
-              >
-                <div className="track-img">
-                  {song.imageUrl ? (
-                    <img src={`${API_URL}${song.imageUrl}`} alt={song.title} className="track-img-thumb" />
-                  ) : (
-                    <div className="track-img-placeholder"><Music size={16} /></div>
-                  )}
-                </div>
-                <div className="track-details">
-                  <span className="track-title">{song.title}</span>
-                  <span className="track-meta">
-                    {song.artist} • {song.genre} 
-                    {song.duration > 0 && ` • ${formatTime(song.duration)}`}
-                  </span>
-                </div>
-                <div className="track-actions">
-                  <button className="ytm-btn" onClick={(e) => fetchMusicBrainzData(index, e)} title="Sincronizar metadatos"><Search size={16} /></button>
-                  <button className="ytm-btn" onClick={(e) => handleEditClick(song, e)} title="Editar metadatos">✏️</button>
-                  <button className="ytm-btn delete" onClick={(e) => handleDeleteSong(song.filename, e)} title="Borrar de la PC"><Trash2 size={16} /></button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {loadingMore && (
-            <div className="ytm-load-more">Cargando más música...</div>
-          )}
-        </section>
-      </main>
-
-      {/* REPRODUCTOR FLOTANTE */}
-      <footer className="ytm-player-bar">
-        <div className="ytm-player-left">
-          {currentSongIndex !== null && filteredSongs[currentSongIndex] ? (
-            <>
-              <div className="player-thumbnail">
-                {filteredSongs[currentSongIndex].imageUrl ? (
-                  <img src={`${API_URL}${filteredSongs[currentSongIndex].imageUrl}`} alt="cover" className="player-cover-img" />
-                ) : (
-                  <Disc size={20} color="#ff0000" />
-                )}
-              </div>
-              <div className="player-track-info">
-                <div className="scroll-title">{filteredSongs[currentSongIndex].title}</div>
-                <span>{filteredSongs[currentSongIndex].artist}</span>
-                <div className="player-progress-wrapper">
-                  <span style={{ fontSize: '11px', color: '#aaa', minWidth: '25px' }}>{formatTime(currentTime)}</span>
-                  <input
-                    className="player-progress"
-                    type="range"
-                    min="0"
-                    max={duration || 0}
-                    value={currentTime}
-                    onChange={(e) => {
-                      const audio = audioRef.current;
-                      audio.currentTime = Number(e.target.value);
-                      setCurrentTime(Number(e.target.value));
-                    }}
-                  />
-                  <span style={{ fontSize: '11px', color: '#aaa', minWidth: '25px' }}>{formatTime(duration)}</span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <span className="no-track">No hay pista seleccionada</span>
-          )}
-        </div>
-
-        <div className="ytm-player-center">
-          <button onClick={handlePrev} className="player-icon-btn"><SkipBack size={22} /></button>
-          <button onClick={togglePlayPause} className="ytm-play-trigger">
-            {isPlaying ? <Pause size={24} fill="black" color="black" /> : <Play size={24} fill="black" color="black" />}
-          </button>
-          <button onClick={handleNext} className="player-icon-btn"><SkipForward size={22} /></button>
-        </div>
-      </footer>
-
-      {/* MODAL DE EDICIÓN */}
-      {editingSong && (
-        <div className="modal-overlay" onClick={() => setEditingSong(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Editar metadatos</h3>
-            <input 
-              type="text" 
-              placeholder="Título" 
-              value={editForm.title}
-              onChange={(e) => setEditForm({...editForm, title: e.target.value})}
-            />
-            <input 
-              type="text" 
-              placeholder="Artista" 
-              value={editForm.artist}
-              onChange={(e) => setEditForm({...editForm, artist: e.target.value})}
-            />
-            <input 
-              type="text" 
-              placeholder="Género" 
-              value={editForm.genre}
-              onChange={(e) => setEditForm({...editForm, genre: e.target.value})}
-            />
-            <input 
-              type="text" 
-              placeholder="Álbum" 
-              value={editForm.album}
-              onChange={(e) => setEditForm({...editForm, album: e.target.value})}
-            />
-            <div className="modal-buttons">
-              <button onClick={handleSaveMetadata}>Guardar</button>
-              <button onClick={() => setEditingSong(null)}>Cancelar</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <div style={{ flexShrink: 0 }}>
+        {currentTrack && (
+          <MiniPlayer
+            track={currentTrack}
+            isPlaying={isPlaying}
+            onPlayPause={handlePlayPause}
+            onNext={handleNext}
+            onOpen={() => setShowNowPlaying(true)}
+          />
+        )}
+        <BottomNav
+          activeView={activeView}
+          onViewChange={(v) => {
+            if (v === "nowplaying" && currentTrack) {
+              setShowNowPlaying(true);
+            } else {
+              setActiveView(v);
+            }
+          }}
+          hasCurrentTrack={!!currentTrack}
+        />
+      </div>
     </div>
   );
 }
-
-export default App;
