@@ -11,6 +11,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const ffmpegStatic = require('ffmpeg-static');
 const https = require('https');
 const axios = require('axios');
+const multer = require('multer');
 
 const app = express();
 app.use(cors());
@@ -21,6 +22,26 @@ const PORT = process.env.PORT || 5000;
 const MUSIC_DIR = process.env.MUSIC_DIR || path.join('C:', 'Users', 'rafael', 'Music');
 const DB_PATH = path.join(__dirname, 'songs_db.json');
 
+// ====== SHAZAM / RAPIDAPI CONFIGURACIÓN ======
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
+const SHAZAM_API_HOST = 'shazam-core.p.rapidapi.com';
+
+// ====== AUDD.IO CONFIGURACIÓN (fallback gratuito) ======
+const AUDD_API_KEY = process.env.AUDD_API_KEY;
+
+// ====== MULTER CONFIGURACIÓN (para uploads de audio) ======
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('audio/') || file.originalname.match(/\.(mp3|wav|ogg|m4a|flac|aac|webm)$/i)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten archivos de audio'));
+    }
+  }
+});
+
 // ====== LAST.FM CONFIGURACIÓN ======
 const LASTFM_API_KEY = process.env.LASTFM_API_KEY;
 const LASTFM_API_URL = 'https://ws.audioscrobbler.com/2.0/';
@@ -30,6 +51,10 @@ const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const SPOTIFY_API_URL = 'https://api.spotify.com/v1';
 const SPOTIFY_ACCOUNTS_URL = 'https://accounts.spotify.com';
+
+// ====== MUSICBRAINZ CONFIGURACIÓN ======
+const MUSICBRAINZ_API_URL = 'https://musicbrainz.org/ws/2';
+const MUSICBRAINZ_USER_AGENT = 'MusicPlayerApp/1.0 (contact@musicplayer.com)';
 
 // Verificar que la API Key de Last.fm esté configurada
 if (!LASTFM_API_KEY) {
@@ -77,7 +102,7 @@ console.log(`🔑 Last.fm API Key: ${LASTFM_API_KEY.substring(0, 8)}...✅`);
 if (SPOTIFY_CLIENT_ID && SPOTIFY_CLIENT_SECRET) {
   console.log(`🔑 Spotify API: ✅ Configurada`);
 } else {
-  console.log(`🔑 Spotify API: ❌ No configurada (Solo se usará Last.fm + iTunes)`);
+  console.log(`🔑 Spotify API: ❌ No configurada (Solo se usará Last.fm + iTunes + MusicBrainz)`);
 }
 
 // ====== CACHE DE TOKEN SPOTIFY ======
@@ -301,6 +326,54 @@ async function getArtistImageFromiTunes(artistName) {
   }
 }
 
+/**
+ * Busca metadatos de una canción en iTunes (título, artista, álbum, año)
+ */
+async function searchiTunesMetadata(artistName, trackTitle) {
+  try {
+    const query = `${encodeURIComponent(artistName)} ${encodeURIComponent(trackTitle)}`;
+    const url = `https://itunes.apple.com/search?term=${query}&entity=song&limit=5`;
+    const response = await axios.get(url, { timeout: 10000 });
+
+    if (response.data && response.data.results && response.data.results.length > 0) {
+      const results = response.data.results;
+      
+      // Buscar el mejor match
+      let bestMatch = results.find(r => 
+        r.trackName && r.artistName &&
+        r.trackName.toLowerCase().includes(trackTitle.toLowerCase()) &&
+        r.artistName.toLowerCase().includes(artistName.toLowerCase())
+      );
+
+      if (!bestMatch) {
+        bestMatch = results[0];
+      }
+
+      if (bestMatch) {
+        const result = {
+          title: bestMatch.trackName || trackTitle,
+          artist: bestMatch.artistName || artistName,
+          album: bestMatch.collectionName || null,
+        };
+        
+        if (bestMatch.releaseDate) {
+          const yearMatch = bestMatch.releaseDate.match(/(\d{4})/);
+          if (yearMatch) {
+            result.year = parseInt(yearMatch[1], 10);
+          }
+        }
+        
+        console.log(`✅ iTunes: "${result.title}" - ${result.artist} (${result.album || 'sin álbum'})`);
+        return result;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error(`⚠️ iTunes Search falló para "${trackTitle}" de "${artistName}":`, error.message);
+    return null;
+  }
+}
+
 // ====== FUNCIONES DE SPOTIFY API ======
 
 /**
@@ -384,10 +457,354 @@ async function getArtistImageFromSpotify(artistName) {
 }
 
 /**
+ * Busca metadatos de una canción en Spotify (título, artista, álbum, año)
+ */
+async function searchSpotifyMetadata(artistName, trackTitle) {
+  const token = await getSpotifyToken();
+  if (!token) return null;
+
+  try {
+    const query = encodeURIComponent(`track:${trackTitle} artist:${artistName}`);
+    const url = `${SPOTIFY_API_URL}/search?q=${query}&type=track&limit=5`;
+    const response = await axios.get(url, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      timeout: 10000
+    });
+
+    if (response.data && response.data.tracks && response.data.tracks.items) {
+      const tracks = response.data.tracks.items;
+      
+      // Buscar el mejor match
+      let bestMatch = tracks.find(t =>
+        t.name && t.artists &&
+        t.name.toLowerCase().includes(trackTitle.toLowerCase()) &&
+        t.artists.some(a => a.name.toLowerCase().includes(artistName.toLowerCase()))
+      );
+
+      if (!bestMatch && tracks.length > 0) {
+        bestMatch = tracks[0];
+      }
+
+      if (bestMatch) {
+        const result = {
+          title: bestMatch.name || trackTitle,
+          artist: bestMatch.artists?.[0]?.name || artistName,
+          album: bestMatch.album?.name || null,
+        };
+        
+        if (bestMatch.album?.release_date) {
+          const yearMatch = bestMatch.album.release_date.match(/(\d{4})/);
+          if (yearMatch) {
+            result.year = parseInt(yearMatch[1], 10);
+          }
+        }
+        
+        console.log(`✅ Spotify: "${result.title}" - ${result.artist} (${result.album || 'sin álbum'})`);
+        return result;
+      }
+    }
+    return null;
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      spotifyAccessToken = null;
+    }
+    console.error(`⚠️ Spotify Search falló para "${trackTitle}":`, error.message);
+    return null;
+  }
+}
+
+// ====== FUNCIONES DE MUSICBRAINZ API ======
+
+// Rate limiting - MusicBrainz requiere 1 request por segundo
+let lastMusicBrainzRequest = 0;
+
+async function musicBrainzRateLimit() {
+  const now = Date.now();
+  const elapsed = now - lastMusicBrainzRequest;
+  if (elapsed < 1500) { // 1.5s para estar seguros
+    await new Promise(resolve => setTimeout(resolve, 1500 - elapsed));
+  }
+  lastMusicBrainzRequest = Date.now();
+}
+
+/**
+ * Busca metadatos de una canción en MusicBrainz
+ * Devuelve: { title, artist, album, year } o null
+ * MusicBrainz no requiere autenticación pero tiene rate limiting (1 req/s)
+ */
+async function searchMusicBrainz(artistName, trackTitle) {
+  try {
+    await musicBrainzRateLimit();
+    
+    // Limpiar términos de búsqueda para mejor matching
+    const cleanArtist = artistName.replace(/[^a-zA-Z0-9áéíóúñüÁÉÍÓÚÑÜ\s]/g, '').trim();
+    const cleanTrack = trackTitle.replace(/[^a-zA-Z0-9áéíóúñüÁÉÍÓÚÑÜ\s]/g, '').trim();
+    
+    if (!cleanTrack) return null;
+    
+    const query = `artist:"${encodeURIComponent(cleanArtist)}" AND recording:"${encodeURIComponent(cleanTrack)}"`;
+    const url = `${MUSICBRAINZ_API_URL}/recording/?query=${query}&fmt=json&limit=5`;
+    
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': MUSICBRAINZ_USER_AGENT,
+        'Accept': 'application/json'
+      },
+      timeout: 10000
+    });
+    
+    if (response.data && response.data.recordings && response.data.recordings.length > 0) {
+      const recording = response.data.recordings[0];
+      const result = {};
+      
+      // Title from recording
+      result.title = recording.title || trackTitle;
+      
+      // Artist from first artist credit
+      if (recording['artist-credit'] && recording['artist-credit'].length > 0) {
+        const credit = recording['artist-credit'][0];
+        result.artist = credit?.artist?.name || credit?.name || artistName;
+        // Manejar " & " joins como "Artist A & Artist B"
+        if (recording['artist-credit'].length > 1) {
+          const fullName = recording['artist-credit']
+            .map(c => c?.artist?.name || c?.name || '')
+            .filter(Boolean)
+            .join(' ');
+          if (fullName) result.artist = fullName;
+        }
+      }
+      
+      // Album and year from first release
+      if (recording.releases && recording.releases.length > 0) {
+        const release = recording.releases[0];
+        result.album = release.title || null;
+        
+        if (release.date) {
+          const yearMatch = release.date.match(/(\d{4})/);
+          if (yearMatch) {
+            result.year = parseInt(yearMatch[1], 10);
+          }
+        }
+        
+        // Si no hay fecha en release, revisar release-events
+        if (!result.year && release['release-events']) {
+          for (const event of release['release-events']) {
+            if (event.date) {
+              const yearMatch = event.date.match(/(\d{4})/);
+              if (yearMatch) {
+                result.year = parseInt(yearMatch[1], 10);
+                break;
+              }
+            }
+          }
+        }
+      }
+      
+      console.log(`✅ MusicBrainz: "${result.title}" - ${result.artist} (${result.album || 'sin álbum'})`);
+      return result;
+    }
+    return null;
+  } catch (error) {
+    if (error.response && error.response.status === 503) {
+      console.error(`⚠️ MusicBrainz: Servicio no disponible (503)`);
+    } else {
+      console.error(`⚠️ MusicBrainz search falló para "${trackTitle}" de "${artistName}":`, error.message);
+    }
+    return null;
+  }
+}
+
+// ====== FUNCIONES DE LAST.FM PARA METADATOS DE CANCIONES ======
+
+/**
+ * Busca metadatos de una canción en Last.fm (título, artista, álbum, año)
+ */
+async function searchLastfmMetadata(artistName, trackTitle) {
+  try {
+    const url = `${LASTFM_API_URL}?method=track.getInfo&artist=${encodeURIComponent(artistName)}&track=${encodeURIComponent(trackTitle)}&api_key=${LASTFM_API_KEY}&format=json`;
+    const response = await axios.get(url, { timeout: 10000 });
+
+    if (response.data && response.data.track) {
+      const track = response.data.track;
+      const result = {
+        title: track.name || trackTitle,
+        artist: track.artist?.name || artistName,
+        album: track.album?.title || null,
+      };
+      
+      // Intentar obtener año de diferentes fuentes
+      if (track.wiki?.published) {
+        const yearMatch = track.wiki.published.match(/(\d{4})/);
+        if (yearMatch) {
+          result.year = parseInt(yearMatch[1], 10);
+        }
+      }
+      
+      if (!result.year && track.album?.releaseDate) {
+        const yearMatch = track.album.releaseDate.match(/(\d{4})/);
+        if (yearMatch) {
+          result.year = parseInt(yearMatch[1], 10);
+        }
+      }
+      
+      console.log(`✅ Last.fm: "${result.title}" - ${result.artist} (${result.album || 'sin álbum'})`);
+      return result;
+    }
+    return null;
+  } catch (error) {
+    console.error(`⚠️ Last.fm search falló para "${trackTitle}" de "${artistName}":`, error.message);
+    return null;
+  }
+}
+
+// ====== FUNCIÓN UNIFICADA DE BÚSQUEDA DE METADATOS ======
+
+/**
+ * Función para buscar metadatos de una canción con cadena de fallbacks:
+ * iTunes → Spotify → MusicBrainz → Last.fm
+ * 
+ * Cada fuente se consulta en orden hasta encontrar datos.
+ * Devuelve: { title, artist, album, year }
+ */
+async function getSongMetadataWithFallback(artistName, trackTitle, albumName) {
+  console.log(`\n🔍 Buscando metadatos para "${trackTitle}" de "${artistName}"...`);
+  
+  // Metadata inicial (lo que ya tenemos)
+  let metadata = {
+    title: trackTitle || null,
+    artist: artistName || null,
+    album: albumName || null,
+    year: null
+  };
+
+  // 1. Intentar iTunes (no requiere autenticación, rápido)
+  console.log(`\n📱 1. Buscando en iTunes...`);
+  const itunes = await searchiTunesMetadata(artistName, trackTitle);
+  if (itunes && itunes.title) {
+    metadata = { ...metadata, ...itunes };
+    console.log(`✅ Metadatos encontrados en iTunes`);
+    return metadata;
+  }
+  console.log(`⚠️ No encontrado en iTunes`);
+
+  // 2. Intentar Spotify
+  console.log(`\n🟢 2. Buscando en Spotify...`);
+  const spotify = await searchSpotifyMetadata(artistName, trackTitle);
+  if (spotify && spotify.title) {
+    metadata = { ...metadata, ...spotify };
+    console.log(`✅ Metadatos encontrados en Spotify`);
+    return metadata;
+  }
+  console.log(`⚠️ No encontrado en Spotify`);
+
+  // 3. Intentar MusicBrainz
+  console.log(`\n🧠 3. Buscando en MusicBrainz...`);
+  const musicbrainz = await searchMusicBrainz(artistName, trackTitle);
+  if (musicbrainz && musicbrainz.title) {
+    metadata = { ...metadata, ...musicbrainz };
+    console.log(`✅ Metadatos encontrados en MusicBrainz`);
+    return metadata;
+  }
+  console.log(`⚠️ No encontrado en MusicBrainz`);
+
+  // 4. Intentar Last.fm (último recurso)
+  console.log(`\n🎵 4. Buscando en Last.fm...`);
+  const lastfm = await searchLastfmMetadata(artistName, trackTitle);
+  if (lastfm && lastfm.title) {
+    metadata = { ...metadata, ...lastfm };
+    console.log(`✅ Metadatos encontrados en Last.fm`);
+    return metadata;
+  }
+
+  console.log(`❌ No se encontraron metadatos en ninguna fuente`);
+  return metadata;
+}
+
+// ====== IMAGEN DE FALLBACK (ESTRELLA) ======
+
+/**
+ * Nombre del archivo de imagen de fallback (estrella)
+ * Debe existir en las carpetas album_art y artist_art
+ */
+const FALLBACK_IMAGE_FILENAME = 'estrella.jpg';
+
+/**
+ * Ruta completa a la imagen de fallback para álbum
+ */
+function getFallbackAlbumImagePath() {
+  return path.join(ALBUM_ART_DIR, FALLBACK_IMAGE_FILENAME);
+}
+
+/**
+ * Ruta completa a la imagen de fallback para artista
+ */
+function getFallbackArtistImagePath() {
+  return path.join(ARTIST_ART_DIR, FALLBACK_IMAGE_FILENAME);
+}
+
+/**
+ * URL pública de la imagen de fallback para álbum
+ */
+function getFallbackAlbumImageUrl() {
+  return `/songs/album_art/${encodeURIComponent(FALLBACK_IMAGE_FILENAME)}`;
+}
+
+/**
+ * URL pública de la imagen de fallback para artista
+ */
+function getFallbackArtistImageUrl() {
+  return `/songs/artist_art/${encodeURIComponent(FALLBACK_IMAGE_FILENAME)}`;
+}
+
+/**
+ * Verifica si un valor de metadata es válido (no es "Desconocido" ni está vacío)
+ */
+function isValidMetadata(value) {
+  return value && value !== "Desconocido" && value !== "" && value !== null;
+}
+
+/**
+ * Obtiene el nombre de archivo normalizado para la imagen de un artista
+ * Ej: "Bad Bunny" → "bad_bunny_artist.jpg"
+ */
+function getArtistImageFilename(artistName) {
+  const sanitized = sanitizeFilename(artistName.toLowerCase());
+  return `${sanitized}_artist.jpg`;
+}
+
+/**
+ * Obtiene la ruta completa a la imagen de un artista por nombre
+ */
+function getArtistImagePath(artistName) {
+  return path.join(ARTIST_ART_DIR, getArtistImageFilename(artistName));
+}
+
+/**
+ * Obtiene la URL pública de la imagen de un artista por nombre
+ */
+function getArtistImageUrl(artistName) {
+  return `/songs/artist_art/${encodeURIComponent(getArtistImageFilename(artistName))}`;
+}
+
+// ====== FUNCIÓN UNIFICADA DE BÚSQUEDA DE IMÁGENES ======
+
+/**
  * Función para obtener imagen de álbum con cadena de fallbacks:
- * iTunes → Spotify → Last.fm
+ * iTunes → Spotify → estrella.jpg
+ * 
+ * Si el álbum o artista son "Desconocido", salta directamente a estrella.jpg
+ * NOTA: Last.fm solo se usa para búsqueda de metadatos, no para imágenes
  */
 async function getAlbumImageWithFallback(albumName, artistName) {
+  // Si los datos no son válidos, no buscar en APIs externas
+  if (!isValidMetadata(albumName) || !isValidMetadata(artistName)) {
+    console.log(`⚠️ Datos de álbum/artista no válidos ("${albumName}" / "${artistName}"), usando imagen de fallback`);
+    if (fs.existsSync(getFallbackAlbumImagePath())) {
+      return { imageUrl: getFallbackAlbumImageUrl(), source: 'fallback' };
+    }
+    return { imageUrl: null, source: null };
+  }
+
   console.log(`🔍 Buscando portada del álbum "${albumName}" de "${artistName}"...`);
 
   // 1. Intentar iTunes (no requiere autenticación, rápido)
@@ -405,30 +822,49 @@ async function getAlbumImageWithFallback(albumName, artistName) {
     return { imageUrl: spotifyImage, source: 'spotify' };
   }
 
-  // 3. Intentar Last.fm (último recurso)
-  console.log(`⚠️ No encontrado en Spotify, probando Last.fm...`);
-  const albumInfo = albumName !== "Desconocido" ? await getAlbumInfo(albumName, artistName) : null;
-  if (albumInfo && albumInfo.imageUrl) {
-    console.log(`✅ Portada encontrada en Last.fm`);
-    return { imageUrl: albumInfo.imageUrl, source: 'lastfm' };
+  // 3. Fallback a estrella.jpg
+  console.log(`❌ No se encontró portada en APIs, usando imagen de fallback...`);
+  if (fs.existsSync(getFallbackAlbumImagePath())) {
+    console.log(`✅ Usando imagen de fallback: ${FALLBACK_IMAGE_FILENAME}`);
+    return { imageUrl: getFallbackAlbumImageUrl(), source: 'fallback' };
   }
 
-  console.log(`❌ No se encontró portada del álbum en ninguna fuente`);
+  console.log(`❌ No se encontró imagen de fallback (${FALLBACK_IMAGE_FILENAME})`);
   return { imageUrl: null, source: null };
 }
 
 /**
  * Función para obtener imagen de artista con cadena de fallbacks:
- * iTunes → Spotify → Last.fm
+ * iTunes → Spotify → estrella.jpg
+ * 
+ * Reutiliza imágenes ya descargadas del artista (por nombre).
+ * Si el artista es "Desconocido", salta directamente a estrella.jpg
+ * NOTA: Last.fm solo se usa para búsqueda de metadatos, no para imágenes
  */
 async function getArtistImageWithFallback(artistName) {
+  // Si los datos no son válidos, no buscar en APIs externas
+  if (!isValidMetadata(artistName)) {
+    console.log(`⚠️ Artista no válido ("${artistName}"), usando imagen de fallback`);
+    if (fs.existsSync(getFallbackArtistImagePath())) {
+      return { imageUrl: getFallbackArtistImageUrl(), source: 'fallback' };
+    }
+    return { imageUrl: null, source: null };
+  }
+
+  // Verificar si ya existe una imagen para este artista (reutilizar)
+  const existingArtistImagePath = getArtistImagePath(artistName);
+  if (fs.existsSync(existingArtistImagePath)) {
+    console.log(`✅ Imagen de artista reutilizada: "${artistName}"`);
+    return { imageUrl: getArtistImageUrl(artistName), source: 'cached' };
+  }
+
   console.log(`🔍 Buscando imagen del artista "${artistName}"...`);
 
   // 1. Intentar iTunes (no requiere autenticación, rápido)
   const itunesImage = await getArtistImageFromiTunes(artistName);
   if (itunesImage) {
     console.log(`✅ Imagen de artista encontrada en iTunes`);
-    return { imageUrl: itunesImage, source: 'itunes' };
+    return { imageUrl: itunesImage, source: 'itunes', cacheAsArtistImage: artistName };
   }
 
   // 2. Intentar Spotify
@@ -436,76 +872,127 @@ async function getArtistImageWithFallback(artistName) {
   const spotifyImage = await getArtistImageFromSpotify(artistName);
   if (spotifyImage) {
     console.log(`✅ Imagen de artista encontrada en Spotify`);
-    return { imageUrl: spotifyImage, source: 'spotify' };
+    return { imageUrl: spotifyImage, source: 'spotify', cacheAsArtistImage: artistName };
   }
 
-  // 3. Intentar Last.fm (último recurso)
-  console.log(`⚠️ No encontrado en Spotify, probando Last.fm...`);
-  const artistInfo = await getArtistInfo(artistName);
-  if (artistInfo && artistInfo.imageUrl) {
-    console.log(`✅ Imagen de artista encontrada en Last.fm`);
-    return { imageUrl: artistInfo.imageUrl, source: 'lastfm' };
+  // 3. Fallback a estrella.jpg
+  console.log(`❌ No se encontró imagen del artista en APIs, usando imagen de fallback...`);
+  if (fs.existsSync(getFallbackArtistImagePath())) {
+    console.log(`✅ Usando imagen de fallback: ${FALLBACK_IMAGE_FILENAME}`);
+    return { imageUrl: getFallbackArtistImageUrl(), source: 'fallback' };
   }
-
-  console.log(`❌ No se encontró imagen del artista en ninguna fuente`);
+  
+  console.log(`❌ No se encontró imagen de fallback (${FALLBACK_IMAGE_FILENAME})`);
   return { imageUrl: null, source: null };
 }
 
 // ====== FUNCIÓN DE DESCARGA DE IMÁGENES ======
 
+/**
+ * Descarga una imagen desde una URL y la guarda en el destino especificado.
+ * Usa axios para manejar redirects automáticamente.
+ * Verifica que el contenido descargado sea una imagen válida.
+ */
 const downloadImageToFolder = async (imageUrl, destFolder, filename) => {
-  return new Promise((resolve, reject) => {
-    if (!imageUrl) {
-      reject(new Error('URL de imagen vacía'));
-      return;
-    }
-    
-    if (!fs.existsSync(destFolder)) {
-      fs.mkdirSync(destFolder, { recursive: true });
-    }
-    
-    const dest = path.join(destFolder, filename);
-    const file = fs.createWriteStream(dest);
-    
-    https.get(imageUrl, { 
-      headers: { 
+  if (!imageUrl) {
+    throw new Error('URL de imagen vacía');
+  }
+  
+  if (!fs.existsSync(destFolder)) {
+    fs.mkdirSync(destFolder, { recursive: true });
+  }
+  
+  const dest = path.join(destFolder, filename);
+  
+  try {
+    // Usar axios con responseType stream para manejar redirects automáticamente
+    const response = await axios({
+      method: 'GET',
+      url: imageUrl,
+      responseType: 'stream',
+      timeout: 20000,
+      headers: {
         'User-Agent': 'MusicPlayer/1.0',
-        'Accept': 'image/*'
-      } 
-    }, (res) => {
-      if (res.statusCode !== 200) {
-        fs.unlink(dest, () => {});
-        reject(new Error(`Error al descargar: ${res.statusCode}`));
-        return;
+        'Accept': 'image/webp,image/jpeg,image/png,image/gif,*/*'
       }
+    });
 
-      let downloadedBytes = 0;
-      const totalBytes = parseInt(res.headers['content-length'], 10);
+    // Verificar que el content-type sea una imagen
+    const contentType = response.headers['content-type'] || '';
+    if (!contentType.startsWith('image/')) {
+      // Consumir el stream para liberar la conexión
+      response.data.resume();
+      throw new Error(`El contenido no es una imagen: ${contentType}`);
+    }
 
-      res.on('data', (chunk) => {
-        downloadedBytes += chunk.length;
-        if (totalBytes && downloadedBytes % (totalBytes / 10) < chunk.length) {
-          const progress = ((downloadedBytes / totalBytes) * 100).toFixed(0);
-          console.log(`📥 Descargando ${path.basename(dest)}: ${progress}%`);
+    const totalBytes = parseInt(response.headers['content-length'], 10) || 0;
+    let downloadedBytes = 0;
+
+    const writer = fs.createWriteStream(dest);
+    
+    response.data.on('data', (chunk) => {
+      downloadedBytes += chunk.length;
+      if (totalBytes > 0 && downloadedBytes % Math.max(1, Math.floor(totalBytes / 10)) < chunk.length) {
+        const progress = Math.min(100, ((downloadedBytes / totalBytes) * 100).toFixed(0));
+        console.log(`📥 Descargando ${filename}: ${progress}%`);
+      }
+    });
+
+    response.data.pipe(writer);
+
+    await new Promise((resolve, reject) => {
+      writer.on('finish', () => {
+        writer.close();
+        
+        // Verificar que el archivo no esté vacío y tenga al menos algunos bytes
+        const stats = fs.statSync(dest);
+        if (stats.size < 100) {
+          fs.unlinkSync(dest);
+          reject(new Error(`Archivo descargado demasiado pequeño (${stats.size} bytes), posiblemente inválido`));
+          return;
         }
-      });
-
-      res.pipe(file);
-      file.on('finish', () => {
-        file.close();
-        console.log(`✅ Imagen guardada: ${path.basename(dest)} (${(downloadedBytes / 1024).toFixed(1)} KB)`);
+        
+        console.log(`✅ Imagen guardada: ${filename} (${(downloadedBytes / 1024).toFixed(1)} KB)`);
         resolve(dest);
       });
-      file.on('error', (err) => {
-        fs.unlink(dest, () => {});
+      writer.on('error', (err) => {
+        if (fs.existsSync(dest)) fs.unlinkSync(dest);
         reject(err);
       });
-    }).on('error', (err) => {
-      fs.unlink(dest, () => {});
-      reject(err);
     });
-  });
+
+    return dest;
+  } catch (error) {
+    // Limpiar archivo si existe
+    if (fs.existsSync(dest)) {
+      try { fs.unlinkSync(dest); } catch (e) { /* ignore */ }
+    }
+    throw new Error(`Error al descargar imagen: ${error.message}`);
+  }
 };
+
+// ====== FUNCIÓN AUXILIAR ======
+
+/**
+ * Limpia un string para usarlo como nombre de archivo
+ * Reemplaza caracteres no válidos en Windows: <>:"/\\|?*
+ */
+function sanitizeFilename(name) {
+  if (!name || typeof name !== 'string') return 'unknown';
+  // Reemplazar caracteres no permitidos en nombres de archivo
+  let clean = name.replace(/[<>:"/\\|?*]/g, '_');
+  // Reemplazar múltiples guiones bajos por uno solo
+  clean = clean.replace(/_+/g, '_');
+  // Eliminar espacios al inicio y final
+  clean = clean.trim();
+  // Si queda vacío, retornar 'unknown'
+  if (!clean || clean.length === 0) return 'unknown';
+  // Limitar longitud máxima (60 chars para mantener nombre legible)
+  if (clean.length > 60) {
+    clean = clean.substring(0, 60).trim();
+  }
+  return clean;
+}
 
 // ====== FUNCIÓN DE CONVERSIÓN A MP3 ======
 
@@ -572,6 +1059,10 @@ const syncDatabase = async () => {
       imageUrl = `/songs/album_art/${encodeURIComponent(baseName)}.jpg`;
     } else if (hasArtistImage) {
       imageUrl = `/songs/artist_art/${encodeURIComponent(baseName)}_artist.jpg`;
+    } else if (fs.existsSync(getFallbackAlbumImagePath())) {
+      imageUrl = getFallbackAlbumImageUrl();
+    } else if (fs.existsSync(getFallbackArtistImagePath())) {
+      imageUrl = getFallbackArtistImageUrl();
     }
 
     try {
@@ -711,7 +1202,7 @@ app.get('/api/artists', (req, res) => {
   res.json(artists);
 });
 
-// PUT: Sincronizar metadatos con Last.fm (con fallback a iTunes y Spotify)
+// PUT: Sincronizar metadatos con iTunes → Spotify → MusicBrainz → Last.fm
 app.put('/api/songs/sync-metadata', async (req, res) => {
   const { filename } = req.body;
   const originalFilePath = path.join(MUSIC_DIR, filename);
@@ -733,54 +1224,109 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
     console.log(`\n🔍 Sincronizando: "${artist} - ${title}"`);
     console.log(`📀 Álbum: "${albumName}"`);
 
-    // 1. Obtener información del artista (Last.fm para nombre y tags)
-    const artistInfo = await getArtistInfo(artist);
-    let newArtist = artist;
+    // ====== 1. BUSCAR METADATOS con cadena de fallback: iTunes → Spotify → MusicBrainz → Last.fm ======
+    const metadata = await getSongMetadataWithFallback(artist, title, albumName);
+    
+    const newTitle = metadata.title || title;
+    const newArtist = metadata.artist || artist;
+    const newAlbum = metadata.album || albumName;
+    const newYear = metadata.year || currentMetadata.common.year || null;
+
+    console.log(`\n📝 Metadatos encontrados:`);
+    console.log(`   Título:  "${newTitle}"${newTitle !== title ? ' (actualizado)' : ''}`);
+    console.log(`   Artista: "${newArtist}"${newArtist !== artist ? ' (actualizado)' : ''}`);
+    console.log(`   Álbum:   "${newAlbum}"${newAlbum !== albumName ? ' (actualizado)' : ''}`);
+    console.log(`   Año:     ${newYear || '❌ No disponible'}`);
+
+    // ====== 2. OBTENER INFORMACIÓN DEL ARTISTA (Last.fm para tags) ======
+    const artistInfo = await getArtistInfo(newArtist);
     let tags = [];
 
     if (artistInfo) {
-      newArtist = artistInfo.name || artist;
       tags = artistInfo.tags || [];
       console.log(`✅ Artista (Last.fm): ${newArtist} (${tags.slice(0, 3).join(', ')})`);
     } else {
-      console.log(`⚠️ Artista no encontrado en Last.fm: ${artist}`);
+      console.log(`⚠️ Artista no encontrado en Last.fm: ${newArtist}`);
     }
 
-    // 2. Si no hay tags, obtener top tags del artista
+    // Si no hay tags, obtener top tags del artista
     if (tags.length === 0) {
       tags = await getArtistTags(newArtist);
       console.log(`🏷️ Tags obtenidos: ${tags.slice(0, 3).join(', ')}`);
     }
 
-    // 3. Determinar géneros
+    // ====== 3. DETERMINAR GÉNEROS ======
     let genres = tags.length > 0 ? tags : ["Urbano"];
     if (genres.length === 0) genres = ["Urbano"];
-
     console.log(`📀 Géneros finales: ${genres.join(", ")}`);
 
-    // 4. Preparar tags ID3 básicos
-    const baseName = path.parse(filename).name;
+    // ====== 4. RENOMBRAR ARCHIVO si el título cambió ======
+    let renamedFilename = convertedFilename;
+    if (newTitle && newTitle !== title) {
+      const ext = path.extname(convertedFilename);
+      const sanitizedTitle = sanitizeFilename(newTitle);
+      const newFilename = `${sanitizedTitle}${ext}`;
+      const newFilePath = path.join(MUSIC_DIR, newFilename);
+      
+      console.log(`\n📝 Renombrando archivo:`);
+      console.log(`   Antes: "${convertedFilename}"`);
+      console.log(`   Ahora: "${newFilename}"`);
+      
+      // Renombrar también las imágenes asociadas si existen
+      const oldBaseName = path.parse(convertedFilename).name;
+      const newBaseName = path.parse(newFilename).name;
+      
+      const oldAlbumImagePath = path.join(ALBUM_ART_DIR, `${oldBaseName}.jpg`);
+      const newAlbumImagePath = path.join(ALBUM_ART_DIR, `${newBaseName}.jpg`);
+      const oldArtistImagePath = path.join(ARTIST_ART_DIR, `${oldBaseName}_artist.jpg`);
+      const newArtistImagePath = path.join(ARTIST_ART_DIR, `${newBaseName}_artist.jpg`);
+      
+      // Renombrar imágenes de álbum
+      if (fs.existsSync(oldAlbumImagePath)) {
+        fs.renameSync(oldAlbumImagePath, newAlbumImagePath);
+        console.log(`   🖼️  Imagen de álbum renombrada`);
+      }
+      
+      // Renombrar imágenes de artista
+      if (fs.existsSync(oldArtistImagePath)) {
+        fs.renameSync(oldArtistImagePath, newArtistImagePath);
+        console.log(`   🖼️  Imagen de artista renombrada`);
+      }
+      
+      // Renombrar el archivo de música
+      fs.renameSync(filePath, newFilePath);
+      console.log(`   ✅ Archivo renombrado correctamente`);
+      
+      renamedFilename = newFilename;
+    }
+
+    // ====== 5. PREPARAR TAGS ID3 ======
+    const currentBaseName = path.parse(renamedFilename).name;
     const tagsID3 = {
-      title: title,
+      title: newTitle,
       artist: newArtist,
       genre: genres.join(" / "),
-      album: albumName
+      album: newAlbum
     };
+    
+    if (newYear) {
+      tagsID3.year = newYear;
+    }
 
-    // 5. Obtener imágenes con cadena de fallback
+    // ====== 6. OBTENER IMÁGENES CON CADENA DE FALLBACK ======
     let hasAlbumImage = false;
     let hasArtistImage = false;
     let albumImageSource = null;
     let artistImageSource = null;
 
-    // 5a. Buscar portada del álbum (Last.fm → iTunes → Spotify)
-    const albumResult = await getAlbumImageWithFallback(albumName, artist);
+    // 6a. Buscar portada del álbum (iTunes → Spotify → Last.fm)
+    const albumResult = await getAlbumImageWithFallback(newAlbum, newArtist);
     let albumImageUrl = albumResult.imageUrl;
     albumImageSource = albumResult.source;
 
     if (albumImageUrl) {
       try {
-        const albumFilename = `${baseName}.jpg`;
+        const albumFilename = `${currentBaseName}.jpg`;
         await downloadImageToFolder(albumImageUrl, ALBUM_ART_DIR, albumFilename);
         hasAlbumImage = true;
         
@@ -801,22 +1347,33 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
       }
     }
 
-    // 5b. Si no hay portada, buscar imagen del artista como fallback (Last.fm → iTunes → Spotify)
+    // 6b. Si no hay portada, buscar imagen del artista como fallback
     if (!hasAlbumImage) {
       console.log(`🔍 No hay portada, buscando imagen del artista como alternativa...`);
-      const artistResult = await getArtistImageWithFallback(newArtist || artist);
+      const artistResult = await getArtistImageWithFallback(newArtist);
       const artistImageUrl = artistResult.imageUrl;
       artistImageSource = artistResult.source;
 
       if (artistImageUrl) {
         try {
-          const artistFilename = `${baseName}_artist.jpg`;
-          await downloadImageToFolder(artistImageUrl, ARTIST_ART_DIR, artistFilename);
+          // Guardar la imagen con el nombre normalizado del artista para reutilizarla
+          const normalizedFilename = getArtistImageFilename(newArtist);
+          await downloadImageToFolder(artistImageUrl, ARTIST_ART_DIR, normalizedFilename);
           hasArtistImage = true;
-          console.log(`✅ Foto del artista guardada desde ${artistImageSource}`);
+          console.log(`✅ Foto del artista guardada como "${normalizedFilename}" desde ${artistImageSource}`);
+          
+          // También guardar una copia con el nombre del archivo actual para compatibilidad
+          const localFilename = `${currentBaseName}_artist.jpg`;
+          if (localFilename !== normalizedFilename) {
+            const normalizedPath = path.join(ARTIST_ART_DIR, normalizedFilename);
+            const localPath = path.join(ARTIST_ART_DIR, localFilename);
+            if (fs.existsSync(normalizedPath)) {
+              fs.copyFileSync(normalizedPath, localPath);
+            }
+          }
           
           // Incrustar imagen del artista en el MP3 como portada
-          const artistImagePath = path.join(ARTIST_ART_DIR, artistFilename);
+          const artistImagePath = path.join(ARTIST_ART_DIR, normalizedFilename);
           if (fs.existsSync(artistImagePath)) {
             const imageBuffer = fs.readFileSync(artistImagePath);
             tagsID3.image = {
@@ -832,37 +1389,23 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
       }
     }
 
-    // 6. Obtener el año del álbum (desde Last.fm)
-    let albumYear = null;
-    if (albumName !== "Desconocido") {
-      const albumInfo = await getAlbumInfo(albumName, artist);
-      if (albumInfo && albumInfo.releaseDate) {
-        const yearMatch = albumInfo.releaseDate.match(/(\d{4})/);
-        if (yearMatch) {
-          albumYear = parseInt(yearMatch[1], 10);
-          tagsID3.year = albumYear;
-          console.log(`📅 Año del álbum: ${albumYear}`);
-        }
-      }
-    }
-
-    // 7. Escribir tags en el archivo
-    const success = NodeID3.write(tagsID3, filePath);
+    // ====== 7. ESCRIBIR TAGS EN EL ARCHIVO ======
+    const success = NodeID3.write(tagsID3, path.join(MUSIC_DIR, renamedFilename));
     if (!success) {
       return res.status(500).json({ error: 'Error al escribir tags.' });
     }
 
-    // 8. Sincronizar base de datos
+    // ====== 8. SINCRONIZAR BASE DE DATOS ======
     await syncDatabase();
 
     res.json({
-      message: 'Sincronización completada con Last.fm',
+      message: '✅ Sincronización completada (iTunes → Spotify → MusicBrainz → Last.fm)',
       updatedSong: {
-        filename: convertedFilename,
-        title: title,
+        filename: renamedFilename,
+        title: newTitle,
         artist: newArtist,
-        album: albumName,
-        year: albumYear,
+        album: newAlbum,
+        year: newYear,
         genre: genres,
         hasAlbumImage: hasAlbumImage,
         hasArtistImage: hasArtistImage
@@ -1027,6 +1570,159 @@ app.delete('/api/songs', async (req, res) => {
   }
 });
 
+// ====== ENDPOINT: RECONOCIMIENTO DE MÚSICA (SHAZAM) ======
+
+/**
+ * POST /api/recognize
+ * Recibe un fragmento de audio y lo envía a Shazam/AudD para identificar la canción.
+ * Luego busca una coincidencia en la biblioteca local.
+ * 
+ * Body: multipart/form-data con campo "audio"
+ * Response: { recognized: { title, artist, album, imageUrl }, matchedTrack: {...} | null }
+ */
+app.post('/api/recognize', upload.single('audio'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No se envió ningún archivo de audio.' });
+  }
+
+  console.log(`\n🎤 Reconocimiento de audio: ${req.file.originalname} (${(req.file.buffer.length / 1024).toFixed(1)} KB, mimetype: ${req.file.mimetype})`);
+
+  let recognized = null;
+
+  // ====== 1. INTENTAR CON SHAZAM (RapidAPI) ======
+  if (RAPIDAPI_KEY) {
+    try {
+      console.log(`\n🔍 Intentando reconocer con Shazam (RapidAPI)...`);
+      const shazamResponse = await axios({
+        method: 'POST',
+        url: `https://${SHAZAM_API_HOST}/v1/records/auto`,
+        headers: {
+          'X-RapidAPI-Key': RAPIDAPI_KEY,
+          'X-RapidAPI-Host': SHAZAM_API_HOST,
+          'Content-Type': 'application/octet-stream',
+        },
+        data: req.file.buffer,
+        timeout: 15000,
+      });
+
+      if (shazamResponse.data && shazamResponse.data.track) {
+        const track = shazamResponse.data.track;
+        const title = track.title || null;
+        const artist = track.subtitle || null;
+        let imageUrl = null;
+        if (track.images && track.images.coverart) {
+          imageUrl = track.images.coverart;
+        } else if (track.sections) {
+          const imageSection = track.sections.find(s => s.type === 'SONG' || s.type === 'SPOTIFY');
+          if (imageSection && imageSection.metaurl) {
+            imageUrl = imageSection.metaurl;
+          }
+        }
+
+        recognized = { title, artist, album: null, imageUrl };
+        console.log(`✅ Shazam reconoció: "${title}" - ${artist}`);
+      } else {
+        console.log(`⚠️ Shazam no reconoció la canción`);
+      }
+    } catch (err) {
+      console.error(`⚠️ Error con Shazam API:`, err.response?.data || err.message);
+    }
+  } else {
+    console.log(`⚠️ RAPIDAPI_KEY no configurada, saltando Shazam`);
+  }
+
+  // ====== 2. INTENTAR CON AUDD.IO (fallback) ======
+  if (!recognized && AUDD_API_KEY) {
+    try {
+      console.log(`\n🔍 Intentando reconocer con AudD.io...`);
+      const FormData = require('form-data');
+      const form = new FormData();
+      form.append('api_token', AUDD_API_KEY);
+      form.append('audio', req.file.buffer, {
+        filename: req.file.originalname || 'audio.webm',
+        contentType: req.file.mimetype || 'audio/webm',
+      });
+      form.append('return', 'spotify,apple_music');
+
+      const auddResponse = await axios({
+        method: 'POST',
+        url: 'https://api.audd.io/',
+        headers: form.getHeaders(),
+        data: form,
+        timeout: 15000,
+      });
+
+      if (auddResponse.data && auddResponse.data.result) {
+        const result = auddResponse.data.result;
+        recognized = {
+          title: result.title || null,
+          artist: result.artist || null,
+          album: result.album || null,
+          imageUrl: result.spotify?.album?.images?.[0]?.url || result.apple_music?.artwork?.url?.replace('{w}', '600').replace('{h}', '600') || null,
+        };
+        console.log(`✅ AudD reconoció: "${recognized.title}" - ${recognized.artist}`);
+      } else {
+        console.log(`⚠️ AudD no reconoció la canción`);
+      }
+    } catch (err) {
+      console.error(`⚠️ Error con AudD API:`, err.response?.data || err.message);
+    }
+  } else if (!recognized) {
+    console.log(`⚠️ AUDD_API_KEY no configurada, saltando AudD`);
+  }
+
+  // ====== 3. BUSCAR COINCIDENCIA EN BIBLIOTECA LOCAL ======
+  let matchedTrack = null;
+  if (recognized && recognized.title) {
+    try {
+      if (!fs.existsSync(DB_PATH)) {
+        await syncDatabase();
+      }
+      const songs = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
+      
+      const normalize = (str) => (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+      const recTitle = normalize(recognized.title);
+      const recArtist = normalize(recognized.artist);
+
+      // Buscar por título y artista
+      matchedTrack = songs.find(s => {
+        const sTitle = normalize(s.title);
+        const sArtist = normalize(s.artist);
+        return (sTitle.includes(recTitle) || recTitle.includes(sTitle)) &&
+               (sArtist.includes(recArtist) || recArtist.includes(sArtist));
+      });
+
+      // Si no hay match exacto, buscar solo por título
+      if (!matchedTrack) {
+        matchedTrack = songs.find(s => {
+          const sTitle = normalize(s.title);
+          return sTitle.includes(recTitle) || recTitle.includes(sTitle);
+        });
+      }
+
+      if (matchedTrack) {
+        console.log(`✅ Coincidencia encontrada en biblioteca: "${matchedTrack.title}" - ${matchedTrack.artist}`);
+      } else {
+        console.log(`ℹ️ No se encontró coincidencia en la biblioteca local`);
+      }
+    } catch (err) {
+      console.error(`Error buscando en biblioteca:`, err.message);
+    }
+  }
+
+  res.json({
+    recognized,
+    matchedTrack: matchedTrack ? {
+      id: matchedTrack.filename,
+      title: matchedTrack.title,
+      artist: matchedTrack.artist,
+      album: matchedTrack.album,
+      filename: matchedTrack.filename,
+      cover: matchedTrack.imageUrl ? `${req.protocol}://${req.get('host')}${matchedTrack.imageUrl}` : undefined,
+    } : null,
+  });
+});
+
 // ====== INICIAR SERVIDOR ======
 
 app.listen(PORT, '0.0.0.0', () => {
@@ -1041,14 +1737,18 @@ app.listen(PORT, '0.0.0.0', () => {
   } else {
     console.log(`🔑 Spotify API: ❌ No configurada`);
   }
+  console.log(`🧠 MusicBrainz API: ✅ Sin autenticación requerida`);
   console.log(`\n📋 Endpoints disponibles:`);
   console.log(`   GET  /api/songs        - Listar canciones`);
   console.log(`   GET  /api/genres       - Listar géneros`);
   console.log(`   GET  /api/albums       - Listar álbumes`);
   console.log(`   GET  /api/artists      - Listar artistas`);
   console.log(`   POST /api/sync-db      - Sincronizar base de datos`);
-  console.log(`   PUT  /api/songs/sync-metadata - Sincronizar con Last.fm + iTunes + Spotify`);
+  console.log(`   PUT  /api/songs/sync-metadata - Sincronizar con iTunes → Spotify → MusicBrainz → Last.fm`);
   console.log(`   PUT  /api/songs/local-metadata - Editar metadatos`);
   console.log(`   DELETE /api/songs      - Eliminar canción`);
+  console.log(`   POST /api/recognize    - Reconocer canción (Shazam/AudD)`);
+  console.log(`🔑 Shazam API: ${RAPIDAPI_KEY ? '✅ Configurada' : '❌ No configurada'}`);
+  console.log(`🔑 AudD.io API: ${AUDD_API_KEY ? '✅ Configurada' : '❌ No configurada'}`);
   console.log(`\n✅ Servidor listo! 🚀`);
 });

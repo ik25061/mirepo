@@ -10,6 +10,12 @@ import "./App.css";
 
 const API_URL = 'http://172.16.12.4:5000';
 
+// ====== CONFIGURACIÓN DE CROSSFADE Y SILENCIO ======
+const CROSSFADE_DURATION = 3; // segundos de crossfade
+const SILENCE_THRESHOLD = 0.01; // umbral para detectar silencio (0-1)
+const SILENCE_CHECK_DURATION = 5; // segundos máximos a analizar al inicio
+const SILENCE_ANALYSE_INTERVAL = 0.1; // intervalo de análisis en segundos
+
 function parseFilename(filename) {
   const name = filename.replace(/\.[^.]+$/, "");
   const dashIdx = name.indexOf(" - ");
@@ -62,9 +68,24 @@ export default function App() {
   const [showNowPlaying, setShowNowPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // ====== AUDIO CON CROSSFADE ======
+  const audioContextRef = useRef(null);
+  const audioARef = useRef(null);
+  const audioBRef = useRef(null);
+  const sourceARef = useRef(null);
+  const sourceBRef = useRef(null);
+  const gainARef = useRef(null);
+  const gainBRef = useRef(null);
+  const analyserRef = useRef(null);
+  const activeSlotRef = useRef("A"); // "A" o "B" - cuál está reproduciendo
+  const crossfadingRef = useRef(false);
+  const silenceSkipDoneRef = useRef(false);
+  const silenceCheckIntervalRef = useRef(null);
+
+  // Referencia legacy para compatibilidad con componentes
   const audioRef = useRef(null);
 
-  // ===== FETCH SONGS FROM SERVER =====
+  // ====== FETCH SONGS FROM SERVER ======
   const fetchSongsFromServer = useCallback(async () => {
     try {
       setLoading(true);
@@ -84,79 +105,365 @@ export default function App() {
     fetchSongsFromServer();
   }, [fetchSongsFromServer]);
 
-  // ===== AUDIO SETUP =====
+  // ====== INICIALIZAR AUDIO CONTEXT CON CROSSFADE ======
   useEffect(() => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
-    }
+    // Crear AudioContext
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    audioContextRef.current = ctx;
+
+    // Crear dos elementos de audio (A y B para crossfade)
+    const audioA = new Audio();
+    audioA.crossOrigin = "anonymous";
+    const audioB = new Audio();
+    audioB.crossOrigin = "anonymous";
+
+    // Crear nodos de Audio
+    const sourceA = ctx.createMediaElementSource(audioA);
+    const gainA = ctx.createGain();
+    sourceA.connect(gainA);
+
+    const sourceB = ctx.createMediaElementSource(audioB);
+    const gainB = ctx.createGain();
+    sourceB.connect(gainB);
+
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+
+    // Conectar ambos gain nodes al analyser y al destino
+    gainA.connect(analyser);
+    gainB.connect(analyser);
+    analyser.connect(ctx.destination);
+
+    // Inicializar: A activo, B silenciado
+    gainA.gain.value = 1;
+    gainB.gain.value = 0;
+
+    audioARef.current = audioA;
+    audioBRef.current = audioB;
+    sourceARef.current = sourceA;
+    sourceBRef.current = sourceB;
+    gainARef.current = gainA;
+    gainBRef.current = gainB;
+    analyserRef.current = analyser;
+
+    // Hacer referencia legacy apunte al audio activo
+    audioRef.current = audioA;
+
+    return () => {
+      audioA.pause();
+      audioB.pause();
+      audioA.src = "";
+      audioB.src = "";
+      ctx.close();
+    };
   }, []);
 
   const currentTrack = queue[queueIndex] ?? null;
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !currentTrack) return;
-    audio.src = currentTrack.url;
-    audio.load();
-    audio.play().catch(() => {});
-  }, [currentTrack?.id]);
+  // ====== FUNCIÓN: Obtener el audio activo ======
+  const getActiveAudio = useCallback(() => {
+    return activeSlotRef.current === "A" ? audioARef.current : audioBRef.current;
+  }, []);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (isPlaying) audio.play().catch(() => {});
-    else audio.pause();
-  }, [isPlaying]);
+  const getActiveGain = useCallback(() => {
+    return activeSlotRef.current === "A" ? gainARef.current : gainBRef.current;
+  }, []);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const onMeta = () => {
-      if (currentTrack) {
-        const dur = audio.duration;
-        setTracks((prev) => prev.map((t) => t.id === currentTrack.id ? { ...t, duration: dur } : t));
-        setQueue((prev) => prev.map((t) => t.id === currentTrack.id ? { ...t, duration: dur } : t));
+  const getInactiveAudio = useCallback(() => {
+    return activeSlotRef.current === "A" ? audioBRef.current : audioARef.current;
+  }, []);
+
+  const getInactiveGain = useCallback(() => {
+    return activeSlotRef.current === "A" ? gainBRef.current : gainARef.current;
+  }, []);
+
+  // ====== FUNCIÓN: Detectar y saltar silencio al inicio ======
+  const detectAndSkipSilence = useCallback((audio) => {
+    if (!audio || !analyserRef.current || !audioContextRef.current) return;
+    if (silenceSkipDoneRef.current) return;
+
+    // Esperar a que empiece a reproducir
+    const checkSilence = () => {
+      if (!audio || audio.paused || audio.ended) {
+        clearInterval(silenceCheckIntervalRef.current);
+        return;
+      }
+
+      // Solo analizar los primeros N segundos
+      if (audio.currentTime > SILENCE_CHECK_DURATION) {
+        clearInterval(silenceCheckIntervalRef.current);
+        silenceSkipDoneRef.current = true;
+        return;
+      }
+
+      // Obtener nivel de audio actual
+      const analyser = analyserRef.current;
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(dataArray);
+
+      // Calcular nivel promedio
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        sum += dataArray[i];
+      }
+      const average = sum / dataArray.length / 255; // Normalizar a 0-1
+
+      // Si hay audio por encima del umbral, no hay silencio
+      if (average > SILENCE_THRESHOLD) {
+        silenceSkipDoneRef.current = true;
+        clearInterval(silenceCheckIntervalRef.current);
+        return;
+      }
+
+      // Si llevamos un tiempo reproduciendo y sigue en silencio, buscar adelante
+      if (audio.currentTime > 1.5) {
+        // Buscar el siguiente punto con audio
+        const skipTo = Math.min(audio.currentTime + 0.5, audio.duration || 0);
+        audio.currentTime = skipTo;
+        silenceSkipDoneRef.current = true;
+        clearInterval(silenceCheckIntervalRef.current);
       }
     };
+
+    silenceCheckIntervalRef.current = setInterval(checkSilence, SILENCE_ANALYSE_INTERVAL * 1000);
+  }, []);
+
+  // ====== FUNCIÓN: Crossfade a siguiente canción ======
+  const crossfadeToTrack = useCallback((nextTrack) => {
+    if (crossfadingRef.current) return;
+    crossfadingRef.current = true;
+
+    const ctx = audioContextRef.current;
+    if (!ctx) {
+      crossfadingRef.current = false;
+      return;
+    }
+
+    // Reanudar AudioContext si está suspendido
+    if (ctx.state === "suspended") {
+      ctx.resume();
+    }
+
+    const currentAudio = getActiveAudio();
+    const currentGain = getActiveGain();
+    const nextAudio = getInactiveAudio();
+    const nextGain = getInactiveGain();
+
+    // Preparar el siguiente audio
+    nextAudio.src = nextTrack.url;
+    nextAudio.load();
+
+    // Configurar el volumen del siguiente en 0
+    nextGain.gain.setValueAtTime(0, ctx.currentTime);
+
+    // Cuando esté listo, hacer crossfade
+    const onCanPlay = () => {
+      nextAudio.removeEventListener("canplay", onCanPlay);
+
+      // Iniciar reproducción del siguiente
+      nextAudio.play().catch(() => {});
+
+      // Fade out del actual
+      currentGain.gain.setValueAtTime(currentGain.gain.value, ctx.currentTime);
+      currentGain.gain.linearRampToValueAtTime(0, ctx.currentTime + CROSSFADE_DURATION);
+
+      // Fade in del siguiente
+      nextGain.gain.setValueAtTime(0, ctx.currentTime);
+      nextGain.gain.linearRampToValueAtTime(1, ctx.currentTime + CROSSFADE_DURATION);
+
+      // Después del crossfade, limpiar
+      setTimeout(() => {
+        currentAudio.pause();
+        currentAudio.src = "";
+        currentGain.gain.value = 1; // Reset para uso futuro
+
+        // Intercambiar slots
+        activeSlotRef.current = activeSlotRef.current === "A" ? "B" : "A";
+        audioRef.current = nextAudio; // Actualizar referencia legacy
+        crossfadingRef.current = false;
+
+        // Detectar silencio en la nueva canción
+        silenceSkipDoneRef.current = false;
+        detectAndSkipSilence(nextAudio);
+      }, CROSSFADE_DURATION * 1000);
+    };
+
+    nextAudio.addEventListener("canplay", onCanPlay, { once: true });
+  }, [getActiveAudio, getActiveGain, getInactiveAudio, getInactiveGain, detectAndSkipSilence]);
+
+  // ====== CARGAR TRACK ACTUAL ======
+  useEffect(() => {
+    const ctx = audioContextRef.current;
+    if (!ctx || !currentTrack) return;
+
+    // Reanudar AudioContext si está suspendido (necesario por políticas de autoplay)
+    if (ctx.state === "suspended") {
+      ctx.resume();
+    }
+
+    // Si ya está crossfadeando, no interferir
+    if (crossfadingRef.current) return;
+
+    const audio = getActiveAudio();
+    const gain = getActiveGain();
+    if (!audio || !gain) return;
+
+    // Resetear silencio
+    silenceSkipDoneRef.current = false;
+
+    audio.src = currentTrack.url;
+    audio.load();
+
+    // Configurar volumen
+    gain.gain.setValueAtTime(1, ctx.currentTime);
+
+    // Detectar silencio cuando empiece a reproducir
+    const onPlay = () => {
+      detectAndSkipSilence(audio);
+      audio.removeEventListener("play", onPlay);
+    };
+    audio.addEventListener("play", onPlay);
+
+    audio.play().catch(() => {});
+  }, [currentTrack?.id, getActiveAudio, getActiveGain, detectAndSkipSilence]);
+
+  // ====== PLAY/PAUSE ======
+  useEffect(() => {
+    const ctx = audioContextRef.current;
+    if (!ctx) return;
+
+    const audio = getActiveAudio();
+    if (!audio) return;
+
+    if (isPlaying) {
+      if (ctx.state === "suspended") ctx.resume();
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying, getActiveAudio]);
+
+  // ====== ACTUALIZAR METADATOS DE DURACIÓN ======
+  useEffect(() => {
+    const audio = getActiveAudio();
+    if (!audio || !currentTrack) return;
+
+    const onMeta = () => {
+      const dur = audio.duration;
+      setTracks((prev) => prev.map((t) => t.id === currentTrack.id ? { ...t, duration: dur } : t));
+      setQueue((prev) => prev.map((t) => t.id === currentTrack.id ? { ...t, duration: dur } : t));
+    };
+
     audio.addEventListener("loadedmetadata", onMeta);
     return () => audio.removeEventListener("loadedmetadata", onMeta);
-  }, [currentTrack]);
+  }, [currentTrack, getActiveAudio]);
 
+  // ====== AUTOMATIC NEXT WITH CROSSFADE ======
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = getActiveAudio();
     if (!audio) return;
+
     const onEnded = () => {
-      setQueueIndex((i) => (i + 1 < queue.length ? i + 1 : 0));
-      setIsPlaying(true);
+      const nextIndex = queueIndex + 1;
+      if (nextIndex < queue.length) {
+        // Hay siguiente canción: hacer crossfade
+        const nextTrack = queue[nextIndex];
+        setQueueIndex(nextIndex);
+        setIsPlaying(true);
+        crossfadeToTrack(nextTrack);
+      } else {
+        // Fin de la cola: volver al inicio
+        setQueueIndex(0);
+        setIsPlaying(true);
+        if (queue.length > 0) {
+          crossfadeToTrack(queue[0]);
+        }
+      }
     };
+
     audio.addEventListener("ended", onEnded);
     return () => audio.removeEventListener("ended", onEnded);
-  }, [queue.length]);
+  }, [queueIndex, queue, getActiveAudio, crossfadeToTrack]);
 
-  // ===== PLAYBACK CONTROLS =====
+  // ====== PLAYBACK CONTROLS ======
   const playTrack = useCallback((track, indexInTracks) => {
+    // Si hay crossfade en curso, cancelarlo
+    if (crossfadingRef.current) {
+      const oldActive = getActiveAudio();
+      if (oldActive) {
+        oldActive.pause();
+        oldActive.src = "";
+      }
+      crossfadingRef.current = false;
+    }
+
+    // Limpiar intervalo de silencio
+    if (silenceCheckIntervalRef.current) {
+      clearInterval(silenceCheckIntervalRef.current);
+    }
+
     setQueue(tracks);
     setQueueIndex(indexInTracks);
     setIsPlaying(true);
-  }, [tracks]);
+
+    // Reproducir directamente en el slot activo
+    const ctx = audioContextRef.current;
+    const audio = getActiveAudio();
+    const gain = getActiveGain();
+    if (ctx && audio && gain) {
+      if (ctx.state === "suspended") ctx.resume();
+      silenceSkipDoneRef.current = false;
+      audio.src = track.url;
+      audio.load();
+      gain.gain.setValueAtTime(1, ctx.currentTime);
+      audio.play().catch(() => {});
+    }
+  }, [tracks, getActiveAudio, getActiveGain]);
 
   const handleNext = useCallback(() => {
-    setQueueIndex((i) => (i + 1 < queue.length ? i + 1 : 0));
-    setIsPlaying(true);
-  }, [queue.length]);
+    const nextIndex = queueIndex + 1;
+    if (nextIndex < queue.length) {
+      const nextTrack = queue[nextIndex];
+      setQueueIndex(nextIndex);
+      setIsPlaying(true);
+      crossfadeToTrack(nextTrack);
+    } else if (queue.length > 0) {
+      setQueueIndex(0);
+      setIsPlaying(true);
+      crossfadeToTrack(queue[0]);
+    }
+  }, [queueIndex, queue, crossfadeToTrack]);
 
   const handlePrev = useCallback(() => {
-    const audio = audioRef.current;
+    const audio = getActiveAudio();
     if (audio && audio.currentTime > 3) {
-      audio.currentTime = 0;
-    } else {
-      setQueueIndex((i) => (i - 1 >= 0 ? i - 1 : queue.length - 1));
+      // Si llevamos más de 3 segundos, reiniciar la canción actual
+      const ctx = audioContextRef.current;
+      if (ctx) {
+        audio.currentTime = 0;
+      }
+    } else if (queueIndex - 1 >= 0) {
+      // Ir a la anterior
+      const prevTrack = queue[queueIndex - 1];
+      setQueueIndex(queueIndex - 1);
+      setIsPlaying(true);
+      crossfadeToTrack(prevTrack);
+    } else if (queue.length > 0) {
+      // Ir a la última
+      const lastTrack = queue[queue.length - 1];
+      setQueueIndex(queue.length - 1);
+      setIsPlaying(true);
+      crossfadeToTrack(lastTrack);
     }
-    setIsPlaying(true);
-  }, [queue.length]);
+  }, [queueIndex, queue, getActiveAudio, crossfadeToTrack]);
 
   const handlePlayPause = useCallback(() => {
     if (!currentTrack) return;
+    const ctx = audioContextRef.current;
+    if (ctx && ctx.state === "suspended") {
+      ctx.resume();
+    }
     setIsPlaying((p) => !p);
   }, [currentTrack]);
 
@@ -169,7 +476,7 @@ export default function App() {
     });
   }, []);
 
-  // ===== DELETE SONG (envía a la papelera y salta a la siguiente) =====
+  // ====== DELETE SONG ======
   const handleDeleteSong = useCallback(async (track) => {
     if (!window.confirm(`¿Enviar "${track.title}" a la papelera?`)) return;
     try {
@@ -179,17 +486,11 @@ export default function App() {
         body: JSON.stringify({ filename: track.filename || track.id })
       });
       if (response.ok) {
-        // Obtener índice antes de eliminar para saber si era la canción actual
         const isCurrentTrack = currentTrack?.id === track.id;
-        
-        // Actualizar la lista de tracks
-        setTracks(prev => {
-          const updated = prev.filter(t => t.id !== track.id);
-          return updated;
-        });
-        
+
+        setTracks(prev => prev.filter(t => t.id !== track.id));
+
         if (isCurrentTrack) {
-          // Saltar a la siguiente canción
           setQueue(queue => {
             const deletedIdx = queue.findIndex(t => t.id === track.id);
             if (deletedIdx === -1) return queue;
@@ -199,7 +500,6 @@ export default function App() {
               setIsPlaying(false);
               return [];
             }
-            // Si la canción eliminada estaba antes o en el índice actual, ajustar
             setQueueIndex(prevIdx => {
               if (deletedIdx < prevIdx) return prevIdx - 1;
               if (deletedIdx === prevIdx) return Math.min(prevIdx, newQueue.length - 1);
@@ -209,7 +509,7 @@ export default function App() {
             return newQueue;
           });
         }
-        
+
         await fetchSongsFromServer();
       } else {
         const error = await response.json();
@@ -221,7 +521,7 @@ export default function App() {
     }
   }, [currentTrack, fetchSongsFromServer]);
 
-  // ===== SYNC METADATA (actualiza la vista actual también) =====
+  // ====== SYNC METADATA ======
   const handleSyncMetadata = useCallback(async (track) => {
     try {
       const response = await fetch(`${API_URL}/api/songs/sync-metadata`, {
@@ -229,17 +529,15 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: track.filename || track.id })
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         const albumText = result.updatedSong.album || "Desconocido";
         const yearText = result.updatedSong.year || "";
         alert(`✅ Sincronización completa!\n\n🎵 Título: ${result.updatedSong.title}\n🎤 Artista: ${result.updatedSong.artist}\n📀 Álbum: ${albumText}${yearText ? `\n📅 Año: ${yearText}` : ''}\n🏷️ Género: ${result.updatedSong.genre}`);
-        
-        // Refrescar lista completa
+
         await fetchSongsFromServer();
-        
-        // Si la canción sincronizada es la actual, actualizar también la queue
+
         if (currentTrack?.id === track.id || currentTrack?.id === track.filename) {
           const updatedFilename = result.updatedSong.filename;
           setQueue(prev => prev.map(t => {
@@ -253,7 +551,7 @@ export default function App() {
                 genre: result.updatedSong.genre,
                 filename: updatedFilename,
                 id: updatedFilename,
-                cover: result.updatedSong.hasAlbumImage 
+                cover: result.updatedSong.hasAlbumImage
                   ? `${API_URL}/songs/album_art/${encodeURIComponent(updatedFilename.replace(/\.[^.]+$/, ''))}.jpg`
                   : result.updatedSong.hasArtistImage
                     ? `${API_URL}/songs/artist_art/${encodeURIComponent(updatedFilename.replace(/\.[^.]+$/, ''))}_artist.jpg`
@@ -273,7 +571,7 @@ export default function App() {
     }
   }, [fetchSongsFromServer, currentTrack]);
 
-  // ===== LOAD FILES (local) =====
+  // ====== LOAD FILES (local) ======
   const handleLoadFiles = useCallback((files) => {
     const newTracks = Array.from(files)
       .filter((f) => f.type.startsWith("audio/") || /\.(mp3|flac|wav|ogg|aac|m4a|opus|wma)$/i.test(f.name))
@@ -317,7 +615,7 @@ export default function App() {
     } catch (_) {}
   }, [handleLoadFiles]);
 
-  // ===== RENDER =====
+  // ====== RENDER ======
   if (showNowPlaying) {
     return (
       <div className="fixed inset-0" style={{ zIndex: 50 }}>
