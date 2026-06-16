@@ -14,7 +14,7 @@
     ],
     "duration": 195.65714285714284,
     "imageUrl": "/songs/album_art/(101)%20Corraleros%20De%20Majagual%20-%20Festival%20De%20Guarare%20%5BDvj%20Flori%202019%5D.jpg",
-    "lastUpdated": "2026-06-16T13:47:41.447Z"
+    "lastUpdated": "2026-06-16T14:10:14.557Z"
   },
   {
     "filename": "075 Chayanne - Dejaria Todo [DJ Jefry Edit - Coro].mp3",
@@ -26,8 +26,8 @@
       "Urbano"
     ],
     "duration": 206.44571428571427,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.448Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.558Z"
   },
   {
     "filename": "075. Coldplay - The Scientist [DVJ FLORI 2021].mp3",
@@ -39,8 +39,8 @@
       "Urbano"
     ],
     "duration": 307.5134693877551,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.449Z"
+    "imageUrl": "/songs/album_art/075.%20Coldplay%20-%20The%20Scientist%20%5BDVJ%20FLORI%202021%5D.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.559Z"
   },
   {
     "filename": "086.  Juanes Ft Nelly Furtado - Fotografia [Dvj Flori].mp3",
@@ -52,35 +52,8 @@
       "Urbano"
     ],
     "duration": 190.58938775510205,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.452Z"
-  },
-  {
-    "filename": "090. 50 Cent - In Da Club - [WolkDeluxeM!x Intro].mp3",
-    "title": "50 Cent \"Da Club\"",
-    "artist": "Lorenzo Laroc",
-    "album": "Under the Covers",
-    "year": 2011,
-    "genre": [
-      "Urbano"
-    ],
-    "duration": 213.57714285714286,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.455Z"
-  },
-  {
-    "filename": "093 - Wisin _ Yandel Ft. Don Omar - Nadie Como Tu (In OriG EdiT) [Geancarlo Dj].mp3",
-    "title": "Nadie Como Tu - Balada",
-    "artist": "Omar Enrique",
-    "album": "Quédate Conmigo",
-    "year": null,
-    "genre": [
-      "venezuela",
-      "venezuelan"
-    ],
-    "duration": 187.61142857142858,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.455Z"
+    "imageUrl": "/songs/artist_art/086.%20%20Juanes%20Ft%20Nelly%20Furtado%20-%20Fotografia%20%5BDvj%20Flori%5D_artist.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.560Z"
   },
   {
     "filename": "094 My Space (Don Omar Ft. W _ Y).IOAcp !ArMando.J´.mp3",
@@ -92,21 +65,8 @@
       "Urbano"
     ],
     "duration": 126.58938775510204,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.456Z"
-  },
-  {
-    "filename": "095. Nicky Jam x Sandu - Me Voy Pal Party [In La Las] [Kev Sandunga Hot Remix].mp3",
-    "title": "Me Voy Pal Party",
-    "artist": "Reggeton Boy's",
-    "album": "Reggeton Boys",
-    "year": null,
-    "genre": [
-      "Urbano"
-    ],
-    "duration": 224.86204081632653,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.457Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.562Z"
   },
   {
     "filename": "097.50. Marco Antonio Solis - Más Que Tu Amigo [ACMusic].mp3",
@@ -118,8 +78,8 @@
       "Urbano"
     ],
     "duration": 209.2669387755102,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.458Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.563Z"
   },
   {
     "filename": "098 - 096 - DON OMAR - En Su Nota (Intro Flow 02) - [Dj Sebastian Aguirre 2023].mp3",
@@ -131,8 +91,8 @@
       "Urbano"
     ],
     "duration": 253.62285714285716,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.459Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.564Z"
   },
   {
     "filename": "100 LA MEDALLITA - CUARTETO CONTINENTAL [DJ JOFERS RETRO].mp3",
@@ -144,8 +104,8 @@
       "Urbano"
     ],
     "duration": 141.63591836734693,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.460Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.565Z"
   },
   {
     "filename": "100. Backstreet Boys - I Want It That Way [Dj Ale M!X Coro].wav",
@@ -157,8 +117,8 @@
       "Desconocido"
     ],
     "duration": 191.85455782312926,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.461Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.566Z"
   },
   {
     "filename": "102 Procura (Chichi Peralta) Coro Acapella [LexMusic].mp3",
@@ -170,8 +130,8 @@
       "Urbano"
     ],
     "duration": 204.72163265306122,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.462Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.567Z"
   },
   {
     "filename": "102 Procura (Chichi Peralta) IO [LexMusic].mp3",
@@ -183,34 +143,8 @@
       "Urbano"
     ],
     "duration": 180.03591836734694,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.462Z"
-  },
-  {
-    "filename": "103.Dua Lipa - Levitating [WolkDeluxeM!x In Acapella].mp3",
-    "title": "Levitating (Dua Lipa)",
-    "artist": "Petits Accents",
-    "album": "L'APE",
-    "year": null,
-    "genre": [
-      "Urbano"
-    ],
-    "duration": 219.27183673469386,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.464Z"
-  },
-  {
-    "filename": "105 - 120 TE ENCONTRE - El Vega [Marck Mendieta_Rework V!P].wav",
-    "title": "105 - 120 TE ENCONTRE - El Vega [Marck Mendieta_Rework V!P]",
-    "artist": "Desconocido",
-    "album": "Desconocido",
-    "year": null,
-    "genre": [
-      "Desconocido"
-    ],
-    "duration": 217.76215419501133,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.464Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.569Z"
   },
   {
     "filename": "105 - Gloria Matancera - Con La Punta Del Pie [DjLuis Mora].wav",
@@ -222,8 +156,8 @@
       "Desconocido"
     ],
     "duration": 180.57142857142858,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.465Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.569Z"
   },
   {
     "filename": "108 - Wilson Manyoma - El Son Del Tren (Inicio) [ RODRIGO CS 2023 ].mp3",
@@ -235,34 +169,34 @@
       "Urbano"
     ],
     "duration": 212.4,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.466Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.570Z"
   },
   {
-    "filename": "131 LOS CORRALEROS DE MAJAGUAL - HACE UN MES (ANIMACION) [THIAGO LOZA 2O22].wav",
+    "filename": "131 LOS CORRALEROS DE MAJAGUAL - HACE UN MES (ANIMACION) [THIAGO LOZA 2O22].mp3",
     "title": "131 LOS CORRALEROS DE MAJAGUAL - HACE UN MES (ANIMACION) [THIAGO LOZA 2O22]",
     "artist": "Desconocido",
     "album": "Desconocido",
     "year": 2022,
     "genre": [
-      "Desconocido"
+      "Urbano"
     ],
-    "duration": 179.54199546485262,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.467Z"
+    "duration": 179.59183673469389,
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.572Z"
   },
   {
     "filename": "132 - 100. CARIÑITO SIN MI - Pastor Lopez _DOWN_ [ AntonyDJ @Vol61 2023  ].mp3",
     "title": "Route, 14. Dec. 2021, Cafe OTO, London",
     "artist": "[ _ _ _ ]",
     "album": "[ _ _ _ ]",
-    "year": null,
+    "year": 2022,
     "genre": [
       "Urbano"
     ],
     "duration": 195.2130612244898,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.468Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.574Z"
   },
   {
     "filename": "15.97 BAILANDO - YAGA & MACKIE FT NINA SKY [DJ JOFERS 2018 INSTRUMENTAL].mp3",
@@ -274,8 +208,8 @@
       "Desconocido"
     ],
     "duration": 94.06693877551021,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.468Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.575Z"
   },
   {
     "filename": "22-135 CUANDO SE ACABA EL AMOR - La Linea [ Dj Parade  ].mp3",
@@ -287,60 +221,8 @@
       "Desconocido"
     ],
     "duration": 158.7461224489796,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.470Z"
-  },
-  {
-    "filename": "24-105 VILMA PALMA E VAMPIROS - La Pachanga VERSION 1- [Dj AnDerSon] 2k17.mp3",
-    "title": "24-105 VILMA PALMA E VAMPIROS - La Pachanga VERSION 1- [Dj AnDerSon] 2k17",
-    "artist": "Desconocido",
-    "album": "Desconocido",
-    "year": null,
-    "genre": [
-      "Desconocido"
-    ],
-    "duration": 141.7404081632653,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.471Z"
-  },
-  {
-    "filename": "4.Teknova - Komodo 2K18 (Bootleg).mp3",
-    "title": "Komodo 2K18 (radio edit)",
-    "artist": "Teknova",
-    "album": "Desconocido",
-    "year": null,
-    "genre": [
-      "Urbano"
-    ],
-    "duration": 240.03918367346938,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.472Z"
-  },
-  {
-    "filename": "9.130 - DOUBLE YOU - Run To Me SALE INSTRUMENTAL BAJAR A YEAH.mp3",
-    "title": "9.130 - DOUBLE YOU - Run To Me SALE INSTRUMENTAL BAJAR A YEAH",
-    "artist": "Desconocido",
-    "album": "Desconocido",
-    "year": null,
-    "genre": [
-      "Desconocido"
-    ],
-    "duration": 144.03918367346938,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.473Z"
-  },
-  {
-    "filename": "90 - HAWAI - MALUMA - HYPE ACAPELLA - VIP REMIXER.wav",
-    "title": "90 - HAWAI - MALUMA - HYPE ACAPELLA - VIP REMIXER",
-    "artist": "Desconocido",
-    "album": "Desconocido",
-    "year": null,
-    "genre": [
-      "Desconocido"
-    ],
-    "duration": 208,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.473Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.576Z"
   },
   {
     "filename": "90 - Otra Como Tu - Eros Ramazzotti ✘ DJ ARMANDO EDIT$  !! (2022).wav",
@@ -352,8 +234,8 @@
       "Desconocido"
     ],
     "duration": 266.3611111111111,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.474Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.577Z"
   },
   {
     "filename": "90 INICIO  Queen - We Will Rock You - Wonderwall (Mashup Short) [Dj AnDerSon] 2k17.mp3",
@@ -365,47 +247,8 @@
       "Desconocido"
     ],
     "duration": 101.38122448979591,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.474Z"
-  },
-  {
-    "filename": "90 _ 120  Cumpleaños Feliz - Tradicional  DjFlower 2k18 .wav",
-    "title": "90 & 120  Cumpleaños Feliz - Tradicional  DjFlower 2k18 ",
-    "artist": "Desconocido",
-    "album": "Desconocido",
-    "year": null,
-    "genre": [
-      "Desconocido"
-    ],
-    "duration": 83.43648526077098,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.475Z"
-  },
-  {
-    "filename": "92 EL AMANTE - NICKY JAM [DJ JOFERS 2017 MASHUP REGGAETON].mp3",
-    "title": "92 EL AMANTE - NICKY JAM [DJ JOFERS 2017 MASHUP REGGAETON]",
-    "artist": "Desconocido",
-    "album": "Desconocido",
-    "year": null,
-    "genre": [
-      "Desconocido"
-    ],
-    "duration": 172.22530612244898,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.476Z"
-  },
-  {
-    "filename": "94. Bad Bunny - Gato de Noche (IO) [ JOTA 2023 ].wav",
-    "title": "94. Bad Bunny - Gato de Noche (IO) [ JOTA 2023 ]",
-    "artist": "Desconocido",
-    "album": "Desconocido",
-    "year": null,
-    "genre": [
-      "Desconocido"
-    ],
-    "duration": 173.62367346938777,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.477Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.578Z"
   },
   {
     "filename": "95 - 110 EL CASORIO - AGUA MARINA [DJ JOFERS 2018 REGGAETON A CUMBIA].mp3",
@@ -417,21 +260,21 @@
       "Desconocido"
     ],
     "duration": 202.8930612244898,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.478Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.579Z"
   },
   {
-    "filename": "95 Juanes - Mala Gente [Andrés T. Edit] Coro.wav",
+    "filename": "95 Juanes - Mala Gente [Andrés T. Edit] Coro.mp3",
     "title": "95 Juanes - Mala Gente [Andrés T. Edit] Coro",
     "artist": "Desconocido",
     "album": "Desconocido",
     "year": null,
     "genre": [
-      "Desconocido"
+      "Urbano"
     ],
-    "duration": 156.6315873015873,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.478Z"
+    "duration": 156.68244897959184,
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.581Z"
   },
   {
     "filename": "Aldo Ranks - Suban Las Manos Remix By Deejay Carlos Nicaragua Charly Producciones.mp3",
@@ -443,8 +286,8 @@
       "Desconocido"
     ],
     "duration": 161.75020408163266,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.479Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.582Z"
   },
   {
     "filename": "Ana Gabriel - Quien como tu  (Bolero Remix 140Bpm) By Leo DJ.mp3",
@@ -456,8 +299,8 @@
       "Dj Pack"
     ],
     "duration": 163.84,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.483Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.586Z"
   },
   {
     "filename": "Aventura - Inmortal - Dj Ricky - Acapella Starter  - 124bpm - JPR.mp3",
@@ -469,8 +312,8 @@
       "Desconocido"
     ],
     "duration": 253.59673469387755,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.484Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.588Z"
   },
   {
     "filename": "Aventura - Jose - Dj Blaxter - Intro _ Outro Break - 125bpm - JPR.mp3",
@@ -482,8 +325,8 @@
       "Desconocido"
     ],
     "duration": 274.67755102040815,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.484Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.589Z"
   },
   {
     "filename": "Aventura-Dj-Time-Intro-Percapella-OutAventura-128Bpm.mp3",
@@ -495,8 +338,8 @@
       "Desconocido"
     ],
     "duration": 184.73795918367347,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.486Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.591Z"
   },
   {
     "filename": "Bla Bla Bla - Gigi D_Agostino - Dj Ronaldo - Techno - Intro & Outro, Final Acap - 133 Bpm.mp3",
@@ -508,8 +351,8 @@
       "Desconocido"
     ],
     "duration": 203.33714285714285,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.486Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.592Z"
   },
   {
     "filename": "BPMLatino - Rica Trompeta (Party Starter Club Tool) (Clean).mp3",
@@ -521,8 +364,8 @@
       "House"
     ],
     "duration": 103.9673469387755,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.488Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.594Z"
   },
   {
     "filename": "Bruno Mars vs Juicy M, Juliann James - 24K Magic (Collini Big Room Hip House Party Starter Dirty)[Dirty].mp3",
@@ -538,8 +381,8 @@
       "EDM"
     ],
     "duration": 206.0538775510204,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.489Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.596Z"
   },
   {
     "filename": "Cada Dia Que Pasa - Guayacan Orquesta - Remix Extended - DJ Eider Parra - 91.mp3",
@@ -551,8 +394,8 @@
       "Desconocido"
     ],
     "duration": 313.73061224489794,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.490Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.597Z"
   },
   {
     "filename": "Calabria-Vs-Dame-lo-que-Necesitas-Morenito-MashUp-Dave-Aguilar-128-BPM.mp3",
@@ -564,8 +407,8 @@
       "Desconocido"
     ],
     "duration": 186.01795918367347,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.491Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.598Z"
   },
   {
     "filename": "Cali Flow Latino - Exitos Cali - Medley - Dj Ronal Sanabria - 0 Bpm.wav",
@@ -577,8 +420,8 @@
       "Desconocido"
     ],
     "duration": 654.0589569160998,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.492Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.600Z"
   },
   {
     "filename": "Celia Cruz - La Vida Es Un Carnaval (Dj Mr D Salsa Intro Break Outro) 104 Bpm.mp3",
@@ -590,8 +433,8 @@
       "Desconocido"
     ],
     "duration": 308.66285714285715,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.494Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.601Z"
   },
   {
     "filename": "CID - La La La (Collini Club House Party Starter Edit)[Clean].mp3",
@@ -604,8 +447,8 @@
       "Electro"
     ],
     "duration": 202.91918367346938,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.495Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.602Z"
   },
   {
     "filename": "Con el Alma Enamorada (En Vivo).mp3",
@@ -621,8 +464,8 @@
       "latin"
     ],
     "duration": 236.094693877551,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.496Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.604Z"
   },
   {
     "filename": "David Guetta - Where Dem Girls (Rich 2022 Surprise Bootleg)[Clean].mp3",
@@ -636,8 +479,8 @@
       "EDM"
     ],
     "duration": 210.52081632653062,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.497Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.605Z"
   },
   {
     "filename": "David Guetta feat. Akon - Sexy Bitch (SNEISEN FLIP) [DropUnited Exclusive].mp3",
@@ -649,8 +492,8 @@
       "Desconocido"
     ],
     "duration": 304.9273469387755,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.498Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.606Z"
   },
   {
     "filename": "David Guetta feat. Sia - Titanium (Single Spark Remix) [Tech House].mp3",
@@ -662,8 +505,8 @@
       "Desconocido"
     ],
     "duration": 259.134693877551,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.499Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.607Z"
   },
   {
     "filename": "Deorro Ft. Oreja De Van Gogh - Rosas Vs. Five More Hours  Rolando Rodriguez Mashup Segway  128 BPM.mp3",
@@ -675,8 +518,8 @@
       "House"
     ],
     "duration": 165.06775510204082,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.500Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.608Z"
   },
   {
     "filename": "DESPEDIDA STEVEN G.mp3",
@@ -688,8 +531,8 @@
       "Desconocido"
     ],
     "duration": 17.03183673469388,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.501Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.610Z"
   },
   {
     "filename": "Dimitri Vegas, Like Mike , Martin Garrix x Alesso - Tremor Cool La La (Dj Allan Festival Mash-Up)[Clean].mp3",
@@ -703,8 +546,8 @@
       "EDM"
     ],
     "duration": 284.1861224489796,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.502Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.611Z"
   },
   {
     "filename": "Dj William Master - Bachateo. mix 2023(bachata).mp3",
@@ -716,8 +559,8 @@
       "Desconocido"
     ],
     "duration": 372.8718367346939,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.503Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.612Z"
   },
   {
     "filename": "Dj William Master - Chucu Chucu mix 2023(Checarnaval).mp3",
@@ -729,8 +572,8 @@
       "Desconocido"
     ],
     "duration": 441.8873469387755,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.503Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.613Z"
   },
   {
     "filename": "Dj William Master - Meren mix 2023(Bailadora).mp3",
@@ -742,8 +585,8 @@
       "Desconocido"
     ],
     "duration": 444.4212244897959,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.504Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.614Z"
   },
   {
     "filename": "Dj William Master - Meren mix urbano 2023.mp3",
@@ -755,8 +598,8 @@
       "Desconocido"
     ],
     "duration": 589.0612244897959,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.505Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.615Z"
   },
   {
     "filename": "Dj William Master - Papayera mix 2023.mp3",
@@ -768,8 +611,8 @@
       "Desconocido"
     ],
     "duration": 486.6612244897959,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.505Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.616Z"
   },
   {
     "filename": "Dj William Master - Populacho mix 2023(monjitas).mp3",
@@ -781,8 +624,8 @@
       "Desconocido"
     ],
     "duration": 538.4881632653061,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.506Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.617Z"
   },
   {
     "filename": "Dj William Master - Regaeton mix sept 2023.mp3",
@@ -794,8 +637,8 @@
       "Desconocido"
     ],
     "duration": 641.3322448979592,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.507Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.618Z"
   },
   {
     "filename": "Dj William master - Salsa mix 2023(Sombrero de Yarey).mp3",
@@ -807,8 +650,8 @@
       "Desconocido"
     ],
     "duration": 724.2448979591836,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.508Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.619Z"
   },
   {
     "filename": "Dj William Master - Slasa mix 2023(Cada dia que pasa(.mp3",
@@ -820,8 +663,8 @@
       "Desconocido"
     ],
     "duration": 553.2734693877551,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.509Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.620Z"
   },
   {
     "filename": "Dj William Master - Valle mix cortavenas(Confundido).mp3",
@@ -833,8 +676,8 @@
       "Desconocido"
     ],
     "duration": 576.6791836734694,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.509Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.621Z"
   },
   {
     "filename": "Don Omar - Ayer la vi (Intro Acapella Dj Force) 94.mp3",
@@ -846,8 +689,8 @@
       "Desconocido"
     ],
     "duration": 243.80081632653062,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.510Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.622Z"
   },
   {
     "filename": "Don Omar - Dale Don Dale - Chick Flix, Ziggy _ Sandersville Remix.mp3",
@@ -859,8 +702,8 @@
       "Desconocido"
     ],
     "duration": 155.63755102040815,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.511Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.624Z"
   },
   {
     "filename": "Dr. Alban - Its My Life (Extended Radio Version) 1992.mp3",
@@ -872,8 +715,8 @@
       "Desconocido"
     ],
     "duration": 338.96489795918365,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.512Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.625Z"
   },
   {
     "filename": "Dulce Carita (Feat. Zion y Lennox) [feat. Zion Y Lennox].mp3",
@@ -889,8 +732,8 @@
       "urban"
     ],
     "duration": 194.8734693877551,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.513Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.626Z"
   },
   {
     "filename": "El Gran Varón.mp3",
@@ -906,8 +749,8 @@
       "electronica"
     ],
     "duration": 236.19918367346938,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.514Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.627Z"
   },
   {
     "filename": "El Perdedor.mp3",
@@ -923,8 +766,8 @@
       "Psychedelic Rock"
     ],
     "duration": 176.58775510204083,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.515Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.629Z"
   },
   {
     "filename": "Escápate Conmigo (feat. Guanabanas).mp3",
@@ -936,8 +779,8 @@
       "Urbano"
     ],
     "duration": 176.22204081632654,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.516Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.630Z"
   },
   {
     "filename": "Este Disco Se Rayo    Oro Solido   DjKevinRomero   Club Rmx   Bpm 171.mp3",
@@ -949,8 +792,8 @@
       "Desconocido"
     ],
     "duration": 266.7885714285714,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.517Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.631Z"
   },
   {
     "filename": "Fonseca - Eres Mi Sueño  - DJ Anthony Sanchez - Percapella Intro  - 115bpm - JPR-pckscalidad.mp3",
@@ -962,8 +805,8 @@
       "Desconocido"
     ],
     "duration": 248.37224489795918,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.518Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.632Z"
   },
   {
     "filename": "Fresto Music, Carlos Baute - Me Hace Daño Verte [DjLuis Mora] LATIN IO - 98.wav",
@@ -975,8 +818,8 @@
       "Desconocido"
     ],
     "duration": 199.4219954648526,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.518Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.633Z"
   },
   {
     "filename": "Fuego  - Vaina Loca  - DJ Anthony Sanchez - Percapella Intro Exclusive - 117bpm - JPR.mp3",
@@ -988,8 +831,8 @@
       "Desconocido"
     ],
     "duration": 190.7983673469388,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.520Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.634Z"
   },
   {
     "filename": "Fulanito - Guallando - Shelco Garcia & Teenwolf Remix.mp3",
@@ -1001,8 +844,8 @@
       "Desconocido"
     ],
     "duration": 240.45714285714286,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.521Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.635Z"
   },
   {
     "filename": "Grupo Niche  - Sin Sentimiento (Live) - Dj Ricky - Intro Acapella Outro - 92bpm - JPR.mp3",
@@ -1014,8 +857,8 @@
       "Desconocido"
     ],
     "duration": 260.91102040816327,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.522Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.637Z"
   },
   {
     "filename": "Grupo Niche - Una Aventura  Intro BreakDown Outro Dave Aguilar  93 BPM.mp3",
@@ -1027,8 +870,8 @@
       "Salsa"
     ],
     "duration": 334.49795918367346,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.523Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.638Z"
   },
   {
     "filename": "Grupo Niche - Una Aventura  Intro Percapella Outro Dave Aguilar  93 BPM.mp3",
@@ -1040,8 +883,8 @@
       "Salsa"
     ],
     "duration": 334.49795918367346,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.525Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.639Z"
   },
   {
     "filename": "Guayacan - Carro De Fuego - DJ Bunny - Intro Acapella Chorus Outro - 90bpm - JPR.mp3",
@@ -1053,8 +896,8 @@
       "Desconocido"
     ],
     "duration": 306.67755102040815,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.526Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.641Z"
   },
   {
     "filename": "James Brown - I Got You  (I Feel Good) (Relanium _ Deen West Remix Extended Version)[Clean].mp3",
@@ -1067,8 +910,8 @@
       "EDM"
     ],
     "duration": 176.9012244897959,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.527Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.643Z"
   },
   {
     "filename": "John Summit - La Danza (Clean).mp3",
@@ -1080,8 +923,8 @@
       "Desconocido"
     ],
     "duration": 275.27836734693875,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.528Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.645Z"
   },
   {
     "filename": "JUEGO DE TIMBALES - ERC 11.wav",
@@ -1093,8 +936,8 @@
       "Desconocido"
     ],
     "duration": 39.18578231292517,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.530Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.646Z"
   },
   {
     "filename": "JUEGO DE TIMBALES - ERC 2.wav",
@@ -1106,8 +949,8 @@
       "Desconocido"
     ],
     "duration": 16.526780045351472,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.531Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.647Z"
   },
   {
     "filename": "JUEGO DE TIMBALES - ERC 9.wav",
@@ -1119,8 +962,8 @@
       "Desconocido"
     ],
     "duration": 8.73278911564626,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.532Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.648Z"
   },
   {
     "filename": "KAROL G & Maldy - GATUBELA (Rey Santana Remix) (Dirty Short Edit).mp3",
@@ -1132,8 +975,8 @@
       "House"
     ],
     "duration": 96.02612244897959,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.538Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.655Z"
   },
   {
     "filename": "Karol G - Provenza -Hype Pull Acapella 115 BPM- Rogger Taboada.mp3",
@@ -1145,8 +988,8 @@
       "Desconocido"
     ],
     "duration": 200.352,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.539Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.656Z"
   },
   {
     "filename": "Karol G Ft. Aldo Ranks - Watati (Extended) By KVN THE PRODUCER.mp3",
@@ -1158,8 +1001,8 @@
       "Desconocido"
     ],
     "duration": 141.84489795918367,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.540Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.657Z"
   },
   {
     "filename": "Karol G x Sean Paul - Mi Ex Tenia Razon X Baby Boy (Sandunga Moombahton).mp3",
@@ -1171,8 +1014,8 @@
       "Desconocido"
     ],
     "duration": 213.62938775510204,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.542Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.659Z"
   },
   {
     "filename": "KISS-- I Was Made For Lovin  1979 Hard Rock  - Extended 130-Bpm.mp3",
@@ -1184,8 +1027,8 @@
       "Desconocido"
     ],
     "duration": 264.3591836734694,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.543Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.661Z"
   },
   {
     "filename": "La Bella Y La Bestia - Romeo Santos - DJ Many Mix - Bachata - Intro Acap Starter Outro BassKick - 128 BPM.mp3",
@@ -1197,8 +1040,8 @@
       "Other"
     ],
     "duration": 236.27755102040817,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.545Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.662Z"
   },
   {
     "filename": "La Burrita - Santo Remedio - Dj Fakir - Guaracha - Remix -  130 Bpmbpm.mp3",
@@ -1210,8 +1053,8 @@
       "Desconocido"
     ],
     "duration": 230.7395918367347,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.546Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.664Z"
   },
   {
     "filename": "La Linea - Si Me Dejas No Vale -Open Show Special 138 BPM- Rogger Taboada.mp3",
@@ -1223,8 +1066,8 @@
       "Desconocido"
     ],
     "duration": 163.488,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.547Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.665Z"
   },
   {
     "filename": "La Tanguita Roja  Oro Solido   DjKevinRomero   Club Rmx   Bpm 170.mp3",
@@ -1236,8 +1079,8 @@
       "Desconocido"
     ],
     "duration": 256.7575510204082,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.548Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.667Z"
   },
   {
     "filename": "Las-Ketchup-Asereje-Tik-Tok-Rmx-Short-Intro-Outro-Clean-115-BPM-Moombahton-Hectico-DJ.mp3",
@@ -1249,8 +1092,8 @@
       "Desconocido"
     ],
     "duration": 125.28,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.549Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.668Z"
   },
   {
     "filename": "La_Sonora_Dinamita-Arbolito_De_Navidad_Onne_Edit_Intro_Acapella_Outro-102BPM.mp3",
@@ -1262,8 +1105,8 @@
       "Desconocido"
     ],
     "duration": 232.67265306122448,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.550Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.669Z"
   },
   {
     "filename": "Los Fantasmas del Caribe - Muchacha Triste - Dj JC   - Intro Outro  - 124bpm - JPR.mp3",
@@ -1275,8 +1118,8 @@
       "Desconocido"
     ],
     "duration": 232.6465306122449,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.551Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.671Z"
   },
   {
     "filename": "Los Melódicos  - Diavolo  - Dj JC   - Intro Outro  - 150bpm - JPR.mp3",
@@ -1288,8 +1131,8 @@
       "Desconocido"
     ],
     "duration": 180.95020408163265,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.552Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.672Z"
   },
   {
     "filename": "Mana - Si No Te Hubieras Ido (Sandunga Guaracha Remix) 125 Bpm.mp3",
@@ -1301,8 +1144,8 @@
       "Desconocido"
     ],
     "duration": 113.29306122448979,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.553Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.673Z"
   },
   {
     "filename": "Manuel-Turizo-La-Bachata-Bachata-Style-DJ-RETO-125-BPM.mp3",
@@ -1314,8 +1157,8 @@
       "Desconocido"
     ],
     "duration": 172.7738775510204,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.554Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.675Z"
   },
   {
     "filename": "Me Matas.mp3",
@@ -1330,8 +1173,25 @@
       "puerto rico"
     ],
     "duration": 157.28326530612244,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.555Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.676Z"
+  },
+  {
+    "filename": "Me Voy Pa'l Party.mp3",
+    "title": "Me Voy Pa'l Party",
+    "artist": "Nicky Jam",
+    "album": "Conspiración 2",
+    "year": 2003,
+    "genre": [
+      "Reggaeton",
+      "latin",
+      "pop",
+      "nicky jam",
+      "oldies"
+    ],
+    "duration": 224.86204081632653,
+    "imageUrl": "/songs/artist_art/Me%20Voy%20Pa'l%20Party_artist.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.677Z"
   },
   {
     "filename": "Me-Duele-La-Cabeza-Hector-Acosta-Dj-Matt-Break-Acapella-Hype-Outro-Fx-123-Bpm.mp3",
@@ -1343,8 +1203,8 @@
       "Desconocido"
     ],
     "duration": 272.2220408163265,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.556Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.679Z"
   },
   {
     "filename": "Mix Champeta 2023-(Arrebatao,Espacio,Brujita)-Dj Mag .mp3",
@@ -1356,8 +1216,8 @@
       "Desconocido"
     ],
     "duration": 272.58775510204083,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.557Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.680Z"
   },
   {
     "filename": "Mix Champeta-(Me Voy,Espeluca,Pegate)-Dj Mag .mp3",
@@ -1369,8 +1229,8 @@
       "Desconocido"
     ],
     "duration": 387.23918367346937,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.558Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.681Z"
   },
   {
     "filename": "Mix Corraleros Del Majagual-(Sabanales,Tingo Tango,Tres Tigres)-Dj Mag .mp3",
@@ -1382,8 +1242,8 @@
       "Desconocido"
     ],
     "duration": 403.43510204081633,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.559Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.682Z"
   },
   {
     "filename": "Mix Hijas De Doña Diana-Dj Mag 2023.mp3",
@@ -1395,8 +1255,8 @@
       "Desconocido"
     ],
     "duration": 455.9673469387755,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.559Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.683Z"
   },
   {
     "filename": "Mix Kvras-(Borrachera,Joyita,Tira Que Jala)-Dj Mag 2023.mp3",
@@ -1408,8 +1268,8 @@
       "Desconocido"
     ],
     "duration": 502.7004081632653,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.560Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.684Z"
   },
   {
     "filename": "Mix Merengue Urbano-(Como Tu No Hay Dos,Despecha,Te Encontre)-Dj Mag .mp3",
@@ -1421,8 +1281,8 @@
       "Desconocido"
     ],
     "duration": 409.80897959183676,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.561Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.685Z"
   },
   {
     "filename": "Mix Merengue-(Magia,Como Llora MI Alma)-Dj Mag .mp3",
@@ -1434,8 +1294,8 @@
       "Desconocido"
     ],
     "duration": 361.7697959183673,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.562Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.686Z"
   },
   {
     "filename": "Mix Reggaeton 2023-(Cual Es Esa,Linea Del Perreo,Chorrito,Castigo)-Dj Mag .mp3",
@@ -1447,8 +1307,8 @@
       "Desconocido"
     ],
     "duration": 393.66530612244895,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.562Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.687Z"
   },
   {
     "filename": "Mix Reggaeton 2023-(LALA,Perro Negro,Quema,Monastery)-Dj Mag.mp3",
@@ -1460,8 +1320,8 @@
       "Desconocido"
     ],
     "duration": 437.3420408163265,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.563Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.688Z"
   },
   {
     "filename": "Mix Rikarena-(Era Mentira,Mirada,Nada Nada)-Dj Mag .mp3",
@@ -1473,8 +1333,8 @@
       "Desconocido"
     ],
     "duration": 466.2857142857143,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.564Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.689Z"
   },
   {
     "filename": "Mix Salsa Brava-(Yoyo,Patuleko,Jala Jala.Las Cajas)-Dj Mag .mp3",
@@ -1486,8 +1346,8 @@
       "Desconocido"
     ],
     "duration": 459.4416326530612,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.565Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.690Z"
   },
   {
     "filename": "Mix Salsa Romantica-(Ganas,Uno Se Cura)-Dj Mag .mp3",
@@ -1499,8 +1359,8 @@
       "Desconocido"
     ],
     "duration": 522.9191836734694,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.566Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.691Z"
   },
   {
     "filename": "Mix Salsa-(Tu Sufriras,Tu Cariñito,OjosChinos-Dj Mag 2023.mp3",
@@ -1512,8 +1372,8 @@
       "Desconocido"
     ],
     "duration": 396.0163265306122,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.567Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.692Z"
   },
   {
     "filename": "Mix Vallenato-(Que Bonita Ni Que Na,Fulano,Me Llevo a la luna)-Dj Mag .mp3",
@@ -1525,8 +1385,8 @@
       "Desconocido"
     ],
     "duration": 413.1526530612245,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.568Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.693Z"
   },
   {
     "filename": "Muchachita Celosa.mp3",
@@ -1538,8 +1398,8 @@
       "Urbano"
     ],
     "duration": 225.2016326530612,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.569Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.694Z"
   },
   {
     "filename": "Musica Ligera - Soda Stereo - DJ Krlitos - Guaracha House Remix - 130BPM.mp3",
@@ -1551,8 +1411,22 @@
       "Desconocido"
     ],
     "duration": 166.4522448979592,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.570Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.695Z"
+  },
+  {
+    "filename": "Nadie Como Tu (Balada).mp3",
+    "title": "Nadie Como Tu (Balada)",
+    "artist": "Omar Enrique",
+    "album": "Quédate Conmigo",
+    "year": 2017,
+    "genre": [
+      "venezuela",
+      "venezuelan"
+    ],
+    "duration": 187.61142857142858,
+    "imageUrl": "/songs/album_art/Nadie%20Como%20Tu%20(Balada).jpg",
+    "lastUpdated": "2026-06-16T14:10:14.696Z"
   },
   {
     "filename": "No Hay Pesos - Los Cantantes - Open Show Acapella - 163 BPM - DJ Nilson Quesada.mp3",
@@ -1564,8 +1438,8 @@
       "Desconocido"
     ],
     "duration": 207.54285714285714,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.571Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.698Z"
   },
   {
     "filename": "Oro Solido - Se Encendio El Beeper DJ Robin Ramos Breakdown In Out 171 Bpm.mp3",
@@ -1577,8 +1451,8 @@
       "Desconocido"
     ],
     "duration": 184.18938775510205,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.571Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.699Z"
   },
   {
     "filename": "P.I.M.P - 50 Cent - DJ Krlitos - House Latino Remix -126BPM.mp3",
@@ -1590,8 +1464,8 @@
       "Desconocido"
     ],
     "duration": 171.44163265306122,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.573Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.700Z"
   },
   {
     "filename": "Pitbull vs Danne _ Lotten - Cafe Con Calabria Leche (DJ Jeff House Mashup)[Clean].mp3",
@@ -1605,8 +1479,8 @@
       "EDM"
     ],
     "duration": 216.81632653061226,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.574Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.701Z"
   },
   {
     "filename": "Pitbull, Mawell & IAmChino - Triple M (Clean).mp3",
@@ -1618,8 +1492,8 @@
       "Latin Pop"
     ],
     "duration": 183.3795918367347,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.575Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.703Z"
   },
   {
     "filename": "Polima WestCoast Ft. Feid & De La Guetto - Me Rehuso x ULTRA SOLO REMIX - Open Show Mashup - 110Bpm - DJ CARLO KOU.m4a",
@@ -1631,8 +1505,8 @@
       "Desconocido"
     ],
     "duration": 411.7594557823129,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.580Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.711Z"
   },
   {
     "filename": "Proyecto Uno  - Esta Pegao  - DJ Anthony Sanchez - Intro Percapella Vers 2 - 131bpm - JPR.mp3",
@@ -1644,8 +1518,8 @@
       "Desconocido"
     ],
     "duration": 273.94612244897957,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.582Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.712Z"
   },
   {
     "filename": "Proyecto Uno - Nu Nu - DJ Fernando Bonilla - Intro Break Outro - 132bpm - JPR.mp3",
@@ -1657,8 +1531,8 @@
       "Merengue House"
     ],
     "duration": 279.1444897959184,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.583Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.714Z"
   },
   {
     "filename": "Ramon Orlando - Amor Para Mi ONNE EDIT Intro Acapella Break 2K22 94 BPM.mp3",
@@ -1670,8 +1544,8 @@
       "Desconocido"
     ],
     "duration": 220.21224489795918,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.584Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.715Z"
   },
   {
     "filename": "Richie Ray & Bobby Cruz - Sonido Bestial - Intro & Outro Short - Pata DJ - 108Bpm.mp3",
@@ -1683,8 +1557,8 @@
       "Desconocido"
     ],
     "duration": 126.768,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.585Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.716Z"
   },
   {
     "filename": "Rihanna - We Found Love (Guztav _ Siëma x Beatz Freq Remix - QH Edit)[Clean].mp3",
@@ -1698,8 +1572,8 @@
       "Afro House"
     ],
     "duration": 109.29632653061225,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.586Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.718Z"
   },
   {
     "filename": "Rnbstylerz X Chimbala  - Esta Si  - Frequency - Mashup Remix - 125bpm - JPR.mp3",
@@ -1711,8 +1585,8 @@
       "Desconocido"
     ],
     "duration": 195.86612244897958,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.588Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.719Z"
   },
   {
     "filename": "Rodolfo Aicardi - El Telefono  ONNE EDIT Stable Intro 2K23  108BPM (1).mp3",
@@ -1724,8 +1598,8 @@
       "Cumbia"
     ],
     "duration": 206.654693877551,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.589Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.721Z"
   },
   {
     "filename": "Roland Clark Pitbull - What The Fuck (DJ Underblasth House Bootleg) 128BPM.mp3",
@@ -1737,8 +1611,8 @@
       "Desconocido"
     ],
     "duration": 271.9085714285714,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.590Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.722Z"
   },
   {
     "filename": "Sandy Y Papo - Mueve Mueve (Dj Fernando Bonilla Intro Percapella Outro) 132 Bpm.mp3",
@@ -1750,8 +1624,8 @@
       "Desconocido"
     ],
     "duration": 290.06367346938777,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.591Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.723Z"
   },
   {
     "filename": "Sandy-Papo-La-Hora-De-Bailar-Dj-Davis-Acapella-Intro-Extended-Outro-133-BPM.mp3",
@@ -1763,8 +1637,8 @@
       "Desconocido"
     ],
     "duration": 223.73877551020408,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.592Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.725Z"
   },
   {
     "filename": "Sexo, Sudor y Calor (feat. Ñejo & Dalmata).mp3",
@@ -1780,8 +1654,8 @@
       "pop"
     ],
     "duration": 180.1926530612245,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.593Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.727Z"
   },
   {
     "filename": "Si Se Enamora De Mi - Polo Montañez - Remix Intro Break - DJ Eider Parra - 100.mp3",
@@ -1793,8 +1667,8 @@
       "Desconocido"
     ],
     "duration": 287.9738775510204,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.594Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.728Z"
   },
   {
     "filename": "silvestre dangond - la cosita   remix dj   dj hardmixx   131 bpm.mp3",
@@ -1806,8 +1680,8 @@
       "Desconocido"
     ],
     "duration": 249.20816326530613,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.595Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.729Z"
   },
   {
     "filename": "Survivor vs Disco Gurls - Eye Of The Tiger (Collini Club House Party Starter Edit)[Clean].mp3",
@@ -1819,8 +1693,8 @@
       "Urbano"
     ],
     "duration": 226.6122448979592,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.596Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.731Z"
   },
   {
     "filename": "Thalia, Jesus Olivera - No Me Enseñaste (DJ Jesus Olivera Guaracha Remix) 130BPM.mp3",
@@ -1832,8 +1706,8 @@
       "Desconocido"
     ],
     "duration": 241.8677551020408,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.597Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.732Z"
   },
   {
     "filename": "Todavia me Amas - Aventura - DJ Fakir - Bachata - Acapella Starter Outro -  130 Bpmbpm.mp3",
@@ -1845,8 +1719,8 @@
       "Desconocido"
     ],
     "duration": 287.92163265306124,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.598Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.733Z"
   },
   {
     "filename": "Tono Rosario  - Kulikitaka (Live)  - Dj Bunny - Intro Outro Basskick - 75bpm - JPR.mp3",
@@ -1858,8 +1732,8 @@
       "Desconocido"
     ],
     "duration": 387.23918367346937,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.599Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.735Z"
   },
   {
     "filename": "Tony Dize ft Don Omar & Ken Y - El Doctorado Remix - Intro Outro - Acapella - Ax Edition - 120Bpm.wav",
@@ -1871,8 +1745,8 @@
       "Desconocido"
     ],
     "duration": 254,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.600Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.736Z"
   },
   {
     "filename": "Trebol Clan - Agarrala, Pegala, Azotala [Halloween Edit] [DJ Gherson Reggaeton] [Starter Halloween] 8A 96.mp3",
@@ -1884,8 +1758,8 @@
       "Desconocido"
     ],
     "duration": 203.8595918367347,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.602Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.738Z"
   },
   {
     "filename": "Un Montón de Estrellas - Gilberto Santa Rosa - Dj Ronaldo - Salsa - Intro, Acap & Outro - 93 Bpm.mp3",
@@ -1897,8 +1771,8 @@
       "Desconocido"
     ],
     "duration": 296.75102040816324,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.604Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.739Z"
   },
   {
     "filename": "Victor Manuelle Ft Tego C - Che Che Cole - Extended Pro - Iván Salas DJ - 100 BPM.mp3",
@@ -1910,8 +1784,8 @@
       "Desconocido"
     ],
     "duration": 271.09877551020406,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.605Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.740Z"
   },
   {
     "filename": "Volverte a Ver.mp3",
@@ -1927,8 +1801,8 @@
       "latino"
     ],
     "duration": 221.04816326530613,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.606Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.742Z"
   },
   {
     "filename": "Willy William - Trompeta (Neo Redrum)[Clean].mp3",
@@ -1942,8 +1816,8 @@
       "Spanish"
     ],
     "duration": 180.5061224489796,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.607Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.743Z"
   },
   {
     "filename": "Wisin y Yandel - Abusadora Dj Time Transition 100 tO 115 Bpm.mp3",
@@ -1955,8 +1829,8 @@
       "Desconocido"
     ],
     "duration": 226.8473469387755,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.607Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.745Z"
   },
   {
     "filename": "Yandar & Yostin, Andy Rivera - Poblado x Te Pintaron Pajaritos (Intensa Hype 96Bpm).mp3",
@@ -1968,8 +1842,8 @@
       "Desconocido"
     ],
     "duration": 229.82530612244898,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.609Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.746Z"
   },
   {
     "filename": "Yo No So Tu Marido.mp3",
@@ -1985,8 +1859,8 @@
       "oldies"
     ],
     "duration": 127.71265306122449,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.610Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.747Z"
   },
   {
     "filename": "[125] - HADDAWAY - What is love [Dj Elmer@Mix] 22'' IN Acapella.wav",
@@ -1998,8 +1872,8 @@
       "Desconocido"
     ],
     "duration": 193.22761904761904,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.611Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.749Z"
   },
   {
     "filename": "[MSH] [095] El Telefono VS HEOH _SHOOT_ [Lunna DJ] [1T].wav",
@@ -2011,8 +1885,8 @@
       "Desconocido"
     ],
     "duration": 141.4736875,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.613Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.751Z"
   },
   {
     "filename": "¡ ¡ ¡ 慌theディスコ ! ! !.mp3",
@@ -2028,7 +1902,7 @@
       "Avant-Garde"
     ],
     "duration": 184.79020408163265,
-    "imageUrl": null,
-    "lastUpdated": "2026-06-16T13:47:41.614Z"
+    "imageUrl": "/songs/album_art/estrella.jpg",
+    "lastUpdated": "2026-06-16T14:10:14.752Z"
   }
 ]

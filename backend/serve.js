@@ -661,12 +661,14 @@ async function searchLastfmMetadata(artistName, trackTitle) {
 
 /**
  * Función para buscar metadatos de una canción con cadena de fallbacks:
- * iTunes → Spotify → MusicBrainz → Last.fm
+ * Shazam → AudD.io → iTunes → Spotify → MusicBrainz → Last.fm
  * 
+ * Si se proporciona audioBuffer, primero envía el audio a Shazam y AudD.io.
+ * Luego busca por nombre en iTunes, Spotify, MusicBrainz y Last.fm.
  * Cada fuente se consulta en orden hasta encontrar datos.
  * Devuelve: { title, artist, album, year }
  */
-async function getSongMetadataWithFallback(artistName, trackTitle, albumName) {
+async function getSongMetadataWithFallback(artistName, trackTitle, albumName, audioBuffer, originalFilename) {
   console.log(`\n🔍 Buscando metadatos para "${trackTitle}" de "${artistName}"...`);
   
   // Metadata inicial (lo que ya tenemos)
@@ -677,8 +679,104 @@ async function getSongMetadataWithFallback(artistName, trackTitle, albumName) {
     year: null
   };
 
-  // 1. Intentar iTunes (no requiere autenticación, rápido)
-  console.log(`\n📱 1. Buscando en iTunes...`);
+  // ====== 1. INTENTAR CON SHAZAM (envío de audio) ======
+  if (audioBuffer && RAPIDAPI_KEY) {
+    console.log(`\n🎵 1. ✅ Enviando audio a Shazam (RapidAPI) para identificar la canción...`);
+    console.log(`   📤 Tamaño del audio: ${(audioBuffer.length / 1024).toFixed(1)} KB`);
+    try {
+      const shazamResponse = await axios({
+        method: 'POST',
+        url: `https://${SHAZAM_API_HOST}/v1/records/auto`,
+        headers: {
+          'X-RapidAPI-Key': RAPIDAPI_KEY,
+          'X-RapidAPI-Host': SHAZAM_API_HOST,
+          'Content-Type': 'application/octet-stream',
+        },
+        data: audioBuffer,
+        timeout: 15000,
+      });
+
+      if (shazamResponse.data && shazamResponse.data.track) {
+        const track = shazamResponse.data.track;
+        const shazamResult = {
+          title: track.title || trackTitle,
+          artist: track.subtitle || artistName,
+          album: null,
+          year: null
+        };
+
+        // Intentar obtener año de la sección de release
+        if (track.sections) {
+          const releaseSection = track.sections.find(s => s.type === 'RELEASE');
+          if (releaseSection && releaseSection.metapages) {
+            const yearMeta = releaseSection.metapages.find(m => m.title === 'Released');
+            if (yearMeta && yearMeta.text) {
+              const yearMatch = yearMeta.text.match(/(\d{4})/);
+              if (yearMatch) shazamResult.year = parseInt(yearMatch[1], 10);
+            }
+          }
+        }
+
+        console.log(`   ✅ Shazam reconoció: "${shazamResult.title}" - ${shazamResult.artist}`);
+        return { ...metadata, ...shazamResult };
+      } else {
+        console.log(`   ⚠️ Shazam no reconoció la canción`);
+      }
+    } catch (err) {
+      console.error(`   ⚠️ Error con Shazam API:`, err.response?.data?.message || err.message);
+    }
+  } else if (!RAPIDAPI_KEY) {
+    console.log(`\n🎵 1. ⚠️ RAPIDAPI_KEY no configurada, saltando Shazam`);
+  } else if (!audioBuffer) {
+    console.log(`\n🎵 1. ⚠️ No hay buffer de audio disponible, saltando Shazam`);
+  }
+
+  // ====== 2. INTENTAR CON AUDD.IO (envío de audio) ======
+  if (audioBuffer && AUDD_API_KEY) {
+    console.log(`\n🎶 2. ✅ Enviando audio a AudD.io para identificar la canción...`);
+    console.log(`   📤 Tamaño del audio: ${(audioBuffer.length / 1024).toFixed(1)} KB`);
+    try {
+      const FormData = require('form-data');
+      const form = new FormData();
+      form.append('api_token', AUDD_API_KEY);
+      form.append('audio', audioBuffer, {
+        filename: originalFilename || 'audio.mp3',
+        contentType: 'audio/mpeg',
+      });
+      form.append('return', 'spotify,apple_music');
+
+      const auddResponse = await axios({
+        method: 'POST',
+        url: 'https://api.audd.io/',
+        headers: form.getHeaders(),
+        data: form,
+        timeout: 15000,
+      });
+
+      if (auddResponse.data && auddResponse.data.result) {
+        const result = auddResponse.data.result;
+        const auddResult = {
+          title: result.title || trackTitle,
+          artist: result.artist || artistName,
+          album: result.album || null,
+          year: result.release_date ? parseInt(result.release_date.match(/(\d{4})/)?.[1], 10) || null : null
+        };
+        console.log(`   ✅ AudD reconoció: "${auddResult.title}" - ${auddResult.artist}`);
+        return { ...metadata, ...auddResult };
+      } else {
+        console.log(`   ⚠️ AudD no reconoció la canción`);
+      }
+    } catch (err) {
+      console.error(`   ⚠️ Error con AudD API:`, err.response?.data?.message || err.message);
+    }
+  } else if (!AUDD_API_KEY) {
+    console.log(`\n🎶 2. ⚠️ AUDD_API_KEY no configurada, saltando AudD.io`);
+  } else if (!audioBuffer) {
+    console.log(`\n🎶 2. ⚠️ No hay buffer de audio disponible, saltando AudD.io`);
+  }
+
+  // ====== 3. INTENTAR CON ITUNES (búsqueda por nombre) ======
+  console.log(`\n📱 3. Buscando en iTunes...`);
   const itunes = await searchiTunesMetadata(artistName, trackTitle);
   if (itunes && itunes.title) {
     metadata = { ...metadata, ...itunes };
@@ -687,8 +785,8 @@ async function getSongMetadataWithFallback(artistName, trackTitle, albumName) {
   }
   console.log(`⚠️ No encontrado en iTunes`);
 
-  // 2. Intentar Spotify
-  console.log(`\n🟢 2. Buscando en Spotify...`);
+  // ====== 4. INTENTAR CON SPOTIFY (búsqueda por nombre) ======
+  console.log(`\n🟢 4. Buscando en Spotify...`);
   const spotify = await searchSpotifyMetadata(artistName, trackTitle);
   if (spotify && spotify.title) {
     metadata = { ...metadata, ...spotify };
@@ -697,8 +795,8 @@ async function getSongMetadataWithFallback(artistName, trackTitle, albumName) {
   }
   console.log(`⚠️ No encontrado en Spotify`);
 
-  // 3. Intentar MusicBrainz
-  console.log(`\n🧠 3. Buscando en MusicBrainz...`);
+  // ====== 5. INTENTAR CON MUSICBRAINZ (búsqueda por nombre) ======
+  console.log(`\n🧠 5. Buscando en MusicBrainz...`);
   const musicbrainz = await searchMusicBrainz(artistName, trackTitle);
   if (musicbrainz && musicbrainz.title) {
     metadata = { ...metadata, ...musicbrainz };
@@ -707,8 +805,8 @@ async function getSongMetadataWithFallback(artistName, trackTitle, albumName) {
   }
   console.log(`⚠️ No encontrado en MusicBrainz`);
 
-  // 4. Intentar Last.fm (último recurso)
-  console.log(`\n🎵 4. Buscando en Last.fm...`);
+  // ====== 6. INTENTAR CON LAST.FM (búsqueda por nombre, último recurso) ======
+  console.log(`\n🎵 6. Buscando en Last.fm...`);
   const lastfm = await searchLastfmMetadata(artistName, trackTitle);
   if (lastfm && lastfm.title) {
     metadata = { ...metadata, ...lastfm };
@@ -1202,7 +1300,7 @@ app.get('/api/artists', (req, res) => {
   res.json(artists);
 });
 
-// PUT: Sincronizar metadatos con iTunes → Spotify → MusicBrainz → Last.fm
+// PUT: Sincronizar metadatos con Shazam → AudD.io → iTunes → Spotify → MusicBrainz → Last.fm
 app.put('/api/songs/sync-metadata', async (req, res) => {
   const { filename } = req.body;
   const originalFilePath = path.join(MUSIC_DIR, filename);
@@ -1224,8 +1322,11 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
     console.log(`\n🔍 Sincronizando: "${artist} - ${title}"`);
     console.log(`📀 Álbum: "${albumName}"`);
 
-    // ====== 1. BUSCAR METADATOS con cadena de fallback: iTunes → Spotify → MusicBrainz → Last.fm ======
-    const metadata = await getSongMetadataWithFallback(artist, title, albumName);
+    // ====== 1. BUSCAR METADATOS con cadena de fallback: Shazam → AudD.io → iTunes → Spotify → MusicBrainz → Last.fm ======
+    // Leer el buffer del archivo convertido para enviarlo a Shazam y AudD.io
+    const audioBuffer = fs.readFileSync(filePath);
+    console.log(`\n📤 Audio cargado: ${(audioBuffer.length / 1024).toFixed(1)} KB`);
+    const metadata = await getSongMetadataWithFallback(artist, title, albumName, audioBuffer, convertedFilename);
     
     const newTitle = metadata.title || title;
     const newArtist = metadata.artist || artist;
@@ -1399,7 +1500,7 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
     await syncDatabase();
 
     res.json({
-      message: '✅ Sincronización completada (iTunes → Spotify → MusicBrainz → Last.fm)',
+      message: '✅ Sincronización completada (Shazam → AudD.io → iTunes → Spotify → MusicBrainz → Last.fm)',
       updatedSong: {
         filename: renamedFilename,
         title: newTitle,
@@ -1744,7 +1845,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   GET  /api/albums       - Listar álbumes`);
   console.log(`   GET  /api/artists      - Listar artistas`);
   console.log(`   POST /api/sync-db      - Sincronizar base de datos`);
-  console.log(`   PUT  /api/songs/sync-metadata - Sincronizar con iTunes → Spotify → MusicBrainz → Last.fm`);
+  console.log(`   PUT  /api/songs/sync-metadata - Sincronizar con Shazam → AudD.io → iTunes → Spotify → MusicBrainz → Last.fm`);
   console.log(`   PUT  /api/songs/local-metadata - Editar metadatos`);
   console.log(`   DELETE /api/songs      - Eliminar canción`);
   console.log(`   POST /api/recognize    - Reconocer canción (Shazam/AudD)`);
