@@ -1,21 +1,36 @@
+// serve.js
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const mm = require('music-metadata');
 const NodeID3 = require('node-id3');
-const download = require('image-downloader');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegStatic = require('ffmpeg-static');
 const https = require('https');
+const axios = require('axios');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ⚠️ CONFIGURACIÓN: Tu carpeta de música
-const MUSIC_DIR = path.join('C:', 'Users', 'rafael', 'Music');
+// ====== CONFIGURACIÓN ======
+const PORT = process.env.PORT || 5000;
+const MUSIC_DIR = process.env.MUSIC_DIR || path.join('C:', 'Users', 'rafael', 'Music');
 const DB_PATH = path.join(__dirname, 'songs_db.json');
+
+// ====== LAST.FM CONFIGURACIÓN ======
+const LASTFM_API_KEY = process.env.LASTFM_API_KEY;
+const LASTFM_API_URL = 'https://ws.audioscrobbler.com/2.0/';
+
+// Verificar que la API Key esté configurada
+if (!LASTFM_API_KEY) {
+  console.error('❌ ERROR: LASTFM_API_KEY no está definida en el archivo .env');
+  console.error('   Crea un archivo .env con: LASTFM_API_KEY=tu_api_key_aqui');
+  process.exit(1);
+}
 
 // ====== CARPETAS PARA IMÁGENES ======
 const ALBUM_ART_DIR = path.join(MUSIC_DIR, 'album_art');
@@ -27,6 +42,8 @@ app.use('/songs/album_art', express.static(ALBUM_ART_DIR));
 app.use('/songs/artist_art', express.static(ARTIST_ART_DIR));
 
 // ====== VERIFICAR CARPETAS Y PERMISOS ======
+console.log('🔍 Verificando configuración...');
+
 if (!fs.existsSync(MUSIC_DIR)) {
   console.error(`❌ La carpeta ${MUSIC_DIR} no existe`);
   process.exit(1);
@@ -34,9 +51,10 @@ if (!fs.existsSync(MUSIC_DIR)) {
   console.log(`✅ Carpeta de música: ${MUSIC_DIR}`);
   try {
     fs.accessSync(MUSIC_DIR, fs.constants.W_OK);
-    console.log(`✅ Permisos de escritura OK en ${MUSIC_DIR}`);
+    console.log(`✅ Permisos de escritura OK`);
   } catch (err) {
     console.error(`❌ No hay permisos de escritura en ${MUSIC_DIR}`);
+    process.exit(1);
   }
 }
 
@@ -50,51 +68,120 @@ if (!fs.existsSync(ARTIST_ART_DIR)) {
   console.log(`📁 Creada carpeta: ${ARTIST_ART_DIR}`);
 }
 
-// ====== FUNCIONES AUXILIARES ======
+console.log(`🔑 Last.fm API Key: ${LASTFM_API_KEY.substring(0, 8)}...✅`);
 
-const searchMusicBrainz = async (query) => {
-  return new Promise((resolve) => {
-    const url = `https://musicbrainz.org/ws/2/recording/?query=${encodeURIComponent(query)}&fmt=json&limit=5`;
-    https.get(url, { headers: { 'User-Agent': 'MusicPlayer/1.0' } }, (res) => {
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(data));
-        } catch (e) {
-          resolve(null);
-        }
-      });
-    }).on('error', () => resolve(null));
-  });
-};
+// ====== FUNCIONES DE LAST.FM ======
 
-const searchArtistImage = async (artistName) => {
-  return new Promise((resolve) => {
-    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(artistName)}&prop=pageimages&pithumbsize=500&format=json`;
-    https.get(url, { headers: { 'User-Agent': 'MusicPlayer/1.0' } }, (res) => {
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        try {
-          const result = JSON.parse(data);
-          const pages = result.query.pages;
-          const page = Object.values(pages)[0];
-          if (page && page.thumbnail) {
-            resolve(page.thumbnail.source);
-          } else {
-            resolve(null);
-          }
-        } catch (e) {
-          resolve(null);
+/**
+ * Obtiene información de un artista de Last.fm
+ * Devuelve: { name, imageUrl, bio, tags, similarArtists }
+ */
+async function getArtistInfo(artistName) {
+  try {
+    const url = `${LASTFM_API_URL}?method=artist.getinfo&artist=${encodeURIComponent(artistName)}&api_key=${LASTFM_API_KEY}&format=json`;
+    const response = await axios.get(url, { timeout: 10000 });
+    
+    if (response.data && response.data.artist) {
+      const artist = response.data.artist;
+      
+      // Obtener la imagen más grande (extralarge)
+      let imageUrl = null;
+      if (artist.image && artist.image.length > 0) {
+        const largestImage = artist.image[artist.image.length - 1];
+        if (largestImage && largestImage['#text']) {
+          imageUrl = largestImage['#text'];
         }
-      });
-    }).on('error', () => resolve(null));
-  });
-};
+      }
+      
+      // Obtener tags/géneros
+      let tags = [];
+      if (artist.tags && artist.tags.tag) {
+        tags = Array.isArray(artist.tags.tag) 
+          ? artist.tags.tag.map(t => t.name) 
+          : [artist.tags.tag.name];
+      }
+      
+      return {
+        name: artist.name,
+        imageUrl: imageUrl,
+        bio: artist.bio?.content || '',
+        tags: tags,
+        similarArtists: artist.similar?.artist?.map(a => a.name) || []
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error(`❌ Error al obtener información de ${artistName} desde Last.fm:`, error.message);
+    return null;
+  }
+}
+
+/**
+ * Obtiene información de un álbum de Last.fm
+ * Devuelve: { name, artist, imageUrl, tracks, releaseDate }
+ */
+async function getAlbumInfo(albumName, artistName) {
+  try {
+    const url = `${LASTFM_API_URL}?method=album.getinfo&artist=${encodeURIComponent(artistName)}&album=${encodeURIComponent(albumName)}&api_key=${LASTFM_API_KEY}&format=json`;
+    const response = await axios.get(url, { timeout: 10000 });
+    
+    if (response.data && response.data.album) {
+      const album = response.data.album;
+      
+      let imageUrl = null;
+      if (album.image && album.image.length > 0) {
+        const largestImage = album.image[album.image.length - 1];
+        if (largestImage && largestImage['#text']) {
+          imageUrl = largestImage['#text'];
+        }
+      }
+      
+      return {
+        name: album.name,
+        artist: album.artist,
+        imageUrl: imageUrl,
+        tracks: album.tracks?.track?.map(t => t.name) || [],
+        releaseDate: album.releasedate || '',
+        playcount: album.playcount || 0
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error(`❌ Error al obtener información del álbum ${albumName} desde Last.fm:`, error.message);
+    return null;
+  }
+}
+
+/**
+ * Busca artistas similares para obtener más géneros
+ */
+async function getArtistTags(artistName) {
+  try {
+    const url = `${LASTFM_API_URL}?method=artist.gettoptags&artist=${encodeURIComponent(artistName)}&api_key=${LASTFM_API_KEY}&format=json`;
+    const response = await axios.get(url, { timeout: 10000 });
+    
+    if (response.data && response.data.toptags && response.data.toptags.tag) {
+      const tags = Array.isArray(response.data.toptags.tag) 
+        ? response.data.toptags.tag.slice(0, 5).map(t => t.name)
+        : [response.data.toptags.tag.name];
+      return tags.filter(t => t && t !== "");
+    }
+    return [];
+  } catch (error) {
+    console.error(`❌ Error al obtener tags de ${artistName}:`, error.message);
+    return [];
+  }
+}
+
+// ====== FUNCIÓN DE DESCARGA DE IMÁGENES ======
 
 const downloadImageToFolder = async (imageUrl, destFolder, filename) => {
   return new Promise((resolve, reject) => {
+    if (!imageUrl) {
+      reject(new Error('URL de imagen vacía'));
+      return;
+    }
+    
     if (!fs.existsSync(destFolder)) {
       fs.mkdirSync(destFolder, { recursive: true });
     }
@@ -114,16 +201,14 @@ const downloadImageToFolder = async (imageUrl, destFolder, filename) => {
         return;
       }
 
-      const totalBytes = parseInt(res.headers['content-length'], 10);
       let downloadedBytes = 0;
+      const totalBytes = parseInt(res.headers['content-length'], 10);
 
       res.on('data', (chunk) => {
         downloadedBytes += chunk.length;
-        if (totalBytes) {
+        if (totalBytes && downloadedBytes % (totalBytes / 10) < chunk.length) {
           const progress = ((downloadedBytes / totalBytes) * 100).toFixed(0);
-          if (progress % 10 === 0) {
-            console.log(`📥 Descargando ${path.basename(dest)}: ${progress}%`);
-          }
+          console.log(`📥 Descargando ${path.basename(dest)}: ${progress}%`);
         }
       });
 
@@ -143,6 +228,8 @@ const downloadImageToFolder = async (imageUrl, destFolder, filename) => {
     });
   });
 };
+
+// ====== FUNCIÓN DE CONVERSIÓN A MP3 ======
 
 const convertToMp3 = async (sourcePath) => {
   const ext = path.extname(sourcePath).toLowerCase();
@@ -170,14 +257,25 @@ const convertToMp3 = async (sourcePath) => {
   });
 };
 
-// ====== BASE DE DATOS JSON ======
+// ====== SINCORNIZAR BASE DE DATOS ======
+
 const syncDatabase = async () => {
   console.log("🔄 Sincronizando base de datos de canciones...");
   const { parseFile } = await import('music-metadata');
-  const files = fs.readdirSync(MUSIC_DIR);
+  
+  let files;
+  try {
+    files = fs.readdirSync(MUSIC_DIR);
+  } catch (err) {
+    console.error(`❌ Error al leer la carpeta ${MUSIC_DIR}:`, err.message);
+    return [];
+  }
+  
   const musicFiles = files.filter(file => 
     ['.mp3', '.wav', '.m4a', '.ogg', '.flac', '.aac'].includes(path.extname(file).toLowerCase())
   );
+
+  console.log(`📂 Encontrados ${musicFiles.length} archivos de audio`);
 
   const songsList = [];
 
@@ -185,14 +283,12 @@ const syncDatabase = async () => {
     const filePath = path.join(MUSIC_DIR, file);
     const baseName = path.parse(file).name;
     
-    // Buscar imágenes en las subcarpetas
     const albumImagePath = path.join(ALBUM_ART_DIR, `${baseName}.jpg`);
     const artistImagePath = path.join(ARTIST_ART_DIR, `${baseName}_artist.jpg`);
 
     const hasAlbumImage = fs.existsSync(albumImagePath);
     const hasArtistImage = fs.existsSync(artistImagePath);
     
-    // Priorizar imagen del álbum, si no, la del artista
     let imageUrl = null;
     if (hasAlbumImage) {
       imageUrl = `/songs/album_art/${encodeURIComponent(baseName)}.jpg`;
@@ -245,6 +341,7 @@ const syncDatabase = async () => {
 
 // ====== ENDPOINTS ======
 
+// GET: Listar canciones con filtros
 app.get('/api/songs', async (req, res) => {
   const limit = parseInt(req.query.limit) || 30;
   const offset = parseInt(req.query.offset) || 0;
@@ -277,14 +374,17 @@ app.get('/api/songs', async (req, res) => {
     songs = songs.filter(s => s.artist.toLowerCase() === artist.toLowerCase());
   }
 
+  const total = songs.length;
   const sliced = songs.slice(offset, offset + limit);
+  
   res.json({
     songs: sliced,
-    total: songs.length,
-    hasMore: offset + limit < songs.length
+    total: total,
+    hasMore: offset + limit < total
   });
 });
 
+// POST: Forzar sincronización manual
 app.post('/api/sync-db', async (req, res) => {
   try {
     const songs = await syncDatabase();
@@ -294,6 +394,7 @@ app.post('/api/sync-db', async (req, res) => {
   }
 });
 
+// GET: Lista de géneros
 app.get('/api/genres', (req, res) => {
   if (!fs.existsSync(DB_PATH)) return res.json([]);
   const songs = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
@@ -314,6 +415,7 @@ app.get('/api/genres', (req, res) => {
   res.json([...genreSet]);
 });
 
+// GET: Lista de álbumes
 app.get('/api/albums', (req, res) => {
   if (!fs.existsSync(DB_PATH)) return res.json([]);
   const songs = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
@@ -321,6 +423,7 @@ app.get('/api/albums', (req, res) => {
   res.json(albums);
 });
 
+// GET: Lista de artistas
 app.get('/api/artists', (req, res) => {
   if (!fs.existsSync(DB_PATH)) return res.json([]);
   const songs = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
@@ -328,6 +431,7 @@ app.get('/api/artists', (req, res) => {
   res.json(artists);
 });
 
+// PUT: Sincronizar metadatos con Last.fm
 app.put('/api/songs/sync-metadata', async (req, res) => {
   const { filename } = req.body;
   const originalFilePath = path.join(MUSIC_DIR, filename);
@@ -343,124 +447,131 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
     const currentMetadata = await parseFile(filePath);
     
     const title = currentMetadata.common.title || path.parse(convertedFilename).name;
-    const searchQuery = `${title}`;
+    const artist = currentMetadata.common.artist || "Desconocido";
+    const albumName = currentMetadata.common.album || "Desconocido";
 
-    console.log(`🔍 Buscando en MusicBrainz: "${searchQuery}"`);
-    const mbData = await searchMusicBrainz(searchQuery);
+    console.log(`🔍 Buscando en Last.fm: "${artist} - ${title}"`);
 
-    if (!mbData || !mbData.recordings || mbData.recordings.length === 0) {
-      return res.status(404).json({ error: 'No se encontraron coincidencias en MusicBrainz' });
+    // 1. Obtener información del artista
+    const artistInfo = await getArtistInfo(artist);
+    let artistImageUrl = null;
+    let newArtist = artist;
+    let tags = [];
+
+    if (artistInfo) {
+      newArtist = artistInfo.name || artist;
+      artistImageUrl = artistInfo.imageUrl;
+      tags = artistInfo.tags || [];
+      console.log(`✅ Artista encontrado: ${newArtist} (${tags.slice(0, 3).join(', ')})`);
+    } else {
+      console.log(`⚠️ No se encontró información para el artista: ${artist}`);
     }
 
-    const recording = mbData.recordings[0];
-    const newTitle = recording.title || title;
-    const newArtist = recording['artist-credit']?.[0]?.name || "Desconocido";
-    
-    let newGenres = ["Urbano"];
-    if (recording.tags && recording.tags.length > 0) {
-      newGenres = recording.tags
-        .sort((a, b) => (b.count || 0) - (a.count || 0))
-        .slice(0, 3)
-        .map(tag => tag.name)
-        .filter(name => name && name !== "");
-    }
-    if (newGenres.length === 0) newGenres = ["Urbano"];
-
-    console.log(`✅ Encontrado: ${newArtist} - ${newTitle} (${newGenres.join(", ")})`);
-
+    // 2. Obtener información del álbum
     let albumImageUrl = null;
-    const releaseId = recording.releases?.[0]?.id;
-    if (releaseId) {
-      try {
-        const coverResponse = await new Promise((resolve) => {
-          https.get(`https://coverartarchive.org/release/${releaseId}`, 
-            { headers: { 'User-Agent': 'MusicPlayer/1.0' } }, (res) => {
-            let data = '';
-            res.on('data', chunk => { data += chunk; });
-            res.on('end', () => {
-              try {
-                const json = JSON.parse(data);
-                resolve(json.images?.[0]?.image || null);
-              } catch (e) {
-                resolve(null);
-              }
-            });
-          }).on('error', () => resolve(null));
-        });
-        albumImageUrl = coverResponse;
-        console.log(`📀 Portada del álbum: ${albumImageUrl ? 'Encontrada' : 'No encontrada'}`);
-      } catch (err) {
-        console.log("⚠️ No se encontró portada de álbum");
+    let newAlbum = albumName;
+
+    if (albumName !== "Desconocido") {
+      const albumInfo = await getAlbumInfo(albumName, artist);
+      if (albumInfo) {
+        newAlbum = albumInfo.name || albumName;
+        albumImageUrl = albumInfo.imageUrl;
+        console.log(`✅ Álbum encontrado: ${newAlbum}`);
+      } else {
+        console.log(`⚠️ No se encontró información para el álbum: ${albumName}`);
       }
     }
 
-    let artistImageUrl = await searchArtistImage(newArtist);
-    console.log(`🎭 Imagen del artista: ${artistImageUrl ? 'Encontrada' : 'No encontrada'}`);
+    // 3. Si no hay tags, obtener top tags del artista
+    if (tags.length === 0) {
+      tags = await getArtistTags(newArtist);
+      console.log(`🏷️ Tags obtenidos: ${tags.slice(0, 3).join(', ')}`);
+    }
 
+    // 4. Determinar géneros
+    let genres = tags.length > 0 ? tags : ["Urbano"];
+    if (genres.length === 0) genres = ["Urbano"];
+
+    console.log(`📀 Géneros finales: ${genres.join(", ")}`);
+
+    // 5. Preparar tags ID3
     const baseName = path.parse(filename).name;
-    const tags = {
-      title: newTitle,
+    const tagsID3 = {
+      title: title,
       artist: newArtist,
-      genre: newGenres.join(" / ")
+      genre: genres.join(" / "),
+      album: newAlbum
     };
 
-    // Descargar portada del álbum en carpeta album_art
+    // 6. Descargar imágenes
     let hasAlbumImage = false;
+    let hasArtistImage = false;
+
+    // Si tenemos imagen del álbum, usarla (prioridad)
     if (albumImageUrl) {
       try {
         const albumFilename = `${baseName}.jpg`;
-        const albumImagePath = await downloadImageToFolder(
-          albumImageUrl, 
-          ALBUM_ART_DIR, 
-          albumFilename
-        );
+        await downloadImageToFolder(albumImageUrl, ALBUM_ART_DIR, albumFilename);
         hasAlbumImage = true;
         
         // Incrustar imagen en el archivo MP3
-        const imageBuffer = fs.readFileSync(albumImagePath);
-        tags.image = {
-          mime: "image/jpeg",
-          type: { id: 3, name: 'front cover' },
-          description: 'Album Cover',
-          imageBuffer: imageBuffer
-        };
-        console.log(`✅ Portada del álbum guardada en: ${albumImagePath}`);
+        const albumImagePath = path.join(ALBUM_ART_DIR, albumFilename);
+        if (fs.existsSync(albumImagePath)) {
+          const imageBuffer = fs.readFileSync(albumImagePath);
+          tagsID3.image = {
+            mime: "image/jpeg",
+            type: { id: 3, name: 'front cover' },
+            description: 'Album Cover',
+            imageBuffer: imageBuffer
+          };
+        }
+        console.log(`✅ Portada del álbum guardada`);
       } catch (imgErr) {
         console.log("⚠️ No se pudo descargar portada del álbum:", imgErr.message);
       }
     }
 
-    // Descargar foto del artista en carpeta artist_art
-    let hasArtistImage = false;
-    if (artistImageUrl) {
+    // Si NO tenemos imagen del álbum, usar la del artista como fallback
+    if (!hasAlbumImage && artistImageUrl) {
       try {
         const artistFilename = `${baseName}_artist.jpg`;
-        const artistImagePath = await downloadImageToFolder(
-          artistImageUrl, 
-          ARTIST_ART_DIR, 
-          artistFilename
-        );
+        await downloadImageToFolder(artistImageUrl, ARTIST_ART_DIR, artistFilename);
         hasArtistImage = true;
-        console.log(`✅ Foto del artista guardada en: ${artistImagePath}`);
+        console.log(`✅ Foto del artista guardada (usada como portada)`);
+        
+        // Incrustar imagen del artista en el MP3
+        const artistImagePath = path.join(ARTIST_ART_DIR, artistFilename);
+        if (fs.existsSync(artistImagePath)) {
+          const imageBuffer = fs.readFileSync(artistImagePath);
+          tagsID3.image = {
+            mime: "image/jpeg",
+            type: { id: 3, name: 'front cover' },
+            description: 'Artist Image',
+            imageBuffer: imageBuffer
+          };
+        }
       } catch (imgErr) {
         console.log("⚠️ No se pudo descargar foto del artista:", imgErr.message);
       }
     }
 
-    const success = NodeID3.write(tags, filePath);
+    // 7. Escribir tags en el archivo
+    const success = NodeID3.write(tagsID3, filePath);
     if (!success) {
       return res.status(500).json({ error: 'Error al escribir tags.' });
     }
 
+    // 8. Sincronizar base de datos
     await syncDatabase();
 
     res.json({
-      message: 'Sincronización completada',
+      message: 'Sincronización completada con Last.fm',
       updatedSong: {
         filename: convertedFilename,
-        title: newTitle,
+        title: title,
         artist: newArtist,
-        genre: newGenres,
+        album: newAlbum,
+        genre: genres,
         hasAlbumImage: hasAlbumImage,
         hasArtistImage: hasArtistImage
       }
@@ -472,6 +583,7 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
   }
 });
 
+// PUT: Editar metadatos localmente
 app.put('/api/songs/local-metadata', async (req, res) => {
   const { filename, title, artist, genre, album } = req.body;
   const filePath = path.join(MUSIC_DIR, filename);
@@ -526,6 +638,7 @@ app.put('/api/songs/local-metadata', async (req, res) => {
   }
 });
 
+// PUT: Actualizar metadatos manualmente (legacy)
 app.put('/api/songs/update-metadata', async (req, res) => {
   const { filename, title, artist, genre, imageUrl } = req.body;
   const filePath = path.join(MUSIC_DIR, filename);
@@ -592,17 +705,22 @@ app.put('/api/songs/update-metadata', async (req, res) => {
   }
 });
 
+// DELETE: Eliminar canción
 app.delete('/api/songs', async (req, res) => {
   const { filename } = req.body;
   const filePath = path.join(MUSIC_DIR, filename);
-  if (!filePath.startsWith(MUSIC_DIR)) return res.status(403).json({ error: 'Denegado' });
+  
+  if (!filePath.startsWith(MUSIC_DIR)) {
+    return res.status(403).json({ error: 'Denegado' });
+  }
 
   try {
-    fs.unlinkSync(filePath);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
     
     const baseName = path.parse(filename).name;
     
-    // Eliminar imágenes asociadas
     const albumImagePath = path.join(ALBUM_ART_DIR, `${baseName}.jpg`);
     const artistImagePath = path.join(ARTIST_ART_DIR, `${baseName}_artist.jpg`);
     
@@ -617,11 +735,23 @@ app.delete('/api/songs', async (req, res) => {
   }
 });
 
-const PORT = 5000;
+// ====== INICIAR SERVIDOR ======
+
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🎵 Servidor de música corriendo en puerto ${PORT}`);
+  console.log(`\n🎵 Servidor de música corriendo en puerto ${PORT}`);
   console.log(`📁 Carpeta de música: ${MUSIC_DIR}`);
   console.log(`📁 Carpetas de imágenes:`);
   console.log(`   - Álbumes: ${ALBUM_ART_DIR}`);
   console.log(`   - Artistas: ${ARTIST_ART_DIR}`);
+  console.log(`🔑 Last.fm API Key: ${LASTFM_API_KEY ? '✅ Configurada' : '❌ No configurada'}`);
+  console.log(`\n📋 Endpoints disponibles:`);
+  console.log(`   GET  /api/songs        - Listar canciones`);
+  console.log(`   GET  /api/genres       - Listar géneros`);
+  console.log(`   GET  /api/albums       - Listar álbumes`);
+  console.log(`   GET  /api/artists      - Listar artistas`);
+  console.log(`   POST /api/sync-db      - Sincronizar base de datos`);
+  console.log(`   PUT  /api/songs/sync-metadata - Sincronizar con Last.fm`);
+  console.log(`   PUT  /api/songs/local-metadata - Editar metadatos`);
+  console.log(`   DELETE /api/songs      - Eliminar canción`);
+  console.log(`\n✅ Servidor listo! 🚀`);
 });
