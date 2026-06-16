@@ -25,10 +25,15 @@ const DB_PATH = path.join(__dirname, 'songs_db.json');
 const LASTFM_API_KEY = process.env.LASTFM_API_KEY;
 const LASTFM_API_URL = 'https://ws.audioscrobbler.com/2.0/';
 
-// Verificar que la API Key esté configurada
+// ====== SPOTIFY CONFIGURACIÓN ======
+const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
+const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+const SPOTIFY_API_URL = 'https://api.spotify.com/v1';
+const SPOTIFY_ACCOUNTS_URL = 'https://accounts.spotify.com';
+
+// Verificar que la API Key de Last.fm esté configurada
 if (!LASTFM_API_KEY) {
   console.error('❌ ERROR: LASTFM_API_KEY no está definida en el archivo .env');
-  console.error('   Crea un archivo .env con: LASTFM_API_KEY=tu_api_key_aqui');
   process.exit(1);
 }
 
@@ -69,6 +74,53 @@ if (!fs.existsSync(ARTIST_ART_DIR)) {
 }
 
 console.log(`🔑 Last.fm API Key: ${LASTFM_API_KEY.substring(0, 8)}...✅`);
+if (SPOTIFY_CLIENT_ID && SPOTIFY_CLIENT_SECRET) {
+  console.log(`🔑 Spotify API: ✅ Configurada`);
+} else {
+  console.log(`🔑 Spotify API: ❌ No configurada (Solo se usará Last.fm + iTunes)`);
+}
+
+// ====== CACHE DE TOKEN SPOTIFY ======
+let spotifyAccessToken = null;
+let spotifyTokenExpiresAt = 0;
+
+/**
+ * Obtiene un token de acceso de Spotify (Client Credentials Flow)
+ */
+async function getSpotifyToken() {
+  if (Date.now() < spotifyTokenExpiresAt && spotifyAccessToken) {
+    return spotifyAccessToken;
+  }
+
+  if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
+    return null;
+  }
+
+  try {
+    const response = await axios.post(
+      `${SPOTIFY_ACCOUNTS_URL}/api/token`,
+      'grant_type=client_credentials',
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')}`
+        },
+        timeout: 10000
+      }
+    );
+
+    if (response.data && response.data.access_token) {
+      spotifyAccessToken = response.data.access_token;
+      spotifyTokenExpiresAt = Date.now() + (response.data.expires_in * 1000) - 60000; // 1 min before expiry
+      console.log(`✅ Token de Spotify obtenido (expira en ${response.data.expires_in}s)`);
+      return spotifyAccessToken;
+    }
+    return null;
+  } catch (error) {
+    console.error(`❌ Error al obtener token de Spotify:`, error.message);
+    return null;
+  }
+}
 
 // ====== FUNCIONES DE LAST.FM ======
 
@@ -171,6 +223,232 @@ async function getArtistTags(artistName) {
     console.error(`❌ Error al obtener tags de ${artistName}:`, error.message);
     return [];
   }
+}
+
+// ====== FUNCIONES DE ITUNES SEARCH API ======
+
+/**
+ * Busca un álbum en iTunes Search API y devuelve su imagen
+ * iTunes no requiere autenticación
+ */
+async function getAlbumImageFromiTunes(albumName, artistName) {
+  try {
+    const query = `${encodeURIComponent(artistName)} ${encodeURIComponent(albumName)}`;
+    const url = `https://itunes.apple.com/search?term=${query}&entity=album&limit=5`;
+    const response = await axios.get(url, { timeout: 10000 });
+
+    if (response.data && response.data.results && response.data.results.length > 0) {
+      // Buscar el mejor match: priorizar coincidencia exacta de álbum
+      const results = response.data.results;
+      
+      // Primero buscar coincidencia exacta
+      let bestMatch = results.find(r => 
+        r.collectionName && r.artistName &&
+        r.collectionName.toLowerCase() === albumName.toLowerCase() &&
+        r.artistName.toLowerCase() === artistName.toLowerCase()
+      );
+
+      // Si no hay match exacto, usar el primer resultado
+      if (!bestMatch) {
+        bestMatch = results[0];
+      }
+
+      if (bestMatch && bestMatch.artworkUrl100) {
+        // Reemplazar 100x100 por 600x600 para obtener imagen más grande
+        const largeImageUrl = bestMatch.artworkUrl100.replace('100x100', '600x600');
+        console.log(`✅ iTunes encontrado: "${bestMatch.collectionName}" - ${bestMatch.artistName}`);
+        return largeImageUrl;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error(`⚠️ iTunes Search falló para "${albumName}" de "${artistName}":`, error.message);
+    return null;
+  }
+}
+
+/**
+ * Busca la imagen de un artista en iTunes Search API
+ */
+async function getArtistImageFromiTunes(artistName) {
+  try {
+    const query = encodeURIComponent(artistName);
+    const url = `https://itunes.apple.com/search?term=${query}&entity=musicArtist&limit=1`;
+    const response = await axios.get(url, { timeout: 10000 });
+
+    if (response.data && response.data.results && response.data.results.length > 0) {
+      const artist = response.data.results[0];
+      if (artist.artistLinkUrl) {
+        // iTunes no da imagen directa del artista, pero podemos buscar el álbum más popular
+        // Buscar álbumes del artista
+        const albumUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=album&limit=1`;
+        const albumResponse = await axios.get(albumUrl, { timeout: 10000 });
+        
+        if (albumResponse.data && albumResponse.data.results && albumResponse.data.results.length > 0) {
+          const album = albumResponse.data.results[0];
+          if (album.artworkUrl100) {
+            const largeImageUrl = album.artworkUrl100.replace('100x100', '600x600');
+            console.log(`✅ iTunes: imagen de "${artistName}" obtenida de su álbum "${album.collectionName}"`);
+            return largeImageUrl;
+          }
+        }
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error(`⚠️ iTunes Search falló para artista "${artistName}":`, error.message);
+    return null;
+  }
+}
+
+// ====== FUNCIONES DE SPOTIFY API ======
+
+/**
+ * Busca un álbum en Spotify y devuelve su imagen
+ */
+async function getAlbumImageFromSpotify(albumName, artistName) {
+  const token = await getSpotifyToken();
+  if (!token) return null;
+
+  try {
+    const query = encodeURIComponent(`album:${albumName} artist:${artistName}`);
+    const url = `${SPOTIFY_API_URL}/search?q=${query}&type=album&limit=5`;
+    const response = await axios.get(url, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      timeout: 10000
+    });
+
+    if (response.data && response.data.albums && response.data.albums.items) {
+      const albums = response.data.albums.items;
+      
+      // Buscar match exacto
+      let bestMatch = albums.find(a =>
+        a.name && a.artists &&
+        a.name.toLowerCase() === albumName.toLowerCase() &&
+        a.artists.some(ar => ar.name.toLowerCase() === artistName.toLowerCase())
+      );
+
+      if (!bestMatch && albums.length > 0) {
+        bestMatch = albums[0];
+      }
+
+      if (bestMatch && bestMatch.images && bestMatch.images.length > 0) {
+        // Usar la imagen más grande disponible
+        const largestImage = bestMatch.images[0];
+        console.log(`✅ Spotify encontrado: "${bestMatch.name}"`);
+        return largestImage.url;
+      }
+    }
+    return null;
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      // Token expirado, forzar renovación en el próximo intento
+      spotifyAccessToken = null;
+    }
+    console.error(`⚠️ Spotify Search falló para álbum "${albumName}":`, error.message);
+    return null;
+  }
+}
+
+/**
+ * Busca la imagen de un artista en Spotify
+ */
+async function getArtistImageFromSpotify(artistName) {
+  const token = await getSpotifyToken();
+  if (!token) return null;
+
+  try {
+    const query = encodeURIComponent(artistName);
+    const url = `${SPOTIFY_API_URL}/search?q=${query}&type=artist&limit=1`;
+    const response = await axios.get(url, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      timeout: 10000
+    });
+
+    if (response.data && response.data.artists && response.data.artists.items) {
+      const artists = response.data.artists.items;
+      if (artists.length > 0 && artists[0].images && artists[0].images.length > 0) {
+        const largestImage = artists[0].images[0];
+        console.log(`✅ Spotify: imagen del artista "${artistName}" encontrada`);
+        return largestImage.url;
+      }
+    }
+    return null;
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      spotifyAccessToken = null;
+    }
+    console.error(`⚠️ Spotify Search falló para artista "${artistName}":`, error.message);
+    return null;
+  }
+}
+
+/**
+ * Función para obtener imagen de álbum con cadena de fallbacks:
+ * iTunes → Spotify → Last.fm
+ */
+async function getAlbumImageWithFallback(albumName, artistName) {
+  console.log(`🔍 Buscando portada del álbum "${albumName}" de "${artistName}"...`);
+
+  // 1. Intentar iTunes (no requiere autenticación, rápido)
+  const itunesImage = await getAlbumImageFromiTunes(albumName, artistName);
+  if (itunesImage) {
+    console.log(`✅ Portada encontrada en iTunes`);
+    return { imageUrl: itunesImage, source: 'itunes' };
+  }
+
+  // 2. Intentar Spotify
+  console.log(`⚠️ No encontrado en iTunes, probando Spotify...`);
+  const spotifyImage = await getAlbumImageFromSpotify(albumName, artistName);
+  if (spotifyImage) {
+    console.log(`✅ Portada encontrada en Spotify`);
+    return { imageUrl: spotifyImage, source: 'spotify' };
+  }
+
+  // 3. Intentar Last.fm (último recurso)
+  console.log(`⚠️ No encontrado en Spotify, probando Last.fm...`);
+  const albumInfo = albumName !== "Desconocido" ? await getAlbumInfo(albumName, artistName) : null;
+  if (albumInfo && albumInfo.imageUrl) {
+    console.log(`✅ Portada encontrada en Last.fm`);
+    return { imageUrl: albumInfo.imageUrl, source: 'lastfm' };
+  }
+
+  console.log(`❌ No se encontró portada del álbum en ninguna fuente`);
+  return { imageUrl: null, source: null };
+}
+
+/**
+ * Función para obtener imagen de artista con cadena de fallbacks:
+ * iTunes → Spotify → Last.fm
+ */
+async function getArtistImageWithFallback(artistName) {
+  console.log(`🔍 Buscando imagen del artista "${artistName}"...`);
+
+  // 1. Intentar iTunes (no requiere autenticación, rápido)
+  const itunesImage = await getArtistImageFromiTunes(artistName);
+  if (itunesImage) {
+    console.log(`✅ Imagen de artista encontrada en iTunes`);
+    return { imageUrl: itunesImage, source: 'itunes' };
+  }
+
+  // 2. Intentar Spotify
+  console.log(`⚠️ No encontrado en iTunes, probando Spotify...`);
+  const spotifyImage = await getArtistImageFromSpotify(artistName);
+  if (spotifyImage) {
+    console.log(`✅ Imagen de artista encontrada en Spotify`);
+    return { imageUrl: spotifyImage, source: 'spotify' };
+  }
+
+  // 3. Intentar Last.fm (último recurso)
+  console.log(`⚠️ No encontrado en Spotify, probando Last.fm...`);
+  const artistInfo = await getArtistInfo(artistName);
+  if (artistInfo && artistInfo.imageUrl) {
+    console.log(`✅ Imagen de artista encontrada en Last.fm`);
+    return { imageUrl: artistInfo.imageUrl, source: 'lastfm' };
+  }
+
+  console.log(`❌ No se encontró imagen del artista en ninguna fuente`);
+  return { imageUrl: null, source: null };
 }
 
 // ====== FUNCIÓN DE DESCARGA DE IMÁGENES ======
@@ -433,7 +711,7 @@ app.get('/api/artists', (req, res) => {
   res.json(artists);
 });
 
-// PUT: Sincronizar metadatos con Last.fm
+// PUT: Sincronizar metadatos con Last.fm (con fallback a iTunes y Spotify)
 app.put('/api/songs/sync-metadata', async (req, res) => {
   const { filename } = req.body;
   const originalFilePath = path.join(MUSIC_DIR, filename);
@@ -452,64 +730,54 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
     const artist = currentMetadata.common.artist || "Desconocido";
     const albumName = currentMetadata.common.album || "Desconocido";
 
-    console.log(`🔍 Buscando en Last.fm: "${artist} - ${title}"`);
+    console.log(`\n🔍 Sincronizando: "${artist} - ${title}"`);
+    console.log(`📀 Álbum: "${albumName}"`);
 
-    // 1. Obtener información del artista
+    // 1. Obtener información del artista (Last.fm para nombre y tags)
     const artistInfo = await getArtistInfo(artist);
-    let artistImageUrl = null;
     let newArtist = artist;
     let tags = [];
 
     if (artistInfo) {
       newArtist = artistInfo.name || artist;
-      artistImageUrl = artistInfo.imageUrl;
       tags = artistInfo.tags || [];
-      console.log(`✅ Artista encontrado: ${newArtist} (${tags.slice(0, 3).join(', ')})`);
+      console.log(`✅ Artista (Last.fm): ${newArtist} (${tags.slice(0, 3).join(', ')})`);
     } else {
-      console.log(`⚠️ No se encontró información para el artista: ${artist}`);
+      console.log(`⚠️ Artista no encontrado en Last.fm: ${artist}`);
     }
 
-    // 2. Obtener información del álbum
-    let albumImageUrl = null;
-    let newAlbum = albumName;
-
-    if (albumName !== "Desconocido") {
-      const albumInfo = await getAlbumInfo(albumName, artist);
-      if (albumInfo) {
-        newAlbum = albumInfo.name || albumName;
-        albumImageUrl = albumInfo.imageUrl;
-        console.log(`✅ Álbum encontrado: ${newAlbum}`);
-      } else {
-        console.log(`⚠️ No se encontró información para el álbum: ${albumName}`);
-      }
-    }
-
-    // 3. Si no hay tags, obtener top tags del artista
+    // 2. Si no hay tags, obtener top tags del artista
     if (tags.length === 0) {
       tags = await getArtistTags(newArtist);
       console.log(`🏷️ Tags obtenidos: ${tags.slice(0, 3).join(', ')}`);
     }
 
-    // 4. Determinar géneros
+    // 3. Determinar géneros
     let genres = tags.length > 0 ? tags : ["Urbano"];
     if (genres.length === 0) genres = ["Urbano"];
 
     console.log(`📀 Géneros finales: ${genres.join(", ")}`);
 
-    // 5. Preparar tags ID3
+    // 4. Preparar tags ID3 básicos
     const baseName = path.parse(filename).name;
     const tagsID3 = {
       title: title,
       artist: newArtist,
       genre: genres.join(" / "),
-      album: newAlbum
+      album: albumName
     };
 
-    // 6. Descargar imágenes
+    // 5. Obtener imágenes con cadena de fallback
     let hasAlbumImage = false;
     let hasArtistImage = false;
+    let albumImageSource = null;
+    let artistImageSource = null;
 
-    // Si tenemos imagen del álbum, usarla (prioridad)
+    // 5a. Buscar portada del álbum (Last.fm → iTunes → Spotify)
+    const albumResult = await getAlbumImageWithFallback(albumName, artist);
+    let albumImageUrl = albumResult.imageUrl;
+    albumImageSource = albumResult.source;
+
     if (albumImageUrl) {
       try {
         const albumFilename = `${baseName}.jpg`;
@@ -523,46 +791,52 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
           tagsID3.image = {
             mime: "image/jpeg",
             type: { id: 3, name: 'front cover' },
-            description: 'Album Cover',
+            description: `Album Cover (${albumImageSource})`,
             imageBuffer: imageBuffer
           };
         }
-        console.log(`✅ Portada del álbum guardada`);
+        console.log(`✅ Portada guardada desde ${albumImageSource}`);
       } catch (imgErr) {
-        console.log("⚠️ No se pudo descargar portada del álbum:", imgErr.message);
+        console.log(`⚠️ No se pudo descargar portada:`, imgErr.message);
       }
     }
 
-    // Si NO tenemos imagen del álbum, usar la del artista como fallback
-    if (!hasAlbumImage && artistImageUrl) {
-      try {
-        const artistFilename = `${baseName}_artist.jpg`;
-        await downloadImageToFolder(artistImageUrl, ARTIST_ART_DIR, artistFilename);
-        hasArtistImage = true;
-        console.log(`✅ Foto del artista guardada (usada como portada)`);
-        
-        // Incrustar imagen del artista en el MP3
-        const artistImagePath = path.join(ARTIST_ART_DIR, artistFilename);
-        if (fs.existsSync(artistImagePath)) {
-          const imageBuffer = fs.readFileSync(artistImagePath);
-          tagsID3.image = {
-            mime: "image/jpeg",
-            type: { id: 3, name: 'front cover' },
-            description: 'Artist Image',
-            imageBuffer: imageBuffer
-          };
+    // 5b. Si no hay portada, buscar imagen del artista como fallback (Last.fm → iTunes → Spotify)
+    if (!hasAlbumImage) {
+      console.log(`🔍 No hay portada, buscando imagen del artista como alternativa...`);
+      const artistResult = await getArtistImageWithFallback(newArtist || artist);
+      const artistImageUrl = artistResult.imageUrl;
+      artistImageSource = artistResult.source;
+
+      if (artistImageUrl) {
+        try {
+          const artistFilename = `${baseName}_artist.jpg`;
+          await downloadImageToFolder(artistImageUrl, ARTIST_ART_DIR, artistFilename);
+          hasArtistImage = true;
+          console.log(`✅ Foto del artista guardada desde ${artistImageSource}`);
+          
+          // Incrustar imagen del artista en el MP3 como portada
+          const artistImagePath = path.join(ARTIST_ART_DIR, artistFilename);
+          if (fs.existsSync(artistImagePath)) {
+            const imageBuffer = fs.readFileSync(artistImagePath);
+            tagsID3.image = {
+              mime: "image/jpeg",
+              type: { id: 3, name: 'front cover' },
+              description: `Artist Image (${artistImageSource})`,
+              imageBuffer: imageBuffer
+            };
+          }
+        } catch (imgErr) {
+          console.log("⚠️ No se pudo descargar foto del artista:", imgErr.message);
         }
-      } catch (imgErr) {
-        console.log("⚠️ No se pudo descargar foto del artista:", imgErr.message);
       }
     }
 
-    // 7. Obtener el año del álbum desde Last.fm
+    // 6. Obtener el año del álbum (desde Last.fm)
     let albumYear = null;
     if (albumName !== "Desconocido") {
       const albumInfo = await getAlbumInfo(albumName, artist);
       if (albumInfo && albumInfo.releaseDate) {
-        // Parsear año del releaseDate
         const yearMatch = albumInfo.releaseDate.match(/(\d{4})/);
         if (yearMatch) {
           albumYear = parseInt(yearMatch[1], 10);
@@ -572,13 +846,13 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
       }
     }
 
-    // 8. Escribir tags en el archivo
+    // 7. Escribir tags en el archivo
     const success = NodeID3.write(tagsID3, filePath);
     if (!success) {
       return res.status(500).json({ error: 'Error al escribir tags.' });
     }
 
-    // 9. Sincronizar base de datos
+    // 8. Sincronizar base de datos
     await syncDatabase();
 
     res.json({
@@ -587,7 +861,7 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
         filename: convertedFilename,
         title: title,
         artist: newArtist,
-        album: newAlbum,
+        album: albumName,
         year: albumYear,
         genre: genres,
         hasAlbumImage: hasAlbumImage,
@@ -762,13 +1036,18 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   - Álbumes: ${ALBUM_ART_DIR}`);
   console.log(`   - Artistas: ${ARTIST_ART_DIR}`);
   console.log(`🔑 Last.fm API Key: ${LASTFM_API_KEY ? '✅ Configurada' : '❌ No configurada'}`);
+  if (SPOTIFY_CLIENT_ID && SPOTIFY_CLIENT_SECRET) {
+    console.log(`🔑 Spotify API: ✅ Configurada`);
+  } else {
+    console.log(`🔑 Spotify API: ❌ No configurada`);
+  }
   console.log(`\n📋 Endpoints disponibles:`);
   console.log(`   GET  /api/songs        - Listar canciones`);
   console.log(`   GET  /api/genres       - Listar géneros`);
   console.log(`   GET  /api/albums       - Listar álbumes`);
   console.log(`   GET  /api/artists      - Listar artistas`);
   console.log(`   POST /api/sync-db      - Sincronizar base de datos`);
-  console.log(`   PUT  /api/songs/sync-metadata - Sincronizar con Last.fm`);
+  console.log(`   PUT  /api/songs/sync-metadata - Sincronizar con Last.fm + iTunes + Spotify`);
   console.log(`   PUT  /api/songs/local-metadata - Editar metadatos`);
   console.log(`   DELETE /api/songs      - Eliminar canción`);
   console.log(`\n✅ Servidor listo! 🚀`);
