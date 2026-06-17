@@ -581,14 +581,16 @@ const handleDeleteSong = useCallback(async (track) => {
         // Si la canción eliminada estaba en la cola, ajustar índice
         const deletedIndex = prev.findIndex(t => t.id === track.id || t.filename === track.filename);
         if (deletedIndex !== -1) {
-          // Si era la canción actual o una anterior, ajustar índice
-          if (deletedIndex <= queueIndex) {
-            const newIndex = Math.min(queueIndex - 1, newQueue.length - 1);
-            setQueueIndex(Math.max(0, newIndex));
+          if (deletedIndex < queueIndex) {
+            // Canción anterior eliminada - seguir reproduciendo la misma, ajustar índice
+            setQueueIndex(queueIndex - 1);
+          } else if (deletedIndex === queueIndex) {
+            // Canción actual eliminada - pasar a la siguiente (la que se desplaza a esta posición)
+            const newIndex = Math.min(queueIndex, newQueue.length - 1);
+            setQueueIndex(newIndex);
             
-            // Si era la canción actual, reproducir la siguiente
             if (isCurrentTrack && newQueue.length > 0) {
-              const nextTrack = newQueue[Math.max(0, newIndex)];
+              const nextTrack = newQueue[newIndex];
               setTimeout(() => {
                 const ctx = audioContextRef.current;
                 const audio = getActiveAudio();
@@ -604,6 +606,7 @@ const handleDeleteSong = useCallback(async (track) => {
               }, 100);
             }
           }
+          // Si deletedIndex > queueIndex, el índice no cambia (la canción actual sigue igual)
         }
         
         return newQueue;
