@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ChevronDown, Heart, Play, Pause,
   SkipBack, SkipForward, Shuffle, Repeat, Volume2, Music2,
-  Search, Trash2,
+  Search, Trash2, ChevronUp, Disc, User,
 } from "lucide-react";
 
 function formatTime(s) {
@@ -16,11 +16,13 @@ function formatTime(s) {
 export function NowPlayingScreen({
   track, isPlaying, onPlayPause, onNext, onPrev, onLike, likedIds, audioRef, onClose,
   onSync, onDelete,
+  allTracks = [], playContext, onPlay, currentQueueIndex,
 }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState(false);
+  const [showTrackList, setShowTrackList] = useState(false);
   const progressRef = useRef(null);
 
   useEffect(() => {
@@ -49,6 +51,21 @@ export function NowPlayingScreen({
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const isLiked = track ? likedIds.has(track.id) : false;
 
+  // Obtener canciones del contexto (artista o género)
+  let contextTracks = [];
+  let contextLabel = "";
+  if (playContext && playContext.type === "artist") {
+    contextTracks = allTracks.filter(t => t.artist === playContext.value);
+    contextLabel = playContext.value;
+  } else if (playContext && playContext.type === "genre") {
+    contextTracks = allTracks.filter(t => {
+      if (Array.isArray(t.genre)) return t.genre.includes(playContext.value);
+      if (typeof t.genre === 'string') return t.genre.split(/[\/,]/).map(g => g.trim()).includes(playContext.value);
+      return false;
+    });
+    contextLabel = playContext.value;
+  }
+
   if (!track) {
     return (
       <div
@@ -71,17 +88,21 @@ export function NowPlayingScreen({
         padding: "16px 20px 20px 20px",
       }}
     >
-      {/* Top bar - SIN tres puntos */}
+      {/* Top bar */}
       <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
         <button onClick={onClose} className="p-2 -ml-2">
           <ChevronDown size={24} style={{ color: "#fff" }} />
         </button>
         <div className="text-center">
           <p style={{ fontSize: 11, color: "#a7a7a7", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>
-            Reproduciendo ahora
+            {playContext ? `${playContext.type === 'artist' ? 'Artista' : 'Género'}` : "Reproduciendo ahora"}
           </p>
+          {playContext && (
+            <p style={{ fontSize: 12, color: "#1db954", fontWeight: 600, marginTop: 1 }}>
+              {contextLabel}
+            </p>
+          )}
         </div>
-        {/* Botones con más separación */}
         <div className="flex items-center" style={{ gap: 16 }}>
           {onSync && (
             <button
@@ -258,6 +279,94 @@ export function NowPlayingScreen({
           style={{ accentColor: "#1db954" }}
         />
       </div>
+
+      {/* Flecha para mostrar lista de canciones del contexto (artista/género) */}
+      {contextTracks.length > 1 && (
+        <div style={{ marginTop: 8, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8 }}>
+          <button
+            onClick={() => setShowTrackList(!showTrackList)}
+            className="flex items-center justify-center w-full gap-2 py-2 rounded-lg hover:bg-white/5 transition-colors"
+            style={{ color: "#a7a7a7", fontSize: 13 }}
+          >
+            {showTrackList ? (
+              <>
+                <ChevronUp size={16} />
+                Ocultar lista
+              </>
+            ) : (
+              <>
+                <ChevronDown size={16} />
+                {contextTracks.length} canciones{playContext?.type === 'artist' ? ` de ${contextLabel}` : ` de ${contextLabel}`}
+              </>
+            )}
+          </button>
+
+          {showTrackList && (
+            <div
+              style={{
+                maxHeight: 200,
+                overflowY: "auto",
+                marginTop: 8,
+                borderRadius: 12,
+                background: "rgba(0,0,0,0.3)",
+                padding: "4px 0",
+              }}
+            >
+              {contextTracks.map((ctxTrack, idx) => {
+                const isActive = ctxTrack.id === track.id;
+                const ctxIndexInTracks = allTracks.findIndex(t => t.id === ctxTrack.id);
+                return (
+                  <button
+                    key={ctxTrack.id}
+                    onClick={() => {
+                      if (!isActive) {
+                        onPlay(ctxTrack, ctxIndexInTracks >= 0 ? ctxIndexInTracks : idx, playContext);
+                      }
+                    }}
+                    className="flex items-center gap-3 w-full text-left px-4 py-2 hover:bg-white/5 transition-colors"
+                    style={{
+                      background: isActive ? "rgba(29,185,84,0.15)" : "transparent",
+                    }}
+                  >
+                    <div
+                      className="flex-shrink-0 flex items-center justify-center rounded overflow-hidden"
+                      style={{ width: 36, height: 36, background: "#282828" }}
+                    >
+                      {ctxTrack.cover ? (
+                        <img src={ctxTrack.cover} alt="" className="w-full h-full object-cover" />
+                      ) : playContext?.type === "artist" ? (
+                        <User size={16} style={{ color: "#535353" }} />
+                      ) : (
+                        <Disc size={16} style={{ color: "#535353" }} />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="truncate"
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: isActive ? "#1db954" : "#fff",
+                        }}
+                      >
+                        {ctxTrack.title}
+                      </p>
+                      {playContext?.type !== "artist" && (
+                        <p className="truncate" style={{ fontSize: 11, color: "#727272" }}>
+                          {ctxTrack.artist}
+                        </p>
+                      )}
+                    </div>
+                    {isActive && (
+                      <Play size={12} fill="#1db954" style={{ color: "#1db954", flexShrink: 0 }} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

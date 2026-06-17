@@ -83,6 +83,9 @@ export default function App() {
   const [activeView, setActiveView] = useState("home");
   const [showNowPlaying, setShowNowPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
+  // Contexto de reproducción: qué grupo de canciones se está mostrando
+  // { type: 'artist', value: 'Nombre', tracks: [...] } o { type: 'genre', value: 'Rock', tracks: [...] }
+  const [playContext, setPlayContext] = useState(null);
 
   // ====== AUDIO CON CROSSFADE ======
   const audioContextRef = useRef(null);
@@ -432,7 +435,7 @@ export default function App() {
   }, [currentTrack?.id, queueIndex, queue, getActiveAudio, crossfadeToTrack]);
 
   // ====== PLAYBACK CONTROLS ======
-  const playTrack = useCallback((track, indexInTracks) => {
+  const playTrack = useCallback((track, indexInTracks, context) => {
     // Si hay crossfade en curso, cancelarlo
     if (crossfadingRef.current) {
       const oldActive = getActiveAudio();
@@ -451,6 +454,13 @@ export default function App() {
     setQueue(tracks);
     setQueueIndex(indexInTracks);
     setIsPlaying(true);
+
+    // Establecer contexto de reproducción (artista, género, etc.)
+    if (context) {
+      setPlayContext(context);
+    } else {
+      setPlayContext(null);
+    }
 
     // Reproducir directamente en el slot activo
     const ctx = audioContextRef.current;
@@ -676,6 +686,10 @@ export default function App() {
           onClose={() => setShowNowPlaying(false)}
           onSync={handleSyncMetadata}
           onDelete={handleDeleteSong}
+          allTracks={tracks}
+          playContext={playContext}
+          onPlay={playTrack}
+          currentQueueIndex={queueIndex}
         />
       </div>
     );

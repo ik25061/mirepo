@@ -295,7 +295,7 @@ function AlbumSection({ albums, tracks, currentTrack, onPlay }) {
                 const firstTrack = tracks.find(t => t.album === album.name);
                 if (firstTrack) {
                   const idx = tracks.indexOf(firstTrack);
-                  onPlay(firstTrack, idx);
+                  onPlay(firstTrack, idx, { type: 'album', value: album.name });
                 }
               }}
             />
@@ -385,7 +385,7 @@ function GenreSection({ genres, tracks, currentTrack, onPlay }) {
                 });
                 if (firstTrack) {
                   const idx = tracks.indexOf(firstTrack);
-                  onPlay(firstTrack, idx);
+                  onPlay(firstTrack, idx, { type: 'genre', value: genre });
                 }
               }}
             />
@@ -462,7 +462,7 @@ function ArtistSection({ artists, tracks, currentTrack, onPlay }) {
               const firstTrack = tracks.find(t => t.artist === artist.name);
               if (firstTrack) {
                 const idx = tracks.indexOf(firstTrack);
-                onPlay(firstTrack, idx);
+                onPlay(firstTrack, idx, { type: 'artist', value: artist.name });
               }
             }}
           />
