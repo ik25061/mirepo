@@ -532,49 +532,81 @@ export default function App() {
   }, []);
 
   // ====== DELETE SONG ======
-  const handleDeleteSong = useCallback(async (track) => {
-    if (!window.confirm(`¿Enviar "${track.title}" a la papelera?`)) return;
-    try {
-      const response = await fetch(`${API_URL}/api/songs`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: track.filename || track.id })
-      });
-      if (response.ok) {
-        const isCurrentTrack = currentTrack?.id === track.id;
-
-        setTracks(prev => prev.filter(t => t.id !== track.id));
-
-        if (isCurrentTrack) {
-          setQueue(queue => {
-            const deletedIdx = queue.findIndex(t => t.id === track.id);
-            if (deletedIdx === -1) return queue;
-            const newQueue = queue.filter(t => t.id !== track.id);
-            if (newQueue.length === 0) {
-              setQueueIndex(-1);
-              setIsPlaying(false);
-              return [];
+// ====== DELETE SONG - CORREGIDO ======
+const handleDeleteSong = useCallback(async (track) => {
+  if (!window.confirm(`¿Enviar "${track.title}" a la papelera?`)) return;
+  try {
+    // Asegurar que enviamos el filename correcto
+    const filename = track.filename || track.id;
+    
+    const response = await fetch(`${API_URL}/api/songs`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: filename })
+    });
+    
+    if (response.ok) {
+      const isCurrentTrack = currentTrack?.id === track.id;
+      
+      // Actualizar tracks
+      setTracks(prev => prev.filter(t => t.id !== track.id));
+      
+      if (isCurrentTrack) {
+        setQueue(queue => {
+          const deletedIdx = queue.findIndex(t => t.id === track.id || t.filename === track.filename);
+          if (deletedIdx === -1) return queue;
+          
+          const newQueue = queue.filter(t => t.id !== track.id && t.filename !== track.filename);
+          
+          if (newQueue.length === 0) {
+            setQueueIndex(-1);
+            setIsPlaying(false);
+            // Limpiar audio
+            const audio = getActiveAudio();
+            if (audio) {
+              audio.pause();
+              audio.src = "";
             }
-            setQueueIndex(prevIdx => {
-              if (deletedIdx < prevIdx) return prevIdx - 1;
-              if (deletedIdx === prevIdx) return Math.min(prevIdx, newQueue.length - 1);
-              return prevIdx;
-            });
-            setIsPlaying(true);
-            return newQueue;
-          });
-        }
-
-        await fetchSongsFromServer();
-      } else {
-        const error = await response.json();
-        alert(`❌ Error al eliminar: ${error.error}`);
+            return [];
+          }
+          
+          // Ajustar índice
+          const newIndex = Math.min(deletedIdx, newQueue.length - 1);
+          setQueueIndex(newIndex);
+          setIsPlaying(true);
+          
+          // Reproducir la siguiente canción
+          const nextTrack = newQueue[newIndex];
+          if (nextTrack) {
+            setTimeout(() => {
+              const ctx = audioContextRef.current;
+              const audio = getActiveAudio();
+              const gain = getActiveGain();
+              if (ctx && audio && gain) {
+                if (ctx.state === "suspended") ctx.resume();
+                silenceSkipDoneRef.current = false;
+                audio.src = nextTrack.url;
+                audio.load();
+                gain.gain.setValueAtTime(1, ctx.currentTime);
+                audio.play().catch(() => {});
+              }
+            }, 100);
+          }
+          
+          return newQueue;
+        });
       }
-    } catch (err) {
-      console.error('Error deleting song:', err);
-      alert('❌ Error de red al eliminar la canción');
+      
+      await fetchSongsFromServer();
+    } else {
+      const error = await response.json();
+      alert(`❌ Error al eliminar: ${error.error || 'Error desconocido'}`);
     }
-  }, [currentTrack, fetchSongsFromServer]);
+  } catch (err) {
+    console.error('Error deleting song:', err);
+    alert('❌ Error de red al eliminar la canción');
+  }
+}, [currentTrack, fetchSongsFromServer, getActiveAudio, getActiveGain, audioContextRef]);
 
   // ====== SYNC METADATA ======
   const handleSyncMetadata = useCallback(async (track) => {

@@ -444,48 +444,71 @@ function GenreCard({ genre, track, onPlay }) {
 }
 
 // ===== SECCIÓN: ARTISTAS =====
+// ===== SECCIÓN: ARTISTAS - ESTILO MEJORADO =====
 function ArtistSection({ artists, tracks, currentTrack, onPlay }) {
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between px-4 mb-3">
-        <h2 className="text-white" style={{ fontSize: 16, fontWeight: 700 }}>Artistas</h2>
-        <button style={{ fontSize: 12, color: "#a7a7a7", fontWeight: 600 }}>Ver todo</button>
+        <h2 className="text-white" style={{ fontSize: 18, fontWeight: 700 }}>Artistas</h2>
+        <button 
+          style={{ 
+            fontSize: 13, 
+            color: "#a7a7a7", 
+            fontWeight: 600,
+            padding: "4px 12px",
+            borderRadius: 20,
+            background: "rgba(255,255,255,0.05)",
+          }}
+        >
+          Ver todo
+        </button>
       </div>
-      <div className="flex gap-4 px-4 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-        {artists.map((artist) => (
-          <ArtistCard
-            key={artist.name}
-            artist={artist}
-            isCurrent={currentTrack?.artist === artist.name}
-            onPlay={() => {
-              // Reproducir primera canción del artista
-              const firstTrack = tracks.find(t => t.artist === artist.name);
-              if (firstTrack) {
-                const idx = tracks.indexOf(firstTrack);
-                onPlay(firstTrack, idx, { type: 'artist', value: artist.name });
-              }
-            }}
-          />
-        ))}
+      <div className="flex gap-4 px-4 overflow-x-auto" style={{ scrollbarWidth: "none", paddingBottom: 8 }}>
+        {artists.slice(0, 8).map((artist) => {
+          const artistTracks = tracks.filter(t => t.artist === artist.name);
+          const artistImage = artist.cover || (artistTracks.length > 0 ? artistTracks[0].cover : null);
+          
+          return (
+            <ArtistCard
+              key={artist.name}
+              artist={artist}
+              image={artistImage}
+              trackCount={artistTracks.length}
+              isCurrent={currentTrack?.artist === artist.name}
+              onPlay={() => {
+                const firstTrack = tracks.find(t => t.artist === artist.name);
+                if (firstTrack) {
+                  const idx = tracks.indexOf(firstTrack);
+                  onPlay(firstTrack, idx, { type: 'artist', value: artist.name });
+                }
+              }}
+            />
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function ArtistCard({ artist, isCurrent, onPlay }) {
+function ArtistCard({ artist, image, trackCount, isCurrent, onPlay }) {
   return (
     <div
       className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group"
-      style={{ width: 100 }}
+      style={{ width: 110 }}
       onClick={onPlay}
     >
       <div
-        className="relative flex items-center justify-center rounded-full overflow-hidden"
-        style={{ width: 90, height: 90, background: "#282828" }}
+        className="relative flex items-center justify-center rounded-full overflow-hidden transition-transform group-hover:scale-105"
+        style={{ 
+          width: 100, 
+          height: 100, 
+          background: "#282828",
+          boxShadow: isCurrent ? "0 0 0 2px #1db954" : "none",
+        }}
       >
-        {artist.cover ? (
+        {image ? (
           <img 
-            src={artist.cover} 
+            src={image} 
             alt={artist.name} 
             className="w-full h-full object-cover" 
           />
@@ -496,24 +519,47 @@ function ArtistCard({ artist, isCurrent, onPlay }) {
           className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
           style={{ background: "rgba(0,0,0,0.4)" }}
         >
-          <Play size={24} fill="#fff" style={{ color: "#fff" }} />
+          <div
+            className="flex items-center justify-center rounded-full"
+            style={{ width: 40, height: 40, background: "#1db954" }}
+          >
+            <Play size={20} fill="#000" style={{ color: "#000", marginLeft: 2 }} />
+          </div>
         </div>
+        {isCurrent && (
+          <div
+            className="absolute top-0 right-0"
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: "50%",
+              background: "#1db954",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span style={{ fontSize: 10, color: "#000" }}>▶</span>
+          </div>
+        )}
       </div>
       <p 
         className="text-center truncate" 
         style={{ 
-          fontSize: 12, 
+          fontSize: 13, 
           fontWeight: 600, 
           color: isCurrent ? "#1db954" : "#fff", 
-          maxWidth: 90 
+          maxWidth: 100 
         }}
       >
         {artist.name}
       </p>
+      <p style={{ fontSize: 11, color: "#727272" }}>
+        {trackCount} {trackCount === 1 ? "canción" : "canciones"}
+      </p>
     </div>
   );
 }
-
 function EmptyState({ onLoadFiles, onLoadFolder }) {
   return (
     <div
