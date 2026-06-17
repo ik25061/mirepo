@@ -5,8 +5,14 @@ export function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOpen }) {
   return (
     <div
       onClick={onOpen}
-      className="flex items-center gap-3 px-3 mx-2 mb-2 rounded-xl cursor-pointer"
-      style={{ height: 60, background: "#282828" }}
+      className="flex items-center gap-3 cursor-pointer"
+      style={{
+        height: 60,
+        background: "#282828",
+        margin: "0 12px 8px 12px",
+        padding: "0 12px",
+        borderRadius: 14,
+      }}
     >
       <div
         className="flex-shrink-0 flex items-center justify-center rounded-lg overflow-hidden"
