@@ -1,5 +1,5 @@
 // components/MobileLibraryView.jsx
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Upload, FolderOpen, Music2, Play, Heart, MoreHorizontal, Trash2 } from "lucide-react";
 
 function formatTime(s) {
@@ -9,32 +9,97 @@ function formatTime(s) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
+// Componente para el loading skeleton
+function TrackSkeleton() {
+  return (
+    <div className="flex items-center gap-3 py-2 px-2 rounded-xl animate-pulse">
+      <div className="flex-shrink-0 rounded-lg" style={{ width: 52, height: 52, background: "#282828" }} />
+      <div className="flex-1 min-w-0">
+        <div style={{ height: 14, width: "70%", background: "#282828", borderRadius: 4, marginBottom: 6 }} />
+        <div style={{ height: 12, width: "50%", background: "#282828", borderRadius: 4 }} />
+      </div>
+    </div>
+  );
+}
+
 export function MobileLibraryView({
   tracks, currentTrack, isPlaying, likedIds, onPlay, onLike, onLoadFiles, onLoadFolder, onDelete, onSync,
 }) {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(20);
+  const [isLoading, setIsLoading] = useState(false);
+  const loadMoreRef = useRef(null);
+  const listRef = useRef(null);
 
-  const filtered = tracks
-    .filter((t) => {
-      if (filter === "liked") return likedIds.has(t.id);
-      return true;
-    })
-    .filter((t) =>
-      !search ||
-      t.title.toLowerCase().includes(search.toLowerCase()) ||
-      t.artist.toLowerCase().includes(search.toLowerCase())
+  // Filtrar canciones según filtro y búsqueda
+  const getFilteredTracks = useCallback(() => {
+    return tracks
+      .filter((t) => {
+        if (filter === "liked") return likedIds.has(t.id);
+        return true;
+      })
+      .filter((t) =>
+        !search ||
+        t.title.toLowerCase().includes(search.toLowerCase()) ||
+        t.artist.toLowerCase().includes(search.toLowerCase())
+      );
+  }, [tracks, filter, search, likedIds]);
+
+  const filteredTracks = getFilteredTracks();
+  const visibleTracks = filteredTracks.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredTracks.length;
+
+  // Cargar más canciones
+  const loadMore = useCallback(() => {
+    if (isLoading || !hasMore) return;
+    setIsLoading(true);
+    // Simular carga con timeout
+    setTimeout(() => {
+      setVisibleCount(prev => Math.min(prev + 20, filteredTracks.length));
+      setIsLoading(false);
+    }, 300);
+  }, [isLoading, hasMore, filteredTracks.length]);
+
+  // Observer para lazy loading
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          loadMore();
+        }
+      },
+      { 
+        root: listRef.current,
+        rootMargin: "100px",
+        threshold: 0.1
+      }
     );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => {
+      if (loadMoreRef.current) {
+        observer.unobserve(loadMoreRef.current);
+      }
+    };
+  }, [hasMore, isLoading, loadMore, filteredTracks.length]);
+
+  // Resetear el contador cuando cambian los filtros
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [filter, search]);
 
   const chips = [
     { id: "all", label: "Todo" },
     { id: "liked", label: "Favoritos" },
-    { id: "recent", label: "Recientes" },
   ];
 
   return (
     <div className="flex flex-col h-full" style={{ background: "#121212" }}>
-      <div className="px-4 pt-12 pb-3">
+      <div className="px-4 pt-12 pb-3" style={{ flexShrink: 0 }}>
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-white" style={{ fontSize: 22, fontWeight: 800 }}>Mi música</h1>
           <button>
@@ -42,7 +107,7 @@ export function MobileLibraryView({
           </button>
         </div>
 
-        {/* Buscador - con más padding inferior */}
+        {/* Buscador */}
         <div
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
           style={{ background: "#282828", marginBottom: 16 }}
@@ -56,9 +121,18 @@ export function MobileLibraryView({
             className="flex-1 bg-transparent text-white outline-none"
             style={{ fontSize: 14 }}
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="p-1 rounded-full hover:bg-white/10"
+              style={{ color: "#a7a7a7" }}
+            >
+              ✕
+            </button>
+          )}
         </div>
 
-        {/* Botones de filtro - con más separación */}
+        {/* Botones de filtro */}
         <div className="flex gap-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {chips.map((chip) => (
             <button
@@ -84,19 +158,34 @@ export function MobileLibraryView({
             <input type="file" accept="audio/*" multiple className="hidden"
               onChange={(e) => e.target.files && onLoadFiles(e.target.files)} />
           </label>
+          <button
+            onClick={onLoadFolder}
+            className="flex-shrink-0 flex items-center gap-2 px-5 py-2 rounded-full transition-colors hover:bg-white/10"
+            style={{ background: "#282828", color: "#fff", fontSize: 13, fontWeight: 500 }}
+          >
+            <FolderOpen size={14} />
+            Carpeta
+          </button>
         </div>
       </div>
 
-      {filtered.length > 0 && (
-        <div className="px-4 pb-2">
+      {filteredTracks.length > 0 && (
+        <div className="px-4 pb-2" style={{ flexShrink: 0 }}>
           <p style={{ fontSize: 12, color: "#a7a7a7" }}>
-            {filtered.length} {filtered.length === 1 ? "canción" : "canciones"}
+            {filteredTracks.length} {filteredTracks.length === 1 ? "canción" : "canciones"}
+            {visibleCount < filteredTracks.length && (
+              <span style={{ color: "#535353" }}> • Mostrando {visibleCount}</span>
+            )}
           </p>
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-4">
-        {filtered.length === 0 ? (
+      <div 
+        ref={listRef}
+        className="flex-1 overflow-y-auto px-4" 
+        style={{ overscrollBehavior: "contain" }}
+      >
+        {filteredTracks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Music2 size={48} style={{ color: "#535353", marginBottom: 12 }} />
             <p className="text-white mb-1" style={{ fontSize: 15, fontWeight: 600 }}>
@@ -131,7 +220,7 @@ export function MobileLibraryView({
           </div>
         ) : (
           <div className="flex flex-col gap-1 pb-4">
-            {filtered.map((track, i) => {
+            {visibleTracks.map((track, i) => {
               const isCurrent = currentTrack?.id === track.id;
               const isLiked = likedIds.has(track.id);
               return (
@@ -229,6 +318,30 @@ export function MobileLibraryView({
                 </div>
               );
             })}
+
+            {/* Loader y elemento para observar */}
+            {hasMore && (
+              <div ref={loadMoreRef} className="py-4">
+                {isLoading ? (
+                  <>
+                    <TrackSkeleton />
+                    <TrackSkeleton />
+                    <TrackSkeleton />
+                  </>
+                ) : (
+                  <p style={{ textAlign: "center", color: "#535353", fontSize: 13 }}>
+                    Desplázate para cargar más...
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Mensaje final */}
+            {!hasMore && filteredTracks.length > 20 && (
+              <p style={{ textAlign: "center", color: "#535353", fontSize: 13, padding: "16px 0" }}>
+                🎵 {filteredTracks.length} canciones cargadas
+              </p>
+            )}
           </div>
         )}
       </div>

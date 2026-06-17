@@ -8,7 +8,7 @@ import { MobileLibraryView } from "./components/MobileLibraryView";
 import { MobileSearchView } from "./components/MobileSearchView";
 import "./App.css";
 
-const API_URL = 'http://172.16.12.4:5000';
+const API_URL = 'http://172.16.12.4:5001';
 
 // ====== CONFIGURACIÓN DE CROSSFADE Y SILENCIO ======
 const CROSSFADE_DURATION = 3; // segundos de crossfade
@@ -105,10 +105,11 @@ export default function App() {
   const audioRef = useRef(null);
 
   // ====== FETCH SONGS FROM SERVER ======
+  // Remove the limit parameter to fetch ALL songs from the server
   const fetchSongsFromServer = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/songs?limit=100`);
+      const response = await fetch(`${API_URL}/api/songs`);
       if (!response.ok) throw new Error('Error fetching songs');
       const data = await response.json();
       const tracksWithUrls = data.songs.map(serverToTrack);
@@ -532,9 +533,9 @@ export default function App() {
   }, []);
 
   // ====== DELETE SONG ======
-// ====== DELETE SONG - CORREGIDO ======
 const handleDeleteSong = useCallback(async (track) => {
-  if (!window.confirm(`¿Enviar "${track.title}" a la papelera?`)) return;
+  if (!window.confirm(`¿Eliminar "${track.title}" de la biblioteca?`)) return;
+  
   try {
     // Asegurar que enviamos el filename correcto
     const filename = track.filename || track.id;
@@ -548,56 +549,69 @@ const handleDeleteSong = useCallback(async (track) => {
     if (response.ok) {
       const isCurrentTrack = currentTrack?.id === track.id;
       
-      // Actualizar tracks
-      setTracks(prev => prev.filter(t => t.id !== track.id));
+      // 1. Eliminar de tracks (actualización local inmediata)
+      setTracks(prev => prev.filter(t => t.id !== track.id && t.filename !== track.filename));
       
-      if (isCurrentTrack) {
-        setQueue(queue => {
-          const deletedIdx = queue.findIndex(t => t.id === track.id || t.filename === track.filename);
-          if (deletedIdx === -1) return queue;
-          
-          const newQueue = queue.filter(t => t.id !== track.id && t.filename !== track.filename);
-          
-          if (newQueue.length === 0) {
-            setQueueIndex(-1);
-            setIsPlaying(false);
-            // Limpiar audio
-            const audio = getActiveAudio();
-            if (audio) {
-              audio.pause();
-              audio.src = "";
-            }
-            return [];
-          }
-          
-          // Ajustar índice
-          const newIndex = Math.min(deletedIdx, newQueue.length - 1);
-          setQueueIndex(newIndex);
-          setIsPlaying(true);
-          
-          // Reproducir la siguiente canción
-          const nextTrack = newQueue[newIndex];
-          if (nextTrack) {
-            setTimeout(() => {
-              const ctx = audioContextRef.current;
-              const audio = getActiveAudio();
-              const gain = getActiveGain();
-              if (ctx && audio && gain) {
-                if (ctx.state === "suspended") ctx.resume();
-                silenceSkipDoneRef.current = false;
-                audio.src = nextTrack.url;
-                audio.load();
-                gain.gain.setValueAtTime(1, ctx.currentTime);
-                audio.play().catch(() => {});
-              }
-            }, 100);
-          }
-          
-          return newQueue;
+      // 2. Eliminar de likedIds si estaba marcada como favorita
+      if (likedIds.has(track.id)) {
+        setLikedIds(prev => {
+          const next = new Set(prev);
+          next.delete(track.id);
+          return next;
         });
       }
       
-      await fetchSongsFromServer();
+      // 3. Manejar la cola de reproducción si la canción estaba en ella
+      setQueue(prev => {
+        const newQueue = prev.filter(t => t.id !== track.id && t.filename !== track.filename);
+        
+        if (newQueue.length === 0) {
+          // No hay más canciones en la cola
+          setQueueIndex(-1);
+          setIsPlaying(false);
+          // Limpiar audio
+          const audio = getActiveAudio();
+          if (audio) {
+            audio.pause();
+            audio.src = "";
+          }
+          return [];
+        }
+        
+        // Si la canción eliminada estaba en la cola, ajustar índice
+        const deletedIndex = prev.findIndex(t => t.id === track.id || t.filename === track.filename);
+        if (deletedIndex !== -1) {
+          // Si era la canción actual o una anterior, ajustar índice
+          if (deletedIndex <= queueIndex) {
+            const newIndex = Math.min(queueIndex - 1, newQueue.length - 1);
+            setQueueIndex(Math.max(0, newIndex));
+            
+            // Si era la canción actual, reproducir la siguiente
+            if (isCurrentTrack && newQueue.length > 0) {
+              const nextTrack = newQueue[Math.max(0, newIndex)];
+              setTimeout(() => {
+                const ctx = audioContextRef.current;
+                const audio = getActiveAudio();
+                const gain = getActiveGain();
+                if (ctx && audio && gain && nextTrack) {
+                  if (ctx.state === "suspended") ctx.resume();
+                  silenceSkipDoneRef.current = false;
+                  audio.src = nextTrack.url;
+                  audio.load();
+                  gain.gain.setValueAtTime(1, ctx.currentTime);
+                  audio.play().catch(() => {});
+                }
+              }, 100);
+            }
+          }
+        }
+        
+        return newQueue;
+      });
+      
+      // Mostrar mensaje de éxito
+      console.log(`✅ Canción "${track.title}" eliminada correctamente`);
+      
     } else {
       const error = await response.json();
       alert(`❌ Error al eliminar: ${error.error || 'Error desconocido'}`);
@@ -606,7 +620,7 @@ const handleDeleteSong = useCallback(async (track) => {
     console.error('Error deleting song:', err);
     alert('❌ Error de red al eliminar la canción');
   }
-}, [currentTrack, fetchSongsFromServer, getActiveAudio, getActiveGain, audioContextRef]);
+}, [currentTrack, likedIds, queueIndex, getActiveAudio, getActiveGain, audioContextRef]);
 
   // ====== SYNC METADATA ======
   const handleSyncMetadata = useCallback(async (track) => {
@@ -755,48 +769,56 @@ const handleDeleteSong = useCallback(async (track) => {
 
   return (
     <div
-      className="flex flex-col"
+      className="flex flex-col app-root"
       style={{
         height: "100dvh",
-        maxWidth: 480,
-        margin: "0 auto",
         background: "#121212",
         color: "#fff",
         overflow: "hidden",
         position: "relative",
       }}
     >
-      <div className="flex-1 min-h-0 overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <p style={{ color: "#a7a7a7" }}>Cargando música...</p>
-          </div>
-        ) : (
-          renderView()
-        )}
-      </div>
+      {/* App container: max-width on mobile, full-width on TV */}
+      <div className="app-inner" style={{
+        maxWidth: 480,
+        width: "100%",
+        margin: "0 auto",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}>
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <p style={{ color: "#a7a7a7" }}>Cargando música...</p>
+            </div>
+          ) : (
+            renderView()
+          )}
+        </div>
 
-      <div style={{ flexShrink: 0 }}>
-        {currentTrack && (
-          <MiniPlayer
-            track={currentTrack}
-            isPlaying={isPlaying}
-            onPlayPause={handlePlayPause}
-            onNext={handleNext}
-            onOpen={() => setShowNowPlaying(true)}
+        <div style={{ flexShrink: 0 }}>
+          {currentTrack && (
+            <MiniPlayer
+              track={currentTrack}
+              isPlaying={isPlaying}
+              onPlayPause={handlePlayPause}
+              onNext={handleNext}
+              onOpen={() => setShowNowPlaying(true)}
+            />
+          )}
+          <BottomNav
+            activeView={activeView}
+            onViewChange={(v) => {
+              if (v === "nowplaying" && currentTrack) {
+                setShowNowPlaying(true);
+              } else {
+                setActiveView(v);
+              }
+            }}
+            hasCurrentTrack={!!currentTrack}
           />
-        )}
-        <BottomNav
-          activeView={activeView}
-          onViewChange={(v) => {
-            if (v === "nowplaying" && currentTrack) {
-              setShowNowPlaying(true);
-            } else {
-              setActiveView(v);
-            }
-          }}
-          hasCurrentTrack={!!currentTrack}
-        />
+        </div>
       </div>
     </div>
   );

@@ -1038,7 +1038,7 @@ body {
 }
 
 /* ==========================================================================
-   RESPONSIVE
+   RESPONSIVE (Mobile)
    ========================================================================== */
 @media (max-width: 768px) {
   .sidebar {
@@ -1142,5 +1142,215 @@ body {
   
   .player-progress {
     max-width: none;
+  }
+}
+
+/* ==========================================================================
+   SMART TV / LARGE SCREEN RESPONSIVE (≥1200px)
+   Optimizado para televisores inteligentes y pantallas grandes
+   ========================================================================== */
+@media (min-width: 1200px) {
+  /* ---- LAYOUT ---- */
+  .app-root {
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #000 !important;
+  }
+
+  .app-inner {
+    max-width: 100% !important;
+    height: 100dvh !important;
+  }
+
+  /* ---- TYPOGRAPHY: bigger text for TV ---- */
+  .app-inner h1 {
+    font-size: clamp(28px, 3vw, 48px) !important;
+  }
+
+  .app-inner h2 {
+    font-size: clamp(20px, 2vw, 36px) !important;
+  }
+
+  .app-inner p,
+  .app-inner span,
+  .app-inner button:not(.bottom-nav-btn) {
+    font-size: clamp(14px, 1.4vw, 22px) !important;
+  }
+
+  /* ---- HOME VIEW ---- */
+  .app-inner .grid.grid-cols-2 {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .app-inner [class*="overflow-x-auto"] {
+    overflow-x: visible !important;
+    flex-wrap: wrap !important;
+    gap: 20px !important;
+    justify-content: center !important;
+  }
+
+  /* Album/Section cards - bigger */
+  .app-inner [style*="width: 140px"],
+  .app-inner [style*="width: 140"] {
+    width: clamp(160px, 12vw, 220px) !important;
+  }
+
+  .app-inner [style*="height: 140px"],
+  .app-inner [style*="height: 140"] {
+    height: clamp(160px, 12vw, 220px) !important;
+  }
+
+  /* Quick pick cards - wider */
+  .app-inner [style*="height: 56px"] {
+    height: clamp(64px, 5vw, 80px) !important;
+  }
+
+  .app-inner [style*="width: 56px"] {
+    width: clamp(64px, 5vw, 80px) !important;
+    height: clamp(64px, 5vw, 80px) !important;
+  }
+
+  /* Artist cards - bigger */
+  .app-inner [style*="width: 110px"] {
+    width: clamp(130px, 10vw, 180px) !important;
+  }
+
+  .app-inner [style*="width: 100px"] {
+    width: clamp(120px, 8vw, 150px) !important;
+    height: clamp(120px, 8vw, 150px) !important;
+  }
+
+  .app-inner [style*="height: 100px"] {
+    height: clamp(120px, 8vw, 150px) !important;
+  }
+
+  /* ---- LIBRARY VIEW ---- */
+  .app-inner [style*="width: 52px"] {
+    width: clamp(56px, 4vw, 72px) !important;
+    height: clamp(56px, 4vw, 72px) !important;
+  }
+
+  .app-inner [style*="height: 52px"] {
+    height: clamp(56px, 4vw, 72px) !important;
+  }
+
+  /* Library track row */
+  .app-inner .flex.items-center.gap-3.py-2 {
+    padding-top: clamp(12px, 1.2vw, 20px) !important;
+    padding-bottom: clamp(12px, 1.2vw, 20px) !important;
+  }
+
+  /* ---- MINI PLAYER ---- */
+  .app-inner [style*="height: 60px"] {
+    height: clamp(64px, 5vw, 80px) !important;
+    margin: 0 clamp(16px, 2vw, 24px) 8px clamp(16px, 2vw, 24px) !important;
+  }
+
+  .app-inner [style*="width: 44px"] {
+    width: clamp(48px, 3.5vw, 64px) !important;
+    height: clamp(48px, 3.5vw, 64px) !important;
+  }
+
+  .app-inner [style*="height: 44px"] {
+    height: clamp(48px, 3.5vw, 64px) !important;
+  }
+
+  /* ---- BOTTOM NAV ---- */
+  .app-inner [style*="height: 64px"] {
+    height: clamp(64px, 5vw, 80px) !important;
+  }
+
+  .app-inner [style*="fontSize: 10"],
+  .app-inner [style*="font-size: 10"] {
+    font-size: clamp(11px, 1.2vw, 16px) !important;
+  }
+
+  /* ---- PADDING/MARGIN adjustments for TV ---- */
+  .app-inner .px-4 {
+    padding-left: clamp(16px, 3vw, 48px) !important;
+    padding-right: clamp(16px, 3vw, 48px) !important;
+  }
+
+  .app-inner .pt-12 {
+    padding-top: clamp(48px, 6vw, 80px) !important;
+  }
+
+  .app-inner .pb-2 {
+    padding-bottom: clamp(8px, 2vw, 24px) !important;
+  }
+
+  .app-inner .gap-2 {
+    gap: clamp(8px, 1.5vw, 20px) !important;
+  }
+
+  .app-inner .gap-3 {
+    gap: clamp(12px, 2vw, 28px) !important;
+  }
+
+  /* ---- FOCUS STYLES for remote control navigation ---- */
+  .app-inner button:focus-visible,
+  .app-inner div[tabindex]:focus-visible,
+  .app-inner [role="button"]:focus-visible {
+    outline: 3px solid var(--accent) !important;
+    outline-offset: 3px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Buttons bigger for remote control */
+  .app-inner [style*="padding: 10px 20px"] {
+    padding: clamp(12px, 1.2vw, 20px) clamp(20px, 2.5vw, 40px) !important;
+  }
+
+  .app-inner .rounded-full {
+    border-radius: clamp(24px, 3vw, 40px) !important;
+  }
+}
+
+/* ==========================================================================
+   VERY LARGE SCREENS (≥1920px) - Full TV 4K optimization
+   ========================================================================== */
+@media (min-width: 1920px) {
+  .app-inner .grid.grid-cols-2 {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  .app-inner [style*="width: 140px"],
+  .app-inner [style*="width: 140"] {
+    width: 240px !important;
+  }
+
+  .app-inner [style*="height: 140px"],
+  .app-inner [style*="height: 140"] {
+    height: 240px !important;
+  }
+
+  .app-inner [style*="width: 110px"] {
+    width: 200px !important;
+  }
+
+  .app-inner [style*="width: 100px"] {
+    width: 160px !important;
+    height: 160px !important;
+  }
+
+  .app-inner [style*="height: 100px"] {
+    height: 160px !important;
+  }
+
+  .app-inner h1 {
+    font-size: 52px !important;
+  }
+
+  .app-inner h2 {
+    font-size: 38px !important;
+  }
+
+  .app-inner p,
+  .app-inner span,
+  .app-inner button:not(.bottom-nav-btn) {
+    font-size: 22px !important;
   }
 }
