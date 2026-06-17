@@ -16,6 +16,32 @@ const SILENCE_THRESHOLD = 0.01; // umbral para detectar silencio (0-1)
 const SILENCE_CHECK_DURATION = 5; // segundos máximos a analizar al inicio
 const SILENCE_ANALYSE_INTERVAL = 0.1; // intervalo de análisis en segundos
 
+// ====== PERSISTENCIA DE FAVORITOS (localStorage) ======
+const STORAGE_KEY_LIKED = 'mirepo_liked_ids';
+
+function loadLikedIds() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_LIKED);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        return new Set(parsed);
+      }
+    }
+  } catch (e) {
+    console.warn('Error loading liked IDs from localStorage:', e);
+  }
+  return new Set();
+}
+
+function saveLikedIds(ids) {
+  try {
+    localStorage.setItem(STORAGE_KEY_LIKED, JSON.stringify([...ids]));
+  } catch (e) {
+    console.warn('Error saving liked IDs to localStorage:', e);
+  }
+}
+
 function parseFilename(filename) {
   const name = filename.replace(/\.[^.]+$/, "");
   const dashIdx = name.indexOf(" - ");
@@ -79,7 +105,7 @@ export default function App() {
   const [queue, setQueue] = useState([]);
   const [queueIndex, setQueueIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [likedIds, setLikedIds] = useState(new Set());
+  const [likedIds, setLikedIds] = useState(() => loadLikedIds());
   const [activeView, setActiveView] = useState("home");
   const [showNowPlaying, setShowNowPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -104,6 +130,11 @@ export default function App() {
   // Referencia legacy para compatibilidad con componentes
   const audioRef = useRef(null);
 
+  // ====== PERSISTIR likedIds EN localStorage ======
+  useEffect(() => {
+    saveLikedIds(likedIds);
+  }, [likedIds]);
+
   // ====== FETCH SONGS FROM SERVER ======
   // Remove the limit parameter to fetch ALL songs from the server
   const fetchSongsFromServer = useCallback(async () => {
@@ -114,6 +145,17 @@ export default function App() {
       const data = await response.json();
       const tracksWithUrls = data.songs.map(serverToTrack);
       setTracks(tracksWithUrls);
+
+      // Limpiar likedIds: eliminar IDs de canciones que ya no existen en el servidor
+      const validIds = new Set(tracksWithUrls.map(t => t.id));
+      setLikedIds(prev => {
+        const cleaned = new Set([...prev].filter(id => validIds.has(id)));
+        if (cleaned.size !== prev.size) {
+          // Si hubo cambios, se guardarán automáticamente por el useEffect de persistencia
+          return cleaned;
+        }
+        return prev;
+      });
     } catch (err) {
       console.error('Error fetching songs:', err);
     } finally {
