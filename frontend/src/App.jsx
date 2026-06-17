@@ -44,20 +44,36 @@ function fileToTrack(file) {
 }
 
 function serverToTrack(song) {
+  // La URL de la canción
+  const audioUrl = `${API_URL}/songs/${encodeURIComponent(song.filename)}`;
+  
+  // Las imágenes ahora usan las nuevas rutas
+  const coverUrl = song.hasCover && song.albumArtist && song.album 
+    ? `${API_URL}/songs/${encodeURIComponent(song.albumArtist)}/${encodeURIComponent(song.album)}/cover.jpg`
+    : null;
+    
+  const artistImageUrl = song.hasArtistImage && song.albumArtist
+    ? `${API_URL}/songs/${encodeURIComponent(song.albumArtist)}/artist.jpg`
+    : null;
+  
   return {
     id: song.filename,
     title: song.title,
     artist: song.artist,
-    album: song.album || "Desconocido",
+    album: song.album,
+    albumArtist: song.albumArtist || song.artist,
+    trackNumber: song.trackNumber,
     year: song.year || null,
     duration: song.duration || 0,
-    url: `${API_URL}/songs/${encodeURIComponent(song.filename)}`,
-    cover: song.imageUrl ? `${API_URL}${song.imageUrl}` : undefined,
-    genre: song.genre,
+    url: audioUrl,
+    cover: coverUrl,
+    imageUrl: coverUrl || artistImageUrl, // Para compatibilidad
+    genre: song.genre || 'Desconocido',
     filename: song.filename,
+    hasCover: song.hasCover || false,
+    hasArtistImage: song.hasArtistImage || false
   };
 }
-
 export default function App() {
   const [tracks, setTracks] = useState([]);
   const [queue, setQueue] = useState([]);
@@ -360,31 +376,60 @@ export default function App() {
   }, [currentTrack, getActiveAudio]);
 
   // ====== AUTOMATIC NEXT WITH CROSSFADE ======
+  // Referencia mutable para el handler onEnded (evita stale closures con los refs)
+  const onEndedRef = useRef(null);
+
   useEffect(() => {
-    const audio = getActiveAudio();
-    if (!audio) return;
+    // Cada vez que cambia currentTrack o queue, re-adjuntar evento ended al audio correcto
+    const currentAudio = getActiveAudio();
+    if (!currentAudio) return;
+
+    // Limpiar listener anterior
+    if (onEndedRef.current) {
+      // Remover del audio previo (si existe y es diferente)
+    }
 
     const onEnded = () => {
       const nextIndex = queueIndex + 1;
       if (nextIndex < queue.length) {
-        // Hay siguiente canción: hacer crossfade
         const nextTrack = queue[nextIndex];
         setQueueIndex(nextIndex);
         setIsPlaying(true);
-        crossfadeToTrack(nextTrack);
-      } else {
-        // Fin de la cola: volver al inicio
+        // Pequeño delay para asegurar que el estado se actualice antes del crossfade
+        setTimeout(() => {
+          crossfadeToTrack(nextTrack);
+        }, 100);
+      } else if (queue.length > 0) {
         setQueueIndex(0);
         setIsPlaying(true);
-        if (queue.length > 0) {
+        setTimeout(() => {
           crossfadeToTrack(queue[0]);
-        }
+        }, 100);
       }
     };
 
-    audio.addEventListener("ended", onEnded);
-    return () => audio.removeEventListener("ended", onEnded);
-  }, [queueIndex, queue, getActiveAudio, crossfadeToTrack]);
+    // Guardar referencia
+    onEndedRef.current = onEnded;
+
+    // Adjuntar evento
+    currentAudio.addEventListener("ended", onEnded);
+
+    // También detectar "stuck" en móvil (si el audio termina pero ended no se dispara)
+    const checkInterval = setInterval(() => {
+      if (!currentAudio.paused && currentAudio.currentTime > 0 && currentAudio.duration > 0) {
+        const remaining = currentAudio.duration - currentAudio.currentTime;
+        if (remaining <= 0.2 && !currentAudio.ended) {
+          // El audio llegó al final pero no disparó ended, forzar
+          currentAudio.dispatchEvent(new Event('ended'));
+        }
+      }
+    }, 500);
+
+    return () => {
+      currentAudio.removeEventListener("ended", onEnded);
+      clearInterval(checkInterval);
+    };
+  }, [currentTrack?.id, queueIndex, queue, getActiveAudio, crossfadeToTrack]);
 
   // ====== PLAYBACK CONTROLS ======
   const playTrack = useCallback((track, indexInTracks) => {
