@@ -91,16 +91,18 @@ export function NowPlayingScreen({
   // Determinar si mostrar la foto (solo si hay pocas canciones o si el usuario decide)
   const showCover = contextTracks.length <= 3;
 
+  const hasContextList = contextTracks.length > 1;
+
   return (
     <div
       className="flex flex-col h-full"
       style={{
         background: "linear-gradient(180deg, #1a1a2e 0%, #0d0d0d 100%)",
-        padding: "12px 16px 16px 16px",
+        padding: "12px 16px 0 16px",
       }}
     >
       {/* Top bar */}
-      <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
+      <div className="flex items-center justify-between" style={{ flexShrink: 0 }}>
         <button onClick={onClose} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors">
           <ChevronDown size={24} style={{ color: "#fff" }} />
         </button>
@@ -133,17 +135,30 @@ export function NowPlayingScreen({
         </div>
       </div>
 
-      {/* Área principal: info de canción + controls + lista */}
-      <div className="flex-1 flex flex-col" style={{ minHeight: 0 }}>
-        {/* Cover - solo visible si hay pocas canciones */}
-        {showCover && (
-          <div className="flex items-center justify-center" style={{ padding: "4px 0" }}>
+      {/* Área principal: contenido centrado verticalmente + lista */}
+      <div
+        className="flex-1 flex flex-col"
+        style={{
+          minHeight: 0,
+          justifyContent: hasContextList ? "flex-start" : "center",
+        }}
+      >
+        {/* Contenedor centrado de info de canción + controles */}
+        <div
+          className="flex flex-col"
+          style={{
+            flexShrink: 0,
+            paddingTop: hasContextList ? 4 : 0,
+          }}
+        >
+          {/* Cover - siempre visible con tamaño más grande para mobile */}
+          <div className="flex items-center justify-center" style={{ padding: hasContextList ? "4px 0" : "8px 0" }}>
             <div
               className="relative flex items-center justify-center overflow-hidden"
               style={{
-                width: "min(50vw, 180px)",
-                height: "min(50vw, 180px)",
-                borderRadius: "8px",
+                width: hasContextList ? "min(40vw, 160px)" : "min(65vw, 240px)",
+                height: hasContextList ? "min(40vw, 160px)" : "min(65vw, 240px)",
+                borderRadius: "12px",
                 background: "#282828",
                 boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
               }}
@@ -155,108 +170,129 @@ export function NowPlayingScreen({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <Music2 size={60} style={{ color: "#535353" }} />
+                <Music2 size={hasContextList ? 48 : 80} style={{ color: "#535353" }} />
               )}
             </div>
           </div>
-        )}
 
-        {/* Track info - compacto */}
-        <div className="flex items-center justify-between" style={{ padding: "4px 0 4px 0" }}>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-white truncate" style={{ fontSize: 18, fontWeight: 700 }}>
-              {track.title}
-            </h2>
-            <p className="truncate" style={{ fontSize: 14, color: "#a7a7a7" }}>
-              {track.artist}
-            </p>
-            {track.album && track.album !== "Desconocido" && (
-              <p className="truncate" style={{ fontSize: 12, color: "#727272" }}>
-                {track.album}
+          {/* Track info */}
+          <div className="flex items-center justify-between" style={{ padding: "8px 0 4px 0" }}>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-white truncate" style={{ fontSize: 20, fontWeight: 700 }}>
+                {track.title}
+              </h2>
+              <p className="truncate" style={{ fontSize: 15, color: "#a7a7a7" }}>
+                {track.artist}
               </p>
-            )}
+              {track.album && track.album !== "Desconocido" && (
+                <p className="truncate" style={{ fontSize: 13, color: "#727272" }}>
+                  {track.album}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => onLike(track.id)}
+              className="ml-3 flex-shrink-0 p-2 hover:scale-110 transition-transform"
+              style={{ color: isLiked ? "#1db954" : "#a7a7a7" }}
+            >
+              <Heart size={26} fill={isLiked ? "currentColor" : "none"} />
+            </button>
           </div>
-          <button
-            onClick={() => onLike(track.id)}
-            className="ml-3 flex-shrink-0 p-2 hover:scale-110 transition-transform"
-            style={{ color: isLiked ? "#1db954" : "#a7a7a7" }}
-          >
-            <Heart size={24} fill={isLiked ? "currentColor" : "none"} />
-          </button>
-        </div>
 
-        {/* Progress bar */}
-        <div style={{ padding: "2px 0" }}>
-          <div
-            ref={progressRef}
-            onClick={seekTo}
-            className="w-full rounded-full cursor-pointer"
-            style={{ height: 4, background: "#535353", position: "relative" }}
-          >
+          {/* Progress bar */}
+          <div style={{ padding: "4px 0" }}>
             <div
-              className="rounded-full"
+              ref={progressRef}
+              onClick={seekTo}
+              className="w-full rounded-full cursor-pointer"
+              style={{ height: 5, background: "#535353", position: "relative" }}
+            >
+              <div
+                className="rounded-full"
+                style={{
+                  width: `${progress}%`,
+                  height: "100%",
+                  background: "#1db954",
+                  position: "relative",
+                }}
+              />
+            </div>
+            <div className="flex justify-between" style={{ marginTop: 2 }}>
+              <span style={{ fontSize: 11, color: "#a7a7a7" }}>{formatTime(currentTime)}</span>
+              <span style={{ fontSize: 11, color: "#a7a7a7" }}>{formatTime(duration)}</span>
+            </div>
+          </div>
+
+          {/* Main controls */}
+          <div className="flex items-center justify-between" style={{ padding: "8px 0" }}>
+            <button
+              onClick={() => setShuffle(!shuffle)}
+              style={{ color: shuffle ? "#1db954" : "#a7a7a7", padding: 8 }}
+            >
+              <Shuffle size={22} />
+            </button>
+
+            <button onClick={onPrev} style={{ color: "#fff", padding: "4px 12px" }}>
+              <SkipBack size={30} fill="currentColor" />
+            </button>
+
+            <button
+              onClick={onPlayPause}
+              className="flex items-center justify-center rounded-full hover:scale-105 transition-transform"
               style={{
-                width: `${progress}%`,
-                height: "100%",
-                background: "#1db954",
-                position: "relative",
+                width: 64,
+                height: 64,
+                background: "#fff",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+              }}
+            >
+              {isPlaying ? (
+                <Pause size={28} fill="#000" style={{ color: "#000" }} />
+              ) : (
+                <Play size={28} fill="#000" style={{ color: "#000", marginLeft: 2 }} />
+              )}
+            </button>
+
+            <button onClick={onNext} style={{ color: "#fff", padding: "4px 12px" }}>
+              <SkipForward size={30} fill="currentColor" />
+            </button>
+
+            <button
+              onClick={() => setRepeat(!repeat)}
+              style={{ color: repeat ? "#1db954" : "#a7a7a7", padding: 8 }}
+            >
+              <Repeat size={22} />
+            </button>
+          </div>
+
+          {/* Volume */}
+          <div className="flex items-center gap-3" style={{ padding: "4px 0 8px 0", flexShrink: 0 }}>
+            <Volume2 size={16} style={{ color: "#a7a7a7", flexShrink: 0 }} />
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              defaultValue={0.8}
+              onChange={(e) => {
+                if (audioRef.current) audioRef.current.volume = parseFloat(e.target.value);
+              }}
+              className="flex-1"
+              style={{ 
+                accentColor: "#1db954",
+                height: 4,
+                borderRadius: 2,
               }}
             />
           </div>
-          <div className="flex justify-between" style={{ marginTop: 2 }}>
-            <span style={{ fontSize: 11, color: "#a7a7a7" }}>{formatTime(currentTime)}</span>
-            <span style={{ fontSize: 11, color: "#a7a7a7" }}>{formatTime(duration)}</span>
-          </div>
         </div>
 
-        {/* Main controls - compactos */}
-        <div className="flex items-center justify-between" style={{ padding: "4px 0" }}>
-          <button
-            onClick={() => setShuffle(!shuffle)}
-            style={{ color: shuffle ? "#1db954" : "#a7a7a7", padding: 4 }}
-          >
-            <Shuffle size={20} />
-          </button>
-
-          <button onClick={onPrev} style={{ color: "#fff", padding: "4px 8px" }}>
-            <SkipBack size={28} fill="currentColor" />
-          </button>
-
-          <button
-            onClick={onPlayPause}
-            className="flex items-center justify-center rounded-full hover:scale-105 transition-transform"
-            style={{
-              width: 56,
-              height: 56,
-              background: "#fff",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
-            }}
-          >
-            {isPlaying ? (
-              <Pause size={24} fill="#000" style={{ color: "#000" }} />
-            ) : (
-              <Play size={24} fill="#000" style={{ color: "#000", marginLeft: 2 }} />
-            )}
-          </button>
-
-          <button onClick={onNext} style={{ color: "#fff", padding: "4px 8px" }}>
-            <SkipForward size={28} fill="currentColor" />
-          </button>
-
-          <button
-            onClick={() => setRepeat(!repeat)}
-            style={{ color: repeat ? "#1db954" : "#a7a7a7", padding: 4 }}
-          >
-            <Repeat size={20} />
-          </button>
-        </div>
-
-        {/* Lista de canciones - OCUPA TODO EL ESPACIO DISPONIBLE SIN SCROLL */}
-        {contextTracks.length > 1 && (
+        {/* Lista de canciones - solo si hay contexto */}
+        {hasContextList && (
           <div 
             className="flex-1 flex flex-col" 
             style={{ 
-              marginTop: 8,
+              marginTop: 0,
               borderTop: "1px solid rgba(255,255,255,0.06)",
               minHeight: 0,
             }}
@@ -264,8 +300,8 @@ export function NowPlayingScreen({
             {/* Header de la lista */}
             <button
               onClick={() => setShowTrackList(!showTrackList)}
-              className="flex items-center justify-between w-full py-2 hover:bg-white/5 transition-colors rounded-lg"
-              style={{ color: "#a7a7a7", flexShrink: 0 }}
+              className="flex items-center justify-between w-full py-2 hover:bg-white/5 transition-colors rounded-lg flex-shrink-0"
+              style={{ color: "#a7a7a7" }}
             >
               <div className="flex items-center gap-2">
                 <ListMusic size={16} style={{ color: "#1db954" }} />
@@ -290,7 +326,7 @@ export function NowPlayingScreen({
               </div>
             </button>
 
-            {/* Lista de canciones - SIN SCROLL, OCUPA TODO EL ESPACIO */}
+            {/* Lista de canciones */}
             {showTrackList && (
               <div 
                 className="flex-1 flex flex-col"
@@ -384,27 +420,6 @@ export function NowPlayingScreen({
             )}
           </div>
         )}
-      </div>
-
-      {/* Volume - compacto */}
-      <div className="flex items-center gap-3" style={{ padding: "6px 0 2px 0", flexShrink: 0 }}>
-        <Volume2 size={14} style={{ color: "#a7a7a7", flexShrink: 0 }} />
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          defaultValue={0.8}
-          onChange={(e) => {
-            if (audioRef.current) audioRef.current.volume = parseFloat(e.target.value);
-          }}
-          className="flex-1"
-          style={{ 
-            accentColor: "#1db954",
-            height: 3,
-            borderRadius: 2,
-          }}
-        />
       </div>
 
       <style>{`

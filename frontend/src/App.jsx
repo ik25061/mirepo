@@ -100,6 +100,7 @@ function serverToTrack(song) {
     hasArtistImage: song.hasArtistImage || false
   };
 }
+
 export default function App() {
   const [tracks, setTracks] = useState([]);
   const [queue, setQueue] = useState([]);
@@ -354,6 +355,85 @@ export default function App() {
     nextAudio.addEventListener("canplay", onCanPlay, { once: true });
   }, [getActiveAudio, getActiveGain, getInactiveAudio, getInactiveGain, detectAndSkipSilence]);
 
+  // ====== FUNCIÓN: Manejar canciones no reproducibles ======
+  const handleUnplayableTrack = useCallback(async (failedTrack) => {
+    if (!failedTrack) return;
+
+    const title = failedTrack.title || failedTrack.filename || 'desconocida';
+    const filename = failedTrack.filename || failedTrack.id;
+
+    console.warn(`⚠️ El archivo "${title}" no es reproducible. Eliminando...`);
+
+    // 1. Eliminar de la lista local
+    setTracks(prev => prev.filter(t => t.id !== failedTrack.id && t.filename !== failedTrack.filename));
+
+    // 2. Eliminar de likedIds si estaba marcada
+    setLikedIds(prev => {
+      const next = new Set(prev);
+      next.delete(failedTrack.id);
+      return next;
+    });
+
+    // 3. Mover a la papelera (llamar al endpoint de eliminar)
+    try {
+      await fetch(`${API_URL}/api/songs`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: filename })
+      });
+      console.log(`🗑️ Archivo "${title}" eliminado del servidor`);
+    } catch (err) {
+      console.error('Error deleting unplayable song from server:', err);
+    }
+
+    // 4. Manejar la cola de reproducción
+    setQueue(prev => {
+      const newQueue = prev.filter(t => t.id !== failedTrack.id && t.filename !== failedTrack.filename);
+
+      if (newQueue.length === 0) {
+        setQueueIndex(-1);
+        setIsPlaying(false);
+        const audio = getActiveAudio();
+        if (audio) {
+          audio.pause();
+          audio.src = "";
+        }
+        return [];
+      }
+
+      const deletedIndex = prev.findIndex(t => t.id === failedTrack.id || t.filename === failedTrack.filename);
+      if (deletedIndex !== -1) {
+        if (deletedIndex < queueIndex) {
+          // Canción anterior eliminada - ajustar índice
+          setQueueIndex(queueIndex - 1);
+        } else if (deletedIndex === queueIndex) {
+          // Canción actual eliminada - pasar a la siguiente
+          const newIndex = Math.min(queueIndex, newQueue.length - 1);
+          setQueueIndex(newIndex);
+
+          // Reproducir la siguiente canción
+          const nextTrack = newQueue[newIndex];
+          setTimeout(() => {
+            const ctx = audioContextRef.current;
+            const audio = getActiveAudio();
+            const gain = getActiveGain();
+            if (ctx && audio && gain && nextTrack) {
+              if (ctx.state === "suspended") ctx.resume();
+              silenceSkipDoneRef.current = false;
+              audio.src = nextTrack.url;
+              audio.load();
+              gain.gain.setValueAtTime(1, ctx.currentTime);
+              audio.play().catch(() => {});
+            }
+          }, 100);
+        }
+        // Si deletedIndex > queueIndex, el índice no cambia
+      }
+
+      return newQueue;
+    });
+  }, [queueIndex, getActiveAudio, getActiveGain, audioContextRef]);
+
   // ====== CARGAR TRACK ACTUAL ======
   useEffect(() => {
     const ctx = audioContextRef.current;
@@ -374,6 +454,8 @@ export default function App() {
     // Resetear silencio
     silenceSkipDoneRef.current = false;
 
+    const currentTrackRef = currentTrack; // Capturar para el closure
+
     audio.src = currentTrack.url;
     audio.load();
 
@@ -383,12 +465,28 @@ export default function App() {
     // Detectar silencio cuando empiece a reproducir
     const onPlay = () => {
       detectAndSkipSilence(audio);
+    };
+    audio.addEventListener("play", onPlay, { once: true });
+
+    // Manejar error de reproducción (archivo no reproducible)
+    const onError = () => {
+      audio.removeEventListener("error", onError);
+      if (currentTrackRef) {
+        setTimeout(() => handleUnplayableTrack(currentTrackRef), 50);
+      }
+    };
+    audio.addEventListener("error", onError);
+
+    audio.play().catch(() => {
+      // Si el catch se dispara por políticas de autoplay, ignoramos (no es error del archivo)
+      // Los errores reales del archivo se capturan con el evento 'error'
+    });
+
+    return () => {
+      audio.removeEventListener("error", onError);
       audio.removeEventListener("play", onPlay);
     };
-    audio.addEventListener("play", onPlay);
-
-    audio.play().catch(() => {});
-  }, [currentTrack?.id, getActiveAudio, getActiveGain, detectAndSkipSilence]);
+  }, [currentTrack?.id, getActiveAudio, getActiveGain, detectAndSkipSilence, handleUnplayableTrack]);
 
   // ====== PLAY/PAUSE ======
   useEffect(() => {
@@ -422,18 +520,10 @@ export default function App() {
   }, [currentTrack, getActiveAudio]);
 
   // ====== AUTOMATIC NEXT WITH CROSSFADE ======
-  // Referencia mutable para el handler onEnded (evita stale closures con los refs)
-  const onEndedRef = useRef(null);
-
   useEffect(() => {
     // Cada vez que cambia currentTrack o queue, re-adjuntar evento ended al audio correcto
     const currentAudio = getActiveAudio();
     if (!currentAudio) return;
-
-    // Limpiar listener anterior
-    if (onEndedRef.current) {
-      // Remover del audio previo (si existe y es diferente)
-    }
 
     const onEnded = () => {
       const nextIndex = queueIndex + 1;
@@ -453,9 +543,6 @@ export default function App() {
         }, 100);
       }
     };
-
-    // Guardar referencia
-    onEndedRef.current = onEnded;
 
     // Adjuntar evento
     currentAudio.addEventListener("ended", onEnded);
@@ -575,97 +662,97 @@ export default function App() {
   }, []);
 
   // ====== DELETE SONG ======
-const handleDeleteSong = useCallback(async (track) => {
-  if (!window.confirm(`¿Eliminar "${track.title}" de la biblioteca?`)) return;
-  
-  try {
-    // Asegurar que enviamos el filename correcto
-    const filename = track.filename || track.id;
+  const handleDeleteSong = useCallback(async (track) => {
+    if (!window.confirm(`¿Eliminar "${track.title}" de la biblioteca?`)) return;
     
-    const response = await fetch(`${API_URL}/api/songs`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename: filename })
-    });
-    
-    if (response.ok) {
-      const isCurrentTrack = currentTrack?.id === track.id;
+    try {
+      // Asegurar que enviamos el filename correcto
+      const filename = track.filename || track.id;
       
-      // 1. Eliminar de tracks (actualización local inmediata)
-      setTracks(prev => prev.filter(t => t.id !== track.id && t.filename !== track.filename));
-      
-      // 2. Eliminar de likedIds si estaba marcada como favorita
-      if (likedIds.has(track.id)) {
-        setLikedIds(prev => {
-          const next = new Set(prev);
-          next.delete(track.id);
-          return next;
-        });
-      }
-      
-      // 3. Manejar la cola de reproducción si la canción estaba en ella
-      setQueue(prev => {
-        const newQueue = prev.filter(t => t.id !== track.id && t.filename !== track.filename);
-        
-        if (newQueue.length === 0) {
-          // No hay más canciones en la cola
-          setQueueIndex(-1);
-          setIsPlaying(false);
-          // Limpiar audio
-          const audio = getActiveAudio();
-          if (audio) {
-            audio.pause();
-            audio.src = "";
-          }
-          return [];
-        }
-        
-        // Si la canción eliminada estaba en la cola, ajustar índice
-        const deletedIndex = prev.findIndex(t => t.id === track.id || t.filename === track.filename);
-        if (deletedIndex !== -1) {
-          if (deletedIndex < queueIndex) {
-            // Canción anterior eliminada - seguir reproduciendo la misma, ajustar índice
-            setQueueIndex(queueIndex - 1);
-          } else if (deletedIndex === queueIndex) {
-            // Canción actual eliminada - pasar a la siguiente (la que se desplaza a esta posición)
-            const newIndex = Math.min(queueIndex, newQueue.length - 1);
-            setQueueIndex(newIndex);
-            
-            if (isCurrentTrack && newQueue.length > 0) {
-              const nextTrack = newQueue[newIndex];
-              setTimeout(() => {
-                const ctx = audioContextRef.current;
-                const audio = getActiveAudio();
-                const gain = getActiveGain();
-                if (ctx && audio && gain && nextTrack) {
-                  if (ctx.state === "suspended") ctx.resume();
-                  silenceSkipDoneRef.current = false;
-                  audio.src = nextTrack.url;
-                  audio.load();
-                  gain.gain.setValueAtTime(1, ctx.currentTime);
-                  audio.play().catch(() => {});
-                }
-              }, 100);
-            }
-          }
-          // Si deletedIndex > queueIndex, el índice no cambia (la canción actual sigue igual)
-        }
-        
-        return newQueue;
+      const response = await fetch(`${API_URL}/api/songs`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: filename })
       });
       
-      // Mostrar mensaje de éxito
-      console.log(`✅ Canción "${track.title}" eliminada correctamente`);
-      
-    } else {
-      const error = await response.json();
-      alert(`❌ Error al eliminar: ${error.error || 'Error desconocido'}`);
+      if (response.ok) {
+        const isCurrentTrack = currentTrack?.id === track.id;
+        
+        // 1. Eliminar de tracks (actualización local inmediata)
+        setTracks(prev => prev.filter(t => t.id !== track.id && t.filename !== track.filename));
+        
+        // 2. Eliminar de likedIds si estaba marcada como favorita
+        if (likedIds.has(track.id)) {
+          setLikedIds(prev => {
+            const next = new Set(prev);
+            next.delete(track.id);
+            return next;
+          });
+        }
+        
+        // 3. Manejar la cola de reproducción si la canción estaba en ella
+        setQueue(prev => {
+          const newQueue = prev.filter(t => t.id !== track.id && t.filename !== track.filename);
+          
+          if (newQueue.length === 0) {
+            // No hay más canciones en la cola
+            setQueueIndex(-1);
+            setIsPlaying(false);
+            // Limpiar audio
+            const audio = getActiveAudio();
+            if (audio) {
+              audio.pause();
+              audio.src = "";
+            }
+            return [];
+          }
+          
+          // Si la canción eliminada estaba en la cola, ajustar índice
+          const deletedIndex = prev.findIndex(t => t.id === track.id || t.filename === track.filename);
+          if (deletedIndex !== -1) {
+            if (deletedIndex < queueIndex) {
+              // Canción anterior eliminada - seguir reproduciendo la misma, ajustar índice
+              setQueueIndex(queueIndex - 1);
+            } else if (deletedIndex === queueIndex) {
+              // Canción actual eliminada - pasar a la siguiente (la que se desplaza a esta posición)
+              const newIndex = Math.min(queueIndex, newQueue.length - 1);
+              setQueueIndex(newIndex);
+              
+              if (isCurrentTrack && newQueue.length > 0) {
+                const nextTrack = newQueue[newIndex];
+                setTimeout(() => {
+                  const ctx = audioContextRef.current;
+                  const audio = getActiveAudio();
+                  const gain = getActiveGain();
+                  if (ctx && audio && gain && nextTrack) {
+                    if (ctx.state === "suspended") ctx.resume();
+                    silenceSkipDoneRef.current = false;
+                    audio.src = nextTrack.url;
+                    audio.load();
+                    gain.gain.setValueAtTime(1, ctx.currentTime);
+                    audio.play().catch(() => {});
+                  }
+                }, 100);
+              }
+            }
+            // Si deletedIndex > queueIndex, el índice no cambia (la canción actual sigue igual)
+          }
+          
+          return newQueue;
+        });
+        
+        // Mostrar mensaje de éxito
+        console.log(`✅ Canción "${track.title}" eliminada correctamente`);
+        
+      } else {
+        const error = await response.json();
+        alert(`❌ Error al eliminar: ${error.error || 'Error desconocido'}`);
+      }
+    } catch (err) {
+      console.error('Error deleting song:', err);
+      alert('❌ Error de red al eliminar la canción');
     }
-  } catch (err) {
-    console.error('Error deleting song:', err);
-    alert('❌ Error de red al eliminar la canción');
-  }
-}, [currentTrack, likedIds, queueIndex, getActiveAudio, getActiveGain, audioContextRef]);
+  }, [currentTrack, likedIds, queueIndex, getActiveAudio, getActiveGain, audioContextRef]);
 
   // ====== SYNC METADATA ======
   const handleSyncMetadata = useCallback(async (track) => {
