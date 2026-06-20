@@ -8,7 +8,8 @@ import { MobileLibraryView } from "./components/MobileLibraryView";
 import { MobileSearchView } from "./components/MobileSearchView";
 import "./App.css";
 
-const API_URL = 'http://172.16.12.4:5001';
+// const API_URL = 'http://172.16.12.4:5001';
+const API_URL = 'http://192.168.1.152:5001';
 
 // ====== CONFIGURACIÓN DE CROSSFADE Y SILENCIO ======
 const CROSSFADE_DURATION = 3; // segundos de crossfade
@@ -911,14 +912,15 @@ export default function App() {
       }}
     >
       {/* App container: max-width on mobile, full-width on TV */}
-      <div className="app-inner" style={{
-        maxWidth: 480,
-        width: "100%",
-        margin: "0 auto",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-      }}>
+
+<div className="app-inner" style={{
+  maxWidth: window.innerWidth >= 1200 ? '100%' : 480,
+  width: "100%",
+  margin: "0 auto",
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+}}>
         <div className="flex-1 min-h-0 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-full">

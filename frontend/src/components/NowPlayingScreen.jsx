@@ -22,7 +22,7 @@ export function NowPlayingScreen({
   const [duration, setDuration] = useState(0);
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState(false);
-  const [showTrackList, setShowTrackList] = useState(true); // Por defecto visible
+  const [showTrackList, setShowTrackList] = useState(true);
   const progressRef = useRef(null);
 
   useEffect(() => {
@@ -88,9 +88,6 @@ export function NowPlayingScreen({
     );
   }
 
-  // Determinar si mostrar la foto (solo si hay pocas canciones o si el usuario decide)
-  const showCover = contextTracks.length <= 3;
-
   const hasContextList = contextTracks.length > 1;
 
   return (
@@ -101,10 +98,20 @@ export function NowPlayingScreen({
         padding: "12px 16px 0 16px",
       }}
     >
-      {/* Top bar */}
+      {/* Top bar - BOTÓN DE MINIMIZAR MEJORADO PARA TV */}
       <div className="flex items-center justify-between" style={{ flexShrink: 0 }}>
-        <button onClick={onClose} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors">
-          <ChevronDown size={24} style={{ color: "#fff" }} />
+        <button 
+          onClick={onClose} 
+          className="p-3 -ml-2 hover:bg-white/10 rounded-full transition-colors"
+          style={{ 
+            minWidth: 48, 
+            minHeight: 48,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <ChevronDown size={28} style={{ color: "#fff" }} />
         </button>
         <div className="text-center">
           <p style={{ fontSize: 11, color: "#a7a7a7", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>
@@ -117,7 +124,7 @@ export function NowPlayingScreen({
               onClick={(e) => { e.stopPropagation(); onSync(track); }}
               className="p-2 rounded-full hover:bg-white/10 transition-colors"
               title="Sincronizar metadatos"
-              style={{ color: "#a7a7a7" }}
+              style={{ color: "#a7a7a7", minWidth: 40, minHeight: 40 }}
             >
               <Search size={20} />
             </button>
@@ -127,7 +134,7 @@ export function NowPlayingScreen({
               onClick={(e) => { e.stopPropagation(); onDelete(track); }}
               className="p-2 rounded-full hover:bg-red-500/20 transition-colors"
               title="Eliminar canción"
-              style={{ color: "#ff4444" }}
+              style={{ color: "#ff4444", minWidth: 40, minHeight: 40 }}
             >
               <Trash2 size={20} />
             </button>
@@ -135,7 +142,7 @@ export function NowPlayingScreen({
         </div>
       </div>
 
-      {/* Área principal: contenido centrado verticalmente + lista */}
+      {/* Área principal */}
       <div
         className="flex-1 flex flex-col"
         style={{
@@ -151,7 +158,7 @@ export function NowPlayingScreen({
             paddingTop: hasContextList ? 4 : 0,
           }}
         >
-          {/* Cover - siempre visible con tamaño más grande para mobile */}
+          {/* Cover */}
           <div className="flex items-center justify-center" style={{ padding: hasContextList ? "4px 0" : "8px 0" }}>
             <div
               className="relative flex items-center justify-center overflow-hidden"
@@ -287,7 +294,7 @@ export function NowPlayingScreen({
           </div>
         </div>
 
-        {/* Lista de canciones - solo si hay contexto */}
+        {/* Lista de canciones */}
         {hasContextList && (
           <div 
             className="flex-1 flex flex-col" 
@@ -356,7 +363,6 @@ export function NowPlayingScreen({
                         paddingLeft: isActive ? 10 : 12,
                       }}
                     >
-                      {/* Número de canción */}
                       <span 
                         style={{ 
                           fontSize: 12, 
@@ -369,7 +375,6 @@ export function NowPlayingScreen({
                         {isActive ? "▶" : idx + 1}
                       </span>
                       
-                      {/* Info de la canción */}
                       <div className="min-w-0 flex-1">
                         <p
                           className="truncate"
@@ -393,7 +398,6 @@ export function NowPlayingScreen({
                         </div>
                       </div>
 
-                      {/* Indicador de reproducción */}
                       {isActive && isPlaying && (
                         <div className="flex items-end gap-0.5 h-4 flex-shrink-0">
                           {[0, 1, 2].map((b) => (

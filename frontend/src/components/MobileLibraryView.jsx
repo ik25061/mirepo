@@ -27,7 +27,9 @@ export function MobileLibraryView({
 }) {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [visibleCount, setVisibleCount] = useState(20);
+  const [visibleCount, setVisibleCount] = useState(() => {
+    return window.innerWidth >= 1200 ? 100 : 20;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const loadMoreRef = useRef(null);
   const listRef = useRef(null);
@@ -54,7 +56,6 @@ export function MobileLibraryView({
   const loadMore = useCallback(() => {
     if (isLoading || !hasMore) return;
     setIsLoading(true);
-    // Simular carga con timeout
     setTimeout(() => {
       setVisibleCount(prev => Math.min(prev + 20, filteredTracks.length));
       setIsLoading(false);
@@ -223,10 +224,12 @@ export function MobileLibraryView({
             {visibleTracks.map((track, i) => {
               const isCurrent = currentTrack?.id === track.id;
               const isLiked = likedIds.has(track.id);
+              
               return (
                 <div
                   key={track.id}
-                  className="flex items-center gap-3 py-2 px-2 rounded-xl active:bg-white/5 cursor-pointer"
+                  className="flex items-center gap-3 py-2 px-2 rounded-xl cursor-pointer active:bg-white/5"
+                  onClick={() => onPlay(track, tracks.indexOf(track))}
                   onDoubleClick={() => onPlay(track, tracks.indexOf(track))}
                 >
                   <div

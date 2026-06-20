@@ -12,9 +12,11 @@ const PORT = process.env.PORT || 5000;
 // ====== CONFIGURACIÓN ======
 const MUSIC_BASE_PATH = process.env.MUSIC_PATH || path.join(process.env.HOME || process.env.USERPROFILE, 'Music');
 const DB_PATH = path.join(__dirname, 'songs_db.json');
+const TRASH_DIR = path.join(__dirname, '.trash');
 
 console.log(`📂 Ruta de música: ${MUSIC_BASE_PATH}`);
 console.log(`💾 Ruta de DB: ${DB_PATH}`);
+console.log(`🗑️ Ruta de papelera: ${TRASH_DIR}`);
 
 // ====== MIDDLEWARE ======
 app.use(cors({
@@ -384,10 +386,7 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
   }
 });
 
-// DELETE - Eliminar canción
-const TRASH_DIR = path.join(__dirname, '.trash');
-
-
+// DELETE - Eliminar canción (con soporte para diferentes unidades)
 app.delete('/api/songs', async (req, res) => {
   try {
     const { filename } = req.body;
@@ -574,13 +573,43 @@ if (db.musicPath && db.musicPath !== MUSIC_BASE_PATH) {
   console.log(`📅 Último escaneo: ${db.lastScan || 'Nunca'}\n`);
 }
 
+// Función para obtener la IP local
+function getLocalIP() {
+  const { networkInterfaces } = require('os');
+  const nets = networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return '127.0.0.1';
+}
+
 // ====== INICIAR SERVIDOR ======
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🎵 Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`📂 Directorio de música: ${MUSIC_BASE_PATH}`);
-  console.log(`💾 Base de datos: ${DB_PATH}`);
-  console.log('\n✅ Servidor listo para recibir peticiones\n');
+  const localIP = getLocalIP();
+  console.log(`\n🎵 ==========================================`);
+  console.log(`   🎵 SERVIDOR DE MÚSICA INICIADO`);
+  console.log(`   ==========================================`);
+  console.log(`   📡 API Local:    http://localhost:${PORT}`);
+  console.log(`   📡 API Red:      http://${localIP}:${PORT}`);
+  console.log(`   📂 Música:       ${MUSIC_BASE_PATH}`);
+  console.log(`   💾 Base datos:   ${DB_PATH}`);
+  console.log(`   🗑️ Papelera:     ${TRASH_DIR}`);
+  console.log(`   ==========================================`);
+  console.log(`   📋 Endpoints disponibles:`);
+  console.log(`   GET  /api/songs           - Obtener todas las canciones`);
+  console.log(`   PUT  /api/songs/sync-metadata - Sincronizar metadatos`);
+  console.log(`   DELETE /api/songs         - Eliminar una canción`);
+  console.log(`   POST /api/recognize       - Reconocimiento de música`);
+  console.log(`   GET  /songs/*             - Servir archivos de música`);
+  console.log(`   ==========================================`);
+  console.log(`   ✅ Servidor listo para recibir peticiones`);
+  console.log(`   🛑 Presiona Ctrl+C para detener`);
+  console.log(`   ==========================================\n`);
 });
 
 // Manejar errores del servidor
@@ -617,5 +646,3 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Promesa rechazada no manejada:', reason);
 });
-
-console.log(`🚀 Servidor iniciando en puerto ${PORT}...`);
