@@ -1,0 +1,10 @@
+C:\Users\phaet\Documents\GitHub\mirepo\backend\.env
+C:\Users\phaet\Documents\GitHub\mirepo\backend\.trash
+C:\Users\phaet\Documents\GitHub\mirepo\backend\listado.txt
+C:\Users\phaet\Documents\GitHub\mirepo\backend\node_modules
+C:\Users\phaet\Documents\GitHub\mirepo\backend\package-lock.json
+C:\Users\phaet\Documents\GitHub\mirepo\backend\package.json
+C:\Users\phaet\Documents\GitHub\mirepo\backend\serve.js
+C:\Users\phaet\Documents\GitHub\mirepo\backend\songs_db.json
+C:\Users\phaet\Documents\GitHub\mirepo\backend\.trash\2026-06
+
