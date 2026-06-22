@@ -24,9 +24,9 @@ export default function HomeView({ songs, onOpenCollection, onLike }) {
 
       {/* Canciones que me gustan */}
       <section className="animate-fade-in overflow-hidden rounded-xl border border-border bg-gradient-to-b from-primary/10 to-surface sm:rounded-2xl">
-        <div className="flex items-center gap-3 p-3 sm:p-5">
-          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-lg sm:h-20 sm:w-20 sm:rounded-xl">
-            <Heart size={20} fill="currentColor" className="sm:hidden" />
+        <div className="flex items-center gap-4 p-4 sm:p-6 sm:pb-4">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-lg sm:h-20 sm:w-20 sm:rounded-xl">
+            <Heart size={22} fill="currentColor" className="sm:hidden" />
             <Heart size={36} fill="currentColor" className="hidden sm:block" />
           </div>
           <div className="min-w-0">
@@ -47,13 +47,13 @@ export default function HomeView({ songs, onOpenCollection, onLike }) {
         </div>
 
         {liked.length > 0 ? (
-          <div className="px-2 pb-2 sm:px-3 sm:pb-3">
+          <div className="flex flex-col gap-1.5 px-3 pb-4 sm:px-5 sm:pb-5">
             {liked.slice(0, 5).map((song, i) => (
               <SongRow key={song.id} song={song} index={i} queue={liked} onLike={onLike} />
             ))}
           </div>
         ) : (
-          <p className="px-3 pb-3 text-xs text-muted-foreground sm:px-5 sm:pb-5 sm:text-sm">
+          <p className="px-4 pb-4 text-xs text-muted-foreground sm:px-6 sm:pb-6 sm:text-sm">
             Marca canciones con el corazón para verlas aquí.
           </p>
         )}

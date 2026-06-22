@@ -4,7 +4,7 @@ import SongRow from './SongRow.jsx';
 import { usePlayer } from '../context/PlayerContext.jsx';
 import { formatTime } from '../lib/format.js';
 
-export default function CollectionView({ collection, onBack, onLike }) {
+export default function CollectionView({ collection, onBack, onLike, onDislike, onDislikeArtist, onDelete }) {
   const { play } = usePlayer();
   const { kind, name, songs } = collection;
   const round = kind === 'Artista';
@@ -12,7 +12,7 @@ export default function CollectionView({ collection, onBack, onLike }) {
   const coverId = songs.find((s) => s.hasCover)?.id || songs[0]?.id;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-20">
       <button
         onClick={onBack}
         className="flex w-fit items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
@@ -51,6 +51,10 @@ export default function CollectionView({ collection, onBack, onLike }) {
             index={i}
             queue={songs}
             onLike={onLike}
+            onDislike={onDislike}
+            onDislikeArtist={onDislikeArtist}
+            onDelete={onDelete}
+            showDelete={true}
             showCover={!round}
           />
         ))}

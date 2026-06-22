@@ -1,15 +1,43 @@
 import { Play, Pause, SkipForward, Music2 } from 'lucide-react';
 
 export function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOpen }) {
+  // Si no hay canción, mostrar un mini player vacío pero funcional
+  if (!track) {
+    return (
+      <div
+        className="flex items-center gap-3 cursor-pointer flex-shrink-0 opacity-50"
+        style={{
+          height: 48,
+          minHeight: 48,
+          background: '#282828',
+          margin: '0 12px 4px 12px',
+          padding: '0 12px',
+          borderRadius: 14,
+          flexShrink: 0,
+        }}
+      >
+        <div
+          className="flex-shrink-0 flex items-center justify-center rounded-lg overflow-hidden"
+          style={{ width: 36, height: 36, background: '#383838' }}
+        >
+          <Music2 size={14} style={{ color: '#535353' }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-muted-foreground truncate text-xs">Sin reproducción</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       onClick={onOpen}
       className="flex items-center gap-3 cursor-pointer flex-shrink-0"
       style={{
-        height: 60,
-        minHeight: 60,
+        height: 48,
+        minHeight: 48,
         background: '#282828',
-        margin: '0 12px 8px 12px',
+        margin: '0 12px 4px 12px',
         padding: '0 12px',
         borderRadius: 14,
         flexShrink: 0,
@@ -17,38 +45,33 @@ export function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOpen }) {
     >
       <div
         className="flex-shrink-0 flex items-center justify-center rounded-lg overflow-hidden"
-        style={{ width: 44, height: 44, background: '#383838' }}
+        style={{ width: 36, height: 36, background: '#383838' }}
       >
         {track.cover ? (
           <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
         ) : (
-          <Music2 size={18} style={{ color: '#a7a7a7' }} />
+          <Music2 size={14} style={{ color: '#a7a7a7' }} />
         )}
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-white truncate" style={{ fontSize: 13, fontWeight: 600 }}>
-          {track.title}
-        </p>
-        <p style={{ fontSize: 12, color: '#a7a7a7' }} className="truncate">
-          {track.artist}
-        </p>
+        <p className="text-white truncate text-xs font-medium">{track.title}</p>
+        <p className="truncate text-[10px] text-muted-foreground">{track.artist}</p>
       </div>
 
-      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={onPlayPause}
-          className="flex items-center justify-center w-9 h-9 rounded-full"
-          style={{ background: 'transparent' }}
+          className="flex items-center justify-center w-7 h-7 rounded-full"
         >
           {isPlaying ? (
-            <Pause size={22} fill="white" className="text-white" />
+            <Pause size={16} fill="white" className="text-white" />
           ) : (
-            <Play size={22} fill="white" className="text-white ml-0.5" />
+            <Play size={16} fill="white" className="text-white ml-0.5" />
           )}
         </button>
-        <button onClick={onNext} className="flex items-center justify-center w-9 h-9">
-          <SkipForward size={22} className="text-white" />
+        <button onClick={onNext} className="flex items-center justify-center w-7 h-7">
+          <SkipForward size={16} className="text-white" />
         </button>
       </div>
     </div>

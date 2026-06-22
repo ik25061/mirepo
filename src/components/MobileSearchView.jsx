@@ -111,14 +111,15 @@ export default function MobileSearchView({ tracks, currentTrack }) {
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full w-full">
       <h1 className="text-white mb-4" style={{ fontSize: 22, fontWeight: 800 }}>
         Buscar
       </h1>
 
-      <div className="flex items-center gap-2 mb-4">
+      {/* Buscador - ancho completo */}
+      <div className="flex items-center gap-2 mb-4 w-full">
         <div
-          className="flex items-center gap-2 px-4 py-3 rounded-xl flex-1"
+          className="flex items-center gap-2 px-4 py-3 rounded-xl flex-1 w-full"
           style={{ background: '#282828' }}
         >
           <Search size={16} style={{ color: '#a7a7a7', flexShrink: 0 }} />
@@ -130,12 +131,12 @@ export default function MobileSearchView({ tracks, currentTrack }) {
               setQuery(e.target.value);
               if (recognitionResult) setRecognitionResult(null);
             }}
-            className="flex-1 bg-transparent text-white outline-none"
+            className="flex-1 bg-transparent text-white outline-none w-full min-w-0"
             style={{ fontSize: 15 }}
             autoFocus
           />
           {query && (
-            <button onClick={() => setQuery('')} className="p-1" style={{ color: '#a7a7a7' }}>
+            <button onClick={() => setQuery('')} className="p-1 flex-shrink-0" style={{ color: '#a7a7a7' }}>
               <X size={14} />
             </button>
           )}
@@ -144,7 +145,7 @@ export default function MobileSearchView({ tracks, currentTrack }) {
         <button
           onClick={handleMicToggle}
           disabled={isRecognizing}
-          className="flex items-center justify-center rounded-full transition-all"
+          className="flex items-center justify-center rounded-full transition-all flex-shrink-0"
           style={{
             width: 44,
             height: 44,
@@ -153,7 +154,6 @@ export default function MobileSearchView({ tracks, currentTrack }) {
               : isRecognizing
               ? '#535353'
               : '#1db954',
-            flexShrink: 0,
             boxShadow: isRecording ? '0 0 20px rgba(231,76,60,0.5)' : 'none',
           }}
         >

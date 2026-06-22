@@ -4,13 +4,13 @@ export function BottomNav({ activeView, onViewChange, hasCurrentTrack }) {
   const tabs = [
     { id: 'home', label: 'Inicio', icon: Home },
     { id: 'search', label: 'Buscar', icon: Search },
-    { id: 'library', label: 'Tu biblioteca', icon: Library },
+    { id: 'library', label: 'Biblioteca', icon: Library },
     { id: 'nowplaying', label: 'Reproduciendo', icon: Music2 },
   ];
 
   return (
     <div
-      className="flex items-center justify-around w-full"
+      className="flex items-center w-full"
       style={{
         height: 64,
         minHeight: 64,
@@ -20,35 +20,40 @@ export function BottomNav({ activeView, onViewChange, hasCurrentTrack }) {
         flexShrink: 0,
         position: 'relative',
         zIndex: 10,
+        overflow: 'hidden',
       }}
     >
-      {tabs.map(({ id, label, icon: Icon }) => {
-        const isActive = activeView === id;
-        const isNowPlaying = id === 'nowplaying';
-        return (
-          <button
-            key={id}
-            onClick={() => onViewChange(id)}
-            className="flex flex-col items-center justify-center flex-1"
-            style={{ 
-              color: isActive ? '#fff' : '#a7a7a7',
-              minHeight: 44,
-              touchAction: 'manipulation',
-              gap: 3,
-              padding: '6px 0 4px',
-            }}
-          >
-            <Icon
-              size={isNowPlaying ? 20 : 18}
-              fill={isActive && isNowPlaying && hasCurrentTrack ? 'currentColor' : 'none'}
-              strokeWidth={isActive ? 2.5 : 1.8}
-            />
-            <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500, lineHeight: 1.2, letterSpacing: '0.02em' }}>
-              {label}
-            </span>
-          </button>
-        );
-      })}
+      <div className="flex items-center justify-around flex-1 min-w-0" style={{ gap: 1 }}>
+        {tabs.map(({ id, label, icon: Icon }) => {
+          const isActive = activeView === id;
+          const isNowPlaying = id === 'nowplaying';
+          return (
+            <button
+              key={id}
+              onClick={() => onViewChange(id)}
+              className="flex flex-col items-center justify-center flex-1 min-w-0"
+              style={{ 
+                color: isActive ? '#fff' : '#a7a7a7',
+                minHeight: 44,
+                touchAction: 'manipulation',
+                gap: 2,
+                padding: '6px 1px 4px',
+                overflow: 'hidden',
+                flexBasis: 0,
+              }}
+            >
+              <Icon
+                size={isNowPlaying ? 20 : 18}
+                fill={isActive && isNowPlaying && hasCurrentTrack ? 'currentColor' : 'none'}
+                strokeWidth={isActive ? 2.5 : 1.8}
+              />
+              <span style={{ fontSize: 'clamp(7px, 2.5vw, 10px)', fontWeight: isActive ? 700 : 500, lineHeight: 1.2, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                {label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

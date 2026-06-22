@@ -35,7 +35,7 @@ export default function PlayerBar({ onLike }) {
 
   if (!current) {
     return (
-      <footer className="flex h-20 items-center justify-center border-t border-border bg-surface px-4 text-sm text-muted-foreground">
+      <footer className="flex h-16 items-center justify-center border-t border-border bg-surface px-4 text-sm text-muted-foreground">
         Selecciona una canción para empezar a escuchar
       </footer>
     );
@@ -44,14 +44,13 @@ export default function PlayerBar({ onLike }) {
   const VolIcon = volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
   return (
-    <footer className="border-t border-border bg-surface px-3 py-3 sm:px-5">
+    <footer className="border-t border-border bg-surface px-3 py-2 sm:px-5" style={{ overflow: 'hidden' }}>
       <div className="flex items-center gap-3 sm:gap-5">
-        {/* Info de la canción */}
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <Cover song={current} className="h-14 w-14 shrink-0" rounded="rounded-lg" />
+          <Cover song={current} className="h-12 w-12 shrink-0 sm:h-14 sm:w-14" rounded="rounded-lg" />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{current.title}</p>
-            <p className="truncate text-xs text-muted-foreground">{current.artist}</p>
+            <p className="truncate text-xs font-semibold sm:text-sm">{current.title}</p>
+            <p className="truncate text-[10px] text-muted-foreground sm:text-xs">{current.artist}</p>
           </div>
           <button
             onClick={() => onLike?.(current)}
@@ -59,50 +58,48 @@ export default function PlayerBar({ onLike }) {
               current.liked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Heart size={18} fill={current.liked ? 'currentColor' : 'none'} />
+            <Heart size={16} fill={current.liked ? 'currentColor' : 'none'} />
           </button>
         </div>
 
-        {/* Controles + progreso */}
         <div className="flex flex-[1.4] flex-col items-center gap-1">
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={prev}
-              className="rounded-full p-2 text-muted-foreground transition hover:text-foreground"
+              className="rounded-full p-1.5 text-muted-foreground transition hover:text-foreground sm:p-2"
             >
-              <SkipBack size={20} fill="currentColor" />
+              <SkipBack size={16} fill="currentColor" className="sm:size-5" />
             </button>
             <button
               onClick={togglePlay}
-              className="grid h-11 w-11 place-items-center rounded-full bg-foreground text-background transition hover:scale-105"
+              className="grid h-9 w-9 place-items-center rounded-full bg-foreground text-background transition hover:scale-105 sm:h-11 sm:w-11"
             >
-              {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
+              {isPlaying ? <Pause size={16} fill="currentColor" className="sm:size-5" /> : <Play size={16} fill="currentColor" className="ml-0.5 sm:size-5" />}
             </button>
             <button
               onClick={next}
-              className="rounded-full p-2 text-muted-foreground transition hover:text-foreground"
+              className="rounded-full p-1.5 text-muted-foreground transition hover:text-foreground sm:p-2"
             >
-              <SkipForward size={20} fill="currentColor" />
+              <SkipForward size={16} fill="currentColor" className="sm:size-5" />
             </button>
           </div>
           <div className="flex w-full max-w-xl items-center gap-2">
-            <span className="w-9 text-right text-[11px] tabular-nums text-muted-foreground">
+            <span className="w-7 text-right text-[10px] tabular-nums text-muted-foreground sm:w-9 sm:text-[11px]">
               {formatTime(progress)}
             </span>
             <SliderBar
               value={progress}
-              max={duration}
+              max={duration || 1}
               onChange={seek}
               ariaLabel="Progreso de la canción"
               className="flex-1"
             />
-            <span className="w-9 text-[11px] tabular-nums text-muted-foreground">
+            <span className="w-7 text-[10px] tabular-nums text-muted-foreground sm:w-9 sm:text-[11px]">
               {formatTime(duration)}
             </span>
           </div>
         </div>
 
-        {/* Volumen + crossfade */}
         <div className="hidden flex-1 items-center justify-end gap-3 lg:flex">
           <div className="relative">
             <button
@@ -134,13 +131,13 @@ export default function PlayerBar({ onLike }) {
               </div>
             )}
           </div>
-          <VolIcon size={18} className="text-muted-foreground" />
+          <VolIcon size={16} className="text-muted-foreground sm:size-5" />
           <SliderBar
             value={volume}
             max={1}
             onChange={setVolume}
             ariaLabel="Volumen"
-            className="w-24"
+            className="w-20 sm:w-24"
           />
         </div>
       </div>

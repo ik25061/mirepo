@@ -58,10 +58,10 @@ export function useLibrary() {
     await api.hideArtist(artist);
   }, []);
 
-  // ====== ELIMINAR CANCIÓN (con confirmación y actualización optimista) ======
+  // ====== ELIMINAR CANCIÓN - Devuelve la lista actualizada ======
   const removeSong = useCallback(async (song) => {
     try {
-      // Actualización optimista: eliminar de la lista
+      // Eliminar de la lista local
       setSongs((prev) => prev.filter((s) => s.id !== song.id));
       setCounts((c) => ({ 
         ...c, 
@@ -69,15 +69,17 @@ export function useLibrary() {
         total: Math.max(0, c.total - 1) 
       }));
 
-      // Llamar al backend con el filename correcto
+      // Llamar al backend
       await api.deleteSong(song.id);
-      
       console.log(`✅ Canción "${song.title}" eliminada correctamente`);
+      
+      // Devolver la lista actualizada para que el reproductor la use
+      return true;
     } catch (error) {
       console.error('Error al eliminar:', error);
-      // Revertir cambios si falla
       await load();
       alert('❌ Error al eliminar la canción');
+      return false;
     }
   }, [load]);
 

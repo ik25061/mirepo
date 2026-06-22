@@ -9,7 +9,10 @@ export default function SliderBar({ value, max, onChange, ariaLabel, className =
     if (!el) return;
     const rect = el.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    onChange(ratio * max);
+    const newValue = ratio * max;
+    if (onChange) {
+      onChange(newValue);
+    }
   };
 
   return (
@@ -23,7 +26,10 @@ export default function SliderBar({ value, max, onChange, ariaLabel, className =
       onClick={(e) => handle(e.clientX)}
       onPointerDown={(e) => {
         handle(e.clientX);
-        const move = (ev) => handle(ev.clientX);
+        const move = (ev) => {
+          ev.preventDefault();
+          handle(ev.clientX);
+        };
         const up = () => {
           window.removeEventListener('pointermove', move);
           window.removeEventListener('pointerup', up);
@@ -31,10 +37,21 @@ export default function SliderBar({ value, max, onChange, ariaLabel, className =
         window.addEventListener('pointermove', move);
         window.addEventListener('pointerup', up);
       }}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const step = max > 0 ? max / 100 : 1;
+          onChange?.(Math.min(max, value + step));
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const step = max > 0 ? max / 100 : 1;
+          onChange?.(Math.max(0, value - step));
+        }
+      }}
       className={`group relative h-1.5 cursor-pointer rounded-full bg-muted ${className}`}
     >
       <div
-        className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-100"
+        className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-75"
         style={{ width: `${pct}%` }}
       />
       <div

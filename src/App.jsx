@@ -58,8 +58,7 @@ function Shell() {
   // ====== VISTA MÓVIL ======
   if (isMobile) {
     return (
-      <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-        {/* Contenido principal con scroll */}
+      <div className="flex flex-col h-full bg-background text-foreground overflow-hidden">
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 pt-3 pb-0">
           {lib.loading ? (
             <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -93,22 +92,21 @@ function Shell() {
               }}
               onBack={() => setView({ type: 'home' })}
               onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
+              onDislikeArtist={lib.dislikeArtist}
+              onDelete={lib.removeSong}
             />
           ) : null}
         </div>
 
-        {/* MiniPlayer (si hay canción) */}
-        {current && (
-          <MiniPlayer
-            track={current}
-            isPlaying={isPlaying}
-            onPlayPause={togglePlay}
-            onNext={next}
-            onOpen={() => setShowNowPlaying(true)}
-          />
-        )}
+        <MiniPlayer
+          track={current}
+          isPlaying={isPlaying}
+          onPlayPause={togglePlay}
+          onNext={next}
+          onOpen={() => current && setShowNowPlaying(true)}
+        />
 
-        {/* BottomNav SIEMPRE visible */}
         <BottomNav
           activeView={view.type}
           onViewChange={(v) => {
@@ -129,8 +127,8 @@ function Shell() {
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
       <Sidebar view={view} onNavigate={setView} trashCount={lib.counts.trash} />
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-10 sm:py-10">
           {lib.loading ? (
             <div className="flex h-full items-center justify-center text-muted-foreground">
               <Loader2 className="mr-2 animate-spin" size={20} /> Cargando biblioteca…
@@ -163,6 +161,9 @@ function Shell() {
               }}
               onBack={() => setView({ type: 'home' })}
               onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
+              onDislikeArtist={lib.dislikeArtist}
+              onDelete={lib.removeSong}
             />
           ) : null}
         </main>

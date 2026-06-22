@@ -82,7 +82,7 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
   }, [hasMore, isLoading, loadMore, filtered.length]);
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex flex-col gap-4 h-full w-full">
       <header className="animate-fade-in flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
         <div>
           <h1 className="font-display text-3xl font-700 tracking-tight">Biblioteca</h1>
@@ -94,20 +94,21 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
             </span>
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* Buscador - ancho completo en móvil */}
+          <div className="relative flex-1 sm:flex-initial">
+            <Search size={16} className="absolute left-3 text-muted-foreground" style={{ top: '50%', transform: 'translateY(-50%)', zIndex: 1 }} />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar en tu biblioteca"
-              className="w-48 rounded-full border border-border bg-surface py-2 pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary sm:w-64"
+              className="w-full sm:w-48 rounded-full border border-border bg-surface py-2 pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary sm:w-64"
             />
           </div>
           {filtered.length > 0 && (
             <button
               onClick={() => play(filtered[0], filtered)}
-              className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow transition hover:scale-105"
+              className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow transition hover:scale-105 flex-shrink-0"
               aria-label="Reproducir todo"
             >
               <Play size={18} fill="currentColor" className="ml-0.5" />

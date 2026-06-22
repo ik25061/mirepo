@@ -7,9 +7,10 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5172,
-    // Proxy desactivado porque usamos URL directa con SERVER_IP
-    // Si quieres usar proxy, descomenta la sección de abajo y comenta SERVER_IP en api.js
-    /*
+    // Excluir la carpeta server del watch para evitar recargas
+    watch: {
+      ignored: ['**/server/**', '**/node_modules/**'],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:5001',
@@ -31,7 +32,6 @@ export default defineConfig({
         target: 'http://localhost:5001',
         changeOrigin: true,
       },
-    }
-    */
+    },
   },
 })

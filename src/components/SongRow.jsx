@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, Pause, Heart, ThumbsDown, UserX, Trash2, Check } from 'lucide-react';
 import Cover from './Cover.jsx';
 import NowPlayingBars from './Player/NowPlayingBars.jsx';
@@ -16,13 +16,44 @@ export default function SongRow({
   showDelete = false,
   showCover = true,
 }) {
-  const { current, isPlaying, play, togglePlay } = usePlayer();
+  const { current, isPlaying, play, togglePlay, removeFromQueue } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isCurrent = current?.id === song.id;
 
+  // Resetear confirmación cuando cambia la canción
+  useEffect(() => {
+    setConfirmDelete(false);
+  }, [song.id]);
+
   const handlePlay = () => {
-    if (isCurrent) togglePlay();
-    else play(song, queue);
+    if (isCurrent) {
+      togglePlay();
+    } else {
+      play(song, queue);
+    }
+  };
+
+  // Eliminar canción - usa removeFromQueue para pasar a la siguiente
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    
+    if (confirmDelete) {
+      const songId = song.id;
+      
+      // Eliminar de la cola de reproducción (esto maneja el paso a la siguiente)
+      removeFromQueue(songId);
+      
+      // Ejecutar eliminación en el servidor
+      await onDelete(song);
+      
+      setConfirmDelete(false);
+    } else {
+      setConfirmDelete(true);
+      // Auto-cancelar después de 3 segundos si no se confirma
+      setTimeout(() => {
+        setConfirmDelete(false);
+      }, 3000);
+    }
   };
 
   const iconBtn =
@@ -54,9 +85,13 @@ export default function SongRow({
         </span>
       </button>
 
-      {showCover && <Cover song={song} className="h-7 w-7 shrink-0 sm:h-10 sm:w-10" rounded="rounded-md" />}
+      {showCover && (
+        <div onClick={handlePlay} className="cursor-pointer shrink-0">
+          <Cover song={song} className="h-7 w-7 sm:h-10 sm:w-10" rounded="rounded-md" />
+        </div>
+      )}
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 cursor-pointer" onClick={handlePlay}>
         <p className={`truncate text-xs font-medium sm:text-sm ${isCurrent ? 'text-primary' : 'text-foreground'}`}>
           {song.title}
         </p>
@@ -67,18 +102,21 @@ export default function SongRow({
         {song.album}
       </p>
 
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-0.5 sm:gap-0.5">
         <button
-          onClick={() => onLike?.(song)}
-          className={`${iconBtn} ${song.liked ? 'text-primary hover:text-primary' : 'opacity-0 group-hover:opacity-100'}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onLike?.(song);
+          }}
+          className={`${iconBtn} ${song.liked ? 'text-primary hover:text-primary' : 'sm:opacity-0 sm:group-hover:opacity-100'}`}
         >
           <Heart size={12} fill={song.liked ? 'currentColor' : 'none'} className="sm:size-4" />
         </button>
 
         {onDislike && (
           <button
-            onClick={() => onDislike(song)}
-            className={`${iconBtn} opacity-0 group-hover:opacity-100`}
+            onClick={(e) => { e.stopPropagation(); onDislike(song); }}
+            className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100`}
             title="No me gusta esta canción"
           >
             <ThumbsDown size={12} className="sm:size-4" />
@@ -87,28 +125,22 @@ export default function SongRow({
 
         {onDislikeArtist && (
           <button
-            onClick={() => onDislikeArtist(song.artist)}
-            className={`${iconBtn} opacity-0 group-hover:opacity-100`}
+            onClick={(e) => { e.stopPropagation(); onDislikeArtist(song.artist); }}
+            className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100`}
             title={`No mostrar al artista ${song.artist}`}
           >
             <UserX size={12} className="sm:size-4" />
           </button>
         )}
 
+        {/* Botón eliminar - con confirmación visible */}
         {showDelete && onDelete && (
           <button
-            onClick={() => {
-              if (confirmDelete) {
-                onDelete(song);
-              } else {
-                setConfirmDelete(true);
-                setTimeout(() => setConfirmDelete(false), 3000);
-              }
-            }}
+            onClick={handleDelete}
             className={`${iconBtn} ${
               confirmDelete
-                ? 'bg-danger/15 text-danger opacity-100'
-                : 'opacity-0 group-hover:opacity-100 hover:text-danger'
+                ? 'bg-red-500/20 text-red-500 opacity-100'
+                : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-500'
             }`}
             title={confirmDelete ? 'Pulsa de nuevo para confirmar' : 'Eliminar (mover a papelera)'}
           >

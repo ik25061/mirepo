@@ -5,17 +5,20 @@ import {
   Search, Trash2, ChevronUp, Disc, User, ListMusic,
 } from 'lucide-react';
 import { formatTime } from '../lib/format.js';
+import { usePlayer } from '../context/PlayerContext.jsx';
 
 export default function NowPlayingScreen({
   track, isPlaying, onPlayPause, onNext, onPrev, onLike, likedIds, audioRef, onClose,
   onSync, onDelete,
   allTracks = [], playContext, onPlay, currentQueueIndex,
 }) {
+  const { removeFromQueue, queue } = usePlayer();
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState(false);
   const [showTrackList, setShowTrackList] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const progressRef = useRef(null);
 
   useEffect(() => {
@@ -44,6 +47,33 @@ export default function NowPlayingScreen({
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const isLiked = track ? likedIds?.has(track.id) : false;
 
+  // ====== ELIMINAR CANCIÓN DESDE NOW PLAYING ======
+  const handleDelete = async () => {
+    if (confirmDelete) {
+      const songId = track?.id;
+      if (!songId) return;
+      
+      // Obtener la cola actual
+      const currentQueue = queue || [];
+      
+      // Eliminar de la cola de reproducción (esto maneja el paso a la siguiente)
+      removeFromQueue(songId);
+      
+      // Ejecutar eliminación en el servidor
+      await onDelete(track);
+      
+      // Cerrar la vista de NowPlaying si no hay más canciones
+      if (currentQueue.length <= 1) {
+        onClose();
+      }
+      
+      setConfirmDelete(false);
+    } else {
+      setConfirmDelete(true);
+      setTimeout(() => setConfirmDelete(false), 3000);
+    }
+  };
+
   if (!track) {
     return (
       <div className="flex flex-col items-center justify-center h-full" style={{ background: '#0d0d0d' }}>
@@ -51,6 +81,12 @@ export default function NowPlayingScreen({
         <p className="mt-4" style={{ color: '#a7a7a7', fontSize: 16 }}>
           Sin reproducción activa
         </p>
+        <button
+          onClick={onClose}
+          className="mt-6 px-6 py-2 rounded-full bg-primary text-black font-semibold"
+        >
+          Volver
+        </button>
       </div>
     );
   }
@@ -86,13 +122,28 @@ export default function NowPlayingScreen({
               <Search size={20} />
             </button>
           )}
+          {/* Botón eliminar con confirmación */}
           {onDelete && (
             <button
-              onClick={(e) => { e.stopPropagation(); onDelete(track); }}
-              className="p-2 rounded-full hover:bg-red-500/20 transition-colors"
-              style={{ color: '#ff4444', minWidth: 40, minHeight: 40 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete();
+              }}
+              className={`p-2 rounded-full transition-colors ${
+                confirmDelete ? 'bg-red-500/30' : 'hover:bg-red-500/20'
+              }`}
+              style={{ 
+                color: confirmDelete ? '#ff4444' : '#ff4444',
+                minWidth: 40, 
+                minHeight: 40 
+              }}
+              title={confirmDelete ? 'Pulsa de nuevo para confirmar' : 'Eliminar canción'}
             >
-              <Trash2 size={20} />
+              {confirmDelete ? (
+                <span style={{ fontSize: 12, fontWeight: 700 }}>✓</span>
+              ) : (
+                <Trash2 size={20} />
+              )}
             </button>
           )}
         </div>
@@ -216,6 +267,15 @@ export default function NowPlayingScreen({
               style={{ accentColor: '#1db954', height: 4, borderRadius: 2 }}
             />
           </div>
+
+          {/* Mensaje de confirmación de eliminación */}
+          {confirmDelete && (
+            <div className="text-center py-2">
+              <span style={{ fontSize: 13, color: '#ff4444', fontWeight: 600 }}>
+                ⚠️ Pulsa de nuevo el botón basura para confirmar
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

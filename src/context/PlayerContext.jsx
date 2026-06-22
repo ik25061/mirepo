@@ -5,6 +5,9 @@ const PlayerContext = createContext(null);
 export const usePlayer = () => useContext(PlayerContext);
 
 const FADE_MS = 16;
+const SILENCE_THRESHOLD = 0.01;
+const SILENCE_CHECK_DURATION = 5;
+const SILENCE_ANALYSE_INTERVAL = 0.1;
 
 export function PlayerProvider({ children }) {
   const audiosRef = useRef(null);
@@ -13,6 +16,8 @@ export function PlayerProvider({ children }) {
   const crossfadingRef = useRef(false);
   const queueRef = useRef([]);
   const indexRef = useRef(-1);
+  const silenceSkipDoneRef = useRef(false);
+  const silenceCheckIntervalRef = useRef(null);
 
   const [queue, setQueue] = useState([]);
   const [current, setCurrent] = useState(null);
@@ -46,12 +51,68 @@ export function PlayerProvider({ children }) {
     }
   };
 
+  // Detectar y saltar silencio al inicio
+  const detectAndSkipSilence = useCallback((audio) => {
+    if (!audio || !audio.src) return;
+    if (silenceSkipDoneRef.current) return;
+
+    const checkSilence = () => {
+      if (!audio || audio.paused || audio.ended || !audio.src) {
+        clearInterval(silenceCheckIntervalRef.current);
+        return;
+      }
+
+      if (audio.currentTime > SILENCE_CHECK_DURATION) {
+        clearInterval(silenceCheckIntervalRef.current);
+        silenceSkipDoneRef.current = true;
+        return;
+      }
+
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        const source = ctx.createMediaElementSource(audio);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        analyser.connect(ctx.destination);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(dataArray);
+
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const average = sum / dataArray.length / 255;
+
+        if (average > SILENCE_THRESHOLD) {
+          silenceSkipDoneRef.current = true;
+          clearInterval(silenceCheckIntervalRef.current);
+        } else if (audio.currentTime > 1.5) {
+          const skipTo = Math.min(audio.currentTime + 0.5, audio.duration || 0);
+          audio.currentTime = skipTo;
+          silenceSkipDoneRef.current = true;
+          clearInterval(silenceCheckIntervalRef.current);
+        }
+      } catch (err) {
+        silenceSkipDoneRef.current = true;
+        clearInterval(silenceCheckIntervalRef.current);
+      }
+    };
+
+    silenceCheckIntervalRef.current = setInterval(checkSilence, SILENCE_ANALYSE_INTERVAL * 1000);
+  }, []);
+
   const playIndex = useCallback((idx, { crossfade = true } = {}) => {
     const q = queueRef.current;
     if (idx < 0 || idx >= q.length) return;
     const song = q[idx];
     indexRef.current = idx;
     setCurrent(song);
+    setDuration(0);
+    setProgress(0);
+    silenceSkipDoneRef.current = false;
 
     const incoming = getIdle();
     const outgoing = getActive();
@@ -59,11 +120,28 @@ export function PlayerProvider({ children }) {
     const fadeTime = crossfade ? crossfadeRef.current : 0.3;
 
     clearFade();
+    if (silenceCheckIntervalRef.current) {
+      clearInterval(silenceCheckIntervalRef.current);
+      silenceCheckIntervalRef.current = null;
+    }
     crossfadingRef.current = true;
 
     incoming.src = audioUrl(song.id);
     incoming.currentTime = 0;
     incoming.volume = 0;
+    
+    const onLoadedMetadata = () => {
+      setDuration(incoming.duration || 0);
+      incoming.removeEventListener('loadedmetadata', onLoadedMetadata);
+    };
+    incoming.addEventListener('loadedmetadata', onLoadedMetadata);
+    
+    const onPlay = () => {
+      detectAndSkipSilence(incoming);
+      incoming.removeEventListener('play', onPlay);
+    };
+    incoming.addEventListener('play', onPlay);
+    
     const playPromise = incoming.play();
     if (playPromise) playPromise.catch(() => {});
     setIsPlaying(true);
@@ -82,12 +160,13 @@ export function PlayerProvider({ children }) {
         if (outgoing && outgoing !== incoming) {
           outgoing.pause();
           outgoing.currentTime = 0;
+          outgoing.removeAttribute('src');
         }
         activeRef.current = activeRef.current === 0 ? 1 : 0;
         crossfadingRef.current = false;
       }
     }, FADE_MS);
-  }, []);
+  }, [detectAndSkipSilence]);
 
   const play = useCallback((song, songs) => {
     const list = songs && songs.length ? songs : [song];
@@ -100,6 +179,8 @@ export function PlayerProvider({ children }) {
   const next = useCallback(() => {
     if (indexRef.current < queueRef.current.length - 1) {
       playIndex(indexRef.current + 1);
+    } else if (queueRef.current.length > 0) {
+      playIndex(0);
     }
   }, [playIndex]);
 
@@ -107,6 +188,7 @@ export function PlayerProvider({ children }) {
     const a = getActive();
     if (a && a.currentTime > 3) {
       a.currentTime = 0;
+      setProgress(0);
       return;
     }
     if (indexRef.current > 0) playIndex(indexRef.current - 1);
@@ -126,14 +208,22 @@ export function PlayerProvider({ children }) {
 
   const seek = useCallback((time) => {
     const a = getActive();
-    if (a) a.currentTime = time;
+    if (a && a.duration) {
+      a.currentTime = time;
+      setProgress(time);
+    }
   }, []);
 
   const stop = useCallback(() => {
     clearFade();
+    if (silenceCheckIntervalRef.current) {
+      clearInterval(silenceCheckIntervalRef.current);
+      silenceCheckIntervalRef.current = null;
+    }
     audiosRef.current?.forEach((a) => {
       a.pause();
       a.removeAttribute('src');
+      a.currentTime = 0;
     });
     setIsPlaying(false);
     setCurrent(null);
@@ -142,50 +232,145 @@ export function PlayerProvider({ children }) {
     queueRef.current = [];
     setQueue([]);
     indexRef.current = -1;
+    activeRef.current = 0;
   }, []);
 
+// ====== ELIMINAR CANCIÓN DE LA COLA Y PASAR A LA SIGUIENTE ======
+const removeFromQueue = useCallback((songId) => {
+  const currentQueue = queueRef.current;
+  const currentIndex = indexRef.current;
+  
+  // Encontrar la canción en la cola
+  const songIndex = currentQueue.findIndex(s => s.id === songId);
+  if (songIndex === -1) return false;
+  
+  // Crear nueva cola sin la canción
+  const newQueue = currentQueue.filter(s => s.id !== songId);
+  queueRef.current = newQueue;
+  setQueue(newQueue);
+  
+  // Si la cola quedó vacía
+  if (newQueue.length === 0) {
+    stop();
+    return true;
+  }
+  
+  // Si la canción eliminada era la actual o estaba antes
+  if (songIndex === currentIndex) {
+    // La canción actual fue eliminada
+    // Buscar la siguiente canción en la nueva cola
+    let nextIndex = songIndex;
+    if (nextIndex >= newQueue.length) {
+      nextIndex = 0;
+    }
+    const nextSong = newQueue[nextIndex];
+    if (nextSong) {
+      // Detener reproducción actual
+      const active = getActive();
+      if (active) {
+        active.pause();
+        active.removeAttribute('src');
+        active.currentTime = 0;
+      }
+      // Reproducir la siguiente
+      setTimeout(() => {
+        play(nextSong, newQueue);
+      }, 150);
+      return true;
+    } else {
+      stop();
+      return true;
+    }
+  } else if (songIndex < currentIndex) {
+    // La canción eliminada estaba antes de la actual, ajustar índice
+    const newIndex = currentIndex - 1;
+    indexRef.current = newIndex;
+    // Actualizar current si es necesario
+    if (newIndex < newQueue.length) {
+      setCurrent(newQueue[newIndex]);
+    } else {
+      setCurrent(newQueue[newQueue.length - 1] || null);
+    }
+  }
+  
+  return true;
+}, [play, stop]);
+
+  // Actualizar progreso
   useEffect(() => {
     const audios = audiosRef.current;
     if (!audios) return;
 
-    const onTime = () => {
+    let intervalId = null;
+
+    const updateProgress = () => {
       const a = getActive();
       if (!a) return;
-      setProgress(a.currentTime);
-      setDuration(a.duration || 0);
+      if (a.duration && a.duration > 0) {
+        setProgress(a.currentTime);
+        setDuration(a.duration);
+        
+        const remaining = a.duration - a.currentTime;
+        if (remaining < 0.3 && remaining > 0 && !crossfadingRef.current) {
+          if (indexRef.current < queueRef.current.length - 1) {
+            playIndex(indexRef.current + 1);
+          }
+        }
+      }
+    };
 
-      const remaining = (a.duration || 0) - a.currentTime;
-      const cf = crossfadeRef.current;
-      if (
-        cf > 0 &&
-        a.duration &&
-        remaining <= cf &&
-        !crossfadingRef.current &&
-        indexRef.current < queueRef.current.length - 1
-      ) {
-        playIndex(indexRef.current + 1);
+    const onTimeUpdate = () => {
+      const a = getActive();
+      if (!a) return;
+      if (a.duration && a.duration > 0) {
+        setProgress(a.currentTime);
+        setDuration(a.duration);
       }
     };
 
     const onEnded = () => {
-      if (!crossfadingRef.current && indexRef.current < queueRef.current.length - 1) {
-        playIndex(indexRef.current + 1);
-      } else if (indexRef.current >= queueRef.current.length - 1) {
-        setIsPlaying(false);
+      if (!crossfadingRef.current) {
+        if (indexRef.current < queueRef.current.length - 1) {
+          playIndex(indexRef.current + 1);
+        } else if (queueRef.current.length > 0) {
+          setIsPlaying(false);
+          const a = getActive();
+          if (a) {
+            a.currentTime = 0;
+            setProgress(0);
+          }
+        }
       }
     };
 
     audios.forEach((a) => {
-      a.addEventListener('timeupdate', onTime);
+      a.addEventListener('timeupdate', onTimeUpdate);
       a.addEventListener('ended', onEnded);
+      a.addEventListener('loadedmetadata', () => {
+        setDuration(a.duration || 0);
+      });
     });
+
+    intervalId = setInterval(updateProgress, 100);
+
     return () => {
       audios.forEach((a) => {
-        a.removeEventListener('timeupdate', onTime);
+        a.removeEventListener('timeupdate', onTimeUpdate);
         a.removeEventListener('ended', onEnded);
+        a.removeEventListener('loadedmetadata', () => {});
       });
+      if (intervalId) clearInterval(intervalId);
     };
   }, [playIndex]);
+
+  useEffect(() => {
+    if (current) {
+      const a = getActive();
+      if (a && a.duration) {
+        setDuration(a.duration);
+      }
+    }
+  }, [current]);
 
   useEffect(() => {
     if (!crossfadingRef.current) {
@@ -210,6 +395,7 @@ export function PlayerProvider({ children }) {
     togglePlay,
     seek,
     stop,
+    removeFromQueue,
   };
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;

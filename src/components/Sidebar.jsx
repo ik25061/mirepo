@@ -8,15 +8,15 @@ export default function Sidebar({ view, onNavigate, trashCount = 0 }) {
   ];
 
   return (
-    <aside className="flex w-16 shrink-0 flex-col gap-2 border-r border-border bg-surface px-2 py-4 sm:w-60 sm:px-3">
-      <div className="mb-4 flex items-center gap-2 px-1 sm:px-2">
-        <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-          <Disc3 size={20} />
+    <aside className="flex w-16 shrink-0 flex-col gap-2 border-r border-border bg-surface px-2 py-5 sm:w-64 sm:px-4 sm:py-6">
+      <div className="mb-6 flex items-center gap-3 px-1 sm:px-2">
+        <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
+          <Disc3 size={22} />
         </div>
-        <span className="hidden font-display text-lg font-700 tracking-tight sm:block">Mirepo</span>
+        <span className="hidden font-display text-xl font-700 tracking-tight sm:block">Mirepo</span>
       </div>
 
-      <nav className="flex flex-col gap-1">
+      <nav className="flex flex-col gap-1.5">
         {items.map(({ id, label, icon: Icon }) => {
           const active = view?.type === id;
           return (
