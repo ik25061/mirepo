@@ -7,6 +7,7 @@ import PlayerBar from './components/Player/PlayerBar.jsx';
 import HomeView from './components/Home/HomeView.jsx';
 import LibraryView from './components/Library/LibraryView.jsx';
 import CollectionView from './components/CollectionView.jsx';
+import GridView from './components/GridView.jsx';
 import MobileSearchView from './components/MobileSearchView.jsx';
 import NowPlayingScreen from './components/NowPlayingScreen.jsx';
 import { MiniPlayer } from './components/MiniPlayer.jsx';
@@ -32,7 +33,18 @@ function Shell() {
     }
   }, [lib.songs, lib.loading, current, stop]);
 
-  const openCollection = (collection) => setView({ type: 'collection', collection });
+  // Función para abrir colección (álbum, artista, género)
+  const openCollection = (collection) => {
+    setView({ type: 'collection', collection });
+  };
+
+  // Función para abrir GridView
+  const openGridView = (type, items) => {
+    setView({ 
+      type: 'grid', 
+      gridData: { type, items }
+    });
+  };
 
   if (showNowPlaying) {
     return (
@@ -72,7 +84,12 @@ function Shell() {
               </button>
             </div>
           ) : view.type === 'home' ? (
-            <HomeView songs={lib.songs} onOpenCollection={openCollection} onLike={lib.toggleLike} />
+            <HomeView 
+              songs={lib.songs} 
+              onOpenCollection={openCollection} 
+              onOpenGridView={openGridView}
+              onLike={lib.toggleLike} 
+            />
           ) : view.type === 'library' ? (
             <LibraryView
               songs={lib.songs}
@@ -84,6 +101,14 @@ function Shell() {
             />
           ) : view.type === 'search' ? (
             <MobileSearchView tracks={lib.songs} currentTrack={current} />
+          ) : view.type === 'grid' ? (
+            <GridView
+              items={view.gridData.items}
+              type={view.gridData.type}
+              onBack={() => setView({ type: 'home' })}
+              onOpenCollection={openCollection}
+              songs={lib.songs}
+            />
           ) : view.type === 'collection' ? (
             <CollectionView
               collection={{
@@ -141,7 +166,12 @@ function Shell() {
               </button>
             </div>
           ) : view.type === 'home' ? (
-            <HomeView songs={lib.songs} onOpenCollection={openCollection} onLike={lib.toggleLike} />
+            <HomeView 
+              songs={lib.songs} 
+              onOpenCollection={openCollection} 
+              onOpenGridView={openGridView}
+              onLike={lib.toggleLike} 
+            />
           ) : view.type === 'library' ? (
             <LibraryView
               songs={lib.songs}
@@ -153,6 +183,14 @@ function Shell() {
             />
           ) : view.type === 'search' ? (
             <MobileSearchView tracks={lib.songs} currentTrack={current} />
+          ) : view.type === 'grid' ? (
+            <GridView
+              items={view.gridData.items}
+              type={view.gridData.type}
+              onBack={() => setView({ type: 'home' })}
+              onOpenCollection={openCollection}
+              songs={lib.songs}
+            />
           ) : view.type === 'collection' ? (
             <CollectionView
               collection={{

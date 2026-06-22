@@ -3,7 +3,11 @@ export default function Carousel({ title, children, action }) {
     <section className="animate-fade-in w-full">
       <div className="mb-1.5 flex items-end justify-between px-1 sm:mb-3">
         <h2 className="text-base font-600 tracking-tight text-white sm:text-xl">{title}</h2>
-        {action}
+        {action && (
+          <div className="flex-shrink-0">
+            {action}
+          </div>
+        )}
       </div>
       <div 
         className="flex gap-2 overflow-x-auto overflow-y-visible pb-2 no-scrollbar sm:gap-3 sm:pb-2"

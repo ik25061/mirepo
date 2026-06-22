@@ -5,7 +5,7 @@ import SongRow from '../SongRow.jsx';
 import { buildAlbums, buildArtists, buildGenres } from '../../lib/format.js';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 
-export default function HomeView({ songs, onOpenCollection, onLike }) {
+export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLike }) {
   const { play } = usePlayer();
   const liked = songs.filter((s) => s.liked);
   const albums = buildAlbums(songs);
@@ -59,8 +59,17 @@ export default function HomeView({ songs, onOpenCollection, onLike }) {
         )}
       </section>
 
-      {/* Por álbum */}
-      <Carousel title="Álbumes">
+      {/* Por álbum - con Ver todo */}
+      <Carousel title="Álbumes" action={
+        albums.length > 10 && (
+          <button
+            onClick={() => onOpenGridView('albums', albums)}
+            className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
+          >
+            Ver todo
+          </button>
+        )
+      }>
         {albums.slice(0, 10).map((al) => (
           <CollectionCard
             key={al.name}
@@ -73,8 +82,17 @@ export default function HomeView({ songs, onOpenCollection, onLike }) {
         ))}
       </Carousel>
 
-      {/* Por artista */}
-      <Carousel title="Artistas">
+      {/* Por artista - con Ver todo */}
+      <Carousel title="Artistas" action={
+        artists.length > 10 && (
+          <button
+            onClick={() => onOpenGridView('artists', artists)}
+            className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
+          >
+            Ver todo
+          </button>
+        )
+      }>
         {artists.slice(0, 10).map((ar) => (
           <CollectionCard
             key={ar.name}
@@ -88,8 +106,17 @@ export default function HomeView({ songs, onOpenCollection, onLike }) {
         ))}
       </Carousel>
 
-      {/* Por género */}
-      <Carousel title="Géneros">
+      {/* Por género - con Ver todo */}
+      <Carousel title="Géneros" action={
+        genres.length > 10 && (
+          <button
+            onClick={() => onOpenGridView('genres', genres)}
+            className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
+          >
+            Ver todo
+          </button>
+        )
+      }>
         {genres.slice(0, 10).map((ge) => (
           <CollectionCard
             key={ge.name}
@@ -102,7 +129,6 @@ export default function HomeView({ songs, onOpenCollection, onLike }) {
         ))}
       </Carousel>
 
-      {/* Espacio extra al final */}
       <div className="h-4" />
     </div>
   );

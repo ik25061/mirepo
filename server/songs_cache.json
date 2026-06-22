@@ -157,18 +157,6 @@
       "hasCover": true
     },
     {
-      "id": "53f67833baf18b51",
-      "relPath": "Ramon Ayala\\Antologia\\7. _Pa' que me sirve la vida_.mp3",
-      "title": "¿Pa' qué me sirve la vida?",
-      "artist": "Ramón Ayala",
-      "album": "Antología",
-      "genre": "norteño",
-      "year": null,
-      "track": 7,
-      "duration": 166,
-      "hasCover": true
-    },
-    {
       "id": "9b8dc841e13cf933",
       "relPath": "Las Jilguerillas\\Serie de coleccion_ 15 autenticos exitos_ Cierren las puertas_ Las Jilguerillas vs Dueto Rio Bravo, volumen II\\2. _Para que me echaste al mundo_.mp3",
       "title": "¿Para qué me echaste al mundo?",
@@ -226,18 +214,6 @@
       "year": 2004,
       "track": 5,
       "duration": 239,
-      "hasCover": true
-    },
-    {
-      "id": "d9e1d0ae2a8b3cf2",
-      "relPath": "Juan Gabriel\\Boleros\\9. _Que le dijiste a Dios_.mp3",
-      "title": "¿Qué le dijiste a Dios?",
-      "artist": "Juan Gabriel",
-      "album": "Boleros",
-      "genre": "Bolero",
-      "year": 2010,
-      "track": 9,
-      "duration": 194,
       "hasCover": true
     },
     {
@@ -1114,18 +1090,6 @@
       "year": 1990,
       "track": 5,
       "duration": 296,
-      "hasCover": true
-    },
-    {
-      "id": "be24e3f45f5f6bf8",
-      "relPath": "Los Cafres\\_Quien da mas_\\3. A pesar.mp3",
-      "title": "A pesar",
-      "artist": "Los Cafres",
-      "album": "¿Quién da más?",
-      "genre": "Reggae",
-      "year": 2004,
-      "track": 3,
-      "duration": 223,
       "hasCover": true
     },
     {
