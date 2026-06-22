@@ -1,0 +1,17 @@
+# Instalar dependencias
+npm install
+
+# Crear la carpeta de música (opcional)
+# Asegúrate de que D:/musica exista o cambia MUSIC_PATH en .env
+
+# Ejecutar en modo desarrollo
+npm run dev
+
+# O ejecutar solo el servidor
+npm run server
+
+# O solo el cliente
+npm run client
+
+# Compilar para producción
+npm run build
