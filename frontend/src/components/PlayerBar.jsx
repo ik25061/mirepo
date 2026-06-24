@@ -1,226 +1,160 @@
-// components/PlayerBar.jsx
-import { useEffect, useRef, useState } from "react";
+import { useState } from 'react';
 import {
   Play,
   Pause,
   SkipBack,
   SkipForward,
-  Volume2,
-  VolumeX,
-  Shuffle,
-  Repeat,
   Heart,
-  Music2,
-} from "lucide-react";
+  Volume2,
+  Volume1,
+  VolumeX,
+  Waves,
+} from 'lucide-react';
+import Cover from '../Cover';
+import SliderBar from './SliderBar';
+import { formatTime } from '../../lib/format';
+import { usePlayer } from '../../context/PlayerContext';
 
-function formatTime(s) {
-  if (!isFinite(s) || s === 0) return "0:00";
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2, "0")}`;
-}
+export default function PlayerBar({ onLike }) {
+  const {
+    current,
+    isPlaying,
+    progress,
+    duration,
+    volume,
+    setVolume,
+    crossfadeSec,
+    setCrossfadeSec,
+    togglePlay,
+    next,
+    prev,
+    seek,
+  } = usePlayer();
 
-export function PlayerBar({
-  track,
-  isPlaying,
-  onPlayPause,
-  onNext,
-  onPrev,
-  onLike,
-  likedIds,
-  audioRef,
-}) {
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0.8);
-  const [muted, setMuted] = useState(false);
-  const [shuffle, setShuffle] = useState(false);
-  const [repeat, setRepeat] = useState(false);
-  const progressRef = useRef(null);
+  const [showCrossfade, setShowCrossfade] = useState(false);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const onTime = () => setCurrentTime(audio.currentTime);
-    const onLoad = () => setDuration(audio.duration);
-    const onEnded = () => { 
-      if (repeat) { 
-        audio.currentTime = 0; 
-        audio.play(); 
-      } else { 
-        onNext(); 
-      } 
-    };
-    audio.addEventListener("timeupdate", onTime);
-    audio.addEventListener("loadedmetadata", onLoad);
-    audio.addEventListener("ended", onEnded);
-    return () => {
-      audio.removeEventListener("timeupdate", onTime);
-      audio.removeEventListener("loadedmetadata", onLoad);
-      audio.removeEventListener("ended", onEnded);
-    };
-  }, [audioRef, onNext, repeat]);
+  if (!current) {
+    return (
+      <footer className="flex h-20 items-center justify-center border-t border-border bg-surface px-4 text-sm text-muted-foreground" style={{ borderColor: '#282828', background: '#181818', color: '#727272' }}>
+        Selecciona una canción para empezar a escuchar
+      </footer>
+    );
+  }
 
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = muted ? 0 : volume;
-    }
-  }, [volume, muted, audioRef]);
-
-  const seekTo = (e) => {
-    const bar = progressRef.current;
-    if (!bar || !audioRef.current) return;
-    const rect = bar.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    audioRef.current.currentTime = ratio * duration;
-  };
-
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const isLiked = track ? likedIds.has(track.id) : false;
+  const VolIcon = volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
   return (
-    <div
-      className="flex items-center justify-between px-4"
-      style={{
-        height: 90,
-        background: "#181818",
-        borderTop: "1px solid rgba(255,255,255,0.1)",
-        gap: 16,
-      }}
-    >
-      {/* Track info */}
-      <div className="flex items-center gap-3 min-w-0" style={{ flex: "0 0 280px" }}>
-        <div
-          className="flex items-center justify-center rounded flex-shrink-0"
-          style={{ width: 56, height: 56, background: "#282828" }}
-        >
-          {track?.cover ? (
-            <img src={track.cover} alt={track.title} className="w-full h-full object-cover rounded" />
-          ) : (
-            <Music2 size={22} className="text-muted-foreground" />
-          )}
-        </div>
-        {track ? (
+    <footer className="border-t border-border bg-surface px-3 py-3 sm:px-5" style={{ borderColor: '#282828', background: '#181818' }}>
+      <div className="flex items-center gap-3 sm:gap-5">
+        {/* Info de la canción */}
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <Cover song={current} className="h-14 w-14 shrink-0" rounded="rounded-lg" />
           <div className="min-w-0">
-            <p className="text-white truncate" style={{ fontSize: 14, fontWeight: 600 }}>{track.title}</p>
-            <p className="text-muted-foreground truncate" style={{ fontSize: 12 }}>{track.artist}</p>
-            {(track.album && track.album !== "Desconocido") || track.year ? (
-              <p className="text-muted-foreground truncate" style={{ fontSize: 10, marginTop: 1, opacity: 0.7 }}>
-                {track.album && track.album !== "Desconocido" ? track.album : ""}
-                {track.year ? ` • ${track.year}` : ""}
-              </p>
-            ) : null}
+            <p className="truncate text-sm font-semibold text-white">{current.title}</p>
+            <p className="truncate text-xs text-muted-foreground" style={{ color: '#a7a7a7' }}>{current.artist}</p>
           </div>
-        ) : (
-          <div>
-            <p className="text-muted-foreground" style={{ fontSize: 13 }}>Sin reproducción</p>
-          </div>
-        )}
-        {track && (
           <button
-            onClick={() => onLike(track.id)}
-            className={`ml-2 flex-shrink-0 transition-colors ${
-              isLiked ? "text-primary" : "text-muted-foreground hover:text-white"
+            onClick={() => onLike?.(current)}
+            className={`ml-1 hidden shrink-0 rounded-full p-2 transition sm:block ${
+              current.liked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
             }`}
+            style={{ color: current.liked ? '#1db954' : '#a7a7a7' }}
+            aria-label="Me gusta"
           >
-            <Heart size={16} fill={isLiked ? "currentColor" : "none"} />
-          </button>
-        )}
-      </div>
-
-      {/* Controls */}
-      <div className="flex flex-col items-center gap-2" style={{ flex: 1, maxWidth: 640 }}>
-        <div className="flex items-center gap-6">
-          <button
-            onClick={() => setShuffle(!shuffle)}
-            className={`transition-colors ${
-              shuffle ? "text-primary" : "text-muted-foreground hover:text-white"
-            }`}
-          >
-            <Shuffle size={18} />
-          </button>
-          <button
-            onClick={onPrev}
-            className="text-muted-foreground hover:text-white transition-colors"
-          >
-            <SkipBack size={22} />
-          </button>
-          <button
-            onClick={onPlayPause}
-            disabled={!track}
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-white hover:scale-105 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {isPlaying ? (
-              <Pause size={18} className="text-black" fill="black" />
-            ) : (
-              <Play size={18} className="text-black ml-0.5" fill="black" />
-            )}
-          </button>
-          <button
-            onClick={onNext}
-            className="text-muted-foreground hover:text-white transition-colors"
-          >
-            <SkipForward size={22} />
-          </button>
-          <button
-            onClick={() => setRepeat(!repeat)}
-            className={`transition-colors ${
-              repeat ? "text-primary" : "text-muted-foreground hover:text-white"
-            }`}
-          >
-            <Repeat size={18} />
+            <Heart size={18} fill={current.liked ? 'currentColor' : 'none'} />
           </button>
         </div>
 
-        {/* Progress bar */}
-        <div className="flex items-center gap-2 w-full">
-          <span className="text-muted-foreground" style={{ fontSize: 11, minWidth: 36, textAlign: "right" }}>
-            {formatTime(currentTime)}
-          </span>
-          <div
-            ref={progressRef}
-            onClick={seekTo}
-            className="flex-1 h-1 rounded-full cursor-pointer group"
-            style={{ background: "#535353" }}
-          >
-            <div
-              className="h-full rounded-full relative transition-all"
-              style={{ width: `${progress}%`, background: "#1db954" }}
+        {/* Controles + progreso */}
+        <div className="flex flex-[1.4] flex-col items-center gap-1">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button
+              onClick={prev}
+              className="rounded-full p-2 text-muted-foreground transition hover:text-foreground"
+              style={{ color: '#a7a7a7' }}
+              aria-label="Anterior"
             >
-              <div
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ transform: "translate(50%, -50%)" }}
-              />
-            </div>
+              <SkipBack size={20} fill="currentColor" />
+            </button>
+            <button
+              onClick={togglePlay}
+              className="grid h-11 w-11 place-items-center rounded-full bg-foreground text-background transition hover:scale-105"
+              style={{ background: '#fff' }}
+              aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
+            >
+              {isPlaying ? <Pause size={20} fill="currentColor" className="text-black" /> : <Play size={20} fill="currentColor" className="ml-0.5 text-black" />}
+            </button>
+            <button
+              onClick={next}
+              className="rounded-full p-2 text-muted-foreground transition hover:text-foreground"
+              style={{ color: '#a7a7a7' }}
+              aria-label="Siguiente"
+            >
+              <SkipForward size={20} fill="currentColor" />
+            </button>
           </div>
-          <span className="text-muted-foreground" style={{ fontSize: 11, minWidth: 36 }}>
-            {formatTime(duration)}
-          </span>
+          <div className="flex w-full max-w-xl items-center gap-2">
+            <span className="w-9 text-right text-[11px] tabular-nums text-muted-foreground" style={{ color: '#727272' }}>
+              {formatTime(progress)}
+            </span>
+            <SliderBar
+              value={progress}
+              max={duration}
+              onChange={seek}
+              ariaLabel="Progreso de la canción"
+              className="flex-1"
+            />
+            <span className="w-9 text-[11px] tabular-nums text-muted-foreground" style={{ color: '#727272' }}>
+              {formatTime(duration)}
+            </span>
+          </div>
+        </div>
+
+        {/* Volumen + crossfade */}
+        <div className="hidden flex-1 items-center justify-end gap-3 lg:flex">
+          <div className="relative">
+            <button
+              onClick={() => setShowCrossfade((v) => !v)}
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs transition ${
+                crossfadeSec > 0
+                  ? 'bg-primary/15 text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              style={{ color: crossfadeSec > 0 ? '#1db954' : '#a7a7a7' }}
+              aria-label="Ajustar fundido entre canciones"
+              title="Fundido cruzado entre canciones"
+            >
+              <Waves size={15} />
+              {crossfadeSec > 0 ? `${crossfadeSec}s` : 'Off'}
+            </button>
+            {showCrossfade && (
+              <div className="absolute bottom-full right-0 mb-2 w-48 rounded-xl border border-border bg-surface-2 p-3 shadow-xl" style={{ borderColor: '#333', background: '#282828' }}>
+                <p className="mb-2 text-xs font-medium text-white">Fundido cruzado</p>
+                <input
+                  type="range"
+                  min="0"
+                  max="12"
+                  step="1"
+                  value={crossfadeSec}
+                  onChange={(e) => setCrossfadeSec(Number(e.target.value))}
+                  className="w-full accent-[#1db954]"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground" style={{ color: '#727272' }}>
+                  {crossfadeSec === 0 ? 'Desactivado' : `${crossfadeSec} segundos`}
+                </p>
+              </div>
+            )}
+          </div>
+          <VolIcon size={18} className="text-muted-foreground" style={{ color: '#a7a7a7' }} />
+          <SliderBar
+            value={volume}
+            max={1}
+            onChange={setVolume}
+            ariaLabel="Volumen"
+            className="w-24"
+          />
         </div>
       </div>
-
-      {/* Volume */}
-      <div className="flex items-center gap-2" style={{ flex: "0 0 180px", justifyContent: "flex-end" }}>
-        <button
-          onClick={() => setMuted(!muted)}
-          className="text-muted-foreground hover:text-white transition-colors"
-        >
-          {muted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
-        </button>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={muted ? 0 : volume}
-          onChange={(e) => { 
-            setVolume(parseFloat(e.target.value)); 
-            setMuted(false); 
-          }}
-          className="w-24 accent-primary cursor-pointer"
-          style={{ accentColor: "#1db954" }}
-        />
-      </div>
-    </div>
+    </footer>
   );
 }
