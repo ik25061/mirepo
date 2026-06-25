@@ -10,6 +10,7 @@ import CollectionView from './components/CollectionView.jsx';
 import GridView from './components/GridView.jsx';
 import MobileSearchView from './components/MobileSearchView.jsx';
 import NowPlayingScreen from './components/NowPlayingScreen.jsx';
+import DuplicateFinder from './components/DuplicateFinder.jsx';
 import { MiniPlayer } from './components/MiniPlayer.jsx';
 import { BottomNav } from './components/BottomNav.jsx';
 
@@ -88,7 +89,8 @@ function Shell() {
               songs={lib.songs} 
               onOpenCollection={openCollection} 
               onOpenGridView={openGridView}
-              onLike={lib.toggleLike} 
+              onLike={lib.toggleLike}
+              onOpenDuplicates={() => setView({ type: 'duplicates' })}
             />
           ) : view.type === 'library' ? (
             <LibraryView
@@ -109,6 +111,8 @@ function Shell() {
               onOpenCollection={openCollection}
               songs={lib.songs}
             />
+          ) : view.type === 'duplicates' ? (
+            <DuplicateFinder onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'collection' ? (
             <CollectionView
               collection={{
@@ -170,7 +174,8 @@ function Shell() {
               songs={lib.songs} 
               onOpenCollection={openCollection} 
               onOpenGridView={openGridView}
-              onLike={lib.toggleLike} 
+              onLike={lib.toggleLike}
+              onOpenDuplicates={() => setView({ type: 'duplicates' })}
             />
           ) : view.type === 'library' ? (
             <LibraryView
@@ -191,6 +196,8 @@ function Shell() {
               onOpenCollection={openCollection}
               songs={lib.songs}
             />
+          ) : view.type === 'duplicates' ? (
+            <DuplicateFinder onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'collection' ? (
             <CollectionView
               collection={{

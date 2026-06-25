@@ -1,11 +1,11 @@
-import { Heart, Play } from 'lucide-react';
+import { Heart, Play, Copy } from 'lucide-react';
 import Carousel from './Carousel.jsx';
 import CollectionCard from './CollectionCard.jsx';
 import SongRow from '../SongRow.jsx';
 import { buildAlbums, buildArtists, buildGenres } from '../../lib/format.js';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 
-export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLike }) {
+export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLike, onOpenDuplicates }) {
   const { play } = usePlayer();
   const liked = songs.filter((s) => s.liked);
   const albums = buildAlbums(songs);
@@ -128,6 +128,25 @@ export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLi
           />
         ))}
       </Carousel>
+
+      {/* Buscar duplicados */}
+      {onOpenDuplicates && (
+        <button
+          onClick={onOpenDuplicates}
+          className="animate-fade-in flex items-center gap-4 p-4 rounded-xl border border-border bg-gradient-to-r from-surface to-surface-2 hover:from-surface-2 hover:to-muted transition-all group"
+        >
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-danger/20 text-danger group-hover:bg-danger/30 transition-colors">
+            <Copy size={22} />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-600 text-white">Buscar música duplicada</p>
+            <p className="text-xs text-muted-foreground">Encuentra canciones repetidas y libera espacio</p>
+          </div>
+          <span className="ml-auto text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+            Abrir →
+          </span>
+        </button>
+      )}
 
       <div className="h-4" />
     </div>

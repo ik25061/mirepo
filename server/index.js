@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'os';
+import crypto from 'node:crypto';
 import { 
   scanLibrary, 
   rescanLibrary, 
@@ -409,6 +410,237 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
   } catch (error) {
     console.error('Error syncing metadata:', error);
     res.status(500).json({ error: 'Error al sincronizar metadatos' });
+  }
+});
+
+// ====== RUTAS PARA BUSCAR DUPLICADOS CON PROGRESO EN VIVO ======
+
+const audioExtensions = new Set(['.mp3', '.m4a', '.wav', '.flac', '.ogg', '.opus']);
+const scanSessions = new Map(); // scanId -> { clients: Set<res>, processed, total, duplicates, done }
+
+// POST - Iniciar escaneo (streaming SSE)
+app.post('/api/scan', async (req, res) => {
+  const { folderPath } = req.body;
+
+  if (!folderPath) {
+    return res.status(400).json({ error: 'Falta especificar el parámetro folderPath en el cuerpo de la petición.' });
+  }
+
+  if (!fs.existsSync(folderPath)) {
+    return res.status(404).json({ error: 'La ruta de la carpeta especificada no existe en la PC.' });
+  }
+
+  try {
+    const files = fs.readdirSync(folderPath, { recursive: true });
+    const totalAudio = files.filter(f => audioExtensions.has(path.extname(f).toLowerCase())).length;
+
+    const scanId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const session = {
+      clients: new Set(),
+      processed: 0,
+      total: totalAudio,
+      duplicates: [],
+      done: false,
+      error: null
+    };
+    scanSessions.set(scanId, session);
+
+    // Responder inmediatamente con el scanId
+    res.json({ success: true, scanId, total: totalAudio });
+
+    // Iniciar escaneo en segundo plano
+    scanLibraryInBackground(folderPath, files, session, scanId);
+  } catch (error) {
+    console.error('[scan] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+async function scanLibraryInBackground(folderPath, files, session, scanId) {
+  const musicDatabase = {};
+
+  for (const relativePath of files) {
+    const ext = path.extname(relativePath).toLowerCase();
+    if (!audioExtensions.has(ext)) continue;
+
+    const fullPath = path.join(folderPath, relativePath);
+    
+    let stats;
+    try { stats = fs.statSync(fullPath); } catch { continue; }
+    if (!stats.isFile()) continue;
+
+    let title, artist, bitrateKbps = 0;
+    try {
+      const { parseFile } = await import('music-metadata');
+      const metadata = await parseFile(fullPath, { duration: false, skipCovers: true, skipPostHeaders: true });
+      title = metadata.common.title || path.basename(relativePath);
+      artist = metadata.common.artist || 'Desconocido';
+      const bitrate = metadata.format.bitrate || 0;
+      bitrateKbps = Math.round(bitrate / 1000);
+    } catch {
+      title = path.basename(relativePath);
+      artist = 'Desconocido';
+    }
+
+    const uniqueKey = `${artist}-${title}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    const currentFileInfo = {
+      name: path.basename(relativePath),
+      path: fullPath,
+      relativePath: relativePath,
+      bitrate: bitrateKbps
+    };
+
+    if (musicDatabase[uniqueKey]) {
+      const existingFile = musicDatabase[uniqueKey];
+      let duplicate;
+
+      if (currentFileInfo.bitrate > existingFile.bitrate) {
+        duplicate = {
+          title,
+          artist,
+          reason: `Calidad inferior (${existingFile.bitrate} kbps vs ${currentFileInfo.bitrate} kbps)`,
+          original: currentFileInfo, 
+          duplicate: existingFile     
+        };
+        musicDatabase[uniqueKey] = currentFileInfo;
+      } else {
+        duplicate = {
+          title,
+          artist,
+          reason: `Calidad inferior o igual (${existingFile.bitrate} kbps vs ${currentFileInfo.bitrate} kbps)`,
+          original: existingFile,    
+          duplicate: currentFileInfo 
+        };
+      }
+
+      session.duplicates.push(duplicate);
+      // Notificar a todos los clientes SSE del nuevo duplicado
+      broadcastToClients(session, { type: 'duplicate', data: duplicate });
+    } else {
+      musicDatabase[uniqueKey] = currentFileInfo;
+    }
+
+    session.processed++;
+    // Notificar progreso cada 10 archivos
+    if (session.processed % 10 === 0 || session.processed === session.total) {
+      broadcastToClients(session, {
+        type: 'progress',
+        processed: session.processed,
+        total: session.total
+      });
+    }
+  }
+
+  session.done = true;
+  broadcastToClients(session, { type: 'complete', duplicates: session.duplicates });
+  console.log(`[scan] Escaneo completado: ${session.processed} archivos, ${session.duplicates.length} duplicados.`);
+
+  // Limpiar sesión después de 30 segundos
+  setTimeout(() => scanSessions.delete(scanId), 30000);
+}
+
+function broadcastToClients(session, data) {
+  const message = JSON.stringify(data);
+  for (const client of session.clients) {
+    try {
+      client.write(`data: ${message}\n\n`);
+    } catch {}
+  }
+}
+
+// SSE - Stream de progreso del escaneo
+app.get('/api/scan-stream/:scanId', (req, res) => {
+  const { scanId } = req.params;
+  const session = scanSessions.get(scanId);
+  
+  if (!session) {
+    res.status(404).json({ error: 'Sesión de escaneo no encontrada o expirada.' });
+    return;
+  }
+
+  // Configurar headers SSE
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+  });
+
+  // Enviar estado actual inmediatamente
+  const initialState = {
+    type: 'init',
+    processed: session.processed,
+    total: session.total,
+    done: session.done
+  };
+  res.write(`data: ${JSON.stringify(initialState)}\n\n`);
+
+  // Si ya terminó, enviar todos los duplicados
+  if (session.done) {
+    res.write(`data: ${JSON.stringify({ type: 'complete', duplicates: session.duplicates })}\n\n`);
+    res.end();
+    return;
+  }
+
+  // Registrar cliente
+  session.clients.add(res);
+
+  // Limpiar cuando el cliente se desconecte
+  req.on('close', () => {
+    session.clients.delete(res);
+  });
+});
+
+// DELETE - Eliminar archivo duplicado (lo mueve a la misma papelera que las otras canciones)
+app.delete('/api/delete-duplicate', async (req, res) => {
+  const { filePath } = req.body;
+
+  if (!filePath) {
+    return res.status(400).json({ error: 'Falta especificar el parámetro filePath en la petición.' });
+  }
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'El archivo seleccionado ya no existe en el disco duro.' });
+  }
+
+  try {
+    // Usar el mismo mecanismo de papelera que delete normal
+    if (!fs.existsSync(TRASH_DIR)) {
+      fs.mkdirSync(TRASH_DIR, { recursive: true });
+    }
+
+    const now = new Date();
+    const trashSubDir = path.join(TRASH_DIR, 
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    );
+    if (!fs.existsSync(trashSubDir)) {
+      fs.mkdirSync(trashSubDir, { recursive: true });
+    }
+
+    const trashName = `${Date.now()}_${path.basename(filePath)}`;
+    const trashPath = path.join(trashSubDir, trashName);
+
+    try {
+      fs.copyFileSync(filePath, trashPath);
+      console.log(`📋 Duplicado copiado a papelera: ${trashPath}`);
+      fs.unlinkSync(filePath);
+      console.log(`🗑️ Duplicado eliminado: ${filePath}`);
+    } catch (copyError) {
+      console.error('Error al copiar duplicado, intentando método alternativo:', copyError);
+      try {
+        fs.renameSync(filePath, trashPath);
+        console.log(`🗑️ Duplicado movido a papelera: ${filePath} → ${trashPath}`);
+      } catch (renameError) {
+        console.log('⚠️ No se pudo mover a papelera, eliminando permanentemente...');
+        fs.unlinkSync(filePath);
+        console.log(`🗑️ Duplicado eliminado permanentemente: ${filePath}`);
+      }
+    }
+
+    res.json({ success: true, message: 'El archivo duplicado ha sido eliminado y movido a la papelera del sistema.' });
+  } catch (error) {
+    res.status(500).json({ error: 'No se pudo eliminar el archivo. Verifica los permisos del sistema.' });
   }
 });
 

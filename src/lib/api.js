@@ -51,8 +51,11 @@ export const api = {
       body: formData,
     }).then((r) => r.json());
   },
+  scanDuplicates: (folderPath) => post('/api/scan', { folderPath }),
+  deleteDuplicate: (filePath) => del('/api/delete-duplicate', { filePath }),
 };
 
 export const audioUrl = (id) => `${API_URL}/audio/${id}`;
+export const serverUrl = API_URL;
 export const coverUrl = (id) => `${API_URL}/cover/${id}`;
 export const artistCoverUrl = (artist) => `${API_URL}/artist-cover/${encodeURIComponent(artist)}`;

@@ -1,10 +1,11 @@
-import { Home, Library, Disc3, Trash2, Search } from 'lucide-react';
+import { Home, Library, Disc3, Trash2, Search, Copy } from 'lucide-react';
 
 export default function Sidebar({ view, onNavigate, trashCount = 0 }) {
   const items = [
     { id: 'home', label: 'Inicio', icon: Home },
     { id: 'search', label: 'Buscar', icon: Search },
     { id: 'library', label: 'Biblioteca', icon: Library },
+    { id: 'duplicates', label: 'Duplicados', icon: Copy },
   ];
 
   return (
