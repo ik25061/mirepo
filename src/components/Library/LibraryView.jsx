@@ -1,7 +1,9 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Play, Trash2 } from 'lucide-react';
+import { Search, Play, Trash2, Wand2 } from 'lucide-react';
 import SongRow from '../SongRow.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
+import { api } from '../../lib/api.js';
+import path from 'node:path';
 
 // Componente para el loading skeleton
 function TrackSkeleton() {
@@ -21,6 +23,7 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
   const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(20);
   const [isLoading, setIsLoading] = useState(false);
+  const [fixingMetadata, setFixingMetadata] = useState(null);
   const loadMoreRef = useRef(null);
   const listRef = useRef(null);
 
@@ -38,6 +41,24 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
 
   const visibleTracks = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
+
+  const handleFixMetadata = async (song) => {
+    if (!confirm(`¿Corregir metadatos de "${song.title}"?\nSe buscará información en AcoustID y se renombrará el archivo.`)) {
+      return;
+    }
+
+    setFixingMetadata(song.id);
+    try {
+      const fullPath = song.relPath.startsWith('music/') ? song.relPath : `music/${song.relPath}`;
+      const result = await api.fixMetadata(fullPath);
+      alert(`✅ ${result.message}\n\nNuevo nombre: ${path.basename(result.newPath)}`);
+      window.location.reload();
+    } catch (err) {
+      alert('Error al corregir metadatos: ' + err.message);
+    } finally {
+      setFixingMetadata(null);
+    }
+  };
 
   // Resetear el contador cuando cambia la búsqueda
   useEffect(() => {
@@ -153,6 +174,9 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
                 onDislike={onDislike}
                 onDislikeArtist={onDislikeArtist}
                 onDelete={onDelete}
+                onFixMetadata={() => handleFixMetadata(song)}
+                showFixMetadata
+                fixingMetadata={fixingMetadata === song.id}
                 showDelete
               />
             ))}

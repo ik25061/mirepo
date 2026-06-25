@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, Pause, Heart, ThumbsDown, UserX, Trash2, Check } from 'lucide-react';
+import { Play, Pause, Heart, ThumbsDown, UserX, Trash2, Check, Wand2 } from 'lucide-react';
 import Cover from './Cover.jsx';
 import NowPlayingBars from './Player/NowPlayingBars.jsx';
 import { formatTime } from '../lib/format.js';
@@ -13,8 +13,11 @@ export default function SongRow({
   onDislike,
   onDislikeArtist,
   onDelete,
+  onFixMetadata,
   showDelete = false,
+  showFixMetadata = false,
   showCover = true,
+  fixingMetadata = false,
 }) {
   const { current, isPlaying, play, togglePlay, removeFromQueue } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -130,6 +133,29 @@ export default function SongRow({
             title={`No mostrar al artista ${song.artist}`}
           >
             <UserX size={12} className="sm:size-4" />
+          </button>
+        )}
+
+        {/* Botón corregir metadatos */}
+        {showFixMetadata && onFixMetadata && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onFixMetadata();
+            }}
+            disabled={fixingMetadata}
+            className={`${iconBtn} ${
+              fixingMetadata
+                ? 'text-primary opacity-100'
+                : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary'
+            }`}
+            title={fixingMetadata ? 'Corrigiendo metadatos...' : 'Corregir metadatos (AcoustID)'}
+          >
+            {fixingMetadata ? (
+              <span className="animate-spin">⚙️</span>
+            ) : (
+              <Wand2 size={12} className="sm:size-4" />
+            )}
           </button>
         )}
 

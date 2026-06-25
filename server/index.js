@@ -477,8 +477,18 @@ app.post('/api/fix-metadata', async (req, res) => {
     const newFullPath = path.join(fileDir, `${cleanFileName}${fileExt}`);
 
     if (filePath !== newFullPath) {
+      console.log(`[fix-metadata] 🔄 Archivo renombrado:`);
+      console.log(`   Antes: ${filePath}`);
+      console.log(`   Ahora: ${newFullPath}`);
       fs.renameSync(filePath, newFullPath);
+    } else {
+      console.log(`[fix-metadata] 📄 Archivo mantiene nombre: ${filePath}`);
     }
+
+    console.log(`[fix-metadata] ✅ Metadatos actualizados:`);
+    console.log(`   Canción: ${tagsToWrite.artist} - ${tagsToWrite.title}`);
+    console.log(`   Álbum: ${tagsToWrite.album}`);
+    console.log(`   Ruta: ${newFullPath}`);
 
     res.json({
       success: true,
@@ -641,8 +651,15 @@ async function scanLibraryInBackground(folderPath, files, session, scanId) {
               if (similarity >= 1.0) {
                 // 100% de similitud → eliminar automáticamente (misma canción exacta)
                 try {
+                  const fileNameToDelete = path.basename(fileToDelete);
+                  const fileNameToKeep = path.basename(fileToKeep);
                   fs.unlinkSync(fileToDelete);
-                  console.log(`🗑️ [auto] Eliminado duplicado exacto (100% AcoustID): ${path.basename(fileToDelete)}`);
+                  console.log(`\n[auto-eliminado] 🔍 Duplicado exacto detectado (100% AcoustID):`);
+                  console.log(`  ❌ Eliminado: ${fileNameToDelete}`);
+                  console.log(`  📍 Ubicación eliminado: ${fileToDelete}`);
+                  console.log(`  ✅ Conservado: ${fileNameToKeep}`);
+                  console.log(`  📍 Ubicación conservado: ${fileToKeep}`);
+                  console.log(`  🎵 Calidad (conservado): ${Math.max(currentFileInfo.bitrate, existingFileInfo.bitrate)} kbps\n`);
                   
                   const deleteInfo = {
                     title,
@@ -787,8 +804,11 @@ app.delete('/api/delete-duplicate', async (req, res) => {
 
   try {
     // Eliminar permanentemente sin hacer copia a papelera
+    const fileName = path.basename(filePath);
     fs.unlinkSync(filePath);
-    console.log(`🗑️ Duplicado eliminado permanentemente: ${filePath}`);
+    console.log(`[delete-duplicate] 🗑️ Eliminado permanentemente:`);
+    console.log(`   Archivo: ${fileName}`);
+    console.log(`   Ruta: ${filePath}`);
 
     res.json({ success: true, message: 'El archivo duplicado ha sido eliminado permanentemente.' });
   } catch (error) {
