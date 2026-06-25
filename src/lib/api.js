@@ -3,7 +3,7 @@
 const SERVER_IP = '172.16.12.4';
 // const SERVER_IP = '192.168.1.152';
 
-const API_URL = `http://${SERVER_IP}:5001`;
+const API_URL = `http://${SERVER_IP}:5000`;
 
 async function post(url, body) {
   const res = await fetch(`${API_URL}${url}`, {

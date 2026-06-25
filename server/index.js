@@ -17,7 +17,7 @@ import { getSongPrefs, getHiddenArtists, setSongFlag, setArtistHidden, deleteSon
 import 'dotenv/config';
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors({
   origin: '*',
@@ -415,8 +415,7 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
 // ====== INICIAR SERVIDOR ======
 
 async function start() {
-  await scanLibrary();
-  
+  // Iniciar servidor inmediatamente, escaneo en segundo plano
   const nets = os.networkInterfaces();
   const ips = [];
   for (const name of Object.keys(nets)) {
@@ -438,10 +437,15 @@ async function start() {
     console.log(`   📂 Música:   ${MUSIC_DIR}`);
     console.log(`   🗑️ Papelera: ${TRASH_DIR}`);
     console.log(`   ==========================================\n`);
-    console.log(`   📝 Para usar desde otra computadora:`);
-    console.log(`   - Cambia SERVER_IP en src/lib/api.js a una de las IPs de arriba`);
-    console.log(`   - Accede al frontend en http://${ips[0] || 'localhost'}:5172`);
-    console.log(`   ==========================================\n`);
+    console.log(`   🔄 Escaneando biblioteca en segundo plano...`);
+    console.log(`   ⚠️  La biblioteca estará disponible cuando termine el escaneo.\n`);
+  });
+
+  // Escanear en segundo plano
+  scanLibrary().then(() => {
+    console.log(`\n✅ Escaneo completado. Servidor listo.`);
+  }).catch(err => {
+    console.error(`\n❌ Error en escaneo:`, err);
   });
 }
 
