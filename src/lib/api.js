@@ -53,6 +53,7 @@ export const api = {
   },
   scanDuplicates: (folderPath) => post('/api/scan', { folderPath }),
   deleteDuplicate: (filePath) => del('/api/delete-duplicate', { filePath }),
+  fixMetadata: (filePath) => post('/api/fix-metadata', { filePath }),
 };
 
 export const audioUrl = (id) => `${API_URL}/audio/${id}`;

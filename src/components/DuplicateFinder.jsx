@@ -116,7 +116,7 @@ export default function DuplicateFinder({ onBack }) {
   };
 
   const handleDelete = async (filePath, index) => {
-    if (!window.confirm('¿Seguro que quieres borrar este archivo duplicado? Se moverá a la papelera del sistema.')) return;
+    if (!window.confirm('¿Seguro que quieres borrar este archivo duplicado? Se eliminará permanentemente.')) return;
 
     setDeletingIndex(index);
     try {
@@ -137,7 +137,7 @@ export default function DuplicateFinder({ onBack }) {
 
   const handleDeleteAll = async () => {
     const currentDuplicates = scanComplete ? duplicates : liveDuplicates;
-    if (!window.confirm(`¿Seguro que quieres borrar TODOS los ${currentDuplicates.length} duplicados? Se moverán a la papelera del sistema.`)) return;
+    if (!window.confirm(`¿Seguro que quieres borrar TODOS los ${currentDuplicates.length} duplicados? Se eliminarán permanentemente.`)) return;
 
     setLoading(true);
     let removed = 0;
@@ -301,12 +301,16 @@ export default function DuplicateFinder({ onBack }) {
                     <p className="text-sm font-600 text-white truncate">
                       {item.artist} — {item.title}
                     </p>
-                    <p className="text-xs text-danger mt-1 flex items-center gap-1">
-                      <AlertTriangle size={12} />
+                    <p className={`text-xs mt-1 flex items-center gap-1 ${item.autoDeleted ? 'text-primary' : 'text-danger'}`}>
+                      {item.autoDeleted ? (
+                        <CheckCircle size={12} />
+                      ) : (
+                        <AlertTriangle size={12} />
+                      )}
                       {item.reason}
                     </p>
                   </div>
-                  {scanComplete && (
+                  {scanComplete && !item.autoDeleted && (
                     <button
                       onClick={() => handleDelete(item.duplicate.path, index)}
                       disabled={deletingIndex === index}

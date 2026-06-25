@@ -14,7 +14,9 @@ import {
   TRASH_DIR,
   removeSongFromCache
 } from './scanner.js';
+import NodeID3 from 'node-id3';
 import { getSongPrefs, getHiddenArtists, setSongFlag, setArtistHidden, deleteSongFromPrefs } from './db.js';
+import { computeFingerprint, lookupAcoustId } from './acoustid.js';
 import 'dotenv/config';
 
 const app = express();
@@ -413,6 +415,83 @@ app.put('/api/songs/sync-metadata', async (req, res) => {
   }
 });
 
+// POST - Corregir metadatos y renombrar archivo
+app.post('/api/fix-metadata', async (req, res) => {
+  const { filePath } = req.body;
+
+  if (!filePath || !fs.existsSync(filePath)) {
+    return res.status(400).json({ error: 'El archivo de música especificado no existe.' });
+  }
+
+  try {
+    const fp = await computeFingerprint(filePath);
+    if (!fp || !fp.fingerprint) {
+      return res.status(400).json({ error: 'No se pudo generar la huella acústica del archivo.' });
+    }
+
+    const lookupResults = await lookupAcoustId(fp.fingerprint, fp.duration);
+    if (!lookupResults || lookupResults.length === 0) {
+      return res.status(404).json({ error: 'No se encontraron metadatos para esta canción en AcoustID.' });
+    }
+
+    const bestMatch = lookupResults[0];
+    const fetchedTags = {
+      title: bestMatch.title,
+      artist: bestMatch.artist,
+      album: bestMatch.album,
+      genre: '',
+      year: '',
+    };
+
+    for (const result of lookupResults) {
+      if (result.albumArtist) {
+        fetchedTags.artist = result.artist;
+        fetchedTags.albumArtist = result.albumArtist;
+        break;
+      }
+      if (result.genre) {
+        fetchedTags.genre = result.genre;
+      }
+      if (result.year) {
+        fetchedTags.year = result.year;
+      }
+    }
+
+    const tagsToWrite = {
+      title: fetchedTags.title,
+      artist: fetchedTags.artist,
+      album: fetchedTags.album,
+      performerInfo: fetchedTags.albumArtist || fetchedTags.artist,
+      genre: fetchedTags.genre || 'Desconocido',
+      year: fetchedTags.year || '2026',
+    };
+
+    const writeSuccess = NodeID3.write(tagsToWrite, filePath);
+    if (!writeSuccess) {
+      return res.status(500).json({ error: 'Error al escribir las etiquetas ID3 en el archivo.' });
+    }
+
+    const cleanFileName = `${fetchedTags.artist} - ${fetchedTags.title}`.replace(/[/\\?%*:|"<>]/g, '-');
+    const fileExt = path.extname(filePath);
+    const fileDir = path.dirname(filePath);
+    const newFullPath = path.join(fileDir, `${cleanFileName}${fileExt}`);
+
+    if (filePath !== newFullPath) {
+      fs.renameSync(filePath, newFullPath);
+    }
+
+    res.json({
+      success: true,
+      message: 'Metadatos corregidos y archivo renombrado correctamente.',
+      newPath: newFullPath,
+      updatedTags: tagsToWrite,
+    });
+  } catch (error) {
+    console.error('[fix-metadata] Error:', error);
+    res.status(500).json({ error: error.message || 'Error al corregir metadatos' });
+  }
+});
+
 // ====== RUTAS PARA BUSCAR DUPLICADOS CON PROGRESO EN VIVO ======
 
 const audioExtensions = new Set(['.mp3', '.m4a', '.wav', '.flac', '.ogg', '.opus']);
@@ -457,7 +536,8 @@ app.post('/api/scan', async (req, res) => {
 });
 
 async function scanLibraryInBackground(folderPath, files, session, scanId) {
-  const musicDatabase = {};
+  const musicDatabase = {};        // keyed by artist-title
+  const fingerprintDatabase = {};  // keyed by fingerprint hash
 
   for (const relativePath of files) {
     const ext = path.extname(relativePath).toLowerCase();
@@ -484,13 +564,20 @@ async function scanLibraryInBackground(folderPath, files, session, scanId) {
 
     const uniqueKey = `${artist}-${title}`.toLowerCase().replace(/[^a-z0-9]/g, '');
     
+    // Computar huella digital para todos los archivos (en paralelo con el procesamiento)
+    const fingerprintPromise = computeFingerprint(fullPath).catch(() => null);
+
     const currentFileInfo = {
       name: path.basename(relativePath),
       path: fullPath,
       relativePath: relativePath,
-      bitrate: bitrateKbps
+      bitrate: bitrateKbps,
+      acoustId: null  // Se llenará después
     };
 
+    let metadataMatched = false;
+
+    // ====== DETECCIÓN POR METADATOS (artista + título) ======
     if (musicDatabase[uniqueKey]) {
       const existingFile = musicDatabase[uniqueKey];
       let duplicate;
@@ -500,8 +587,8 @@ async function scanLibraryInBackground(folderPath, files, session, scanId) {
           title,
           artist,
           reason: `Calidad inferior (${existingFile.bitrate} kbps vs ${currentFileInfo.bitrate} kbps)`,
-          original: currentFileInfo, 
-          duplicate: existingFile     
+          original: currentFileInfo,
+          duplicate: existingFile
         };
         musicDatabase[uniqueKey] = currentFileInfo;
       } else {
@@ -509,16 +596,102 @@ async function scanLibraryInBackground(folderPath, files, session, scanId) {
           title,
           artist,
           reason: `Calidad inferior o igual (${existingFile.bitrate} kbps vs ${currentFileInfo.bitrate} kbps)`,
-          original: existingFile,    
-          duplicate: currentFileInfo 
+          original: existingFile,
+          duplicate: currentFileInfo
         };
       }
 
       session.duplicates.push(duplicate);
-      // Notificar a todos los clientes SSE del nuevo duplicado
       broadcastToClients(session, { type: 'duplicate', data: duplicate });
+      metadataMatched = true;
     } else {
       musicDatabase[uniqueKey] = currentFileInfo;
+    }
+
+    // ====== DETECCIÓN POR HUELLA DIGITAL ACUSTICA (AcoustID) ======
+    try {
+      const fp = await fingerprintPromise;
+      if (fp && fp.fingerprint) {
+        const fpHash = simpleFingerprintHash(fp.fingerprint);
+        
+        // Buscar si este fingerprint ya existe en la base de fingerprints
+        let fpMatchFound = false;
+        for (const [existingHash, existingFileInfo] of Object.entries(fingerprintDatabase)) {
+          const similarity = fingerprintSimilarity(fp.fingerprint, existingFileInfo.fingerprint);
+          if (similarity >= 0.7) { // 70% de similitud o más = mismo tema
+            if (!metadataMatched) {
+              let fileToDelete;
+              let fileToKeep;
+              
+              if (currentFileInfo.bitrate > existingFileInfo.bitrate) {
+                // El actual es mejor calidad → eliminar el anterior (existing)
+                fileToDelete = existingFileInfo.path;
+                fileToKeep = currentFileInfo.path;
+                fingerprintDatabase[fpHash] = { ...currentFileInfo, fingerprint: fp.fingerprint };
+                delete fingerprintDatabase[existingHash];
+                
+                // Actualizar musicDatabase para que el archivo de mejor calidad quede registrado
+                musicDatabase[uniqueKey] = currentFileInfo;
+              } else {
+                // El existente es mejor calidad → eliminar el actual
+                fileToDelete = currentFileInfo.path;
+                fileToKeep = existingFileInfo.path;
+              }
+
+              if (similarity >= 1.0) {
+                // 100% de similitud → eliminar automáticamente (misma canción exacta)
+                try {
+                  fs.unlinkSync(fileToDelete);
+                  console.log(`🗑️ [auto] Eliminado duplicado exacto (100% AcoustID): ${path.basename(fileToDelete)}`);
+                  
+                  const deleteInfo = {
+                    title,
+                    artist,
+                    reason: `Coincidencia exacta por huella digital (AcoustID: 100%) · Eliminado automáticamente · Conservado: ${path.basename(fileToKeep)} (${Math.max(currentFileInfo.bitrate, existingFileInfo.bitrate)} kbps)`,
+                    original: { name: path.basename(fileToKeep), path: fileToKeep, bitrate: Math.max(currentFileInfo.bitrate, existingFileInfo.bitrate) },
+                    duplicate: { name: path.basename(fileToDelete), path: fileToDelete, bitrate: Math.min(currentFileInfo.bitrate, existingFileInfo.bitrate) },
+                    autoDeleted: true
+                  };
+                  session.duplicates.push(deleteInfo);
+                  broadcastToClients(session, { type: 'duplicate', data: deleteInfo });
+                } catch (err) {
+                  console.error(`[auto] Error eliminando duplicado: ${err.message}`);
+                }
+              } else {
+                // Menos de 100% → mostrar en UI para decisión manual
+                let duplicate;
+                if (currentFileInfo.bitrate > existingFileInfo.bitrate) {
+                  duplicate = {
+                    title,
+                    artist,
+                    reason: `Coincidencia por huella digital (AcoustID): ${Math.round(similarity * 100)}% similitud · Calidad inferior (${existingFileInfo.bitrate} kbps vs ${currentFileInfo.bitrate} kbps)`,
+                    original: currentFileInfo,
+                    duplicate: existingFileInfo
+                  };
+                } else {
+                  duplicate = {
+                    title,
+                    artist,
+                    reason: `Coincidencia por huella digital (AcoustID): ${Math.round(similarity * 100)}% similitud · Calidad inferior o igual (${existingFileInfo.bitrate} kbps vs ${currentFileInfo.bitrate} kbps)`,
+                    original: existingFileInfo,
+                    duplicate: currentFileInfo
+                  };
+                }
+                session.duplicates.push(duplicate);
+                broadcastToClients(session, { type: 'duplicate', data: duplicate });
+              }
+            }
+            fpMatchFound = true;
+            break;
+          }
+        }
+
+        if (!fpMatchFound) {
+          fingerprintDatabase[fpHash] = { ...currentFileInfo, fingerprint: fp.fingerprint };
+        }
+      }
+    } catch {
+      // Si falla el fingerprint, ignoramos silenciosamente
     }
 
     session.processed++;
@@ -538,6 +711,14 @@ async function scanLibraryInBackground(folderPath, files, session, scanId) {
 
   // Limpiar sesión después de 30 segundos
   setTimeout(() => scanSessions.delete(scanId), 30000);
+}
+
+/**
+ * Genera un hash simple para un fingerprint raw (primeros 50 chars).
+ */
+function simpleFingerprintHash(fingerprint) {
+  if (!fingerprint) return '';
+  return fingerprint.split(',').slice(0, 50).join(',');
 }
 
 function broadcastToClients(session, data) {
@@ -592,7 +773,7 @@ app.get('/api/scan-stream/:scanId', (req, res) => {
   });
 });
 
-// DELETE - Eliminar archivo duplicado (lo mueve a la misma papelera que las otras canciones)
+// DELETE - Eliminar archivo duplicado (eliminación permanente, sin copia a papelera)
 app.delete('/api/delete-duplicate', async (req, res) => {
   const { filePath } = req.body;
 
@@ -605,40 +786,11 @@ app.delete('/api/delete-duplicate', async (req, res) => {
   }
 
   try {
-    // Usar el mismo mecanismo de papelera que delete normal
-    if (!fs.existsSync(TRASH_DIR)) {
-      fs.mkdirSync(TRASH_DIR, { recursive: true });
-    }
+    // Eliminar permanentemente sin hacer copia a papelera
+    fs.unlinkSync(filePath);
+    console.log(`🗑️ Duplicado eliminado permanentemente: ${filePath}`);
 
-    const now = new Date();
-    const trashSubDir = path.join(TRASH_DIR, 
-      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-    );
-    if (!fs.existsSync(trashSubDir)) {
-      fs.mkdirSync(trashSubDir, { recursive: true });
-    }
-
-    const trashName = `${Date.now()}_${path.basename(filePath)}`;
-    const trashPath = path.join(trashSubDir, trashName);
-
-    try {
-      fs.copyFileSync(filePath, trashPath);
-      console.log(`📋 Duplicado copiado a papelera: ${trashPath}`);
-      fs.unlinkSync(filePath);
-      console.log(`🗑️ Duplicado eliminado: ${filePath}`);
-    } catch (copyError) {
-      console.error('Error al copiar duplicado, intentando método alternativo:', copyError);
-      try {
-        fs.renameSync(filePath, trashPath);
-        console.log(`🗑️ Duplicado movido a papelera: ${filePath} → ${trashPath}`);
-      } catch (renameError) {
-        console.log('⚠️ No se pudo mover a papelera, eliminando permanentemente...');
-        fs.unlinkSync(filePath);
-        console.log(`🗑️ Duplicado eliminado permanentemente: ${filePath}`);
-      }
-    }
-
-    res.json({ success: true, message: 'El archivo duplicado ha sido eliminado y movido a la papelera del sistema.' });
+    res.json({ success: true, message: 'El archivo duplicado ha sido eliminado permanentemente.' });
   } catch (error) {
     res.status(500).json({ error: 'No se pudo eliminar el archivo. Verifica los permisos del sistema.' });
   }
