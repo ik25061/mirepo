@@ -20,7 +20,7 @@ import { computeFingerprint, lookupAcoustId } from './acoustid.js';
 import 'dotenv/config';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 app.use(cors({
   origin: '*',
@@ -131,33 +131,30 @@ app.get('/cover/:id', async (req, res) => {
     // Silencioso - continuar con fallback
   }
 
-  // 5. IMAGEN POR DEFECTO en la raíz de música
-  const defaultCoverJpg = path.join(MUSIC_DIR, 'cover.jpg');
-  const defaultCoverPng = path.join(MUSIC_DIR, 'cover.png');
-  
-  if (fs.existsSync(defaultCoverJpg)) {
-    console.log(`[cover] 📷 Usando imagen por defecto: ${defaultCoverJpg}`);
-    res.set('Content-Type', 'image/jpeg');
-    res.set('Cache-Control', 'public, max-age=3600');
-    res.sendFile(defaultCoverJpg);
-    return;
-  }
-  
-  if (fs.existsSync(defaultCoverPng)) {
-    console.log(`[cover] 📷 Usando imagen por defecto: ${defaultCoverPng}`);
-    res.set('Content-Type', 'image/png');
-    res.set('Cache-Control', 'public, max-age=3600');
-    res.sendFile(defaultCoverPng);
-    return;
-  }
+  // 5. Último recurso: SVG generado dinámicamente por álbum/canción
+  console.log(`[cover] ❌ No se encontró portada para: ${song.title}, generando SVG dinámico`);
+  const albumKey = song.album || 'unknown';
+  let hash = 0;
+  for (let i = 0; i < albumKey.length; i++) hash = (hash * 31 + albumKey.charCodeAt(i)) | 0;
+  const hue1 = Math.abs(hash) % 360;
+  const hue2 = (hue1 + 40) % 360;
+  const hue3 = (hue1 + 80) % 360;
+  const color1 = `hsl(${hue1}, 55%, 22%)`;
+  const color2 = `hsl(${hue2}, 45%, 18%)`;
+  const color3 = `hsl(${hue3}, 50%, 30%)`;
 
-  // 6. Último recurso: SVG generado dinámicamente
-  console.log(`[cover] ❌ No se encontró portada para: ${song.title}, usando SVG por defecto`);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-    <rect width="200" height="200" fill="#1a1a2e"/>
-    <text x="100" y="90" font-family="Arial" font-size="60" text-anchor="middle" fill="#1db954">♫</text>
-    <text x="100" y="120" font-family="Arial" font-size="12" text-anchor="middle" fill="#a7a7a7" max-width="180">${song.artist}</text>
-    <text x="100" y="140" font-family="Arial" font-size="10" text-anchor="middle" fill="#535353" max-width="180">${song.album}</text>
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="${color1}"/>
+        <stop offset="1" stop-color="${color2}"/>
+      </linearGradient>
+    </defs>
+    <rect width="200" height="200" fill="url(#bg)"/>
+    <text x="100" y="85" font-family="Arial" font-size="60" text-anchor="middle" fill="${color3}">♫</text>
+    <text x="100" y="120" font-family="Arial" font-size="12" text-anchor="middle" fill="#e5e5e5">${song.artist}</text>
+    <text x="100" y="140" font-family="Arial" font-size="10" text-anchor="middle" fill="#a7a7a7">${song.album}</text>
+    <text x="100" y="158" font-family="Arial" font-size="9" text-anchor="middle" fill="#737373">${song.title}</text>
   </svg>`;
 
   res.set('Content-Type', 'image/svg+xml');

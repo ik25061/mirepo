@@ -11,14 +11,14 @@ node serve.js
 
 **Esperado:**
 ```
-🎵 Servidor de música corriendo en puerto 5000
+🎵 Servidor de música corriendo en puerto 5001
 📁 Carpeta de música: C:\Users\rafael\Music
 ```
 
 ### 2. Probar Endpoint GET
 
 ```bash
-curl http://localhost:5000/api/songs?limit=5&offset=0
+curl http://localhost:5001/api/songs?limit=5&offset=0
 ```
 
 **Esperado:** JSON con array de canciones incluyendo `imageUrl`
@@ -26,7 +26,7 @@ curl http://localhost:5000/api/songs?limit=5&offset=0
 ### 3. Probar Sincronización
 
 ```bash
-curl -X PUT http://localhost:5000/api/songs/sync-metadata \
+curl -X PUT http://localhost:5001/api/songs/sync-metadata \
   -H "Content-Type: application/json" \
   -d '{
     "filename": "cancion.mp3"
@@ -58,11 +58,11 @@ cd frontend
 npm run dev
 ```
 
-**Esperado:** Vite abre en `http://localhost:5173`
+**Esperado:** Vite abre en `http://localhost:5172`
 
 ### 2. Verificar Carga de Canciones
 
-1. Abre `http://localhost:5173`
+1. Abre `http://localhost:5172`
 2. Debería mostrar:
    - ✅ Sección de Géneros (bloques)
    - ✅ Sección de Artistas (círculos)
@@ -140,8 +140,8 @@ Get-Item "C:\Users\rafael\Music\cancion_artist.jpg" | Select-Object Length, Last
 
 ### Scenario 1: Primera Sincronización
 
-1. ✅ Backend corriendo en puerto 5000
-2. ✅ Frontend corriendo en puerto 5173
+1. ✅ Backend corriendo en puerto 5001
+2. ✅ Frontend corriendo en puerto 5172
 3. ✅ Carpeta de música tiene canciones sin sincronizar
 4. Click en 🔍 Search de canción
 5. Esperar respuesta de MusicBrainz (2-5 segundos)

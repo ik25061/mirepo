@@ -41,7 +41,7 @@ const MUSIC_DIR = path.join('C:', 'Users', 'TU_USUARIO', 'Music');
 node serve.js
 ```
 
-Verá: `🎵 Servidor de música corriendo en puerto 5000`
+Verá: `🎵 Servidor de música corriendo en puerto 5001`
 
 ### 2. Frontend
 
@@ -51,20 +51,20 @@ npm install
 npm run dev
 ```
 
-Abre `http://localhost:5173` en tu navegador
+Abre `http://localhost:5172` en tu navegador
 
 ## 📱 Acceso Remoto (Teléfono/Tablet)
 
 1. En `frontend/src/App.jsx` línea 5, cambia:
 ```javascript
 // De:
-const API_URL = 'http://localhost:5000';
+const API_URL = 'http://localhost:5001';
 
 // A:
-const API_URL = 'http://192.168.1.100:5000'; // Tu IP local
+const API_URL = 'http://192.168.1.100:5001'; // Tu IP local
 ```
 
-2. Accede desde otro dispositivo: `http://192.168.1.100:5173`
+2. Accede desde otro dispositivo: `http://192.168.1.100:5172`
 
 ## 🎮 Cómo Usar
 
@@ -151,7 +151,7 @@ C:\Users\TU_USUARIO\Music\
 
 En `backend/serve.js` línea 190:
 ```javascript
-const PORT = 5000; // Cambiar aquí
+const PORT = 5001 // Cambiar aquí
 ```
 
 ### Cambiar Límite de Canciones por Página

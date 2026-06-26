@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import { parseFile } from 'music-metadata';
 import 'dotenv/config';
 
-export const MUSIC_DIR = process.env.MUSIC_PATH || path.join(process.cwd(), 'music');
+export const MUSIC_DIR = process.env.VITE_MUSIC_PATH || path.join(process.cwd(), 'music');
 export const TRASH_DIR = path.join(MUSIC_DIR, 'trash');
 export const CACHE_PATH = path.join(process.cwd(), 'server', 'songs_cache.json');
 

@@ -98,12 +98,12 @@ const MUSIC_DIR = path.join('C:', 'Users', 'rafael', 'Music');
 ### URL de API (Frontend)
 En `frontend/src/App.jsx` línea 5:
 ```javascript
-const API_URL = 'http://localhost:5000';
+const API_URL = 'http://localhost:5001';
 ```
 
 Cambiar a tu IP para acceso remoto:
 ```javascript
-const API_URL = 'http://192.168.1.100:5000';
+const API_URL = 'http://192.168.1.100:5001';
 ```
 
 ---
