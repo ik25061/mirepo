@@ -18,6 +18,8 @@ export function PlayerProvider({ children }) {
   const indexRef = useRef(-1);
   const silenceSkipDoneRef = useRef(false);
   const silenceCheckIntervalRef = useRef(null);
+  const playedHistoryRef = useRef(new Set());
+  const originalQueueRef = useRef([]);
 
   const [queue, setQueue] = useState([]);
   const [current, setCurrent] = useState(null);
@@ -176,12 +178,38 @@ export function PlayerProvider({ children }) {
     playIndex(idx === -1 ? 0 : idx, { crossfade: getActive() && !getActive().paused });
   }, [playIndex]);
 
-  const next = useCallback(() => {
-    if (indexRef.current < queueRef.current.length - 1) {
-      playIndex(indexRef.current + 1);
-    } else if (queueRef.current.length > 0) {
-      playIndex(0);
+  // Reproducción aleatoria SIN repetición hasta completar toda la lista
+  const shufflePlay = useCallback((songs) => {
+    if (!songs || songs.length === 0) return;
+    
+    const list = [...songs];
+    
+    // Si ya se reprodujeron todas las canciones, reiniciar historial
+    if (playedHistoryRef.current.size >= list.length) {
+      playedHistoryRef.current = new Set();
     }
+    
+    // Filtrar canciones no reproducidas
+    const unplayed = list.filter((s) => !playedHistoryRef.current.has(s.id));
+    
+    // Mezclar las canciones no reproducidas
+    for (let i = unplayed.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [unplayed[i], unplayed[j]] = [unplayed[j], unplayed[i]];
+    }
+    
+    // Actualizar historial: marcar todas como reproducidas para este ciclo
+    unplayed.forEach((s) => playedHistoryRef.current.add(s.id));
+    
+    // Establecer cola completa (para next/prev funcionen correctamente)
+    originalQueueRef.current = list;
+    queueRef.current = list;
+    setQueue(list);
+    
+    // Reproducir la primera canción del subset aleatorio
+    const firstSong = unplayed[0];
+    const firstIndex = list.findIndex((s) => s.id === firstSong.id);
+    playIndex(firstIndex, { crossfade: getActive() && !getActive().paused });
   }, [playIndex]);
 
   const prev = useCallback(() => {
@@ -390,6 +418,7 @@ const removeFromQueue = useCallback((songId) => {
     setVolume,
     setCrossfadeSec,
     play,
+    shufflePlay,
     next,
     prev,
     togglePlay,

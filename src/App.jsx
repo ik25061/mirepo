@@ -88,8 +88,11 @@ function Shell() {
             <HomeView 
               songs={lib.songs} 
               onOpenCollection={openCollection} 
-              onOpenGridView={openGridView}
+              onOpenGridView={onGridView}
               onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
+              onDislikeArtist={lib.dislikeArtist}
+              onDelete={lib.removeSong}
               onOpenDuplicates={() => setView({ type: 'duplicates' })}
             />
           ) : view.type === 'library' ? (
@@ -173,8 +176,11 @@ function Shell() {
             <HomeView 
               songs={lib.songs} 
               onOpenCollection={openCollection} 
-              onOpenGridView={openGridView}
+              onOpenGridView={onGridView}
               onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
+              onDislikeArtist={lib.dislikeArtist}
+              onDelete={lib.removeSong}
               onOpenDuplicates={() => setView({ type: 'duplicates' })}
             />
           ) : view.type === 'library' ? (

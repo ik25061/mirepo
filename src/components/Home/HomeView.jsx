@@ -1,12 +1,12 @@
-import { Heart, Play, Copy } from 'lucide-react';
+import { Heart, Play, Copy, Shuffle } from 'lucide-react';
 import Carousel from './Carousel.jsx';
 import CollectionCard from './CollectionCard.jsx';
 import SongRow from '../SongRow.jsx';
 import { buildAlbums, buildArtists, buildGenres } from '../../lib/format.js';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 
-export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLike, onOpenDuplicates }) {
-  const { play } = usePlayer();
+export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLike, onDislike, onDislikeArtist, onDelete, onOpenDuplicates }) {
+  const { play, shufflePlay } = usePlayer();
   const liked = songs.filter((s) => s.liked);
   const albums = buildAlbums(songs);
   const artists = buildArtists(songs);
@@ -37,21 +37,40 @@ export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLi
             </p>
           </div>
           {liked.length > 0 && (
-            <button
-              onClick={() => play(liked[0], liked)}
-              className="ml-auto hidden h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 sm:grid sm:h-12 sm:w-12"
-            >
-              <Play size={18} fill="currentColor" className="ml-0.5 sm:size-6" />
-            </button>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={() => shufflePlay(liked)}
+                className="hidden h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-2 text-white shadow-lg transition hover:scale-105 sm:grid sm:h-12 sm:w-12"
+                title="Reproducción aleatoria"
+              >
+                <Shuffle size={16} className="sm:size-5" />
+              </button>
+              <button
+                onClick={() => play(liked[0], liked)}
+                className="hidden h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 sm:grid sm:h-12 sm:w-12"
+              >
+                <Play size={18} fill="currentColor" className="ml-0.5 sm:size-6" />
+              </button>
+            </div>
           )}
         </div>
 
-        {liked.length > 0 ? (
-          <div className="flex flex-col gap-1.5 px-3 pb-4 sm:px-5 sm:pb-5">
-            {liked.slice(0, 5).map((song, i) => (
-              <SongRow key={song.id} song={song} index={i} queue={liked} onLike={onLike} />
-            ))}
-          </div>
+          {liked.length > 0 ? (
+            <div className="flex flex-col gap-1.5 px-3 pb-4 sm:px-5 sm:pb-5">
+              {liked.slice(0, 5).map((song, i) => (
+                <SongRow
+                  key={song.id}
+                  song={song}
+                  index={i}
+                  queue={liked}
+                  onLike={onLike}
+                  onDislike={onDislike}
+                  onDislikeArtist={onDislikeArtist}
+                  onDelete={onDelete}
+                  showDelete
+                />
+              ))}
+            </div>
         ) : (
           <p className="px-4 pb-4 text-xs text-muted-foreground sm:px-6 sm:pb-6 sm:text-sm">
             Marca canciones con el corazón para verlas aquí.
