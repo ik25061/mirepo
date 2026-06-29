@@ -36,11 +36,17 @@ async function del(url, body) {
 }
 
 export const api = {
-  getLibrary: () => fetch(`${API_URL}/api/library`).then((r) => r.json()),
+  getLibrary: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit !== undefined) qs.set('limit', String(params.limit));
+    if (params.offset !== undefined) qs.set('offset', String(params.offset));
+    const url = `${API_URL}/api/library${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return fetch(url).then((r) => r.json());
+  },
   rescan: () => post('/api/rescan'),
   like: (id, liked) => post(`/api/songs/${id}/like`, { liked }),
   hideSong: (id) => post(`/api/songs/${id}/hide`),
-  deleteSong: (filename) => del('/api/songs', { filename }),
+  deleteSong: (id) => del('/api/songs', { id }),
   hideArtist: (artist) => post('/api/artists/hide', { artist }),
   syncMetadata: (filename) => put('/api/songs/sync-metadata', { filename }),
   recognize: (audioBlob) => {

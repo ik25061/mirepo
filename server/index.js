@@ -34,7 +34,7 @@ app.use('/songs', express.static(MUSIC_DIR));
 
 // ====== FUNCIÓN PARA CONSTRUIR BIBLIOTECA ======
 
-async function buildLibrary() {
+async function buildLibrary({ limit, offset } = {}) {
   const { songs } = getCache();
   const [prefs, hiddenArtists] = await Promise.all([getSongPrefs(), getHiddenArtists()]);
 
@@ -51,19 +51,27 @@ async function buildLibrary() {
     trashCount = fs.readdirSync(TRASH_DIR).filter((f) => !f.startsWith('.')).length;
   } catch {}
 
+  const total = visible.length;
+  const start = typeof offset === 'number' ? offset : 0;
+  const end = typeof limit === 'number' ? start + limit : total;
+  const paged = visible.slice(start, end);
+
   return {
-    songs: visible,
+    songs: paged,
     hiddenArtists: [...hiddenArtists],
-    counts: { total: visible.length, trash: trashCount },
+    counts: { total, trash: trashCount },
+    pagination: { offset: start, limit: typeof limit === 'number' ? limit : total, total },
   };
 }
 
 // ====== RUTAS API ======
 
-// GET - Obtener biblioteca
-app.get('/api/library', async (_req, res) => {
+// GET - Obtener biblioteca (soporta paginación por query params)
+app.get('/api/library', async (req, res) => {
   try {
-    res.json(await buildLibrary());
+    const limit = req.query.limit !== undefined ? parseInt(req.query.limit, 10) : undefined;
+    const offset = req.query.offset !== undefined ? parseInt(req.query.offset, 10) : undefined;
+    res.json(await buildLibrary({ limit, offset }));
   } catch (err) {
     console.error('[api/library]', err);
     res.status(500).json({ error: 'No se pudo cargar la biblioteca' });
@@ -132,7 +140,7 @@ app.get('/cover/:id', async (req, res) => {
   }
 
   // 5. Último recurso: SVG generado dinámicamente por álbum/canción
-  console.log(`[cover] ❌ No se encontró portada para: ${song.title}, generando SVG dinámico`);
+  console.log(`[cover] ❌ No se encontró portada para: ${song.title} en: ${albumDir}, generando SVG dinámico`);
   const albumKey = song.album || 'unknown';
   let hash = 0;
   for (let i = 0; i < albumKey.length; i++) hash = (hash * 31 + albumKey.charCodeAt(i)) | 0;
@@ -233,14 +241,18 @@ app.post('/api/songs/:id/hide', async (req, res) => {
 });
 
 // DELETE - Eliminar canción (mover a papelera)
+console.log('[server] Ruta DELETE /api/songs registrada');
 app.delete('/api/songs', async (req, res) => {
+  console.log('[server] DELETE /api/songs recibido', req.body);
   try {
-    const { filename } = req.body;
-    if (!filename) {
-      return res.status(400).json({ error: 'Filename es requerido' });
+    let { id, filename } = req.body;
+    console.log('[server] delete id=', typeof id, id, 'filename=', typeof filename, filename);
+    if (!id && !filename) {
+      return res.status(400).json({ error: 'Se requiere id o filename' });
     }
 
-    const song = getSongById(filename);
+    const song = id ? getSongById(id) : getSongById(filename);
+    console.log('[server] getSongById result=', song ? song.id : null);
     if (!song) {
       return res.status(404).json({ error: 'Canción no encontrada' });
     }

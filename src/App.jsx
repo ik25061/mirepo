@@ -88,7 +88,7 @@ function Shell() {
             <HomeView 
               songs={lib.songs} 
               onOpenCollection={openCollection} 
-              onOpenGridView={onGridView}
+              onOpenGridView={openGridView}
               onLike={lib.toggleLike}
               onDislike={lib.dislikeSong}
               onDislikeArtist={lib.dislikeArtist}
@@ -103,6 +103,9 @@ function Shell() {
               onDislike={lib.dislikeSong}
               onDislikeArtist={lib.dislikeArtist}
               onDelete={lib.removeSong}
+              onLoadMore={lib.loadMore}
+              hasMore={lib.hasMore}
+              loading={lib.loading}
             />
           ) : view.type === 'search' ? (
             <MobileSearchView tracks={lib.songs} currentTrack={current} />
@@ -176,7 +179,7 @@ function Shell() {
             <HomeView 
               songs={lib.songs} 
               onOpenCollection={openCollection} 
-              onOpenGridView={onGridView}
+              onOpenGridView={openGridView}
               onLike={lib.toggleLike}
               onDislike={lib.dislikeSong}
               onDislikeArtist={lib.dislikeArtist}
@@ -191,6 +194,9 @@ function Shell() {
               onDislike={lib.dislikeSong}
               onDislikeArtist={lib.dislikeArtist}
               onDelete={lib.removeSong}
+              onLoadMore={lib.loadMore}
+              hasMore={lib.hasMore}
+              loading={lib.loading}
             />
           ) : view.type === 'search' ? (
             <MobileSearchView tracks={lib.songs} currentTrack={current} />

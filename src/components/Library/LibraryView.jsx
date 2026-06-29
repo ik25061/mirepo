@@ -18,14 +18,13 @@ function TrackSkeleton() {
   );
 }
 
-export default function LibraryView({ songs, counts, onLike, onDislike, onDislikeArtist, onDelete }) {
+export default function LibraryView({ songs, counts, onLike, onDislike, onDislikeArtist, onDelete, onLoadMore, hasMore, loading }) {
   const { play } = usePlayer();
   const [query, setQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(20);
-  const [isLoading, setIsLoading] = useState(false);
   const [fixingMetadata, setFixingMetadata] = useState(null);
   const loadMoreRef = useRef(null);
   const listRef = useRef(null);
+  const isLoading = loading;
 
   // Filtrar canciones
   const filtered = useMemo(() => {
@@ -38,9 +37,6 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
         s.album.toLowerCase().includes(q)
     );
   }, [songs, query]);
-
-  const visibleTracks = filtered.slice(0, visibleCount);
-  const hasMore = visibleCount < filtered.length;
 
   const handleFixMetadata = async (song) => {
     if (!confirm(`¿Corregir metadatos de "${song.title}"?\nSe buscará información en AcoustID y se renombrará el archivo.`)) {
@@ -60,20 +56,11 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
     }
   };
 
-  // Resetear el contador cuando cambia la búsqueda
-  useEffect(() => {
-    setVisibleCount(20);
-  }, [query]);
-
   // Cargar más canciones
-  const loadMore = useCallback(() => {
-    if (isLoading || !hasMore) return;
-    setIsLoading(true);
-    setTimeout(() => {
-      setVisibleCount(prev => Math.min(prev + 20, filtered.length));
-      setIsLoading(false);
-    }, 300);
-  }, [isLoading, hasMore, filtered.length]);
+  const handleLoadMore = useCallback(() => {
+    if (!onLoadMore || loading) return;
+    onLoadMore();
+  }, [onLoadMore, loading]);
 
   // Observer para lazy loading (Intersection Observer)
   useEffect(() => {
@@ -82,8 +69,8 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
     
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) {
-          loadMore();
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          handleLoadMore();
         }
       },
       { 
@@ -100,7 +87,7 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
         observer.unobserve(currentRef);
       }
     };
-  }, [hasMore, isLoading, loadMore, filtered.length]);
+  }, [hasMore, loading, handleLoadMore]);
 
   return (
     <div className="flex flex-col gap-4 h-full w-full">
@@ -143,8 +130,8 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
         <div className="flex-shrink-0">
           <p className="text-xs text-muted-foreground">
             {filtered.length} {filtered.length === 1 ? 'canción' : 'canciones'}
-            {visibleCount < filtered.length && (
-              <span className="text-muted-foreground/60"> · Mostrando {visibleCount}</span>
+            {hasMore && (
+              <span className="text-muted-foreground/60"> · Cargando más...</span>
             )}
           </p>
         </div>
@@ -162,9 +149,9 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
               ? 'No hay canciones. Agrega archivos a la carpeta /music del servidor.'
               : 'No se encontraron coincidencias.'}
           </p>
-        ) : (
-          <div className="flex flex-col gap-1">
-            {visibleTracks.map((song, i) => (
+         ) : (
+           <div className="flex flex-col gap-1">
+             {filtered.map((song, i) => (
               <SongRow
                 key={song.id}
                 song={song}

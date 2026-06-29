@@ -222,6 +222,16 @@ export function PlayerProvider({ children }) {
     if (indexRef.current > 0) playIndex(indexRef.current - 1);
   }, [playIndex]);
 
+  const next = useCallback(() => {
+    const q = queueRef.current;
+    if (q.length === 0) return;
+    if (indexRef.current < q.length - 1) {
+      playIndex(indexRef.current + 1);
+    } else {
+      playIndex(0);
+    }
+  }, [playIndex]);
+
   const togglePlay = useCallback(() => {
     const a = getActive();
     if (!a || !a.src) return;

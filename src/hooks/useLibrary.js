@@ -6,27 +6,59 @@ export function useLibrary() {
   const [counts, setCounts] = useState({ total: 0, trash: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasMore, setHasMore] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async ({ limit, offset } = {}) => {
     try {
-      const data = await api.getLibrary();
-      setSongs(data.songs || []);
-      setCounts(data.counts || { total: 0, trash: 0 });
+      const data = await api.getLibrary({ limit, offset });
+      const incoming = data.songs || [];
+      const total = typeof data.counts?.total === 'number' ? data.counts.total : incoming.length;
+      const paging = data.pagination || { offset: 0, limit: incoming.length, total };
+
+      setSongs((prev) => (typeof offset === 'number' && offset > 0 ? [...prev, ...incoming] : incoming));
+      setCounts({ total, trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 });
       setError(null);
+      setHasMore(paging.offset + paging.limit < paging.total);
+      return data;
     } catch (err) {
       setError(err.message);
+      setHasMore(false);
+      return null;
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const loadMore = useCallback(async () => {
+    if (loading || error || !hasMore) return;
+    setLoading(true);
+    try {
+      const data = await api.getLibrary({ limit: 100, offset: songs.length });
+      const incoming = data.songs || [];
+      const total = typeof data.counts?.total === 'number' ? data.counts.total : songs.length + incoming.length;
+      const paging = data.pagination || { offset: songs.length, limit: incoming.length, total };
+
+      setSongs((prev) => [...prev, ...incoming]);
+      setCounts((prev) => ({ ...prev, total }));
+      setHasMore(paging.offset + paging.limit < paging.total);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, error, hasMore, songs.length]);
+
   const rescan = useCallback(async () => {
     setLoading(true);
     try {
       const data = await api.rescan();
-      setSongs(data.songs || []);
-      setCounts(data.counts || { total: 0, trash: 0 });
+      const incoming = data.songs || [];
+      const total = typeof data.counts?.total === 'number' ? data.counts.total : incoming.length;
+      setSongs(incoming);
+      setCounts({ total, trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 });
       setError(null);
+      const paging = data.pagination || { offset: 0, limit: incoming.length, total };
+      setHasMore(paging.offset + paging.limit < paging.total);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -35,7 +67,7 @@ export function useLibrary() {
   }, []);
 
   useEffect(() => {
-    load();
+    load({ limit: 100 });
   }, [load]);
 
   const toggleLike = useCallback(async (song) => {
@@ -58,26 +90,20 @@ export function useLibrary() {
     await api.hideArtist(artist);
   }, []);
 
-  // ====== ELIMINAR CANCIÓN - Devuelve la lista actualizada ======
   const removeSong = useCallback(async (song) => {
     try {
-      // Eliminar de la lista local
       setSongs((prev) => prev.filter((s) => s.id !== song.id));
-      setCounts((c) => ({ 
-        ...c, 
-        trash: c.trash + 1, 
-        total: Math.max(0, c.total - 1) 
+      setCounts((c) => ({
+        ...c,
+        trash: c.trash + 1,
+        total: Math.max(0, c.total - 1),
       }));
-
-      // Llamar al backend
       await api.deleteSong(song.id);
       console.log(`✅ Canción "${song.title}" eliminada correctamente`);
-      
-      // Devolver la lista actualizada para que el reproductor la use
       return true;
     } catch (error) {
       console.error('Error al eliminar:', error);
-      await load();
+      await load({ limit: 100 });
       alert('❌ Error al eliminar la canción');
       return false;
     }
@@ -94,5 +120,7 @@ export function useLibrary() {
     dislikeSong,
     dislikeArtist,
     removeSong,
+    loadMore,
+    hasMore,
   };
 }

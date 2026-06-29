@@ -151,6 +151,7 @@ async function scanFullLibrary() {
     processed++;
     if (processed % 10 === 0 || processed === total) {
       console.log(`[scanner] ⏳ Progreso: ${processed}/${total} archivos procesados`);
+      process.stdout.write(`\x1b[F\x1b[K`); // Mover cursor arriba y limpiar línea en terminal
     }
     try {
       const song = await readSong(file);
@@ -171,6 +172,7 @@ async function scanFullLibrary() {
 // ====== ESCANEO PRINCIPAL (con caché) ======
 
 export async function scanLibrary() {
+  console.log(`[scanner] 🔍 Iniciando escaneo de biblioteca...`);
   // Intentar cargar desde caché
   if (loadCache()) {
     try {
@@ -188,14 +190,22 @@ export async function scanLibrary() {
       
       if (newFiles.length === 0 && deletedFiles.length === 0) {
         console.log(`[scanner] ✅ Sin cambios detectados. ${cache.songs.length} canciones cargadas.`);
+        console.log(`[scanner] 🎵 Escaneo rápido completado.`);
         return cache;
       }
       
       console.log(`[scanner] 🔄 Cambios detectados: +${newFiles.length} nuevos, -${deletedFiles.length} eliminados`);
+      console.log(`[scanner] ⏳ Procesando archivos nuevos...`);
       
       const songs = cache.songs.filter(s => !deletedFiles.includes(s.relPath));
+      let processed = 0;
+      const total = newFiles.length;
       
       for (const relPath of newFiles) {
+        processed++;
+        if (processed % 5 === 0 || processed === total) {
+          console.log(`[scanner] ⏳ Procesando: ${processed}/${total} archivos nuevos`);
+        }
         const fullPath = path.join(MUSIC_DIR, relPath);
         const song = await readSong(fullPath);
         songs.push(song);
