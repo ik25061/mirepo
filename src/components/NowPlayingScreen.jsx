@@ -25,7 +25,9 @@ export default function NowPlayingScreen({
   const [artistImageUrl, setArtistImageUrl] = useState(null);
 
   // Generar URL de la portada del álbum a partir del ID de la canción
-  const albumCoverUrl = track?.id ? coverUrl(track.id) : null;
+  // Usar coverId si existe, si no el id de la canción
+  const coverId = track?.coverId || track?.id;
+  const albumCoverUrl = coverId ? coverUrl(coverId) : null;
 
   // Precargar imagen del artista silenciosamente (sin errores 404 en consola)
   useEffect(() => {
@@ -270,16 +272,15 @@ export default function NowPlayingScreen({
 
             {/* Info del tema */}
             <div className="flex items-center justify-between" style={{ padding: '12px 0 4px 0' }}>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+                <div className="group flex items-center gap-3">
                   {onDislike && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onDislike(track); }}
-                      className="hidden sm:flex flex-shrink-0 p-2 hover:scale-110 transition-transform opacity-70 hover:opacity-100"
-                      style={{ color: '#ff4444' }}
+                      className="grid h-6 w-6 place-items-center rounded-full text-muted-foreground transition hover:text-foreground hover:bg-muted sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100"
                       title="No me gusta (pasa a la siguiente)"
                     >
-                      <ThumbsDown size={20} />
+                      <ThumbsDown size={26} className="sm:size-4" />
                     </button>
                   )}
                   <div className="min-w-0">

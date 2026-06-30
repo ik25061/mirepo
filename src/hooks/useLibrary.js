@@ -17,6 +17,7 @@ export function useLibrary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(false);
+  const [serverOffset, setServerOffset] = useState(0);
 
   const load = useCallback(async ({ limit, offset } = {}) => {
     try {
@@ -29,8 +30,13 @@ export function useLibrary() {
       if (!offset || offset === 0) {
         const shuffled = shuffleArray(incoming);
         setSongs(shuffled);
+        setServerOffset(incoming.length);
       } else {
-        setSongs((prev) => [...prev, ...incoming]);
+        setSongs((prev) => {
+          const combined = [...prev, ...incoming];
+          return shuffleArray(combined);
+        });
+        setServerOffset((prev) => prev + incoming.length);
       }
       setCounts({ total, trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 });
       setError(null);
@@ -49,12 +55,17 @@ export function useLibrary() {
     if (loading || error || !hasMore) return;
     setLoading(true);
     try {
-      const data = await api.getLibrary({ limit: 100, offset: songs.length });
+      const nextOffset = serverOffset;
+      const data = await api.getLibrary({ limit: 100, offset: nextOffset });
       const incoming = data.songs || [];
-      const total = typeof data.counts?.total === 'number' ? data.counts.total : songs.length + incoming.length;
-      const paging = data.pagination || { offset: songs.length, limit: incoming.length, total };
+      const total = typeof data.counts?.total === 'number' ? data.counts.total : serverOffset + incoming.length;
+      const paging = data.pagination || { offset: nextOffset, limit: incoming.length, total };
 
-      setSongs((prev) => [...prev, ...incoming]);
+      setSongs((prev) => {
+        const combined = [...prev, ...incoming];
+        return shuffleArray(combined);
+      });
+      setServerOffset((prev) => prev + incoming.length);
       setCounts((prev) => ({ ...prev, total }));
       setHasMore(paging.offset + paging.limit < paging.total);
     } catch (err) {
@@ -62,7 +73,7 @@ export function useLibrary() {
     } finally {
       setLoading(false);
     }
-  }, [loading, error, hasMore, songs.length]);
+  }, [loading, error, hasMore, serverOffset]);
 
   const rescan = useCallback(async () => {
     setLoading(true);
@@ -72,6 +83,7 @@ export function useLibrary() {
       const total = typeof data.counts?.total === 'number' ? data.counts.total : incoming.length;
       const shuffled = shuffleArray(incoming);
       setSongs(shuffled);
+      setServerOffset(incoming.length);
       setCounts({ total, trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 });
       setError(null);
       const paging = data.pagination || { offset: 0, limit: incoming.length, total };

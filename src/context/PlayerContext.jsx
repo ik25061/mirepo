@@ -38,6 +38,15 @@ export function PlayerProvider({ children }) {
   useEffect(() => { crossfadeRef.current = crossfadeSec; }, [crossfadeSec]);
   useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
 
+  // Sincronizar volumen con los elementos de audio al cambiar
+  useEffect(() => {
+    const audios = audiosRef.current;
+    if (!audios) return;
+    audios.forEach((a) => {
+      if (a.src) a.volume = volume;
+    });
+  }, [volume]);
+
   if (!audiosRef.current && typeof window !== 'undefined') {
     audiosRef.current = [new Audio(), new Audio()];
     audiosRef.current.forEach((a) => {

@@ -5,6 +5,7 @@ import {
   SkipBack,
   SkipForward,
   Heart,
+  ThumbsDown,
   Volume2,
   Volume1,
   VolumeX,
@@ -15,7 +16,7 @@ import SliderBar from './SliderBar.jsx';
 import { formatTime } from '../../lib/format.js';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 
-export default function PlayerBar({ onLike }) {
+export default function PlayerBar({ onLike, onDislike }) {
   const {
     current,
     isPlaying,
@@ -60,6 +61,15 @@ export default function PlayerBar({ onLike }) {
           >
             <Heart size={16} fill={current.liked ? 'currentColor' : 'none'} />
           </button>
+          {onDislike && (
+            <button
+              onClick={() => onDislike(current)}
+              className="ml-1 hidden shrink-0 rounded-full p-2 transition text-muted-foreground hover:text-foreground sm:block"
+              title="No me gusta"
+            >
+              <ThumbsDown size={16} />
+            </button>
+          )}
         </div>
 
         <div className="flex flex-[1.4] flex-col items-center gap-1">

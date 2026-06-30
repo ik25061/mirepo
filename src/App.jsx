@@ -239,7 +239,7 @@ function Shell() {
           ) : null}
         </main>
 
-        <PlayerBar onLike={lib.toggleLike} />
+        <PlayerBar onLike={lib.toggleLike} onDislike={lib.dislikeSong} />
       </div>
     </div>
   );
