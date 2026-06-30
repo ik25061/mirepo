@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 
+// Algoritmo Fisher-Yates - reproducción aleatoria sin repetición garantizada
+function shuffleArray(array) {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 export function useLibrary() {
   const [songs, setSongs] = useState([]);
   const [counts, setCounts] = useState({ total: 0, trash: 0 });
@@ -15,7 +25,13 @@ export function useLibrary() {
       const total = typeof data.counts?.total === 'number' ? data.counts.total : incoming.length;
       const paging = data.pagination || { offset: 0, limit: incoming.length, total };
 
-      setSongs((prev) => (typeof offset === 'number' && offset > 0 ? [...prev, ...incoming] : incoming));
+      // Aplicar shuffle solo cuando es carga inicial (offset = 0 o undefined)
+      if (!offset || offset === 0) {
+        const shuffled = shuffleArray(incoming);
+        setSongs(shuffled);
+      } else {
+        setSongs((prev) => [...prev, ...incoming]);
+      }
       setCounts({ total, trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 });
       setError(null);
       setHasMore(paging.offset + paging.limit < paging.total);
@@ -54,7 +70,8 @@ export function useLibrary() {
       const data = await api.rescan();
       const incoming = data.songs || [];
       const total = typeof data.counts?.total === 'number' ? data.counts.total : incoming.length;
-      setSongs(incoming);
+      const shuffled = shuffleArray(incoming);
+      setSongs(shuffled);
       setCounts({ total, trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 });
       setError(null);
       const paging = data.pagination || { offset: 0, limit: incoming.length, total };
@@ -70,13 +87,21 @@ export function useLibrary() {
     load({ limit: 100 });
   }, [load]);
 
-  const toggleLike = useCallback(async (song) => {
-    const liked = !song.liked;
-    setSongs((prev) => prev.map((s) => (s.id === song.id ? { ...s, liked } : s)));
+  const toggleLike = useCallback(async (songOrId) => {
+    const songId = typeof songOrId === 'string' ? songOrId : songOrId.id;
+    
+    let newLiked;
+    setSongs((prev) => {
+      const song = prev.find((s) => s.id === songId);
+      if (!song) return prev;
+      newLiked = !song.liked;
+      return prev.map((s) => (s.id === songId ? { ...s, liked: newLiked } : s));
+    });
+    
     try {
-      await api.like(song.id, liked);
+      await api.like(songId, newLiked);
     } catch {
-      setSongs((prev) => prev.map((s) => (s.id === song.id ? { ...s, liked: !liked } : s)));
+      setSongs((prev) => prev.map((s) => (s.id === songId ? { ...s, liked: !newLiked } : s)));
     }
   }, []);
 
