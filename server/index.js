@@ -2,8 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import fs from 'node:fs';
-import os from 'os';
+import os from 'node:os';
+import https from 'node:https';
 import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { 
   scanLibrary, 
   rescanLibrary, 
@@ -828,6 +830,14 @@ app.delete('/api/delete-duplicate', async (req, res) => {
 // ====== INICIAR SERVIDOR ======
 
 async function start() {
+  // Cargar certificados SSL
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const certDir = path.resolve(__dirname, '..', 'certs');
+  const sslOptions = {
+    key: fs.readFileSync(path.join(certDir, 'server.key')),
+    cert: fs.readFileSync(path.join(certDir, 'server.cert')),
+  };
+
   // Iniciar servidor inmediatamente, escaneo en segundo plano
   const nets = os.networkInterfaces();
   const ips = [];
@@ -839,13 +849,13 @@ async function start() {
     }
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  https.createServer(sslOptions, app).listen(PORT, '0.0.0.0', () => {
     console.log(`\n🎵 ==========================================`);
-    console.log(`   🎵 MIREPO - SERVIDOR DE MÚSICA`);
+    console.log(`   🎵 MIREPO - SERVIDOR DE MÚSICA (HTTPS)`);
     console.log(`   ==========================================`);
-    console.log(`   📡 Local:    http://localhost:${PORT}`);
+    console.log(`   📡 Local:    https://localhost:${PORT}`);
     ips.forEach(ip => {
-      console.log(`   📡 Red:      http://${ip}:${PORT}`);
+      console.log(`   📡 Red:      https://${ip}:${PORT}`);
     });
     console.log(`   📂 Música:   ${MUSIC_DIR}`);
     console.log(`   🗑️ Papelera: ${TRASH_DIR}`);

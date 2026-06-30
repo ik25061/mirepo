@@ -1,10 +1,13 @@
 // ====== CONFIGURACIÓN DE IP ======
 // Cambia esta variable según la computadora donde estés trabajando
+// En desarrollo, Vite proxy redirige las peticiones al backend,
+// así que usamos rutas relativas para evitar Mixed Content con HTTPS.
+// Para conexión directa (sin proxy Vite), usa la IP del servidor.
+const DIRECT = false; // Cambiar a true para conectar directo sin proxy Vite
 const SERVER_IP = '172.16.12.4';
 // const SERVER_IP = '192.168.1.152';
 
-const API_URL = `http://${SERVER_IP}:5001`;
-
+const API_URL = DIRECT ? `https://${SERVER_IP}:5001` : '';
 async function post(url, body) {
   const res = await fetch(`${API_URL}${url}`, {
     method: 'POST',
