@@ -16,7 +16,7 @@ import { BottomNav } from './components/BottomNav.jsx';
 
 function Shell() {
   const lib = useLibrary();
-  const { current, stop, isPlaying, togglePlay, next } = usePlayer();
+  const { current, stop, isPlaying, togglePlay, prev, next, progress, duration, repeatMode, setRepeatMode } = usePlayer();
   const [view, setView] = useState({ type: 'home' });
   const [showNowPlaying, setShowNowPlaying] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -27,12 +27,12 @@ function Shell() {
     return () => window.removeEventListener('resize', handler);
   }, []);
 
-  // Si la canción que suena se elimina/oculta, detener
+  // Si la canción que suena se elimina/oculta, pasar a la siguiente
   useEffect(() => {
     if (current && !lib.loading && !lib.songs.some((s) => s.id === current.id)) {
-      stop();
+      next();
     }
-  }, [lib.songs, lib.loading, current, stop]);
+  }, [lib.songs, lib.loading, current, next]);
 
   // Escuchar evento "me gusta" desde la pantalla de bloqueo (Media Session API)
   useEffect(() => {
@@ -68,8 +68,9 @@ function Shell() {
           isPlaying={isPlaying}
           onPlayPause={togglePlay}
           onNext={next}
-          onPrev={() => {}}
+          onPrev={prev}
           onLike={lib.toggleLike}
+          onDislike={lib.dislikeSong}
           likedIds={new Set(lib.songs.filter(s => s.liked).map(s => s.id))}
           audioRef={null}
           onClose={() => setShowNowPlaying(false)}

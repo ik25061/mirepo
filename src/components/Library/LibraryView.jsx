@@ -48,7 +48,6 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
       const fullPath = song.relPath.startsWith('music/') ? song.relPath : `music/${song.relPath}`;
       const result = await api.fixMetadata(fullPath);
       alert(`✅ ${result.message}\n\nNuevo nombre: ${path.basename(result.newPath)}`);
-      window.location.reload();
     } catch (err) {
       alert('Error al corregir metadatos: ' + err.message);
     } finally {

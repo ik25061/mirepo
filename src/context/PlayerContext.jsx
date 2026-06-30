@@ -28,12 +28,15 @@ export function PlayerProvider({ children }) {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.9);
   const [crossfadeSec, setCrossfadeSec] = useState(3);
+  const [repeatMode, setRepeatMode] = useState(0); // 0=none, 1=all, 2=one
 
   const volumeRef = useRef(volume);
   const crossfadeRef = useRef(crossfadeSec);
+  const repeatModeRef = useRef(repeatMode);
   
   useEffect(() => { volumeRef.current = volume; }, [volume]);
   useEffect(() => { crossfadeRef.current = crossfadeSec; }, [crossfadeSec]);
+  useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
 
   if (!audiosRef.current && typeof window !== 'undefined') {
     audiosRef.current = [new Audio(), new Audio()];
@@ -154,7 +157,7 @@ export function PlayerProvider({ children }) {
       step++;
       const ratio = Math.min(1, step / steps);
       incoming.volume = Math.min(1, target * ratio);
-      if (outgoing && !outgoing.paused) {
+      if (outgoing) {
         outgoing.volume = Math.max(0, target * (1 - ratio));
       }
       if (ratio >= 1) {
@@ -225,10 +228,26 @@ export function PlayerProvider({ children }) {
   const next = useCallback(() => {
     const q = queueRef.current;
     if (q.length === 0) return;
+    // Repeat one: replay current song
+    if (repeatModeRef.current === 2 && indexRef.current >= 0 && indexRef.current < q.length) {
+      playIndex(indexRef.current);
+      return;
+    }
     if (indexRef.current < q.length - 1) {
       playIndex(indexRef.current + 1);
     } else {
-      playIndex(0);
+      // Repeat all: loop to beginning
+      if (repeatModeRef.current === 1) {
+        playIndex(0);
+      } else {
+        // No repeat: stop at end
+        setIsPlaying(false);
+        const a = getActive();
+        if (a) {
+          a.currentTime = 0;
+          setProgress(0);
+        }
+      }
     }
   }, [playIndex]);
 
@@ -341,6 +360,34 @@ const removeFromQueue = useCallback((songId) => {
 
     let intervalId = null;
 
+    // Inline next-track logic to avoid circular dependency with next() const
+    const advanceTrack = () => {
+      const q = queueRef.current;
+      const repeat = repeatModeRef.current;
+      if (q.length === 0) return;
+      // Repeat one: replay current song
+      if (repeat === 2 && indexRef.current >= 0 && indexRef.current < q.length) {
+        playIndex(indexRef.current);
+        return;
+      }
+      if (indexRef.current < q.length - 1) {
+        playIndex(indexRef.current + 1);
+      } else {
+        // Repeat all: loop to beginning
+        if (repeat === 1) {
+          playIndex(0);
+        } else {
+          // No repeat: stop at end
+          setIsPlaying(false);
+          const a = getActive();
+          if (a) {
+            a.currentTime = 0;
+            setProgress(0);
+          }
+        }
+      }
+    };
+
     const updateProgress = () => {
       const a = getActive();
       if (!a) return;
@@ -350,9 +397,7 @@ const removeFromQueue = useCallback((songId) => {
         
         const remaining = a.duration - a.currentTime;
         if (remaining < 0.3 && remaining > 0 && !crossfadingRef.current) {
-          if (indexRef.current < queueRef.current.length - 1) {
-            playIndex(indexRef.current + 1);
-          }
+          advanceTrack();
         }
       }
     };
@@ -368,16 +413,7 @@ const removeFromQueue = useCallback((songId) => {
 
     const onEnded = () => {
       if (!crossfadingRef.current) {
-        if (indexRef.current < queueRef.current.length - 1) {
-          playIndex(indexRef.current + 1);
-        } else if (queueRef.current.length > 0) {
-          setIsPlaying(false);
-          const a = getActive();
-          if (a) {
-            a.currentTime = 0;
-            setProgress(0);
-          }
-        }
+        advanceTrack();
       }
     };
 
@@ -470,6 +506,9 @@ const removeFromQueue = useCallback((songId) => {
     }
   }, [current, isPlaying, togglePlay, prev, next, seek]);
 
+  // Exponer el audio activo para WaveSurfer
+  const getActiveAudio = useCallback(() => getActive(), []);
+
   const value = {
     queue,
     current,
@@ -478,8 +517,10 @@ const removeFromQueue = useCallback((songId) => {
     duration,
     volume,
     crossfadeSec,
+    repeatMode,
     setVolume,
     setCrossfadeSec,
+    setRepeatMode,
     play,
     shufflePlay,
     next,
@@ -488,6 +529,7 @@ const removeFromQueue = useCallback((songId) => {
     seek,
     stop,
     removeFromQueue,
+    getActiveAudio,
   };
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;

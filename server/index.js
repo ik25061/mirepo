@@ -172,19 +172,39 @@ app.get('/cover/:id', async (req, res) => {
   res.send(svg);
 });
 
-// GET - Portada del artista
+// GET - Portada del artista (con fallback a la portada del álbum)
 app.get('/artist-cover/:artist', async (req, res) => {
   const artistName = decodeURIComponent(req.params.artist);
   const artistDir = path.join(MUSIC_DIR, artistName);
   const artistImagePath = path.join(artistDir, 'artist.jpg');
 
+  // 1. Intentar con artist.jpg en la carpeta del artista
   if (fs.existsSync(artistImagePath)) {
     res.set('Content-Type', 'image/jpeg');
     res.set('Cache-Control', 'public, max-age=86400');
     res.sendFile(artistImagePath);
-  } else {
-    res.status(404).end();
+    return;
   }
+
+  // 2. Fallback: buscar la portada del primer álbum de este artista
+  const { songs } = getCache();
+  const artistSongs = songs.filter(s => s.artist === artistName);
+  for (const song of artistSongs) {
+    // Buscar portada para esta canción - redirigir al endpoint /cover/:id
+    if (song.id) {
+      // Redirigir a la portada de la canción (que ya tiene su propio fallback)
+      res.redirect(`/cover/${song.id}`);
+      return;
+    }
+  }
+
+  // 3. Si no hay ninguna canción, devolver un SVG genérico
+  res.set('Content-Type', 'image/svg+xml');
+  res.set('Cache-Control', 'public, max-age=3600');
+  res.send(`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <rect width="200" height="200" fill="#282828"/>
+    <text x="100" y="100" font-family="Arial" font-size="50" text-anchor="middle" dominant-baseline="central" fill="#535353">🎤</text>
+  </svg>`);
 });
 
 // GET - Audio streaming

@@ -1,9 +1,32 @@
+import { useState, useEffect } from 'react';
 import { Play } from 'lucide-react';
 import Cover from '../Cover.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
+import { artistCoverUrl } from '../../lib/api.js';
 
-export default function CollectionCard({ title, subtitle, coverSong, songs, onOpen, round = false }) {
+export default function CollectionCard({ title, subtitle, coverSong, songs, onOpen, round = false, artistName }) {
   const { play } = usePlayer();
+  const [artistImageUrl, setArtistImageUrl] = useState(null);
+  const [artistImageError, setArtistImageError] = useState(false);
+
+  // Si es una colección de artista, intentar cargar artist.jpg
+  useEffect(() => {
+    if (!artistName) {
+      setArtistImageUrl(null);
+      return;
+    }
+    const url = artistCoverUrl(artistName);
+    const img = new Image();
+    img.onload = () => setArtistImageUrl(url);
+    img.onerror = () => {
+      setArtistImageUrl(null);
+      setArtistImageError(true);
+    };
+    img.src = url;
+    return () => { img.onload = null; img.onerror = null; };
+  }, [artistName]);
+
+  const useArtistImage = artistImageUrl && !artistImageError;
 
   return (
     <button
@@ -15,11 +38,19 @@ export default function CollectionCard({ title, subtitle, coverSong, songs, onOp
       }}
     >
       <div className="relative mb-1.5 sm:mb-3">
-        <Cover
-          song={coverSong}
-          rounded={round ? 'rounded-full' : 'rounded-md'}
-          className={`aspect-square w-full shadow-lg ${round ? 'rounded-full' : ''}`}
-        />
+        {useArtistImage ? (
+          <img
+            src={artistImageUrl}
+            alt={title}
+            className={`aspect-square w-full object-cover shadow-lg ${round ? 'rounded-full' : 'rounded-md'}`}
+          />
+        ) : (
+          <Cover
+            song={coverSong}
+            rounded={round ? 'rounded-full' : 'rounded-md'}
+            className={`aspect-square w-full shadow-lg ${round ? 'rounded-full' : ''}`}
+          />
+        )}
         <span
           onClick={(e) => {
             e.stopPropagation();

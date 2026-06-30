@@ -1,9 +1,33 @@
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Play } from 'lucide-react';
 import Cover from './Cover.jsx';
 import { usePlayer } from '../context/PlayerContext.jsx';
+import { artistCoverUrl } from '../lib/api.js';
 
 export default function GridView({ items, type, onBack, onOpenCollection, songs }) {
   const { play } = usePlayer();
+  const [artistCache, setArtistCache] = useState({});
+
+  // Precargar imágenes de artistas para el grid
+  useEffect(() => {
+    if (type !== 'artists') return;
+    const newCache = { ...artistCache };
+    let changed = false;
+    for (const item of items) {
+      if (!newCache[item.name]) {
+        const url = artistCoverUrl(item.name);
+        const img = new Image();
+        img.onload = () => {
+          setArtistCache(prev => ({ ...prev, [item.name]: { url } }));
+        };
+        img.onerror = () => {};
+        img.src = url;
+        newCache[item.name] = { loading: true };
+        changed = true;
+      }
+    }
+    if (changed) setArtistCache(newCache);
+  }, [items, type]);
 
   const getTitle = () => {
     switch(type) {
@@ -28,26 +52,13 @@ export default function GridView({ items, type, onBack, onOpenCollection, songs 
     return `${item.songs.length} ${item.songs.length === 1 ? 'canción' : 'canciones'}`;
   };
 
-  // Al hacer clic en un elemento, abre la colección correspondiente
   const handleOpen = (item) => {
     if (type === 'albums') {
-      onOpenCollection({ 
-        kind: 'Álbum', 
-        name: item.name, 
-        songs: item.songs 
-      });
+      onOpenCollection({ kind: 'Álbum', name: item.name, songs: item.songs });
     } else if (type === 'artists') {
-      onOpenCollection({ 
-        kind: 'Artista', 
-        name: item.name, 
-        songs: item.songs 
-      });
+      onOpenCollection({ kind: 'Artista', name: item.name, songs: item.songs });
     } else if (type === 'genres') {
-      onOpenCollection({ 
-        kind: 'Género', 
-        name: item.name, 
-        songs: item.songs 
-      });
+      onOpenCollection({ kind: 'Género', name: item.name, songs: item.songs });
     }
   };
 
@@ -72,58 +83,66 @@ export default function GridView({ items, type, onBack, onOpenCollection, songs 
         </p>
       </header>
 
-      {/* Grid estilo Spotify con números */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {items.map((item, idx) => (
-          <div
-            key={item.name}
-            onClick={() => handleOpen(item)}
-            className="group relative cursor-pointer"
-          >
-            <div className="relative overflow-hidden rounded-lg bg-surface-2 transition hover:bg-surface-2/70">
-              {/* Número en la esquina superior izquierda - estilo Spotify */}
-              <div className="absolute top-2 left-2 z-10">
-                <span className="text-xs font-bold text-white/50 group-hover:text-white/80 transition-colors">
-                  #{idx + 1}
-                </span>
+        {items.map((item, idx) => {
+          const artistKey = type === 'artists' ? item.name : null;
+          const cachedArtist = artistKey ? artistCache[artistKey] : null;
+
+          return (
+            <div
+              key={item.name}
+              onClick={() => handleOpen(item)}
+              className="group relative cursor-pointer"
+            >
+              <div className="relative overflow-hidden rounded-lg bg-surface-2 transition hover:bg-surface-2/70">
+                <div className="absolute top-2 left-2 z-10">
+                  <span className="text-xs font-bold text-white/50 group-hover:text-white/80 transition-colors">
+                    #{idx + 1}
+                  </span>
+                </div>
+
+                <div className="aspect-square w-full">
+                  {cachedArtist?.url ? (
+                    <img
+                      src={cachedArtist.url}
+                      alt={item.name}
+                      className={`w-full h-full object-cover ${isRound ? 'rounded-full' : ''}`}
+                    />
+                  ) : (
+                    <Cover
+                      song={{ coverId: item.coverId, hasCover: true }}
+                      rounded={isRound ? 'rounded-full' : 'rounded-none'}
+                      className={`w-full h-full ${isRound ? 'rounded-full' : ''}`}
+                    />
+                  )}
+                </div>
+
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (item.songs?.length) {
+                        play(item.songs[0], item.songs);
+                      }
+                    }}
+                    className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-xl transition hover:scale-105"
+                  >
+                    <Play size={22} fill="currentColor" className="ml-0.5" />
+                  </button>
+                </div>
               </div>
 
-              {/* Imagen */}
-              <div className="aspect-square w-full">
-                <Cover
-                  song={{ coverId: item.coverId, hasCover: true }}
-                  rounded={isRound ? 'rounded-full' : 'rounded-none'}
-                  className={`w-full h-full ${isRound ? 'rounded-full' : ''}`}
-                />
-              </div>
-
-              {/* Overlay con botón de reproducción al hacer hover */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (item.songs?.length) {
-                      play(item.songs[0], item.songs);
-                    }
-                  }}
-                  className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-xl transition hover:scale-105"
-                >
-                  <Play size={22} fill="currentColor" className="ml-0.5" />
-                </button>
+              <div className="mt-2 px-1">
+                <p className="truncate text-sm font-semibold text-white group-hover:text-primary transition-colors">
+                  {item.name}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {getSubtitle(item)}
+                </p>
               </div>
             </div>
-
-            {/* Información */}
-            <div className="mt-2 px-1">
-              <p className="truncate text-sm font-semibold text-white group-hover:text-primary transition-colors">
-                {item.name}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {getSubtitle(item)}
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

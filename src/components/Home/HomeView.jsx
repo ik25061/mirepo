@@ -120,6 +120,7 @@ export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLi
             subtitle={`${ar.songs.length} ${ar.songs.length === 1 ? 'canción' : 'canciones'}`}
             coverSong={{ coverId: ar.coverId, hasCover: true }}
             songs={ar.songs}
+            artistName={ar.name}
             onOpen={() => onOpenCollection({ kind: 'Artista', name: ar.name, songs: ar.songs })}
           />
         ))}
