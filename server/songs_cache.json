@@ -1,18 +1,6 @@
 {
   "songs": [
     {
-      "id": "4bb6d8adb8a578ee",
-      "relPath": "Metallica\\The Metallica Collection\\Human.mp3",
-      "title": "-Human",
-      "artist": "Metallica",
-      "album": "The Metallica Collection",
-      "genre": "Sin género",
-      "year": 2009,
-      "track": 4,
-      "duration": 259,
-      "hasCover": true
-    },
-    {
       "id": "ed4b81481e4e193d",
       "relPath": "Lucero\\Cerca De Ti\\_Antojo.mp3",
       "title": "¡Antojo!",
