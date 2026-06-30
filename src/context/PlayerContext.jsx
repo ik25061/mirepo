@@ -410,12 +410,65 @@ const removeFromQueue = useCallback((songId) => {
     }
   }, [current]);
 
+  // Media Session API para controles de pantalla de bloqueo
   useEffect(() => {
-    if (!crossfadingRef.current) {
-      const a = getActive();
-      if (a) a.volume = volume;
+    const a = getActive();
+    if (!a || !current) return;
+
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: current.title || 'Desconocido',
+        artist: current.artist || 'Artista desconocido',
+        album: current.album || '',
+        artwork: current.cover
+          ? [
+              { src: current.cover, sizes: '96x96', type: 'image/*' },
+              { src: current.cover, sizes: '128x128', type: 'image/*' },
+              { src: current.cover, sizes: '192x192', type: 'image/*' },
+              { src: current.cover, sizes: '256x256', type: 'image/*' },
+              { src: current.cover, sizes: '384x384', type: 'image/*' },
+              { src: current.cover, sizes: '512x512', type: 'image/*' },
+            ]
+          : [],
+      });
+
+      navigator.mediaSession.setActionHandler('play', togglePlay);
+      navigator.mediaSession.setActionHandler('pause', togglePlay);
+      navigator.mediaSession.setActionHandler('previoustrack', prev);
+      navigator.mediaSession.setActionHandler('nexttrack', next);
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (details.seekTime && a.duration) {
+          seek(details.seekTime);
+        }
+      });
+
+      // Botón "Me gusta" (corazón) - mapeado a 'togglemicrophone' en algunos dispositivos
+      try {
+        navigator.mediaSession.setActionHandler('togglemicrophone', () => {
+          // Disparar evento personalizado para que App.jsx lo capture
+          window.dispatchEvent(new CustomEvent('music-lock-toggle-like', { detail: current }));
+        });
+      } catch (err) {
+        // Alternativa: API de Rating
+        try {
+          navigator.mediaSession.setActionHandler('setrating', (details) => {
+            if (details.rating === 1) {
+              window.dispatchEvent(new CustomEvent('music-lock-toggle-like', { detail: current }));
+            }
+          });
+        } catch (_) {}
+      }
+
+      // Botón "No me gusta" / Bloquear (icono prohibido) - mapeado a 'hangup'
+      try {
+        navigator.mediaSession.setActionHandler('hangup', () => {
+          next();
+        });
+      } catch (err) {}
     }
-  }, [volume]);
+  }, [current, isPlaying, togglePlay, prev, next, seek]);
 
   const value = {
     queue,

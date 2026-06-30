@@ -34,6 +34,19 @@ function Shell() {
     }
   }, [lib.songs, lib.loading, current, stop]);
 
+  // Escuchar evento "me gusta" desde la pantalla de bloqueo (Media Session API)
+  useEffect(() => {
+    const handler = (e) => {
+      const songId = e.detail?.id;
+      if (songId) {
+        const song = lib.songs.find((s) => s.id === songId);
+        if (song) lib.toggleLike(song);
+      }
+    };
+    window.addEventListener('music-lock-toggle-like', handler);
+    return () => window.removeEventListener('music-lock-toggle-like', handler);
+  }, [lib.songs, lib.toggleLike]);
+
   // Función para abrir colección (álbum, artista, género)
   const openCollection = (collection) => {
     setView({ type: 'collection', collection });
