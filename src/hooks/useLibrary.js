@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 
+// Algoritmo Fisher-Yates - reproducción aleatoria sin repetición garantizada
 function shuffleArray(array) {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
@@ -18,13 +19,16 @@ export function useLibrary(userId) {
   const [hasMore, setHasMore] = useState(false);
   const [serverOffset, setServerOffset] = useState(0);
 
+  // Cargar canciones desde el servidor
   const load = useCallback(async ({ limit, offset } = {}) => {
     try {
+      console.log('[useLibrary] Cargando canciones...', { limit, offset, userId });
       const data = await api.getLibrary({ limit, offset, userId });
       const incoming = data.songs || [];
       const total = typeof data.counts?.total === 'number' ? data.counts.total : incoming.length;
       const paging = data.pagination || { offset: 0, limit: incoming.length, total };
 
+      // Aplicar shuffle solo cuando es carga inicial (offset = 0 o undefined)
       if (!offset || offset === 0) {
         const shuffled = shuffleArray(incoming);
         setSongs(shuffled);
@@ -41,6 +45,7 @@ export function useLibrary(userId) {
       setHasMore(paging.offset + paging.limit < paging.total);
       return data;
     } catch (err) {
+      console.error('[useLibrary] Error cargando:', err);
       setError(err.message);
       setHasMore(false);
       return null;
@@ -49,6 +54,7 @@ export function useLibrary(userId) {
     }
   }, [userId]);
 
+  // Cargar más canciones (scroll infinito)
   const loadMore = useCallback(async () => {
     if (loading || error || !hasMore) return;
     setLoading(true);
@@ -73,6 +79,7 @@ export function useLibrary(userId) {
     }
   }, [loading, error, hasMore, serverOffset, userId]);
 
+  // Rescanear biblioteca
   const rescan = useCallback(async () => {
     setLoading(true);
     try {
@@ -93,10 +100,12 @@ export function useLibrary(userId) {
     }
   }, []);
 
+  // Cargar inicial
   useEffect(() => {
     load({ limit: 100 });
   }, [load]);
 
+  // Toggle Like
   const toggleLike = useCallback(async (songOrId) => {
     const songId = typeof songOrId === 'string' ? songOrId : songOrId.id;
     
@@ -115,16 +124,19 @@ export function useLibrary(userId) {
     }
   }, [userId]);
 
+  // Dislike / Ocultar canción
   const dislikeSong = useCallback(async (song) => {
     setSongs((prev) => prev.filter((s) => s.id !== song.id));
     await api.hideSong(song.id, userId);
   }, [userId]);
 
+  // Dislike / Ocultar artista
   const dislikeArtist = useCallback(async (artist) => {
     setSongs((prev) => prev.filter((s) => s.artist !== artist));
     await api.hideArtist(artist, userId);
   }, [userId]);
 
+  // Eliminar canción (mover a papelera)
   const removeSong = useCallback(async (song) => {
     try {
       setSongs((prev) => prev.filter((s) => s.id !== song.id));
@@ -134,6 +146,7 @@ export function useLibrary(userId) {
         total: Math.max(0, c.total - 1),
       }));
       await api.deleteSong(song.id, userId);
+      console.log(`✅ Canción "${song.title}" eliminada correctamente`);
       return true;
     } catch (error) {
       console.error('Error al eliminar:', error);
@@ -143,18 +156,25 @@ export function useLibrary(userId) {
     }
   }, [load, userId]);
 
+  // Recargar (reload)
+  const reload = useCallback(() => {
+    setLoading(true);
+    load({ limit: 100 });
+  }, [load]);
+
   return {
     songs,
     counts,
     loading,
     error,
-    reload: load,
+    hasMore,
+    reload,
+    load,
+    loadMore,
     rescan,
     toggleLike,
     dislikeSong,
     dislikeArtist,
     removeSong,
-    loadMore,
-    hasMore,
   };
 }

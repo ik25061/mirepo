@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Music2 } from 'lucide-react';
 import { coverUrl } from '../lib/api.js';
 
 export default function Cover({ song, size = 'md', rounded = 'rounded-lg', className = '' }) {
   const [failed, setFailed] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
   const id = song?.coverId || song?.id;
   const showImage = song && song.hasCover !== false && !failed;
+
+  useEffect(() => {
+    if (id && showImage) {
+      const url = coverUrl(id);
+      console.log('[Cover] Cargando imagen:', url);
+      setImageUrl(url);
+    }
+  }, [id, showImage]);
 
   const iconSize = size === 'lg' ? 48 : size === 'sm' ? 16 : 24;
 
@@ -14,12 +23,15 @@ export default function Cover({ song, size = 'md', rounded = 'rounded-lg', class
       className={`relative overflow-hidden bg-surface-2 ${rounded} ${className}`}
       aria-hidden="true"
     >
-      {showImage ? (
+      {showImage && imageUrl ? (
         <img
-          src={coverUrl(id) || '/placeholder.svg'}
+          src={imageUrl}
           alt=""
           loading="lazy"
-          onError={() => setFailed(true)}
+          onError={() => {
+            console.warn('[Cover] Error cargando imagen:', imageUrl);
+            setFailed(true);
+          }}
           className="h-full w-full object-cover"
         />
       ) : (

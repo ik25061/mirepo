@@ -18,6 +18,13 @@ export default {
         border: 'rgba(255, 255, 255, 0.08)',
         danger: '#e22134',
       },
+      fontFamily: {
+        display: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+      },
+      fontWeight: {
+        700: '700',
+        600: '600',
+      },
     },
   },
   plugins: [],

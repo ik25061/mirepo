@@ -1,7 +1,7 @@
 import { Play, Pause, SkipForward, Music2 } from 'lucide-react';
 
-export function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOpen }) {
-  // Si no hay canción, mostrar un mini player vacío pero funcional
+export default function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOpen }) {
+  // Si no hay canción, mostrar mini player vacío
   if (!track) {
     return (
       <div

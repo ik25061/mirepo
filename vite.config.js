@@ -1,13 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import tailwindcss from 'tailwindcss';
 import { VitePWA } from 'vite-plugin-pwa';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import os from 'node:os';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function getLocalLanIp() {
   const interfaces = os.networkInterfaces();
@@ -46,28 +40,10 @@ export default defineConfig({
       }
     })
   ],
-  css: {
-    postcss: {
-      plugins: [tailwindcss()]
-    }
-  },
   server: {
     host: '0.0.0.0',
     port: 5172,
-    https: (() => {
-      try {
-        return {
-          key: fs.readFileSync(path.resolve(__dirname, 'certs', 'server.key')),
-          cert: fs.readFileSync(path.resolve(__dirname, 'certs', 'server.cert')),
-        };
-      } catch {
-        return false;
-      }
-    })(),
-    allowedHosts: true,
-    watch: {
-      ignored: ['**/server/**', '**/node_modules/**'],
-    },
+    https: false,  // <-- HTTP
     proxy: {
       '/api': {
         target: `http://${localIP}:${BACKEND_PORT}`,
@@ -99,17 +75,7 @@ export default defineConfig({
   preview: {
     host: '0.0.0.0',
     port: 5172,
-    https: (() => {
-      try {
-        return {
-          key: fs.readFileSync(path.resolve(__dirname, 'certs', 'server.key')),
-          cert: fs.readFileSync(path.resolve(__dirname, 'certs', 'server.cert')),
-        };
-      } catch {
-        return false;
-      }
-    })(),
-    allowedHosts: true,
+    https: false,  // <-- HTTP
     proxy: {
       '/api': {
         target: `http://${localIP}:${BACKEND_PORT}`,

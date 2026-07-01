@@ -6,108 +6,33 @@ import {
 } from 'lucide-react';
 import { formatTime } from '../lib/format.js';
 import { usePlayer } from '../context/PlayerContext.jsx';
-import WaveSurfer from 'wavesurfer.js';
-import { audioUrl, artistCoverUrl, coverUrl } from '../lib/api.js';
+import { coverUrl } from '../lib/api.js';
 
 export default function NowPlayingScreen({
-  track, isPlaying, onPlayPause, onNext, onPrev, onLike, onDislike, likedIds, audioRef, onClose,
-  onSync, onDelete,
-  allTracks = [], playContext, onPlay, currentQueueIndex,
+  track, isPlaying, onPlayPause, onNext, onPrev, onLike, onDislike, likedIds, onClose,
+  onDelete,
+  allTracks = [],
 }) {
-  const { removeFromQueue, queue, progress, duration, volume, setVolume, repeatMode, setRepeatMode, shufflePlay, seek, getActiveAudio } = usePlayer();
-  const [showTrackList, setShowTrackList] = useState(true);
+  const { progress, duration, volume, setVolume, repeatMode, setRepeatMode, shufflePlay, seek } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const progressRef = useRef(null);
-  const waveformRef = useRef(null);
-  const wavesurferInstance = useRef(null);
-  const [wavesurferReady, setWavesurferReady] = useState(false);
-  const [wsProgress, setWsProgress] = useState(0);
-  const [artistImageUrl, setArtistImageUrl] = useState(null);
 
-  // Generar URL de la portada del álbum a partir del ID de la canción
-  // Usar coverId si existe, si no el id de la canción
+  const isLiked = track ? likedIds?.has(track.id) : false;
+
+  // Generar URL de la portada
   const coverId = track?.coverId || track?.id;
   const albumCoverUrl = coverId ? coverUrl(coverId) : null;
 
-  // Precargar imagen del artista silenciosamente (sin errores 404 en consola)
-  useEffect(() => {
-    if (!track?.artist) {
-      setArtistImageUrl(null);
-      return;
-    }
-    const url = artistCoverUrl(track.artist);
-    const img = new Image();
-    img.onload = () => setArtistImageUrl(url);
-    img.onerror = () => setArtistImageUrl(null);
-    img.src = url;
-    return () => { img.onload = null; img.onerror = null; };
-  }, [track?.artist]);
-
-  // Priority: artist image (if loaded) > album cover > null
-  const centerImage = artistImageUrl || albumCoverUrl || null;
-  // Background: siempre la portada del álbum
-  const bgImage = albumCoverUrl || null;
-
-  // Inicializar WaveSurfer
-  useEffect(() => {
-    if (!waveformRef.current || !track) return;
-
-    if (wavesurferInstance.current) {
-      wavesurferInstance.current.destroy();
-      wavesurferInstance.current = null;
-    }
-    setWavesurferReady(false);
-
-    const audio = getActiveAudio?.();
-    if (!audio) return;
-
-    const ws = WaveSurfer.create({
-      container: waveformRef.current,
-      waveColor: 'rgba(255,255,255,0.25)',
-      progressColor: '#1db954',
-      cursorColor: 'transparent',
-      barWidth: 2.5,
-      barGap: 2,
-      barRadius: 3,
-      height: 56,
-      normalize: true,
-      backend: 'WebAudio',
-      media: audio,
-      interact: true,
-    });
-
-    ws.on('ready', () => {
-      setWavesurferReady(true);
-    });
-
-    ws.on('timeupdate', (currentTime) => {
-      setWsProgress(currentTime);
-    });
-
-    ws.on('interaction', () => {
-      const newTime = ws.getCurrentTime();
-      seek(newTime);
-    });
-
-    wavesurferInstance.current = ws;
-
-    return () => {
-      if (wavesurferInstance.current) {
-        wavesurferInstance.current.destroy();
-        wavesurferInstance.current = null;
-      }
-    };
-  }, [track?.id, getActiveAudio, seek]);
-
-  // Sincronizar play/pausa con WaveSurfer
-  useEffect(() => {
-    if (!wavesurferInstance.current || !wavesurferReady) return;
-    if (isPlaying) {
-      try { wavesurferInstance.current.play(); } catch(e) {}
+  const handleDelete = async () => {
+    if (confirmDelete) {
+      await onDelete(track);
+      setConfirmDelete(false);
+      onClose();
     } else {
-      try { wavesurferInstance.current.pause(); } catch(e) {}
+      setConfirmDelete(true);
+      setTimeout(() => setConfirmDelete(false), 3000);
     }
-  }, [isPlaying, wavesurferReady]);
+  };
 
   const seekTo = (e) => {
     const bar = progressRef.current;
@@ -118,30 +43,6 @@ export default function NowPlayingScreen({
   };
 
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
-  const isLiked = track ? likedIds?.has(track.id) : false;
-
-  // ====== ELIMINAR CANCIÓN DESDE NOW PLAYING ======
-  const handleDelete = async () => {
-    if (confirmDelete) {
-      const songId = track?.id;
-      if (!songId) return;
-      
-      const currentQueue = queue || [];
-      
-      removeFromQueue(songId);
-      
-      await onDelete(track);
-      
-      if (currentQueue.length <= 1) {
-        onClose();
-      }
-      
-      setConfirmDelete(false);
-    } else {
-      setConfirmDelete(true);
-      setTimeout(() => setConfirmDelete(false), 3000);
-    }
-  };
 
   if (!track) {
     return (
@@ -168,12 +69,12 @@ export default function NowPlayingScreen({
         padding: '12px 16px 0 16px',
       }}
     >
-      {/* FONDO DIFUMINADO - Capa de imagen del álbum */}
-      {bgImage && (
+      {/* Fondo difuminado */}
+      {albumCoverUrl && (
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `url(${bgImage})`,
+            backgroundImage: `url(${albumCoverUrl})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -182,7 +83,6 @@ export default function NowPlayingScreen({
           }}
         />
       )}
-      {/* Degradado oscuro encima del fondo para mejor legibilidad */}
       <div
         className="absolute inset-0"
         style={{
@@ -191,7 +91,7 @@ export default function NowPlayingScreen({
         }}
       />
 
-      {/* CONTENIDO PRINCIPAL (sobre el fondo) */}
+      {/* Contenido */}
       <div className="relative z-10 flex flex-col h-full">
         {/* Barra superior */}
         <div className="flex items-center justify-between" style={{ flexShrink: 0 }}>
@@ -208,21 +108,9 @@ export default function NowPlayingScreen({
             </p>
           </div>
           <div className="flex items-center" style={{ gap: 12 }}>
-            {onSync && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onSync(track); }}
-                className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                style={{ color: '#a7a7a7', minWidth: 40, minHeight: 40 }}
-              >
-                <Search size={20} />
-              </button>
-            )}
             {onDelete && (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete();
-                }}
+                onClick={handleDelete}
                 className={`p-2 rounded-full transition-colors ${
                   confirmDelete ? 'bg-red-500/30' : 'hover:bg-red-500/20'
                 }`}
@@ -231,7 +119,6 @@ export default function NowPlayingScreen({
                   minWidth: 40, 
                   minHeight: 40 
                 }}
-                title={confirmDelete ? 'Pulsa de nuevo para confirmar' : 'Eliminar canción'}
               >
                 {confirmDelete ? (
                   <span style={{ fontSize: 12, fontWeight: 700 }}>✓</span>
@@ -243,10 +130,10 @@ export default function NowPlayingScreen({
           </div>
         </div>
 
-        {/* Cuerpo principal centrado */}
+        {/* Cuerpo principal */}
         <div className="flex-1 flex flex-col" style={{ justifyContent: 'center' }}>
           <div className="flex flex-col">
-            {/* Portada del álbum/artista centrada */}
+            {/* Portada */}
             <div className="flex items-center justify-center" style={{ padding: '8px 0' }}>
               <div
                 className="relative flex items-center justify-center overflow-hidden"
@@ -255,15 +142,11 @@ export default function NowPlayingScreen({
                   height: 'min(65vw, 260px)',
                   borderRadius: '12px',
                   background: '#282828',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.7), 0 0 80px rgba(0,0,0,0.4)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
                 }}
               >
-                {centerImage ? (
-                  <img
-                    src={centerImage}
-                    alt={track.title}
-                    className="w-full h-full object-cover"
-                  />
+                {albumCoverUrl ? (
+                  <img src={albumCoverUrl} alt={track.title} className="w-full h-full object-cover" />
                 ) : (
                   <Music2 size={80} style={{ color: '#535353' }} />
                 )}
@@ -272,13 +155,13 @@ export default function NowPlayingScreen({
 
             {/* Info del tema */}
             <div className="flex items-center justify-between" style={{ padding: '12px 0 4px 0' }}>
-            <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1">
                 <div className="group flex items-center gap-3">
                   {onDislike && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); onDislike(track); }}
-                      className="grid h-6 w-6 place-items-center rounded-full text-muted-foreground transition hover:text-foreground hover:bg-muted sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100"
-                      title="No me gusta (pasa a la siguiente)"
+                      onClick={() => onDislike(track)}
+                      className="grid h-6 w-6 place-items-center rounded-full text-muted-foreground transition hover:text-foreground hover:bg-muted"
+                      title="No me gusta"
                     >
                       <ThumbsDown size={26} className="sm:size-4" />
                     </button>
@@ -302,29 +185,13 @@ export default function NowPlayingScreen({
               </button>
             </div>
 
-            {/* WaveSurfer Waveform */}
+            {/* Progress bar */}
             <div style={{ padding: '4px 0' }}>
-              <div
-                ref={waveformRef}
-                style={{
-                  width: '100%',
-                  cursor: 'pointer',
-                  borderRadius: '4px',
-                  minHeight: 56,
-                  position: 'relative',
-                }}
-              />
               <div
                 ref={progressRef}
                 onClick={seekTo}
                 className="w-full rounded-full cursor-pointer"
-                style={{
-                  height: 4,
-                  background: 'rgba(255,255,255,0.15)',
-                  position: 'relative',
-                  marginTop: 4,
-                  display: 'none',
-                }}
+                style={{ height: 4, background: 'rgba(255,255,255,0.15)', position: 'relative' }}
               >
                 <div
                   className="rounded-full"
@@ -342,16 +209,11 @@ export default function NowPlayingScreen({
               </div>
             </div>
 
-            {/* Controles de reproducción */}
+            {/* Controles */}
             <div className="flex items-center justify-between" style={{ padding: '8px 0' }}>
               <button
-                onClick={() => {
-                  if (allTracks && allTracks.length > 0) {
-                    shufflePlay(allTracks);
-                  }
-                }}
+                onClick={() => shufflePlay(allTracks)}
                 style={{ color: '#1db954', padding: 8 }}
-                title="Reproducción aleatoria"
               >
                 <Shuffle size={22} />
               </button>
@@ -382,22 +244,13 @@ export default function NowPlayingScreen({
               </button>
 
               <button
-                onClick={() => {
-                  setRepeatMode((repeatMode + 1) % 3);
-                }}
+                onClick={() => setRepeatMode((repeatMode + 1) % 3)}
                 style={{ color: repeatMode > 0 ? '#1db954' : '#a7a7a7', padding: 8 }}
-                title={
-                  repeatMode === 0 ? 'Sin repetición' :
-                  repeatMode === 1 ? 'Repetir todas' : 'Repetir una'
-                }
               >
                 {repeatMode === 2 ? (
                   <span className="relative">
                     <Repeat size={22} />
-                    <span style={{
-                      position: 'absolute', top: -4, right: -6,
-                      fontSize: 9, fontWeight: 700, color: '#1db954'
-                    }}>1</span>
+                    <span style={{ position: 'absolute', top: -4, right: -6, fontSize: 9, fontWeight: 700, color: '#1db954' }}>1</span>
                   </span>
                 ) : (
                   <Repeat size={22} />
@@ -405,7 +258,7 @@ export default function NowPlayingScreen({
               </button>
             </div>
 
-            {/* Control de volumen */}
+            {/* Volumen */}
             <div className="flex items-center gap-3" style={{ padding: '4px 0 8px 0', flexShrink: 0 }}>
               <Volume2 size={16} style={{ color: '#a7a7a7', flexShrink: 0 }} />
               <input

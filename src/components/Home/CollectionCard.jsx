@@ -4,7 +4,15 @@ import Cover from '../Cover.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import { artistCoverUrl } from '../../lib/api.js';
 
-export default function CollectionCard({ title, subtitle, coverSong, songs, onOpen, round = false, artistName }) {
+export default function CollectionCard({ 
+  title, 
+  subtitle, 
+  coverSong, 
+  songs, 
+  onOpen, 
+  round = false, 
+  artistName 
+}) {
   const { play } = usePlayer();
   const [artistImageUrl, setArtistImageUrl] = useState(null);
   const [artistImageError, setArtistImageError] = useState(false);

@@ -1,8 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Search, Music2, Play, Mic, MicOff, Loader2, X } from 'lucide-react';
-import { api } from '../lib/api.js';
 
-export default function MobileSearchView({ tracks, currentTrack }) {
+export default function MobileSearchView({ tracks, currentTrack, onPlay }) {
   const [query, setQuery] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isRecognizing, setIsRecognizing] = useState(false);
@@ -58,7 +57,17 @@ export default function MobileSearchView({ tracks, currentTrack }) {
         setIsRecognizing(true);
         try {
           const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType });
-          const data = await api.recognize(blob);
+          const formData = new FormData();
+          formData.append('audio', blob, 'recording.webm');
+
+          const response = await fetch('/api/recognize', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) throw new Error('Error en el reconocimiento');
+
+          const data = await response.json();
           setRecognitionResult(data);
         } catch (err) {
           console.error('Error reconociendo canción:', err);
@@ -88,10 +97,7 @@ export default function MobileSearchView({ tracks, currentTrack }) {
   }, []);
 
   const stopRecording = useCallback(() => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state !== 'inactive'
-    ) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
     setIsRecording(false);
@@ -116,12 +122,8 @@ export default function MobileSearchView({ tracks, currentTrack }) {
         Buscar
       </h1>
 
-      {/* Buscador - ancho completo */}
       <div className="flex items-center gap-2 mb-4 w-full">
-        <div
-          className="flex items-center gap-2 px-4 py-3 rounded-xl flex-1 w-full"
-          style={{ background: '#282828' }}
-        >
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl flex-1 w-full" style={{ background: '#282828' }}>
           <Search size={16} style={{ color: '#a7a7a7', flexShrink: 0 }} />
           <input
             type="text"
@@ -149,11 +151,7 @@ export default function MobileSearchView({ tracks, currentTrack }) {
           style={{
             width: 44,
             height: 44,
-            background: isRecording
-              ? '#e74c3c'
-              : isRecognizing
-              ? '#535353'
-              : '#1db954',
+            background: isRecording ? '#e74c3c' : isRecognizing ? '#535353' : '#1db954',
             boxShadow: isRecording ? '0 0 20px rgba(231,76,60,0.5)' : 'none',
           }}
         >
@@ -168,14 +166,8 @@ export default function MobileSearchView({ tracks, currentTrack }) {
       </div>
 
       {isRecording && (
-        <div
-          className="flex items-center justify-center gap-2 mt-3 py-2 rounded-lg"
-          style={{ background: 'rgba(231,76,60,0.15)' }}
-        >
-          <div
-            className="rounded-full animate-pulse"
-            style={{ width: 8, height: 8, background: '#e74c3c' }}
-          />
+        <div className="flex items-center justify-center gap-2 mt-3 py-2 rounded-lg" style={{ background: 'rgba(231,76,60,0.15)' }}>
+          <div className="rounded-full animate-pulse" style={{ width: 8, height: 8, background: '#e74c3c' }} />
           <span style={{ fontSize: 13, color: '#e74c3c', fontWeight: 600 }}>
             Escuchando... {recordingTime}s / 10s
           </span>
@@ -186,35 +178,17 @@ export default function MobileSearchView({ tracks, currentTrack }) {
         {recognitionResult && !recognitionResult.error && recognitionResult.recognized && (
           <div className="mb-4">
             <div className="flex items-center justify-between mb-3">
-              <p style={{ fontSize: 13, color: '#1db954', fontWeight: 600 }}>
-                🎤 Canción reconocida
-              </p>
-              <button
-                onClick={clearRecognition}
-                className="p-1 rounded-full hover:bg-white/10"
-                style={{ color: '#a7a7a7' }}
-              >
+              <p style={{ fontSize: 13, color: '#1db954', fontWeight: 600 }}>🎤 Canción reconocida</p>
+              <button onClick={clearRecognition} className="p-1 rounded-full hover:bg-white/10" style={{ color: '#a7a7a7' }}>
                 <X size={14} />
               </button>
             </div>
-
-            <div
-              className="rounded-xl p-3 mb-3"
-              style={{ background: '#1a1a2e', border: '1px solid #1db95433' }}
-            >
+            <div className="rounded-xl p-3 mb-3" style={{ background: '#1a1a2e', border: '1px solid #1db95433' }}>
               <div className="flex items-center gap-3">
                 {recognitionResult.recognized.imageUrl ? (
-                  <img
-                    src={recognitionResult.recognized.imageUrl}
-                    alt={recognitionResult.recognized.title}
-                    className="rounded-lg"
-                    style={{ width: 52, height: 52, objectFit: 'cover' }}
-                  />
+                  <img src={recognitionResult.recognized.imageUrl} alt="" className="rounded-lg" style={{ width: 52, height: 52, objectFit: 'cover' }} />
                 ) : (
-                  <div
-                    className="flex items-center justify-center rounded-lg"
-                    style={{ width: 52, height: 52, background: '#282828' }}
-                  >
+                  <div className="flex items-center justify-center rounded-lg" style={{ width: 52, height: 52, background: '#282828' }}>
                     <Music2 size={20} style={{ color: '#535353' }} />
                   </div>
                 )}
@@ -232,10 +206,7 @@ export default function MobileSearchView({ tracks, currentTrack }) {
         )}
 
         {recognitionResult?.error && (
-          <div
-            className="flex items-center justify-between mb-4 py-3 px-4 rounded-xl"
-            style={{ background: 'rgba(231,76,60,0.1)' }}
-          >
+          <div className="flex items-center justify-between mb-4 py-3 px-4 rounded-xl" style={{ background: 'rgba(231,76,60,0.1)' }}>
             <p style={{ fontSize: 13, color: '#e74c3c' }}>❌ {recognitionResult.error}</p>
             <button onClick={clearRecognition} className="p-1" style={{ color: '#a7a7a7' }}>
               <X size={14} />
@@ -246,42 +217,27 @@ export default function MobileSearchView({ tracks, currentTrack }) {
         {query.trim() === '' && !recognitionResult ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Search size={48} style={{ color: '#535353', marginBottom: 12 }} />
-            <p className="text-white mb-1" style={{ fontSize: 15, fontWeight: 600 }}>
-              Encuentra tu música
-            </p>
-            <p style={{ fontSize: 13, color: '#a7a7a7', marginBottom: 16 }}>
-              Busca por canción, artista o álbum
-            </p>
-            <div
-              className="flex items-center gap-2 py-2 px-4 rounded-full"
-              style={{ background: '#1db95420', border: '1px solid #1db95440' }}
-            >
+            <p className="text-white mb-1" style={{ fontSize: 15, fontWeight: 600 }}>Encuentra tu música</p>
+            <p style={{ fontSize: 13, color: '#a7a7a7', marginBottom: 16 }}>Busca por canción, artista o álbum</p>
+            <div className="flex items-center gap-2 py-2 px-4 rounded-full" style={{ background: '#1db95420', border: '1px solid #1db95440' }}>
               <Mic size={14} style={{ color: '#1db954' }} />
-              <p style={{ fontSize: 12, color: '#1db954' }}>
-                O presiona el micrófono para identificar una canción
-              </p>
+              <p style={{ fontSize: 12, color: '#1db954' }}>O presiona el micrófono para identificar una canción</p>
             </div>
           </div>
         ) : query.trim() !== '' && results.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="text-white mb-1" style={{ fontSize: 15, fontWeight: 600 }}>
-              Sin resultados
-            </p>
-            <p style={{ fontSize: 13, color: '#a7a7a7' }}>
-              No se encontró "{query}" en tu biblioteca
-            </p>
+            <p className="text-white mb-1" style={{ fontSize: 15, fontWeight: 600 }}>Sin resultados</p>
+            <p style={{ fontSize: 13, color: '#a7a7a7' }}>No se encontró "{query}" en tu biblioteca</p>
           </div>
         ) : (
           <div className="flex flex-col gap-1 pb-4">
             {results.map((track) => (
               <div
                 key={track.id}
+                onClick={() => onPlay(track, tracks.indexOf(track))}
                 className="flex items-center gap-3 py-2 px-2 rounded-xl cursor-pointer active:bg-white/5"
               >
-                <div
-                  className="flex-shrink-0 flex items-center justify-center rounded-lg overflow-hidden"
-                  style={{ width: 52, height: 52, background: '#282828' }}
-                >
+                <div className="flex-shrink-0 flex items-center justify-center rounded-lg overflow-hidden" style={{ width: 52, height: 52, background: '#282828' }}>
                   {track.cover ? (
                     <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
                   ) : (
@@ -289,19 +245,10 @@ export default function MobileSearchView({ tracks, currentTrack }) {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p
-                    className="truncate"
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: currentTrack?.id === track.id ? '#1db954' : '#fff',
-                    }}
-                  >
+                  <p className="truncate" style={{ fontSize: 14, fontWeight: 600, color: currentTrack?.id === track.id ? '#1db954' : '#fff' }}>
                     {track.title}
                   </p>
-                  <p className="truncate" style={{ fontSize: 12, color: '#a7a7a7' }}>
-                    {track.artist} · {track.album}
-                  </p>
+                  <p className="truncate" style={{ fontSize: 12, color: '#a7a7a7' }}>{track.artist} · {track.album}</p>
                 </div>
                 <Play size={18} style={{ color: '#a7a7a7', flexShrink: 0 }} />
               </div>

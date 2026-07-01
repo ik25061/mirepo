@@ -13,6 +13,18 @@
       "hasCover": true
     },
     {
+      "id": "72a75de9b339a2b3",
+      "relPath": "Leo Dan\\La Historia\\_Como Te Extrano, Mi Amor.mp3",
+      "title": "¡Cómo te extraño, mi amor!",
+      "artist": "Leo Dan",
+      "album": "La Historia",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 1,
+      "duration": 176,
+      "hasCover": true
+    },
+    {
       "id": "ee8baadf17bd3aa7",
       "relPath": "Jesse & Joy\\Soltando Al Perro\\_Corre.mp3",
       "title": "¡Corre!",
@@ -106,6 +118,18 @@
       "year": 2003,
       "track": 3,
       "duration": 161,
+      "hasCover": true
+    },
+    {
+      "id": "45fe4fd5611985c6",
+      "relPath": "Los Brios\\30 Anos De Exitos\\(De Muchas Cosas) Tengo Miedo (1).mp3",
+      "title": "(De muchas cosas) Tengo miedo",
+      "artist": "Los Bríos",
+      "album": "30 años de éxitos",
+      "genre": "Sin género",
+      "year": 2003,
+      "track": 3,
+      "duration": 162,
       "hasCover": true
     },
     {
@@ -286,6 +310,18 @@
       "year": 2004,
       "track": 1,
       "duration": 278,
+      "hasCover": true
+    },
+    {
+      "id": "6cf388fc2da7c2c8",
+      "relPath": "Asto Pituak\\Un Pequeno Despiste De Comico\\A Matar.mp3",
+      "title": "A Matar",
+      "artist": "Asto Pituak",
+      "album": "Un Pequeño Despiste de Cómico",
+      "genre": "Sin género",
+      "year": 2001,
+      "track": 17,
+      "duration": 107,
       "hasCover": true
     },
     {
@@ -793,6 +829,18 @@
       "hasCover": true
     },
     {
+      "id": "7bf3e63b33ab25b9",
+      "relPath": "Lorenzo Antonio\\Tributo 2\\Amandote.mp3",
+      "title": "Amándote",
+      "artist": "Lorenzo Antonio",
+      "album": "Tributo 2",
+      "genre": "Sin género",
+      "year": 1995,
+      "track": 2,
+      "duration": 252,
+      "hasCover": true
+    },
+    {
       "id": "a34e6a3040d4635f",
       "relPath": "Miguel Bose\\Bandido\\Amante Bandido.mp3",
       "title": "Amante bandido",
@@ -898,6 +946,18 @@
       "year": 1997,
       "track": 8,
       "duration": 291,
+      "hasCover": true
+    },
+    {
+      "id": "e2c24e9fa9acfb95",
+      "relPath": "Bronco\\Bronco La Serie\\Amigo Bronco (1).mp3",
+      "title": "Amigo bronco",
+      "artist": "Bronco",
+      "album": "Bronco: la Serie",
+      "genre": "Sin género",
+      "year": 2019,
+      "track": 5,
+      "duration": 226,
       "hasCover": true
     },
     {
@@ -1057,6 +1117,18 @@
       "hasCover": true
     },
     {
+      "id": "21a377debb26e539",
+      "relPath": "KPaz De La Sierra\\Los Super Exitos\\Amor No Me Ignores (2).mp3",
+      "title": "Amor no me ignores",
+      "artist": "K-Paz de la Sierra",
+      "album": "Los super éxitos",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 4,
+      "duration": 156,
+      "hasCover": true
+    },
+    {
       "id": "f5b90b7521d277ae",
       "relPath": "KPaz De La Sierra\\Los Super Exitos\\Amor No Me Ignores.mp3",
       "title": "Amor No Me Ignores",
@@ -1090,6 +1162,30 @@
       "year": 1995,
       "track": 7,
       "duration": 173,
+      "hasCover": true
+    },
+    {
+      "id": "ff554cc36f6b9904",
+      "relPath": "Various Artists\\Boleros De Oro\\Amor Que Malo Eres.mp3",
+      "title": "Amor que malo eres",
+      "artist": "Annia Linares",
+      "album": "Boleros de oro",
+      "genre": "Sin género",
+      "year": null,
+      "track": 14,
+      "duration": 172,
+      "hasCover": true
+    },
+    {
+      "id": "3098b318ee316a5d",
+      "relPath": "Zeze Di Camargo & Luciano\\1999 2000\\Amor Selvagem.mp3",
+      "title": "Amor selvagem",
+      "artist": "Zezé Di Camargo & Luciano",
+      "album": "1999 / 2000",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 3,
+      "duration": 260,
       "hasCover": true
     },
     {
@@ -1129,6 +1225,18 @@
       "hasCover": true
     },
     {
+      "id": "c7f13c53664d6511",
+      "relPath": "Fernando Allende\\A Toda Banda\\Amorcito Corazon.mp3",
+      "title": "Amorcito Corazon",
+      "artist": "Fernando Allende",
+      "album": "A Toda Banda",
+      "genre": "Sin género",
+      "year": 1993,
+      "track": 9,
+      "duration": 182,
+      "hasCover": true
+    },
+    {
       "id": "151a6c9bca36a503",
       "relPath": "Los Enanitos Verdes\\Amores Lejanos\\Amores Lejanos.mp3",
       "title": "Amores lejanos",
@@ -1150,6 +1258,18 @@
       "year": 2003,
       "track": 2,
       "duration": 193,
+      "hasCover": true
+    },
+    {
+      "id": "bfd1c144b8d669ad",
+      "relPath": "Antonio Aguilar\\Con Tambora, Volumen 2\\Ando Que Me Lleva.mp3",
+      "title": "Ando que me lleva",
+      "artist": "Antonio Aguilar",
+      "album": "Con tambora, volumen 2",
+      "genre": "Sin género",
+      "year": 1995,
+      "track": 3,
+      "duration": 202,
       "hasCover": true
     },
     {
@@ -1561,6 +1681,18 @@
       "hasCover": true
     },
     {
+      "id": "7b2065714936f428",
+      "relPath": "Manolo Galvan\\15 Grandes Exitos De Amor\\Bailar Pegados.mp3",
+      "title": "Bailar pegados",
+      "artist": "Manolo Galván",
+      "album": "15 grandes éxitos de amor",
+      "genre": "Sin género",
+      "year": 1997,
+      "track": 8,
+      "duration": 275,
+      "hasCover": true
+    },
+    {
       "id": "cdd2658d2c80da2d",
       "relPath": "Orquesta Sinfonica De Bratislava & Roque Banos\\Balada Triste De Trompeta\\Balada De La Trompeta.mp3",
       "title": "Balada de La Trompeta",
@@ -1582,6 +1714,18 @@
       "year": 2022,
       "track": 1,
       "duration": 206,
+      "hasCover": true
+    },
+    {
+      "id": "54e8bcf2967ca2c8",
+      "relPath": "Various Artists\\Der Osten Rockt\\Bambule.mp3",
+      "title": "Bambule",
+      "artist": "Karussell",
+      "album": "Der Osten rockt",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 11,
+      "duration": 235,
       "hasCover": true
     },
     {
@@ -1609,6 +1753,18 @@
       "hasCover": true
     },
     {
+      "id": "ab181cf8583695b1",
+      "relPath": "Antonio Aguilar\\Coleccion De Oro De Antonio Aguilar\\Bandido De Amores.mp3",
+      "title": "Bandido de Amores",
+      "artist": "Antonio Aguilar feat. Joan Sebastian",
+      "album": "Coleccion de Oro de Antonio Aguilar",
+      "genre": "Sin género",
+      "year": 2009,
+      "track": 9,
+      "duration": 179,
+      "hasCover": true
+    },
+    {
       "id": "ea7575f9fc1039e8",
       "relPath": "Various Artists\\Vibra Bogota 1049 FM Mas Espanol\\Baracunatana.mp3",
       "title": "Baracunátana",
@@ -1618,6 +1774,18 @@
       "year": 2005,
       "track": 6,
       "duration": 152,
+      "hasCover": true
+    },
+    {
+      "id": "e80eb41e7a4d1684",
+      "relPath": "Pepe Aguilar\\Por Mujeres Como Tu\\Baraja De Oro.mp3",
+      "title": "Baraja de oro",
+      "artist": "Pepe Aguilar",
+      "album": "Por mujeres como tú",
+      "genre": "Sin género",
+      "year": 1998,
+      "track": 8,
+      "duration": 180,
       "hasCover": true
     },
     {
@@ -1705,6 +1873,18 @@
       "hasCover": true
     },
     {
+      "id": "54e790c26d9b5b02",
+      "relPath": "Galy Galiano\\30 Anos\\Bebiendo Para Olvidar.mp3",
+      "title": "Bebiendo para Olvidar",
+      "artist": "Galy Galiano",
+      "album": "30 Años",
+      "genre": "Sin género",
+      "year": 2013,
+      "track": 6,
+      "duration": 216,
+      "hasCover": true
+    },
+    {
       "id": "c38fba014a4beaa8",
       "relPath": "Various Artists\\NRJ Music Awards 2021 Edition Collector Limitee\\Beggin'.mp3",
       "title": "Beggin'",
@@ -1762,6 +1942,18 @@
       "year": 1993,
       "track": 16,
       "duration": 165,
+      "hasCover": true
+    },
+    {
+      "id": "8fc9c03af95ee915",
+      "relPath": "Mana\\Exiliados En La Bahia Lo Mejor De Mana\\Bendita Tu Luz.mp3",
+      "title": "Bendita tu luz",
+      "artist": "Maná",
+      "album": "Exiliados en la bahía: lo mejor de Maná",
+      "genre": "Sin género",
+      "year": 2012,
+      "track": 9,
+      "duration": 280,
       "hasCover": true
     },
     {
@@ -2089,6 +2281,18 @@
       "hasCover": true
     },
     {
+      "id": "30d80f7257186a16",
+      "relPath": "Various Artists\\Discoparade Estate '97\\Cachete, Pechito Y Ombligo.mp3",
+      "title": "Cachete, pechito y ombligo",
+      "artist": "Chocolate",
+      "album": "Discoparade estate '97",
+      "genre": "Sin género",
+      "year": 1997,
+      "track": 15,
+      "duration": 199,
+      "hasCover": true
+    },
+    {
       "id": "09da6647404813cd",
       "relPath": "Los Fabulosos Cadillac\\Fabulosos Calavera\\Calaveras Y Diablitos.mp3",
       "title": "Calaveras y diablitos",
@@ -2353,6 +2557,30 @@
       "hasCover": true
     },
     {
+      "id": "b1a33862ce52cb2f",
+      "relPath": "Grupo Santa Maria\\Santa Maria\\Carino Mio.mp3",
+      "title": "Cariño mío",
+      "artist": "Grupo Santa María",
+      "album": "Santa María",
+      "genre": "Sin género",
+      "year": 1988,
+      "track": 10,
+      "duration": 112,
+      "hasCover": true
+    },
+    {
+      "id": "a3d740c832e45f33",
+      "relPath": "Julio Jaramillo\\Para Ti Madrecita\\Carino Verdad.mp3",
+      "title": "Cariño verdad",
+      "artist": "Julio Jaramillo",
+      "album": "Para ti madrecita",
+      "genre": "Sin género",
+      "year": 1988,
+      "track": 6,
+      "duration": 202,
+      "hasCover": true
+    },
+    {
       "id": "3977c2f75e371648",
       "relPath": "Nino Bravo\\Nino Bravo\\Cartas Amarillas.mp3",
       "title": "Cartas amarillas",
@@ -2521,6 +2749,18 @@
       "hasCover": true
     },
     {
+      "id": "4773f4006f0a6e8f",
+      "relPath": "Los Mismos\\Juntos Para Siempre\\Cobarde.mp3",
+      "title": "Cobarde",
+      "artist": "Los Mismos",
+      "album": "Juntos para siempre",
+      "genre": "Sin género",
+      "year": 1996,
+      "track": 3,
+      "duration": 239,
+      "hasCover": true
+    },
+    {
       "id": "5b0231ba58c63c43",
       "relPath": "Camila\\Greatest Hits\\Coleccionista De Canciones.mp3",
       "title": "Coleccionista de canciones",
@@ -2542,6 +2782,18 @@
       "year": 2003,
       "track": 6,
       "duration": 219,
+      "hasCover": true
+    },
+    {
+      "id": "3d48ccb4bf6f4118",
+      "relPath": "Perla\\Sus Mejores Exitos\\Comienza A Amanecer.mp3",
+      "title": "Comienza a amanecer",
+      "artist": "Perla",
+      "album": "Sus mejores éxitos",
+      "genre": "Sin género",
+      "year": null,
+      "track": 10,
+      "duration": 213,
       "hasCover": true
     },
     {
@@ -2677,6 +2929,18 @@
       "hasCover": true
     },
     {
+      "id": "2f04934a20d22db7",
+      "relPath": "Grupo Yndio\\Exitos De Epoca (De Coleccion)\\Como Te Extrano (Album Version).mp3",
+      "title": "Como te extraño (album version)",
+      "artist": "Grupo Yndio",
+      "album": "Éxitos de época (De colección)",
+      "genre": "Sin género",
+      "year": 2010,
+      "track": 10,
+      "duration": 185,
+      "hasCover": true
+    },
+    {
       "id": "1f74f8caa06bbe16",
       "relPath": "Leo Dan\\Celebrando A Una Leyenda\\Como Te Extrano Mi Amor.mp3",
       "title": "Cómo te extraño mi amor",
@@ -2809,6 +3073,18 @@
       "hasCover": true
     },
     {
+      "id": "af3a04cc6b6edd65",
+      "relPath": "Ole Ole\\Duetos Sin Control\\Con Solo Una Mirada.mp3",
+      "title": "Con solo una mirada",
+      "artist": "Olé Olé con Materia Prima",
+      "album": "Duetos sin control",
+      "genre": "Sin género",
+      "year": 2016,
+      "track": 12,
+      "duration": 215,
+      "hasCover": true
+    },
+    {
       "id": "24110fdb67de43cf",
       "relPath": "Pimpinela\\Hay Amores Que Matan\\Con Un Nudo En La Garganta.mp3",
       "title": "Con un nudo en la garganta",
@@ -2831,6 +3107,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "440945464e9a3cc0",
+      "relPath": "Bronco\\Bronco La Serie\\Con Zapatos De Tacon (1).mp3",
+      "title": "Con zapatos de tacón",
+      "artist": "Bronco",
+      "album": "Bronco: la Serie",
+      "genre": "Sin género",
+      "year": 2019,
+      "track": 7,
+      "duration": 180,
+      "hasCover": true
     },
     {
       "id": "de38bd0ba357b2c0",
@@ -3034,6 +3322,18 @@
       "year": 2021,
       "track": 9,
       "duration": 141,
+      "hasCover": true
+    },
+    {
+      "id": "f83936e0c40dfcd4",
+      "relPath": "Kenny Rogers\\20 Great Years\\Coward Of The County (2).mp3",
+      "title": "Coward of the County",
+      "artist": "Kenny Rogers",
+      "album": "20 Great Years",
+      "genre": "Sin género",
+      "year": 1991,
+      "track": 5,
+      "duration": 271,
       "hasCover": true
     },
     {
@@ -3409,6 +3709,18 @@
       "hasCover": true
     },
     {
+      "id": "44f1744d89d538f3",
+      "relPath": "Trio Patio\\Patio Vol II\\De Mi Flor.mp3",
+      "title": "De mi flor",
+      "artist": "Trío Patio",
+      "album": "Patio Vol. II",
+      "genre": "Sin género",
+      "year": 2022,
+      "track": 5,
+      "duration": 159,
+      "hasCover": true
+    },
+    {
       "id": "47eaa1f505f70aa1",
       "relPath": "Various Artists\\Amores Perros\\De Perros Amores.mp3",
       "title": "De perros amores",
@@ -3454,6 +3766,18 @@
       "year": 2010,
       "track": 9,
       "duration": 248,
+      "hasCover": true
+    },
+    {
+      "id": "5f48a3316bd46502",
+      "relPath": "Alvaro Torres\\En Busca Del Amor\\De Que Me Sirve Quererte.mp3",
+      "title": "De que me sirve quererte",
+      "artist": "Álvaro Torres",
+      "album": "En busca del amor",
+      "genre": "Sin género",
+      "year": 1996,
+      "track": 5,
+      "duration": 224,
       "hasCover": true
     },
     {
@@ -3601,6 +3925,18 @@
       "hasCover": false
     },
     {
+      "id": "e0db6654509d46dc",
+      "relPath": "Jarabe De Palo\\Depende\\Depende (2).mp3",
+      "title": "Depende",
+      "artist": "Jarabe de Palo",
+      "album": "Depende",
+      "genre": "Sin género",
+      "year": 1998,
+      "track": 1,
+      "duration": 268,
+      "hasCover": true
+    },
+    {
       "id": "408c2046a0aa30e4",
       "relPath": "Jarabe De Palo\\Depende\\Depende (1).mp3",
       "title": "Depende (1)",
@@ -3611,6 +3947,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "4b0c4808a8faa368",
+      "relPath": "Los Mismos\\Romances\\Dependo De Mi Trabajo (1).mp3",
+      "title": "Dependo de mi trabajo",
+      "artist": "Los Mismos",
+      "album": "Romances",
+      "genre": "Sin género",
+      "year": 2013,
+      "track": 5,
+      "duration": 212,
+      "hasCover": true
     },
     {
       "id": "3579144cf4707a17",
@@ -4285,6 +4633,18 @@
       "hasCover": true
     },
     {
+      "id": "5657bcff039a1112",
+      "relPath": "Laura Flores\\Me Quede Vacia\\El Alma No Tiene Color.mp3",
+      "title": "El alma no tiene color",
+      "artist": "Laura Flores",
+      "album": "Me quedé vacía",
+      "genre": "Sin género",
+      "year": null,
+      "track": 4,
+      "duration": 256,
+      "hasCover": true
+    },
+    {
       "id": "33fe8d0d6416c687",
       "relPath": "Jose Luis Perales\\Mis 30 Mejores Canciones\\El Amor.mp3",
       "title": "El amor",
@@ -4333,6 +4693,18 @@
       "hasCover": true
     },
     {
+      "id": "eddac0575279db05",
+      "relPath": "Adriana Lucia Y Harold Rivera\\Te Amaria\\El Amor Es Un Misterio.mp3",
+      "title": "El amor es un misterio",
+      "artist": "Adriana Lucía y Harold Rivera",
+      "album": "Te amaría",
+      "genre": "Sin género",
+      "year": 2000,
+      "track": 8,
+      "duration": 275,
+      "hasCover": true
+    },
+    {
       "id": "4969ed340345b829",
       "relPath": "Aleks Syntek\\Trasatlantico\\El Ataque De Las Chicas Cocodrilo.mp3",
       "title": "El ataque de las chicas cocodrilo",
@@ -4369,6 +4741,18 @@
       "hasCover": true
     },
     {
+      "id": "89165d9b9582efdb",
+      "relPath": "Cachureos\\Lo Mas Grande De Cachureos\\El Baile Del Perrito.mp3",
+      "title": "El Baile del Perrito",
+      "artist": "Cachureos",
+      "album": "Lo Más Grande De Cachureos",
+      "genre": "Sin género",
+      "year": 2016,
+      "track": 3,
+      "duration": 263,
+      "hasCover": true
+    },
+    {
       "id": "fa76e5b43d1ee7bc",
       "relPath": "Kinito Mendez\\El Decreto De Kinito Mendez\\El Baile Del Sua Sua.mp3",
       "title": "El baile del sua sua",
@@ -4378,6 +4762,18 @@
       "year": 1997,
       "track": 6,
       "duration": 293,
+      "hasCover": true
+    },
+    {
+      "id": "8f683bb55fbc4f8a",
+      "relPath": "Nina Diaz\\Happy Holidays Xo Nina\\El Burrito Sabanero.mp3",
+      "title": "El Burrito Sabanero",
+      "artist": "Nina Diaz",
+      "album": "Happy Holidays xo Nina",
+      "genre": "Sin género",
+      "year": 2020,
+      "track": 1,
+      "duration": 191,
       "hasCover": true
     },
     {
@@ -4474,6 +4870,18 @@
       "year": 1995,
       "track": 1,
       "duration": 198,
+      "hasCover": true
+    },
+    {
+      "id": "68c4e04005c170f7",
+      "relPath": "Sparx Y Lorenzo Antonio\\Cantan Corridos\\El Corrido De Juanito.mp3",
+      "title": "El corrido de Juanito",
+      "artist": "Sparx y Lorenzo Antonio",
+      "album": "Cantan corridos",
+      "genre": "Sin género",
+      "year": 1996,
+      "track": 1,
+      "duration": 251,
       "hasCover": true
     },
     {
@@ -4585,6 +4993,18 @@
       "hasCover": true
     },
     {
+      "id": "081d1d8418cfc2dd",
+      "relPath": "Antonio Aguilar\\A Diez Anos De Su Adios\\El Hijo Desobediente.mp3",
+      "title": "El hijo desobediente",
+      "artist": "Antonio Aguilar",
+      "album": "A Diez Años De Su Adiós",
+      "genre": "Sin género",
+      "year": 2017,
+      "track": 10,
+      "duration": 195,
+      "hasCover": true
+    },
+    {
       "id": "25fe62236455d50c",
       "relPath": "Ana Belen\\Con Las Manos Llenas\\El Hombre Del Piano.mp3",
       "title": "El hombre del piano",
@@ -4606,6 +5026,18 @@
       "year": 2006,
       "track": 4,
       "duration": 213,
+      "hasCover": true
+    },
+    {
+      "id": "bd956aa5c48441fe",
+      "relPath": "Various Artists\\Fiesta Tropical Nortena\\El Humo Del Cigarrillo.mp3",
+      "title": "El Humo del Cigarrillo",
+      "artist": "Victor Hugo Y Los Bengalas",
+      "album": "Fiesta Tropical Norteña",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 4,
+      "duration": 174,
       "hasCover": true
     },
     {
@@ -4642,6 +5074,18 @@
       "year": 1990,
       "track": 1,
       "duration": 229,
+      "hasCover": true
+    },
+    {
+      "id": "22bfe323b3fd3069",
+      "relPath": "Natusha & Kondor Band\\Natusha & Kondor Band\\El La Engano (2).mp3",
+      "title": "Él la engañó",
+      "artist": "Natusha & Kondor Band",
+      "album": "Natusha & Kondor Band",
+      "genre": "Sin género",
+      "year": 1990,
+      "track": 1,
+      "duration": 234,
       "hasCover": true
     },
     {
@@ -4715,6 +5159,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "14d2636af7fed719",
+      "relPath": "Exterminador\\Me Gusta Ponerle Al Polvo\\El Meneito (2).mp3",
+      "title": "El Meneito",
+      "artist": "Exterminador",
+      "album": "Me Gusta Ponerle Al Polvo",
+      "genre": "Sin género",
+      "year": null,
+      "track": 1,
+      "duration": 224,
+      "hasCover": true
     },
     {
       "id": "6981869faa1ed786",
@@ -4861,6 +5317,18 @@
       "hasCover": true
     },
     {
+      "id": "0c63a2256c4d6270",
+      "relPath": "Various Artists\\Historia Del Vallenato En El Siglo XX, Volumen 3\\El Santo Cachon.mp3",
+      "title": "El santo Cachón",
+      "artist": "Los Embajadores Vallenatos",
+      "album": "Historia del vallenato en el siglo XX, volumen 3",
+      "genre": "Sin género",
+      "year": 1998,
+      "track": 1,
+      "duration": 268,
+      "hasCover": true
+    },
+    {
       "id": "6f160f3d8a154e5e",
       "relPath": "Bronco\\Por El Mundo\\El Sheriff De Chocolate.mp3",
       "title": "El sheriff de chocolate",
@@ -4885,6 +5353,18 @@
       "hasCover": true
     },
     {
+      "id": "57a92d8f3ed7dcc4",
+      "relPath": "Flor De Cana\\_Muevete\\El Sombrero Azul.mp3",
+      "title": "El Sombrero Azul",
+      "artist": "Flor de Caña",
+      "album": "¡Muévete!",
+      "genre": "Sin género",
+      "year": 1988,
+      "track": 4,
+      "duration": 248,
+      "hasCover": true
+    },
+    {
       "id": "1310471660f2fc44",
       "relPath": "Proyecto Uno\\In Da House\\El Tiburon.mp3",
       "title": "El tiburón",
@@ -4906,6 +5386,30 @@
       "year": 1994,
       "track": 9,
       "duration": 302,
+      "hasCover": true
+    },
+    {
+      "id": "e293736d6f4e682c",
+      "relPath": "Die Cuba Boarischen\\Is Denn Des Net A Leb'n\\El Toro Y La Luna.mp3",
+      "title": "El Toro y la luna",
+      "artist": "Die Cuba Boarischen",
+      "album": "Is denn des net a Leb'n",
+      "genre": "Sin género",
+      "year": 2013,
+      "track": 6,
+      "duration": 214,
+      "hasCover": true
+    },
+    {
+      "id": "d33cff4ca4c37c1c",
+      "relPath": "Grupo Fiesta\\Cumbias & Nortenas Mix\\El Toro Y La Luna.mp3",
+      "title": "El Toro y la Luna",
+      "artist": "Grupo Fiesta",
+      "album": "Cumbias & Norteñas Mix",
+      "genre": "Sin género",
+      "year": 2012,
+      "track": 20,
+      "duration": 259,
       "hasCover": true
     },
     {
@@ -4954,6 +5458,18 @@
       "year": 2015,
       "track": 1,
       "duration": 162,
+      "hasCover": true
+    },
+    {
+      "id": "00d2b584acfc629e",
+      "relPath": "Baito\\En MI Habitacion\\El Ultimo Beso.mp3",
+      "title": "El último Beso",
+      "artist": "Baito",
+      "album": "En MI habitación",
+      "genre": "Sin género",
+      "year": 2016,
+      "track": 7,
+      "duration": 156,
       "hasCover": true
     },
     {
@@ -5233,6 +5749,18 @@
       "hasCover": true
     },
     {
+      "id": "1d79902b6f808827",
+      "relPath": "Albert Hammond\\Mi Album De Recuerdos\\Eres Toda Una Mujer.mp3",
+      "title": "Eres toda una mujer",
+      "artist": "Albert Hammond",
+      "album": "Mi album de recuerdos",
+      "genre": "Sin género",
+      "year": 1977,
+      "track": 3,
+      "duration": 208,
+      "hasCover": true
+    },
+    {
       "id": "846be5e3cc3644e8",
       "relPath": "Various Artists\\1000 Klassiekers De Eindejaarstop Van Radio 2\\Eres Tu.mp3",
       "title": "Eres tú",
@@ -5302,6 +5830,18 @@
       "year": 2004,
       "track": 14,
       "duration": 251,
+      "hasCover": true
+    },
+    {
+      "id": "56d52e2e735349ea",
+      "relPath": "Los Fugitivos\\Vanidosa\\Es Que Te Amo.mp3",
+      "title": "Es que te amo",
+      "artist": "Los Fugitivos",
+      "album": "Vanidosa",
+      "genre": "Sin género",
+      "year": 1993,
+      "track": 5,
+      "duration": 184,
       "hasCover": true
     },
     {
@@ -5737,6 +6277,18 @@
       "hasCover": true
     },
     {
+      "id": "25dd56fb5a641c2b",
+      "relPath": "Mago De Oz\\Finisterra\\Fiesta Pagana (2).mp3",
+      "title": "Fiesta pagana",
+      "artist": "Mägo de Oz",
+      "album": "Finisterra",
+      "genre": "Sin género",
+      "year": 2019,
+      "track": 1,
+      "duration": 293,
+      "hasCover": true
+    },
+    {
       "id": "b3040a67cb5f91f9",
       "relPath": "Mago De Oz\\Finisterra\\Fiesta Pagana.mp3",
       "title": "Fiesta Pagana",
@@ -5770,6 +6322,18 @@
       "year": 1998,
       "track": 4,
       "duration": 276,
+      "hasCover": true
+    },
+    {
+      "id": "2b39496fbd69a9cb",
+      "relPath": "Los Flamers\\Flamazo Navideno\\Flamazo Navideno.mp3",
+      "title": "Flamazo navídeño",
+      "artist": "Los Flamers",
+      "album": "Flamazo navideño",
+      "genre": "Sin género",
+      "year": 1990,
+      "track": 1,
+      "duration": 940,
       "hasCover": true
     },
     {
@@ -5953,6 +6517,18 @@
       "hasCover": true
     },
     {
+      "id": "17bf3646c8ee0298",
+      "relPath": "Hilario Duran Trio\\New Danzon\\Gaviota.mp3",
+      "title": "Gaviota",
+      "artist": "Hilario Duran Trio",
+      "album": "New Danzon",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 4,
+      "duration": 275,
+      "hasCover": true
+    },
+    {
       "id": "479015d3ed5bfc22",
       "relPath": "Banda & Voz Jr\\Alegria\\Gente Como A Gente.mp3",
       "title": "Gente Como a Gente",
@@ -6049,6 +6625,18 @@
       "hasCover": true
     },
     {
+      "id": "ec1d0a4252c5b89a",
+      "relPath": "Leandro & Leonardo\\Leandro Y Leonardo\\Golpes Y Besos.mp3",
+      "title": "Golpes y besos",
+      "artist": "Leandro & Leonardo",
+      "album": "Leandro y Leonardo",
+      "genre": "Sin género",
+      "year": 1995,
+      "track": 3,
+      "duration": 220,
+      "hasCover": true
+    },
+    {
       "id": "0c7266d91d3cac4d",
       "relPath": "Various Artists\\Pure Metal\\Got The Life.mp3",
       "title": "Got the Life",
@@ -6133,6 +6721,18 @@
       "hasCover": true
     },
     {
+      "id": "67c4904f925fd92e",
+      "relPath": "Various Artists\\Quiero Creedence\\Have You Ever Seen The Rain (Gracias Al Sol).mp3",
+      "title": "Have You Ever Seen the Rain? (Gracias al sol)",
+      "artist": "Juan Gabriel",
+      "album": "Quiero Creedence",
+      "genre": "Sin género",
+      "year": 2016,
+      "track": 3,
+      "duration": 164,
+      "hasCover": true
+    },
+    {
       "id": "c62767d6a585feac",
       "relPath": "Sergio Fachelli\\Hay Amores Y Amores La Chica De Mis Suenos O Todo O Nada Lagrimas De Amor\\Hay Amores Y Amores.mp3",
       "title": "Hay Amores... Y Amores",
@@ -6142,6 +6742,18 @@
       "year": 1985,
       "track": 1,
       "duration": 227,
+      "hasCover": true
+    },
+    {
+      "id": "f44da246355e159b",
+      "relPath": "Omar Enrique\\Omar Enrique Y Los Dan House\\Hay Que Rico.mp3",
+      "title": "Hay que rico",
+      "artist": "Omar Enrique",
+      "album": "Omar Enrique y los Dan House",
+      "genre": "Sin género",
+      "year": 1997,
+      "track": 5,
+      "duration": 195,
       "hasCover": true
     },
     {
@@ -6373,6 +6985,18 @@
       "hasCover": true
     },
     {
+      "id": "40bca14efd98f005",
+      "relPath": "Pedro Infante\\Coleccion De Lujo\\Historia De Un Amor.mp3",
+      "title": "Historia de un amor",
+      "artist": "Pedro Infante",
+      "album": "Colección de Lujo",
+      "genre": "Sin género",
+      "year": 2015,
+      "track": 1,
+      "duration": 204,
+      "hasCover": true
+    },
+    {
       "id": "b9e4d308baf26a37",
       "relPath": "Aleks Syntek\\Leccion De Vuelo\\Historias De Danzon & De Arrabal.mp3",
       "title": "Historias de danzón & de arrabal",
@@ -6454,6 +7078,18 @@
       "year": 1996,
       "track": 1,
       "duration": 221,
+      "hasCover": true
+    },
+    {
+      "id": "d98b00ec52e49645",
+      "relPath": "Leonardo Favio\\Grandes Exitos En El Gran Rex\\Hoy Corte Una Flor En Vivo.mp3",
+      "title": "Hoy Corte una Flor - En Vivo",
+      "artist": "Leonardo Favio",
+      "album": "Grandes Exitos en el Gran Rex",
+      "genre": "Sin género",
+      "year": 2019,
+      "track": 4,
+      "duration": 488,
       "hasCover": true
     },
     {
@@ -6661,6 +7297,18 @@
       "hasCover": true
     },
     {
+      "id": "9c7533c0bf541991",
+      "relPath": "Various Artists\\NRJ Hit Music Only 2015\\I'm An Albatraoz (2).mp3",
+      "title": "I'm an Albatraoz",
+      "artist": "AronChupa",
+      "album": "NRJ Hit Music Only 2015",
+      "genre": "Sin género",
+      "year": 2015,
+      "track": 4,
+      "duration": 167,
+      "hasCover": true
+    },
+    {
       "id": "ad441597fd905335",
       "relPath": "Various Artists\\NRJ Hit Music Only 2015\\I'm An Albatraoz.mp3",
       "title": "I'm An Albatraoz",
@@ -6697,6 +7345,18 @@
       "hasCover": false
     },
     {
+      "id": "69619086f5446568",
+      "relPath": "Alice Cooper\\Love It To Death\\I'm Eighteen (2).mp3",
+      "title": "I'm Eighteen",
+      "artist": "Alice Cooper",
+      "album": "Love It to Death",
+      "genre": "Sin género",
+      "year": 1971,
+      "track": 2,
+      "duration": 181,
+      "hasCover": true
+    },
+    {
       "id": "25b7e97d0218aca8",
       "relPath": "Alice Cooper\\Love It To Death\\I'm Eighteen (1).mp3",
       "title": "I'm Eighteen (1)",
@@ -6718,6 +7378,18 @@
       "year": 1988,
       "track": 5,
       "duration": 240,
+      "hasCover": true
+    },
+    {
+      "id": "5c89185d80c1f4c7",
+      "relPath": "Nelly Furtado\\Whoa, Nelly\\I'm Like A Bird (2).mp3",
+      "title": "I'm Like a Bird",
+      "artist": "Nelly Furtado",
+      "album": "Whoa, Nelly!",
+      "genre": "Sin género",
+      "year": 2001,
+      "track": 5,
+      "duration": 244,
       "hasCover": true
     },
     {
@@ -6743,6 +7415,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "bc1e588477a676a6",
+      "relPath": "Various Artists\\Bravo Hits 88\\I'm Not The Only One (2).mp3",
+      "title": "I'm Not the Only One",
+      "artist": "Sam Smith",
+      "album": "Bravo Hits 88",
+      "genre": "Sin género",
+      "year": 2015,
+      "track": 16,
+      "duration": 239,
+      "hasCover": true
     },
     {
       "id": "edd5516fa6b52571",
@@ -6817,6 +7501,18 @@
       "hasCover": false
     },
     {
+      "id": "be3a28d132fc4f4a",
+      "relPath": "Various Artists\\Heaven I Love Music\\If I Can't Have You (2).mp3",
+      "title": "If I Can't Have You",
+      "artist": "Yvonne Elliman",
+      "album": "Heaven - I Love Music",
+      "genre": "Sin género",
+      "year": 1993,
+      "track": 12,
+      "duration": 178,
+      "hasCover": true
+    },
+    {
       "id": "c4780d63bd2477b3",
       "relPath": "Various Artists\\Heaven I Love Music\\If I Can't Have You (1).mp3",
       "title": "If I Can't Have You (1)",
@@ -6853,6 +7549,18 @@
       "hasCover": false
     },
     {
+      "id": "c5fac6d7e35e8c9b",
+      "relPath": "Various Artists\\Le Piu Belle Canzoni Italiane Di Sempre\\Il Cuore E Uno Zingaro (2).mp3",
+      "title": "Il cuore è uno zingaro",
+      "artist": "Nicola Di Bari",
+      "album": "Le più belle canzoni italiane di sempre",
+      "genre": "Sin género",
+      "year": 2005,
+      "track": 8,
+      "duration": 193,
+      "hasCover": true
+    },
+    {
       "id": "5f942a04d44a43af",
       "relPath": "Various Artists\\Le Piu Belle Canzoni Italiane Di Sempre\\Il Cuore E Uno Zingaro (1).mp3",
       "title": "Il Cuore E Uno Zingaro (1)",
@@ -6874,6 +7582,18 @@
       "year": 1990,
       "track": 2,
       "duration": 256,
+      "hasCover": true
+    },
+    {
+      "id": "06aa7ea2c12647dd",
+      "relPath": "Linkin Park\\Hybrid Theory (20th Anniversary Edition)\\In The End (2).mp3",
+      "title": "In the End",
+      "artist": "Linkin Park",
+      "album": "Hybrid Theory (20th anniversary edition)",
+      "genre": "Sin género",
+      "year": 2020,
+      "track": 8,
+      "duration": 217,
       "hasCover": true
     },
     {
@@ -6899,6 +7619,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "e04169dae6d3f906",
+      "relPath": "Various Artists\\The Newbreed\\In The Shadows (2).mp3",
+      "title": "In the Shadows",
+      "artist": "The Rasmus",
+      "album": "The Newbreed",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 1,
+      "duration": 258,
+      "hasCover": true
     },
     {
       "id": "f80883c83eae29e1",
@@ -6935,6 +7667,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "67b437150d264959",
+      "relPath": "Cabas\\Puro CaBas\\Increible (2).mp3",
+      "title": "Increíble",
+      "artist": "Cabas",
+      "album": "Puro CaBas",
+      "genre": "Sin género",
+      "year": 2005,
+      "track": 6,
+      "duration": 230,
+      "hasCover": true
     },
     {
       "id": "90eea88039968ad3",
@@ -6997,6 +7741,18 @@
       "hasCover": true
     },
     {
+      "id": "4e0f959f5aa2b42e",
+      "relPath": "Various Artists\\Greatest Hits Of The 70'S\\It's A Heartache (2).mp3",
+      "title": "It's a Heartache",
+      "artist": "Bonnie Tyler",
+      "album": "Greatest Hits of the 70's",
+      "genre": "Sin género",
+      "year": 2003,
+      "track": 1,
+      "duration": 215,
+      "hasCover": true
+    },
+    {
       "id": "4022e874eed8b576",
       "relPath": "Various Artists\\Greatest Hits Of The 70'S\\It's A Heartache.mp3",
       "title": "It's A Heartache",
@@ -7043,6 +7799,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "dac1461db891c01e",
+      "relPath": "Camilo Sesto\\Esencial\\Jamas (2).mp3",
+      "title": "Jamás",
+      "artist": "Camilo Sesto",
+      "album": "Esencial",
+      "genre": "Sin género",
+      "year": 2013,
+      "track": 10,
+      "duration": 200,
+      "hasCover": true
     },
     {
       "id": "6584f7d8b687c295",
@@ -7093,6 +7861,18 @@
       "hasCover": true
     },
     {
+      "id": "f2f325855660c262",
+      "relPath": "Antonio Aguilar\\Los Exitos De Siempre, Vol 1\\Juan Charrasqueado (2).mp3",
+      "title": "Juan charrasqueado",
+      "artist": "Antonio Aguilar",
+      "album": "Los Éxitos De Siempre, Vol. 1",
+      "genre": "Sin género",
+      "year": 1965,
+      "track": 2,
+      "duration": 223,
+      "hasCover": true
+    },
+    {
       "id": "224d60676bc7c0b4",
       "relPath": "Antonio Aguilar\\Los Exitos De Siempre, Vol 1\\Juan Charrasqueado.mp3",
       "title": "Juan Charrasqueado",
@@ -7115,6 +7895,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "31162a25534c448f",
+      "relPath": "Various Artists\\Los Anos Maravillosos Del Merengue\\Juana La Cubana (2).mp3",
+      "title": "Juana la cubana",
+      "artist": "Las Chicas del Can",
+      "album": "Los años maravillosos del merengue",
+      "genre": "Sin género",
+      "year": 1999,
+      "track": 5,
+      "duration": 293,
+      "hasCover": true
     },
     {
       "id": "b290e9ddd0959dfe",
@@ -7189,6 +7981,18 @@
       "hasCover": true
     },
     {
+      "id": "48108fcba12460ed",
+      "relPath": "Bruno Mars\\Just The Way You Are\\Just The Way You Are (2).mp3",
+      "title": "Just the Way You Are",
+      "artist": "Bruno Mars",
+      "album": "Just the Way You Are",
+      "genre": "Sin género",
+      "year": 2010,
+      "track": 1,
+      "duration": 221,
+      "hasCover": true
+    },
+    {
       "id": "00aee589e148f52b",
       "relPath": "Bruno Mars\\Just The Way You Are\\Just The Way You Are.mp3",
       "title": "Just The Way You Are",
@@ -7225,6 +8029,18 @@
       "hasCover": false
     },
     {
+      "id": "9d5ca842a1cd9342",
+      "relPath": "Various Artists\\Pop Giganten Cover Hits\\Killing Me Softly With His Song (2).mp3",
+      "title": "Killing Me Softly With His Song",
+      "artist": "Fugees",
+      "album": "Pop Giganten: Cover Hits",
+      "genre": "Sin género",
+      "year": 2017,
+      "track": 7,
+      "duration": 299,
+      "hasCover": true
+    },
+    {
       "id": "394d850c83581b7c",
       "relPath": "Various Artists\\Pop Giganten Cover Hits\\Killing Me Softly With His Song (1).mp3",
       "title": "Killing Me Softly With His Song (1)",
@@ -7249,6 +8065,18 @@
       "hasCover": false
     },
     {
+      "id": "64817f158ef92552",
+      "relPath": "Los Caligaris\\No Es Lo Que Parece\\Kilometros (2).mp3",
+      "title": "Kilómetros",
+      "artist": "Los Caligaris",
+      "album": "No es lo que parece",
+      "genre": "Sin género",
+      "year": 2007,
+      "track": 1,
+      "duration": 191,
+      "hasCover": true
+    },
+    {
       "id": "07c3f5412f718d44",
       "relPath": "Los Caligaris\\No Es Lo Que Parece\\Kilometros (1).mp3",
       "title": "Kilometros (1)",
@@ -7259,6 +8087,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "e0c9f23cfa1afd9d",
+      "relPath": "The Manhattans\\Greatest Hits\\Kiss And Say Goodbye (2).mp3",
+      "title": "Kiss and Say Goodbye",
+      "artist": "The Manhattans",
+      "album": "Greatest Hits",
+      "genre": "Sin género",
+      "year": 1980,
+      "track": 3,
+      "duration": 266,
+      "hasCover": true
     },
     {
       "id": "77de64790a1cb562",
@@ -7297,6 +8137,18 @@
       "hasCover": true
     },
     {
+      "id": "24905e63a672a0a8",
+      "relPath": "Brazeros Musical De Durango\\Serie Diamante 15 Super Exitos\\La Abeja Miope (2).mp3",
+      "title": "La abeja miope",
+      "artist": "Brazeros Musical de Durango",
+      "album": "Serie díamante: 15 súper éxitos",
+      "genre": "Sin género",
+      "year": 2010,
+      "track": 1,
+      "duration": 201,
+      "hasCover": true
+    },
+    {
       "id": "330510bd16829400",
       "relPath": "Brazeros Musical De Durango\\Serie Diamante 15 Super Exitos\\La Abeja Miope.mp3",
       "title": "La Abeja Miope",
@@ -7319,6 +8171,30 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "09842d2968c39f5e",
+      "relPath": "Various Artists\\Blanco, Azul Y Rojo\\La Avispa.mp3",
+      "title": "La avispa",
+      "artist": "La Banda",
+      "album": "Blanco, azul y rojo",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 3,
+      "duration": 240,
+      "hasCover": true
+    },
+    {
+      "id": "1d6abae2286990de",
+      "relPath": "Intempo\\La Bala Que Doblo La Esquina EP\\La Bala.mp3",
+      "title": "La bala",
+      "artist": "Intempo",
+      "album": "La bala que dobló la esquina EP",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 5,
+      "duration": 602,
+      "hasCover": true
     },
     {
       "id": "0083c33173f5373b",
@@ -7354,6 +8230,18 @@
       "year": 1995,
       "track": 11,
       "duration": 245,
+      "hasCover": true
+    },
+    {
+      "id": "8fd082a8283b06c0",
+      "relPath": "La Sonora Santanera\\En Su 60 Aniversario\\La Boa (1).mp3",
+      "title": "La boa",
+      "artist": "La Sonora Santanera with Roco",
+      "album": "En su 60 aniversario",
+      "genre": "Sin género",
+      "year": 2016,
+      "track": 1,
+      "duration": 172,
       "hasCover": true
     },
     {
@@ -7405,6 +8293,18 @@
       "hasCover": true
     },
     {
+      "id": "568bfced6a951411",
+      "relPath": "Kabah\\El Pop\\La Calle De Las Sirenas (2).mp3",
+      "title": "La calle de las sirenas",
+      "artist": "Kabah",
+      "album": "El Pop",
+      "genre": "Sin género",
+      "year": 2005,
+      "track": 1,
+      "duration": 236,
+      "hasCover": true
+    },
+    {
       "id": "c1d1f67fd3e802c0",
       "relPath": "Kabah\\El Pop\\La Calle De Las Sirenas.mp3",
       "title": "La Calle De Las Sirenas",
@@ -7429,6 +8329,18 @@
       "hasCover": false
     },
     {
+      "id": "6e72509502f97fdd",
+      "relPath": "Antonio Aguilar\\Lo Esencial De Antonio Aguilar\\La Cama De Piedra.mp3",
+      "title": "La cama de piedra",
+      "artist": "Antonio Aguilar",
+      "album": "Lo Esencial De Antonio Aguilar",
+      "genre": "Sin género",
+      "year": 2015,
+      "track": 17,
+      "duration": 146,
+      "hasCover": true
+    },
+    {
       "id": "fb77edd0f7e68a4e",
       "relPath": "Juanes\\Mi Sangre\\La Camisa Negra.mp3",
       "title": "La camisa negra",
@@ -7451,6 +8363,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "5791d2558079fe33",
+      "relPath": "Selena\\La Leyenda\\La Caracha (2).mp3",
+      "title": "La Caracha",
+      "artist": "Selena",
+      "album": "La Leyenda",
+      "genre": "Sin género",
+      "year": 2010,
+      "track": 4,
+      "duration": 197,
+      "hasCover": true
     },
     {
       "id": "dc16035e52b47fa0",
@@ -7501,6 +8425,18 @@
       "hasCover": false
     },
     {
+      "id": "46c7e1e9e50bb43f",
+      "relPath": "Calo\\Leyenda\\La Colegiala (2).mp3",
+      "title": "La Colegiala",
+      "artist": "Caló, Andrés Castillo & Margarita, La Diosa de la Cumbia",
+      "album": "Leyenda",
+      "genre": "Sin género",
+      "year": 2007,
+      "track": 6,
+      "duration": 249,
+      "hasCover": true
+    },
+    {
       "id": "4acbf1897888d1f6",
       "relPath": "Calo\\Leyenda\\La Colegiala (1).mp3",
       "title": "La Colegiala (1)",
@@ -7534,6 +8470,18 @@
       "year": 1995,
       "track": 14,
       "duration": 252,
+      "hasCover": true
+    },
+    {
+      "id": "a52999ad31f7a906",
+      "relPath": "Banda Machos\\25 Aniversario Una Leyenda Viviente\\La Culebra (2).mp3",
+      "title": "La culebra",
+      "artist": "Banda Machos",
+      "album": "25 aniversario: Una leyenda viviente",
+      "genre": "Sin género",
+      "year": 2015,
+      "track": 5,
+      "duration": 189,
       "hasCover": true
     },
     {
@@ -7609,6 +8557,18 @@
       "hasCover": false
     },
     {
+      "id": "575486db16fc0a71",
+      "relPath": "Los Pedernales\\La Del Mono Colorado\\La Del Mono Colorado (2).mp3",
+      "title": "La del moño colorado",
+      "artist": "Los Pedernales",
+      "album": "La del moño colorado",
+      "genre": "Sin género",
+      "year": 1996,
+      "track": 1,
+      "duration": 302,
+      "hasCover": true
+    },
+    {
       "id": "de1a6a152a18b1d3",
       "relPath": "Vicente Fernandez\\Historia De Un Idolo Vol I\\La Diferencia.mp3",
       "title": "La diferencia",
@@ -7645,6 +8605,18 @@
       "hasCover": true
     },
     {
+      "id": "aa1d8ccd7646f720",
+      "relPath": "Pochy Y Su Cocoband\\Grandes Exitos De La Cocoband, Vol 1\\La Faldita (2).mp3",
+      "title": "La faldita",
+      "artist": "Pochy y su Cocoband",
+      "album": "Grandes éxitos de la Cocoband, vol. 1",
+      "genre": "Sin género",
+      "year": 1994,
+      "track": 5,
+      "duration": 231,
+      "hasCover": true
+    },
+    {
       "id": "c9dbd6fdedbb34de",
       "relPath": "Pochy Y Su Cocoband\\Grandes Exitos De La Cocoband, Vol 1\\La Faldita.mp3",
       "title": "La Faldita",
@@ -7667,6 +8639,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "e812f1c49e8d1067",
+      "relPath": "Jarabe De Palo\\Fundamentales\\La Flaca (2).mp3",
+      "title": "La flaca",
+      "artist": "Jarabe de Palo",
+      "album": "Fundamentales",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 4,
+      "duration": 261,
+      "hasCover": true
     },
     {
       "id": "1b77b0164f469dca",
@@ -7717,6 +8701,18 @@
       "hasCover": false
     },
     {
+      "id": "7ef1fcf2ea445261",
+      "relPath": "Various Artists\\_Hola Nu Latin Divas\\La Fuerza Del Engano (2).mp3",
+      "title": "La fuerza del engaño",
+      "artist": "Marcela Morelo",
+      "album": "¡Hola! Nu Latin Divas",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 13,
+      "duration": 207,
+      "hasCover": true
+    },
+    {
       "id": "5b67bab93465da37",
       "relPath": "Carlos Vives\\Clasicos De La Provincia\\La Gota Fria.mp3",
       "title": "La gota fría",
@@ -7726,6 +8722,18 @@
       "year": 1993,
       "track": 1,
       "duration": 217,
+      "hasCover": true
+    },
+    {
+      "id": "44a95b55b1645b74",
+      "relPath": "Los Tigres Del Norte\\La Granja\\La Granja (2).mp3",
+      "title": "La granja",
+      "artist": "Los Tigres del Norte",
+      "album": "La granja",
+      "genre": "Sin género",
+      "year": 2009,
+      "track": 1,
+      "duration": 226,
       "hasCover": true
     },
     {
@@ -7765,6 +8773,30 @@
       "hasCover": true
     },
     {
+      "id": "1b6e351f26a6150a",
+      "relPath": "Yolanda Del Rio\\Lo Mejor De Lo Mejor De RCA Victor\\La Hija De Nadie.mp3",
+      "title": "La hija de nadie",
+      "artist": "Yolanda del Río",
+      "album": "Lo mejor de lo mejor de RCA Victor",
+      "genre": "Sin género",
+      "year": 2001,
+      "track": 1,
+      "duration": 169,
+      "hasCover": true
+    },
+    {
+      "id": "c3e752680f9c2fd2",
+      "relPath": "Sandy & Papo\\La Historia\\La Hora De Bailar (2).mp3",
+      "title": "La hora de bailar",
+      "artist": "Sandy & Papo",
+      "album": "La historia...",
+      "genre": "Sin género",
+      "year": 2005,
+      "track": 2,
+      "duration": 289,
+      "hasCover": true
+    },
+    {
       "id": "e4845abeb9eb9f2d",
       "relPath": "Sandy & Papo\\La Historia\\La Hora De Bailar.mp3",
       "title": "La Hora De Bailar",
@@ -7801,6 +8833,18 @@
       "hasCover": true
     },
     {
+      "id": "2d57cb437c5d57c6",
+      "relPath": "Cafe Tacvba\\Re\\La Ingrata.mp3",
+      "title": "La ingrata",
+      "artist": "Café Tacvba",
+      "album": "Re",
+      "genre": "Sin género",
+      "year": 1994,
+      "track": 2,
+      "duration": 212,
+      "hasCover": true
+    },
+    {
       "id": "f976fdf91bd5451b",
       "relPath": "Vicente Fernandez\\Historia De Un Idolo Vol I\\La Ley Del Monte.mp3",
       "title": "La ley del monte",
@@ -7810,6 +8854,18 @@
       "year": 2000,
       "track": 2,
       "duration": 204,
+      "hasCover": true
+    },
+    {
+      "id": "65ba439052e3a520",
+      "relPath": "Rata Blanca\\Magos, Espadas Y Rosas\\La Leyenda Del Hada Y El Mago (1).mp3",
+      "title": "La leyenda del hada y el mago",
+      "artist": "Rata Blanca",
+      "album": "Magos, espadas y rosas",
+      "genre": "Sin género",
+      "year": 1990,
+      "track": 1,
+      "duration": 325,
       "hasCover": true
     },
     {
@@ -7837,6 +8893,18 @@
       "hasCover": false
     },
     {
+      "id": "9f43449836d1b6ce",
+      "relPath": "Selena\\La Leyenda\\La Llambada (2).mp3",
+      "title": "La Llambada",
+      "artist": "Selena",
+      "album": "La Leyenda",
+      "genre": "Sin género",
+      "year": 2010,
+      "track": 7,
+      "duration": 192,
+      "hasCover": true
+    },
+    {
       "id": "de84d5dcc4db2e40",
       "relPath": "Selena\\La Leyenda\\La Llambada (1).mp3",
       "title": "La Llambada (1)",
@@ -7861,6 +8929,30 @@
       "hasCover": true
     },
     {
+      "id": "8fcf883f76958b1e",
+      "relPath": "Raphael\\Yo Soy Aquel\\La Llorona.mp3",
+      "title": "La llorona",
+      "artist": "Raphael",
+      "album": "Yo soy aquél",
+      "genre": "Sin género",
+      "year": 2000,
+      "track": 10,
+      "duration": 230,
+      "hasCover": true
+    },
+    {
+      "id": "b396eccd4fac7b91",
+      "relPath": "Los Fugitivos\\Vanidosa\\La Loca.mp3",
+      "title": "La loca",
+      "artist": "Los Fugitivos",
+      "album": "Vanidosa",
+      "genre": "Sin género",
+      "year": 1993,
+      "track": 7,
+      "duration": 253,
+      "hasCover": true
+    },
+    {
       "id": "c5b3fa873c731eb4",
       "relPath": "Cafe Quijano\\La Extraordinaria Paradoja Del Sonido Quijano\\La Lola.mp3",
       "title": "La Lola",
@@ -7873,6 +8965,18 @@
       "hasCover": false
     },
     {
+      "id": "e242c2198b7efc4b",
+      "relPath": "Cafe Quijano\\La Extraordinaria Paradoja Del Sonido Quijano\\La Lola (2).mp3",
+      "title": "La Lola",
+      "artist": "Café Quijano",
+      "album": "La extraordinaria paradoja del sonido Quijano",
+      "genre": "Sin género",
+      "year": 1999,
+      "track": 1,
+      "duration": 197,
+      "hasCover": true
+    },
+    {
       "id": "753596fbf16ad900",
       "relPath": "Cafe Quijano\\La Extraordinaria Paradoja Del Sonido Quijano\\La Lola (1).mp3",
       "title": "La Lola (1)",
@@ -7883,6 +8987,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "805236c73ae8edd6",
+      "relPath": "Juanes\\Loco De Amor\\La Luz (2).mp3",
+      "title": "La luz",
+      "artist": "Juanes",
+      "album": "Loco de amor",
+      "genre": "Sin género",
+      "year": 2014,
+      "track": 3,
+      "duration": 177,
+      "hasCover": true
     },
     {
       "id": "3dc5af95fd6116f3",
@@ -7921,6 +9037,30 @@
       "hasCover": true
     },
     {
+      "id": "afef2cfdc29c36f9",
+      "relPath": "Adolfo Echeverria\\Me Robaron El Sombrero\\La Matraca.mp3",
+      "title": "La matraca",
+      "artist": "Adolfo Echeverría",
+      "album": "Me robaron el sombrero",
+      "genre": "Sin género",
+      "year": 1974,
+      "track": 10,
+      "duration": 211,
+      "hasCover": true
+    },
+    {
+      "id": "67d86b7c65f763dc",
+      "relPath": "Mercedes Sosa\\Cantora 1\\La Maza (2).mp3",
+      "title": "La maza",
+      "artist": "Mercedes Sosa con Shakira",
+      "album": "Cantora 1",
+      "genre": "Sin género",
+      "year": 2009,
+      "track": 5,
+      "duration": 258,
+      "hasCover": true
+    },
+    {
       "id": "31984cd3c827fd80",
       "relPath": "Mercedes Sosa\\Cantora 1\\La Maza.mp3",
       "title": "La Maza",
@@ -7943,6 +9083,30 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "ed974b221df39037",
+      "relPath": "Banda El Recodo De Don Cruz Lizarraga\\Romances\\La Mejor De Todas (4).mp3",
+      "title": "La mejor de todas",
+      "artist": "Banda el Recodo de Don Cruz Lizárraga",
+      "album": "Romances",
+      "genre": "Sin género",
+      "year": 2013,
+      "track": 1,
+      "duration": 207,
+      "hasCover": true
+    },
+    {
+      "id": "ab2ace36cc433313",
+      "relPath": "Banda El Recodo De Don Cruz Lizarraga\\Romances\\La Mejor De Todas (5).mp3",
+      "title": "La mejor de todas",
+      "artist": "Banda el Recodo de Don Cruz Lizárraga",
+      "album": "Romances",
+      "genre": "Sin género",
+      "year": 2013,
+      "track": 1,
+      "duration": 209,
+      "hasCover": true
     },
     {
       "id": "716dc2527a35ce4c",
@@ -7993,6 +9157,18 @@
       "hasCover": false
     },
     {
+      "id": "62f5cc73830f022a",
+      "relPath": "Vicente Fernandez\\La Muerte De Un Gallero\\La Muerte De Un Gallero (2).mp3",
+      "title": "La muerte de un gallero",
+      "artist": "Vicente Fernández",
+      "album": "La muerte de un gallero",
+      "genre": "Sin género",
+      "year": 1991,
+      "track": 1,
+      "duration": 228,
+      "hasCover": true
+    },
+    {
       "id": "7e8a0cf064c64e04",
       "relPath": "Vicente Fernandez\\La Muerte De Un Gallero\\La Muerte De Un Gallero.mp3",
       "title": "La Muerte De Un Gallero",
@@ -8026,6 +9202,18 @@
       "year": 2004,
       "track": 16,
       "duration": 300,
+      "hasCover": true
+    },
+    {
+      "id": "a6d4e1632d8a25d6",
+      "relPath": "Los Enanitos Verdes\\Contra Reloj\\La Muralla Verde (2).mp3",
+      "title": "La muralla verde",
+      "artist": "Los Enanitos Verdes",
+      "album": "Contra reloj",
+      "genre": "Sin género",
+      "year": 1992,
+      "track": 1,
+      "duration": 162,
       "hasCover": true
     },
     {
@@ -8065,6 +9253,18 @@
       "hasCover": true
     },
     {
+      "id": "f8716eb8ed14ff33",
+      "relPath": "Various Artists\\100% Rumba\\La Negra Tiene Tumbao (2).mp3",
+      "title": "La negra tiene tumbao",
+      "artist": "Celia Cruz",
+      "album": "100% rumba",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 5,
+      "duration": 253,
+      "hasCover": true
+    },
+    {
       "id": "a2ad5839e547c996",
       "relPath": "Various Artists\\100% Rumba\\La Negra Tiene Tumbao.mp3",
       "title": "La Negra Tiene Tumbao",
@@ -8101,6 +9301,30 @@
       "hasCover": true
     },
     {
+      "id": "e742361a28a3d456",
+      "relPath": "Leo Dan\\Celebrando A Una Leyenda\\La Nina Esta Triste.mp3",
+      "title": "La niña está triste",
+      "artist": "Leo Dan feat. Jesús Martínez",
+      "album": "Celebrando a una leyenda",
+      "genre": "Sin género",
+      "year": 2018,
+      "track": 14,
+      "duration": 188,
+      "hasCover": true
+    },
+    {
+      "id": "e4150e12a7361a27",
+      "relPath": "Banda Zeta\\Jacarandosa\\La Nina Fresa.mp3",
+      "title": "La Niña Fresa",
+      "artist": "Banda Zeta",
+      "album": "Jacarandosa",
+      "genre": "Sin género",
+      "year": null,
+      "track": 1,
+      "duration": 161,
+      "hasCover": true
+    },
+    {
       "id": "429e67196259b749",
       "relPath": "Fulanito\\El Hombre Mas Famoso De La Tierra\\La Novela.mp3",
       "title": "La novela",
@@ -8113,6 +9337,18 @@
       "hasCover": true
     },
     {
+      "id": "d53dd207e69c06fb",
+      "relPath": "Vilma Palma E Vampiros\\La Pachanga\\La Pachanga.mp3",
+      "title": "La pachanga",
+      "artist": "Vilma Palma e Vampiros",
+      "album": "La pachanga",
+      "genre": "Sin género",
+      "year": 1991,
+      "track": 1,
+      "duration": 282,
+      "hasCover": true
+    },
+    {
       "id": "aa7bbe1c3150fe15",
       "relPath": "Juanes\\Mi Sangre\\La Paga.mp3",
       "title": "La paga",
@@ -8122,6 +9358,30 @@
       "year": 2004,
       "track": 16,
       "duration": 205,
+      "hasCover": true
+    },
+    {
+      "id": "ac6ed743f1f699b9",
+      "relPath": "Los Reyes Del KO\\Hot Tin Roof\\La Paloma.mp3",
+      "title": "La Paloma",
+      "artist": "Los Reyes del K.O.",
+      "album": "Hot Tin Roof",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 7,
+      "duration": 296,
+      "hasCover": true
+    },
+    {
+      "id": "31882e87c60cdaa0",
+      "relPath": "Juanes\\Mas Futuro Que Pasado\\La Plata (2).mp3",
+      "title": "La plata",
+      "artist": "Juanes & Lalo Ebratt",
+      "album": "Más futuro que pasado",
+      "genre": "Sin género",
+      "year": 2019,
+      "track": 10,
+      "duration": 195,
       "hasCover": true
     },
     {
@@ -8149,6 +9409,18 @@
       "hasCover": false
     },
     {
+      "id": "2e7e1a2ef23fdf91",
+      "relPath": "Various Artists\\Le Storie Di Mogol\\La Prima Cosa Bella.mp3",
+      "title": "La prima cosa bella",
+      "artist": "Nicola Di Bari",
+      "album": "Le storie di Mogol",
+      "genre": "Sin género",
+      "year": 2005,
+      "track": 5,
+      "duration": 191,
+      "hasCover": true
+    },
+    {
       "id": "40f6bf887e965cf2",
       "relPath": "Ana Belen\\Los Grandes Exitos Y Mas\\La Puerta De Alcala.mp3",
       "title": "La Puerta De Alcala",
@@ -8161,6 +9433,18 @@
       "hasCover": false
     },
     {
+      "id": "3fef8037e8d21d14",
+      "relPath": "Ana Belen\\Los Grandes Exitos Y Mas\\La Puerta De Alcala (2).mp3",
+      "title": "La puerta de Alcalá",
+      "artist": "Ana Belén feat. Víctor Manuel",
+      "album": "Los grandes éxitos... y más",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 15,
+      "duration": 284,
+      "hasCover": true
+    },
+    {
       "id": "2ee995a40c320e88",
       "relPath": "Ana Belen\\Los Grandes Exitos Y Mas\\La Puerta De Alcala (1).mp3",
       "title": "La Puerta De Alcala (1)",
@@ -8171,6 +9455,30 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "e6dec9b5ab7cd69d",
+      "relPath": "Banda Machos\\La Suegra\\La Suegra.mp3",
+      "title": "La suegra",
+      "artist": "Banda Machos",
+      "album": "La suegra",
+      "genre": "Sin género",
+      "year": null,
+      "track": 10,
+      "duration": 199,
+      "hasCover": true
+    },
+    {
+      "id": "b3dd4b53be2d2878",
+      "relPath": "Oro Solido\\Internacional\\La Tanga (2).mp3",
+      "title": "La tanga",
+      "artist": "Oro Sólido",
+      "album": "Internacional",
+      "genre": "Sin género",
+      "year": 1996,
+      "track": 4,
+      "duration": 264,
+      "hasCover": true
     },
     {
       "id": "d76547cba929f729",
@@ -8197,6 +9505,30 @@
       "hasCover": false
     },
     {
+      "id": "b0a0cfb19949e094",
+      "relPath": "Juan Luis Guerra 440\\La Llave De Mi Corazon\\La Travesia.mp3",
+      "title": "La travesía",
+      "artist": "Juan Luis Guerra 4.40 feat. Daniela Mercury",
+      "album": "La llave de mi corazón",
+      "genre": "Sin género",
+      "year": 2007,
+      "track": 17,
+      "duration": 207,
+      "hasCover": true
+    },
+    {
+      "id": "c7146a9e2a84e510",
+      "relPath": "Thomas Zwijsen\\Nylonized\\La Ultima Cancion.mp3",
+      "title": "La ultima cancion",
+      "artist": "Thomas Zwijsen",
+      "album": "Nylonized",
+      "genre": "Sin género",
+      "year": 2014,
+      "track": 12,
+      "duration": 203,
+      "hasCover": true
+    },
+    {
       "id": "43e01be0d13940ac",
       "relPath": "Marco Antonio Solis\\40 Anos\\La Venia Bendita.mp3",
       "title": "La venia bendita",
@@ -8206,6 +9538,18 @@
       "year": 2016,
       "track": 16,
       "duration": 192,
+      "hasCover": true
+    },
+    {
+      "id": "46c404db46fa40cc",
+      "relPath": "Various Artists\\Los Mas De La Fiesta\\La Ventanita (2).mp3",
+      "title": "La ventanita",
+      "artist": "Sergio Vargas",
+      "album": "Los más de la fiesta",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 10,
+      "duration": 287,
       "hasCover": true
     },
     {
@@ -8245,6 +9589,18 @@
       "hasCover": true
     },
     {
+      "id": "c241821c73b00ddc",
+      "relPath": "Mana\\Amar Es Combatir\\Labios Compartidos (2).mp3",
+      "title": "Labios compartidos",
+      "artist": "Maná",
+      "album": "Amar es combatir",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 2,
+      "duration": 318,
+      "hasCover": true
+    },
+    {
       "id": "13f6bff3b0ec4b70",
       "relPath": "Mana\\Amar Es Combatir\\Labios Compartidos.mp3",
       "title": "Labios Compartidos",
@@ -8281,6 +9637,54 @@
       "hasCover": true
     },
     {
+      "id": "8a440fb98a379093",
+      "relPath": "Tamara\\Canta Roberto Carlos\\Lady Laura.mp3",
+      "title": "Lady Laura",
+      "artist": "Tamara",
+      "album": "Canta Roberto Carlos",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 5,
+      "duration": 250,
+      "hasCover": true
+    },
+    {
+      "id": "53886a96e6b36cd2",
+      "relPath": "Los Caminantes\\Las Numero 1 De Siempre\\Lagrimas Al Recordar.mp3",
+      "title": "Lágrimas al recordar",
+      "artist": "Los Caminantes",
+      "album": "Las número 1... de siempre",
+      "genre": "Sin género",
+      "year": 2015,
+      "track": 18,
+      "duration": 224,
+      "hasCover": true
+    },
+    {
+      "id": "e2dac4f796f1576a",
+      "relPath": "Various Artists\\Absolute Number One 19841989\\Lambada.mp3",
+      "title": "Lambada",
+      "artist": "Kaoma",
+      "album": "Absolute Number One 1984-1989",
+      "genre": "Sin género",
+      "year": 2001,
+      "track": 7,
+      "duration": 208,
+      "hasCover": true
+    },
+    {
+      "id": "8601ed5c10eb5f7d",
+      "relPath": "Various Artists\\Absolute Number One 19841989\\Lambada (1).mp3",
+      "title": "Lambada",
+      "artist": "Kaoma",
+      "album": "Absolute Number One 1984-1989",
+      "genre": "Sin género",
+      "year": 2001,
+      "track": 7,
+      "duration": 209,
+      "hasCover": true
+    },
+    {
       "id": "537c0ccbc64f5709",
       "relPath": "Antonio Aguilar\\Nadie Es Eterno\\Lamberto Quintero.mp3",
       "title": "Lamberto Quintero",
@@ -8290,6 +9694,18 @@
       "year": 2014,
       "track": 8,
       "duration": 184,
+      "hasCover": true
+    },
+    {
+      "id": "e41a32e13de91bb7",
+      "relPath": "Los Enanitos Verdes\\Big Bang\\Lamento Boliviano.mp3",
+      "title": "Lamento boliviano",
+      "artist": "Los Enanitos Verdes",
+      "album": "Big Bang",
+      "genre": "Sin género",
+      "year": 1994,
+      "track": 2,
+      "duration": 223,
       "hasCover": true
     },
     {
@@ -8305,6 +9721,42 @@
       "hasCover": true
     },
     {
+      "id": "89c56cd9943c52b0",
+      "relPath": "Vicente Fernandez\\El Tahur\\Las Botas Del Charro.mp3",
+      "title": "Las botas del charro",
+      "artist": "Vicente Fernández",
+      "album": "El tahúr",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 4,
+      "duration": 181,
+      "hasCover": true
+    },
+    {
+      "id": "fed2dfc98eaafdaa",
+      "relPath": "Flans\\Luz Y Sombra\\Las Mil Y Una Noches.mp3",
+      "title": "Las mil y una noches",
+      "artist": "Flans",
+      "album": "Luz y sombra",
+      "genre": "Sin género",
+      "year": 1993,
+      "track": 8,
+      "duration": 280,
+      "hasCover": true
+    },
+    {
+      "id": "7ce44f3f644fe8f0",
+      "relPath": "Grupo Exterminador\\Nuestra Historia\\Las Monjitas.mp3",
+      "title": "Las Monjitas",
+      "artist": "Grupo Exterminador",
+      "album": "Nuestra Historia",
+      "genre": "Sin género",
+      "year": null,
+      "track": 1,
+      "duration": 275,
+      "hasCover": true
+    },
+    {
       "id": "b7374820285511b2",
       "relPath": "Los Iracundos\\Serie 20 Exitos\\Las Puertas Del Olvido.mp3",
       "title": "Las puertas del olvido",
@@ -8314,6 +9766,18 @@
       "year": null,
       "track": 11,
       "duration": 256,
+      "hasCover": true
+    },
+    {
+      "id": "70eacd47de95dd18",
+      "relPath": "Various Artists\\Greatest Ever Rock Party\\Last Resort.mp3",
+      "title": "Last Resort",
+      "artist": "Papa Roach",
+      "album": "Greatest Ever Rock Party",
+      "genre": "Sin género",
+      "year": 2017,
+      "track": 16,
+      "duration": 200,
       "hasCover": true
     },
     {
@@ -8353,6 +9817,30 @@
       "hasCover": true
     },
     {
+      "id": "2945aa933ad89d96",
+      "relPath": "Los Diablos\\Grandes Exitos\\Lazos De Amistad.mp3",
+      "title": "Lazos de amistad",
+      "artist": "Los Diablos",
+      "album": "Grandes exitos",
+      "genre": "Sin género",
+      "year": 1990,
+      "track": 9,
+      "duration": 285,
+      "hasCover": true
+    },
+    {
+      "id": "a94095568979fa36",
+      "relPath": "Ernesto Perez Zagaste\\Le Hace Falta Un Beso\\Le Hace Falta Un Beso.mp3",
+      "title": "Le hace falta un beso",
+      "artist": "Ernesto Perez Zagaste",
+      "album": "Le hace falta un beso",
+      "genre": "Sin género",
+      "year": 2013,
+      "track": 1,
+      "duration": 169,
+      "hasCover": true
+    },
+    {
       "id": "2b08f0178049f5c6",
       "relPath": "Julieta Venegas\\Si\\Lento.mp3",
       "title": "Lento",
@@ -8377,6 +9865,30 @@
       "hasCover": true
     },
     {
+      "id": "257795f35f9b74b3",
+      "relPath": "Los Beatles\\Let It Be\\Let It Be.mp3",
+      "title": "Let It Be",
+      "artist": "Los Beatles",
+      "album": "Let It Be",
+      "genre": "Sin género",
+      "year": 1987,
+      "track": 6,
+      "duration": 243,
+      "hasCover": true
+    },
+    {
+      "id": "333f4b5b796112b0",
+      "relPath": "Various Artists\\The Dome, Volume 60\\Levels.mp3",
+      "title": "Levels",
+      "artist": "Avicii",
+      "album": "The Dome, Volume 60",
+      "genre": "Sin género",
+      "year": 2011,
+      "track": 21,
+      "duration": 339,
+      "hasCover": true
+    },
+    {
       "id": "fda4050686e293f6",
       "relPath": "Nino Bravo\\Nino Bravo\\Libre.mp3",
       "title": "Libre",
@@ -8398,6 +9910,30 @@
       "year": 2010,
       "track": 4,
       "duration": 227,
+      "hasCover": true
+    },
+    {
+      "id": "4062508da1b36f00",
+      "relPath": "Various Artists\\Born In The 80s Hits From The 80s, Vol 1\\Life Is Life.mp3",
+      "title": "Life Is Life",
+      "artist": "John Vass",
+      "album": "Born in the 80s: Hits from the 80s, Vol. 1",
+      "genre": "Sin género",
+      "year": 2015,
+      "track": 1,
+      "duration": 257,
+      "hasCover": true
+    },
+    {
+      "id": "bc1406429f4f3e27",
+      "relPath": "Audioslave\\Like A Stone (Disc 2)\\Like A Stone.mp3",
+      "title": "Like a Stone",
+      "artist": "Audioslave",
+      "album": "Like a Stone (disc 2)",
+      "genre": "Sin género",
+      "year": 2003,
+      "track": 1,
+      "duration": 294,
       "hasCover": true
     },
     {
@@ -8437,6 +9973,18 @@
       "hasCover": true
     },
     {
+      "id": "9e6ee4e07481b6f5",
+      "relPath": "Opus\\Tonight At The Opera\\Live Is Life.mp3",
+      "title": "Live Is Life",
+      "artist": "Opus",
+      "album": "Tonight at the Opera",
+      "genre": "Sin género",
+      "year": 2010,
+      "track": 11,
+      "duration": 299,
+      "hasCover": true
+    },
+    {
       "id": "3c88b831d3b8e6f9",
       "relPath": "Bon Jovi\\The Albums\\Livin' On A Prayer.mp3",
       "title": "Livin' on a Prayer",
@@ -8446,6 +9994,18 @@
       "year": 2017,
       "track": 3,
       "duration": 249,
+      "hasCover": true
+    },
+    {
+      "id": "482708bc19f5f8f8",
+      "relPath": "Various Artists\\50 Jahre DRKBlutspendedienst NRW, Vol 1 No 1 Hits\\Living Next Door To Alice.mp3",
+      "title": "Living Next Door to Alice",
+      "artist": "Smokie",
+      "album": "50 Jahre DRK-Blutspendedienst NRW, Vol. 1: No. 1 Hits",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 12,
+      "duration": 207,
       "hasCover": true
     },
     {
@@ -8461,6 +10021,30 @@
       "hasCover": true
     },
     {
+      "id": "32bb552a0e6b4eea",
+      "relPath": "Piero\\20 De Coleccion\\Llegando Llegaste.mp3",
+      "title": "Llegando llegaste",
+      "artist": "Piero",
+      "album": "20 de colección",
+      "genre": "Sin género",
+      "year": 1983,
+      "track": 10,
+      "duration": 202,
+      "hasCover": true
+    },
+    {
+      "id": "f10c2acf303ebf2d",
+      "relPath": "Jose Jose\\Mujeriego\\Llora Corazon.mp3",
+      "title": "Llora corazón",
+      "artist": "José José",
+      "album": "Mujeriego",
+      "genre": "Sin género",
+      "year": 1995,
+      "track": 4,
+      "duration": 182,
+      "hasCover": true
+    },
+    {
       "id": "2e7044c03c77839d",
       "relPath": "Various Artists\\Tropicana Total\\Lloraras.mp3",
       "title": "Llorarás",
@@ -8470,6 +10054,18 @@
       "year": 2001,
       "track": 6,
       "duration": 222,
+      "hasCover": true
+    },
+    {
+      "id": "fd0430c1c2e99fe4",
+      "relPath": "Camilo Sesto\\Camilo\\Llueve Sobre Mojado.mp3",
+      "title": "Llueve sobre mojado",
+      "artist": "Camilo Sesto",
+      "album": "Camilo",
+      "genre": "Sin género",
+      "year": 1974,
+      "track": 2,
+      "duration": 169,
       "hasCover": true
     },
     {
@@ -8533,6 +10129,30 @@
       "hasCover": true
     },
     {
+      "id": "25094bacf63ccd71",
+      "relPath": "Various Artists\\Los Numero Uno 40\\Loba.mp3",
+      "title": "Loba",
+      "artist": "Shakira",
+      "album": "Los número uno 40",
+      "genre": "Sin género",
+      "year": 2009,
+      "track": 1,
+      "duration": 189,
+      "hasCover": true
+    },
+    {
+      "id": "b7e8c6839d099f35",
+      "relPath": "La Union\\Mil Siluetas\\Lobohombre En Paris.mp3",
+      "title": "Lobo-hombre en París",
+      "artist": "La Unión",
+      "album": "Mil siluetas",
+      "genre": "Sin género",
+      "year": 1984,
+      "track": 5,
+      "duration": 233,
+      "hasCover": true
+    },
+    {
       "id": "96d7b91548bf0be5",
       "relPath": "Various Artists\\NRJ 200% Hits 2013\\Locked Out Of Heaven.mp3",
       "title": "Locked Out of Heaven",
@@ -8593,6 +10213,42 @@
       "hasCover": true
     },
     {
+      "id": "cfed4d26764ce777",
+      "relPath": "Baby Horror\\En El Infierno Esta El R n R\\Loco Por Ti.mp3",
+      "title": "Loco por ti",
+      "artist": "Baby Horror",
+      "album": "En el infierno está el R ́n ́R",
+      "genre": "Sin género",
+      "year": 2020,
+      "track": 9,
+      "duration": 179,
+      "hasCover": true
+    },
+    {
+      "id": "b298a351b39e9262",
+      "relPath": "Various Artists\\Bravo Hits 50\\Lonely.mp3",
+      "title": "Lonely",
+      "artist": "Akon",
+      "album": "Bravo Hits 50",
+      "genre": "Sin género",
+      "year": 2005,
+      "track": 5,
+      "duration": 236,
+      "hasCover": true
+    },
+    {
+      "id": "b6a96f382ba2cb54",
+      "relPath": "Various Artists\\Tributo A Ana, Jose Y Nacho\\Los Amantes.mp3",
+      "title": "Los amantes",
+      "artist": "Playa Limbo",
+      "album": "Tributo a Ana, José y Nacho",
+      "genre": "Sin género",
+      "year": 2010,
+      "track": 1,
+      "duration": 170,
+      "hasCover": true
+    },
+    {
       "id": "e6ab9f36ed173e84",
       "relPath": "Mariana Ingold\\El Gran Misterio\\Los Caminantes.mp3",
       "title": "Los caminantes",
@@ -8614,6 +10270,54 @@
       "year": 2011,
       "track": 12,
       "duration": 212,
+      "hasCover": true
+    },
+    {
+      "id": "82b7821d5f8d1339",
+      "relPath": "Vicentico\\Los Pajaros\\Los Caminos De La Vida.mp3",
+      "title": "Los caminos de la vida",
+      "artist": "Vicentico",
+      "album": "Los pájaros",
+      "genre": "Sin género",
+      "year": 2007,
+      "track": 11,
+      "duration": 241,
+      "hasCover": true
+    },
+    {
+      "id": "ebfd87388a286463",
+      "relPath": "Los Tigres Del Norte\\Los Dos Plebes\\Los Dos Plebes.mp3",
+      "title": "Los dos plebes",
+      "artist": "Los Tigres del Norte",
+      "album": "Los dos plebes",
+      "genre": "Sin género",
+      "year": 1994,
+      "track": 1,
+      "duration": 211,
+      "hasCover": true
+    },
+    {
+      "id": "74dfca8e19e785ec",
+      "relPath": "Various Artists\\Las 100 Clasicas Rancheras, Volumen 3\\Los Laureles.mp3",
+      "title": "Los laureles",
+      "artist": "Miguel Aceves Mejía",
+      "album": "Las 100 clásicas rancheras, volumen 3",
+      "genre": "Sin género",
+      "year": 2003,
+      "track": 1,
+      "duration": 138,
+      "hasCover": true
+    },
+    {
+      "id": "d56c85f4eb64c626",
+      "relPath": "PXNDX\\Amantes Sunt Amentes\\Los Malaventurados No Lloran.mp3",
+      "title": "Los Malaventurados No Lloran",
+      "artist": "PXNDX",
+      "album": "Amantes sunt amentes",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 9,
+      "duration": 208,
       "hasCover": true
     },
     {
@@ -8653,6 +10357,18 @@
       "hasCover": true
     },
     {
+      "id": "088a02d57cc397bd",
+      "relPath": "Nazareth\\Anthology\\Love Hurts.mp3",
+      "title": "Love Hurts",
+      "artist": "Nazareth",
+      "album": "Anthology",
+      "genre": "Sin género",
+      "year": 1991,
+      "track": 17,
+      "duration": 232,
+      "hasCover": true
+    },
+    {
       "id": "e49847f187ff6e19",
       "relPath": "Adele\\25\\Love In The Dark.mp3",
       "title": "Love in the Dark",
@@ -8689,6 +10405,18 @@
       "hasCover": true
     },
     {
+      "id": "e30dbc3544967786",
+      "relPath": "Los Mitos\\Es Muy Facil\\Luces.mp3",
+      "title": "Luces",
+      "artist": "Los Mitos",
+      "album": "Es muy fácil",
+      "genre": "Sin género",
+      "year": 1996,
+      "track": 8,
+      "duration": 198,
+      "hasCover": true
+    },
+    {
       "id": "71862dc3909a539a",
       "relPath": "Flex\\Romantic Style In Da World\\Luna.mp3",
       "title": "Luna",
@@ -8698,6 +10426,30 @@
       "year": 2007,
       "track": 15,
       "duration": 197,
+      "hasCover": true
+    },
+    {
+      "id": "bf36413b469dc5ab",
+      "relPath": "Paloma San Basilio\\Diva\\Luna De Miel.mp3",
+      "title": "Luna de miel",
+      "artist": "Paloma San Basilio",
+      "album": "Diva",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 5,
+      "duration": 231,
+      "hasCover": true
+    },
+    {
+      "id": "77557bd8ad7b26bd",
+      "relPath": "Paloma San Basilio\\Diva\\Luna De Miel (1).mp3",
+      "title": "Luna de miel",
+      "artist": "Paloma San Basilio",
+      "album": "Diva",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 5,
+      "duration": 232,
       "hasCover": true
     },
     {
@@ -8725,6 +10477,30 @@
       "hasCover": true
     },
     {
+      "id": "7468fe12121c0ab8",
+      "relPath": "Los Enanitos Verdes\\Nectar\\Luz De Dia.mp3",
+      "title": "Luz de día",
+      "artist": "Los Enanitos Verdes",
+      "album": "Néctar",
+      "genre": "Sin género",
+      "year": 1999,
+      "track": 4,
+      "duration": 268,
+      "hasCover": true
+    },
+    {
+      "id": "5d921867c980d193",
+      "relPath": "Belinda\\See A Little Light Luz Sin Gravedad\\Luz Sin Gravedad.mp3",
+      "title": "Luz sin Gravedad",
+      "artist": "Belinda",
+      "album": "See a Little Light / Luz sin Gravedad",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 2,
+      "duration": 242,
+      "hasCover": true
+    },
+    {
       "id": "af3691368c37b117",
       "relPath": "Mi Banda El Mexicano\\Fuera De Serie\\Ma, Me, Mi, Mo, Mu.mp3",
       "title": "Ma, me, mi, mo, mu",
@@ -8737,6 +10513,162 @@
       "hasCover": true
     },
     {
+      "id": "c864c1c87743123a",
+      "relPath": "Various Artists\\Fetenhits Alpen Party\\Macarena.mp3",
+      "title": "Macarena",
+      "artist": "Los del Río",
+      "album": "Fetenhits: Alpen Party",
+      "genre": "Sin género",
+      "year": 2005,
+      "track": 4,
+      "duration": 304,
+      "hasCover": true
+    },
+    {
+      "id": "6025dc858ecbf414",
+      "relPath": "Oscar Chavez\\Por Ti\\Macondo.mp3",
+      "title": "Macondo",
+      "artist": "Óscar Chávez",
+      "album": "Por ti",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 3,
+      "duration": 215,
+      "hasCover": true
+    },
+    {
+      "id": "4779f0f741f7011a",
+      "relPath": "Phillip Phillips\\Collateral\\Magnetic.mp3",
+      "title": "Magnetic",
+      "artist": "Phillip Phillips",
+      "album": "Collateral",
+      "genre": "Sin género",
+      "year": 2018,
+      "track": 1,
+      "duration": 196,
+      "hasCover": true
+    },
+    {
+      "id": "1c519c28a7b5b4f9",
+      "relPath": "Peter Schilling\\Error In The System\\Major Tom (Coming Home).mp3",
+      "title": "Major Tom (Coming Home)",
+      "artist": "Peter Schilling",
+      "album": "Error in the System",
+      "genre": "Sin género",
+      "year": 1983,
+      "track": 7,
+      "duration": 301,
+      "hasCover": true
+    },
+    {
+      "id": "4dca6da175e2edf9",
+      "relPath": "Air Supply\\Greatest Hits\\Making Love Out Of Nothing At All.mp3",
+      "title": "Making Love Out of Nothing at All",
+      "artist": "Air Supply",
+      "album": "Greatest Hits",
+      "genre": "Sin género",
+      "year": 1991,
+      "track": 6,
+      "duration": 340,
+      "hasCover": true
+    },
+    {
+      "id": "828906b88928c09c",
+      "relPath": "Los Fabulosos Cadillac\\20 Grandes Exitos\\Mal Bicho.mp3",
+      "title": "Mal bicho",
+      "artist": "Los Fabulosos Cadillac",
+      "album": "20 grandes éxitos",
+      "genre": "Sin género",
+      "year": 1998,
+      "track": 1,
+      "duration": 244,
+      "hasCover": true
+    },
+    {
+      "id": "d0cf00efb304c29f",
+      "relPath": "Los Fabulosos Cadillac\\20 Grandes Exitos\\Mal Bicho (1).mp3",
+      "title": "Mal bicho",
+      "artist": "Los Fabulosos Cadillac",
+      "album": "20 grandes éxitos",
+      "genre": "Sin género",
+      "year": 1998,
+      "track": 1,
+      "duration": 244,
+      "hasCover": true
+    },
+    {
+      "id": "f1df24101a729108",
+      "relPath": "Juanes\\Un Dia Normal\\Mala Gente.mp3",
+      "title": "Mala Gente",
+      "artist": "Juanes",
+      "album": "Un Día Normal",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 8,
+      "duration": 197,
+      "hasCover": true
+    },
+    {
+      "id": "b9142a54ec8239a6",
+      "relPath": "Vikki Carr\\20 Exitos Originales\\Mala Suerte.mp3",
+      "title": "Mala suerte",
+      "artist": "Vikki Carr",
+      "album": "20 éxitos originales",
+      "genre": "Sin género",
+      "year": 2007,
+      "track": 3,
+      "duration": 265,
+      "hasCover": true
+    },
+    {
+      "id": "5d7fb5b3977fded4",
+      "relPath": "Mirla Castellanos\\Mirla Castellanos\\Maldito Amor.mp3",
+      "title": "Maldito amor",
+      "artist": "Mirla Castellanos",
+      "album": "Mirla Castellanos",
+      "genre": "Sin género",
+      "year": 2017,
+      "track": 1,
+      "duration": 209,
+      "hasCover": true
+    },
+    {
+      "id": "825c5b5547f620a4",
+      "relPath": "Heroes Del Silencio\\The Platinum Collection\\Maldito Duende.mp3",
+      "title": "Maldito duende",
+      "artist": "Héroes del Silencio",
+      "album": "The Platinum Collection",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 3,
+      "duration": 255,
+      "hasCover": true
+    },
+    {
+      "id": "f3b9c87ef8eda05d",
+      "relPath": "Aterciopelados\\The Best Of Ultimate Collection\\Maligno.mp3",
+      "title": "Maligno",
+      "artist": "Aterciopelados",
+      "album": "The Best of: Ultimate Collection",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 12,
+      "duration": 250,
+      "hasCover": true
+    },
+    {
+      "id": "0e1d5e09423f8928",
+      "relPath": "Mi Banda El Mexicano\\12 Exitos Lo Mejor De Lo Mejor\\Mambo Lupita.mp3",
+      "title": "Mambo Lupita",
+      "artist": "Mi Banda El Mexicano",
+      "album": "12 éxitos lo mejor de lo mejor",
+      "genre": "Sin género",
+      "year": 1995,
+      "track": 7,
+      "duration": 216,
+      "hasCover": true
+    },
+    {
       "id": "f843c296a129c887",
       "relPath": "Various Artists\\Get Down & Dance\\Mambo No 5 (A Little Bit Of).mp3",
       "title": "Mambo No. 5 (A Little Bit Of...)",
@@ -8746,6 +10678,30 @@
       "year": 2009,
       "track": 11,
       "duration": 220,
+      "hasCover": true
+    },
+    {
+      "id": "6a0f9797d3f86d08",
+      "relPath": "Mana\\Exiliados En La Bahia Lo Mejor De Mana\\Manda Una Senal.mp3",
+      "title": "Manda una señal",
+      "artist": "Maná",
+      "album": "Exiliados en la bahía: lo mejor de Maná",
+      "genre": "Sin género",
+      "year": 2012,
+      "track": 12,
+      "duration": 282,
+      "hasCover": true
+    },
+    {
+      "id": "3cb6cee0e9296945",
+      "relPath": "Barry Manilow\\Barry Manilow II\\Mandy.mp3",
+      "title": "Mandy",
+      "artist": "Barry Manilow",
+      "album": "Barry Manilow II",
+      "genre": "Sin género",
+      "year": 1974,
+      "track": 3,
+      "duration": 213,
       "hasCover": true
     },
     {
@@ -8770,6 +10726,30 @@
       "year": 1992,
       "track": 4,
       "duration": 245,
+      "hasCover": true
+    },
+    {
+      "id": "4d082f714f7f2ce4",
+      "relPath": "Various Artists\\30 Reggaeton Superhits 2006\\Maniatica Sexual.mp3",
+      "title": "Maniática sexual",
+      "artist": "Lito & Polaco",
+      "album": "30 Reggaeton Superhits 2006",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 2,
+      "duration": 178,
+      "hasCover": true
+    },
+    {
+      "id": "90acb45971225f0d",
+      "relPath": "Moenia\\Manto Estelar\\Manto Estelar (Album Version).mp3",
+      "title": "Manto estelar (Album Version)",
+      "artist": "Mœnia",
+      "album": "Manto estelar",
+      "genre": "Sin género",
+      "year": 1999,
+      "track": 1,
+      "duration": 253,
       "hasCover": true
     },
     {
@@ -8809,6 +10789,54 @@
       "hasCover": true
     },
     {
+      "id": "747640610a90844d",
+      "relPath": "Los Caminantes\\20 Cumbias Sin Parar\\Maria Elena.mp3",
+      "title": "María Elena",
+      "artist": "Los Caminantes",
+      "album": "20 cumbias sin parar",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 20,
+      "duration": 194,
+      "hasCover": true
+    },
+    {
+      "id": "2016483f23bc6386",
+      "relPath": "Mana & Alejandro Fernandez\\Mariposa Traicionera\\Mariposa Traicionera.mp3",
+      "title": "Mariposa traicionera",
+      "artist": "Maná & Alejandro Fernández",
+      "album": "Mariposa traicionera",
+      "genre": "Sin género",
+      "year": 2021,
+      "track": 1,
+      "duration": 243,
+      "hasCover": true
+    },
+    {
+      "id": "fdf3a0bb6eebd46a",
+      "relPath": "The Refrescos\\_A Que Piso Va\\Maruja.mp3",
+      "title": "Maruja",
+      "artist": "The Refrescos",
+      "album": "¿A qué piso va?",
+      "genre": "Sin género",
+      "year": 1996,
+      "track": 1,
+      "duration": 258,
+      "hasCover": true
+    },
+    {
+      "id": "1f7887ba82e1fd42",
+      "relPath": "Leo Dan\\15 Autenticos Exitos\\Mary Es Mi Amor.mp3",
+      "title": "Mary es mi amor",
+      "artist": "Leo Dan",
+      "album": "15 auténticos éxitos",
+      "genre": "Sin género",
+      "year": 1987,
+      "track": 9,
+      "duration": 192,
+      "hasCover": true
+    },
+    {
       "id": "a6484edc0089ed93",
       "relPath": "The Sacados\\Asunto Chino\\Mas De Lo Que Te Imaginas.mp3",
       "title": "Mas De Lo Que Te Imaginas",
@@ -8819,6 +10847,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "73ef1477620bd618",
+      "relPath": "The Sacados\\Asunto Chino\\Mas De Lo Que Te Imaginas (2).mp3",
+      "title": "Más de lo que te imaginas",
+      "artist": "The Sacados",
+      "album": "Asunto chino",
+      "genre": "Sin género",
+      "year": 1995,
+      "track": 2,
+      "duration": 244,
+      "hasCover": true
     },
     {
       "id": "d40e615c1978aecc",
@@ -8845,6 +10885,18 @@
       "hasCover": true
     },
     {
+      "id": "a82e36618174e34f",
+      "relPath": "Mecano\\Entre El Cielo Y El Suelo\\Me Cuesta Tanto Olvidarte.mp3",
+      "title": "Me cuesta tanto olvidarte",
+      "artist": "Mecano",
+      "album": "Entre el cielo y el suelo",
+      "genre": "Sin género",
+      "year": 1988,
+      "track": 5,
+      "duration": 175,
+      "hasCover": true
+    },
+    {
       "id": "8c3c3b1f5ae11ca0",
       "relPath": "La Mafia\\Hits De Coleccion, Vol1\\Me Duele Estar Solo.mp3",
       "title": "Me duele estar solo",
@@ -8857,6 +10909,30 @@
       "hasCover": true
     },
     {
+      "id": "5c1e1cdb8b908257",
+      "relPath": "Los Inhumanos\\25 Anos Haciendo El Imbecil\\Me Duele La Cara De Ser Tan Guapo.mp3",
+      "title": "Me duele la cara de ser tan guapo",
+      "artist": "Los Inhumanos",
+      "album": "25 años haciendo el imbecil",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 4,
+      "duration": 231,
+      "hasCover": true
+    },
+    {
+      "id": "a32ae0cfb98249a1",
+      "relPath": "Various Artists\\40 Latino\\Me Enamora.mp3",
+      "title": "Me enamora",
+      "artist": "Juanes",
+      "album": "40 Latino",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 1,
+      "duration": 193,
+      "hasCover": true
+    },
+    {
       "id": "fd8f847a20a2277e",
       "relPath": "Juan Luis Guerra 440\\Grandes Exitos De Juan Luis Guerra 4 40\\Me Enamoro De Ella.mp3",
       "title": "Me enamoro de ella",
@@ -8866,6 +10942,18 @@
       "year": 1995,
       "track": 7,
       "duration": 257,
+      "hasCover": true
+    },
+    {
+      "id": "bf1f704a96efbec6",
+      "relPath": "Los Dora2\\Un Sueno Perfecto\\Me Esta Doliendo Dejarte.mp3",
+      "title": "Me está doliendo dejarte",
+      "artist": "Los Dora2",
+      "album": "Un sueño perfecto",
+      "genre": "Sin género",
+      "year": 1998,
+      "track": 4,
+      "duration": 205,
       "hasCover": true
     },
     {
@@ -8905,6 +10993,18 @@
       "hasCover": false
     },
     {
+      "id": "663e25c3effc7d6a",
+      "relPath": "Noche De Brujas\\Me Gusta Todo De Ti\\Me Gusta Todo De Ti (2).mp3",
+      "title": "Me Gusta Todo De Ti",
+      "artist": "Noche de Brujas",
+      "album": "Me Gusta Todo De Ti",
+      "genre": "Sin género",
+      "year": 2011,
+      "track": 8,
+      "duration": 249,
+      "hasCover": true
+    },
+    {
       "id": "456b2b1f6b4d946e",
       "relPath": "Noche De Brujas\\Me Gusta Todo De Ti\\Me Gusta Todo De Ti (1).mp3",
       "title": "Me Gusta Todo De Ti (1)",
@@ -8915,6 +11015,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "122f99d20ea2b680",
+      "relPath": "Rocio Durcal\\Amor Eterno Los Exitos\\Me Gustas Mucho (2).mp3",
+      "title": "Me gustas mucho",
+      "artist": "Rocío Dúrcal",
+      "album": "Amor eterno: Los éxitos",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 8,
+      "duration": 187,
+      "hasCover": true
     },
     {
       "id": "8369c6bc95ca2544",
@@ -8965,6 +11077,18 @@
       "hasCover": false
     },
     {
+      "id": "a5e9b9e5eeac8741",
+      "relPath": "Various Artists\\Uncut, 20019\\Me Gustas Tu (2).mp3",
+      "title": "Me Gustas Tu",
+      "artist": "Manu Chao",
+      "album": "Uncut, 2001.9",
+      "genre": "Sin género",
+      "year": 2001,
+      "track": 11,
+      "duration": 240,
+      "hasCover": true
+    },
+    {
       "id": "2bc9df71205d9343",
       "relPath": "Various Artists\\Uncut, 20019\\Me Gustas Tu (1).mp3",
       "title": "Me Gustas Tu (1)",
@@ -8975,6 +11099,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "4558a671398794a6",
+      "relPath": "Banda Machos\\25 Aniversario Una Leyenda Viviente\\Me Llamo Raquel (2).mp3",
+      "title": "Me llamo Raquel",
+      "artist": "Banda Machos",
+      "album": "25 aniversario: Una leyenda viviente",
+      "genre": "Sin género",
+      "year": 2015,
+      "track": 1,
+      "duration": 163,
+      "hasCover": true
     },
     {
       "id": "e63b3d0941350a64",
@@ -9001,6 +11137,18 @@
       "hasCover": false
     },
     {
+      "id": "2eb559512955e49a",
+      "relPath": "La Quinta Estacion\\El Mundo Se Equivoca\\Me Muero (2).mp3",
+      "title": "Me muero",
+      "artist": "La Quinta Estación",
+      "album": "El mundo se equivoca",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 3,
+      "duration": 190,
+      "hasCover": true
+    },
+    {
       "id": "f05724d44d09858c",
       "relPath": "La Quinta Estacion\\El Mundo Se Equivoca\\Me Muero.mp3",
       "title": "Me Muero",
@@ -9023,6 +11171,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "b26285d9820e31b9",
+      "relPath": "Maelo Ruiz\\Exitos Originales, Vol 2\\Me Niegas Tanto Amor (2).mp3",
+      "title": "Me niegas tanto amor",
+      "artist": "Pedro Conga & Maelo Ruiz",
+      "album": "Éxitos originales, vol. 2",
+      "genre": "Sin género",
+      "year": 2017,
+      "track": 2,
+      "duration": 284,
+      "hasCover": true
     },
     {
       "id": "9deb56cfd2509ed7",
@@ -9061,6 +11221,18 @@
       "hasCover": false
     },
     {
+      "id": "b832349c7f9ea37d",
+      "relPath": "Amistades Peligrosas\\La Profecia\\Me Quedare Solo (2).mp3",
+      "title": "Me quedaré solo",
+      "artist": "Amistades Peligrosas",
+      "album": "La Profecía",
+      "genre": "Sin género",
+      "year": 1996,
+      "track": 1,
+      "duration": 262,
+      "hasCover": true
+    },
+    {
       "id": "63f63074c9c155b2",
       "relPath": "Amistades Peligrosas\\La Profecia\\Me Quedare Solo (1).mp3",
       "title": "Me Quedare Solo (1)",
@@ -9071,6 +11243,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "0abdf3b9c015066e",
+      "relPath": "Various Artists\\Hits 2016\\Me Rindo (2).mp3",
+      "title": "Me rindo",
+      "artist": "Yahir",
+      "album": "Hits 2016",
+      "genre": "Sin género",
+      "year": 2016,
+      "track": 16,
+      "duration": 235,
+      "hasCover": true
     },
     {
       "id": "279c066c60931fc8",
@@ -9133,6 +11317,18 @@
       "hasCover": true
     },
     {
+      "id": "58ae747e1f2c8801",
+      "relPath": "Various Artists\\El Mexican Rock & Roll, Vol 2\\Medico Brujo.mp3",
+      "title": "Medico brujo",
+      "artist": "Manuel \"el Loco\" Valdés",
+      "album": "El Mexican Rock & Roll, Vol 2",
+      "genre": "Sin género",
+      "year": 2012,
+      "track": 23,
+      "duration": 143,
+      "hasCover": true
+    },
+    {
       "id": "c612a3a7a60aac42",
       "relPath": "Camilo Sesto\\Lo Mejor De Lo Mejor\\Melina.mp3",
       "title": "Melina",
@@ -9143,6 +11339,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "60ab9cc597e7ac41",
+      "relPath": "Camilo Sesto\\Lo Mejor De Lo Mejor\\Melina (2).mp3",
+      "title": "Melina",
+      "artist": "Camilo Sesto",
+      "album": "Lo mejor de lo mejor",
+      "genre": "Sin género",
+      "year": 1999,
+      "track": 5,
+      "duration": 167,
+      "hasCover": true
     },
     {
       "id": "2b81c6daa29c8df7",
@@ -9193,6 +11401,18 @@
       "hasCover": false
     },
     {
+      "id": "b1f0a646c585ed3a",
+      "relPath": "Los Amigos Invisibles\\Commercial\\Mentiras (2).mp3",
+      "title": "Mentiras",
+      "artist": "Los Amigos Invisibles",
+      "album": "Commercial",
+      "genre": "Sin género",
+      "year": 2009,
+      "track": 2,
+      "duration": 201,
+      "hasCover": true
+    },
+    {
       "id": "db82e3291bf5852a",
       "relPath": "Los Amigos Invisibles\\Commercial\\Mentiras (1).mp3",
       "title": "Mentiras (1)",
@@ -9217,6 +11437,18 @@
       "hasCover": false
     },
     {
+      "id": "59810344fa3e9686",
+      "relPath": "Azul Azul\\El Sapo\\Mentirosa (2).mp3",
+      "title": "Mentirosa",
+      "artist": "Azul Azul",
+      "album": "El Sapo",
+      "genre": "Sin género",
+      "year": null,
+      "track": 5,
+      "duration": 187,
+      "hasCover": true
+    },
+    {
       "id": "59e0f3bcadeb80f8",
       "relPath": "Azul Azul\\El Sapo\\Mentirosa (1).mp3",
       "title": "Mentirosa (1)",
@@ -9227,6 +11459,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "e9c4c355975bbe71",
+      "relPath": "Victor Victor\\La Escencia De La Bachata\\Mesita De Noche (2).mp3",
+      "title": "Mesita de noche",
+      "artist": "Víctor Víctor",
+      "album": "La escencia de la bachata",
+      "genre": "Sin género",
+      "year": 2009,
+      "track": 7,
+      "duration": 240,
+      "hasCover": true
     },
     {
       "id": "00bbfeec4548d0a8",
@@ -9265,6 +11509,18 @@
       "hasCover": false
     },
     {
+      "id": "ee5d7992105257a2",
+      "relPath": "Various Artists\\Las 100 Clasicas Rancheras, Volumen 1\\Mexico Lindo (2).mp3",
+      "title": "México lindo",
+      "artist": "Jorge Negrete",
+      "album": "Las 100 clásicas rancheras, volumen 1",
+      "genre": "Sin género",
+      "year": 2001,
+      "track": 9,
+      "duration": 191,
+      "hasCover": true
+    },
+    {
       "id": "354bccf14bcd4bf4",
       "relPath": "Various Artists\\Las 100 Clasicas Rancheras, Volumen 1\\Mexico Lindo (1).mp3",
       "title": "Mexico Lindo (1)",
@@ -9289,6 +11545,18 @@
       "hasCover": false
     },
     {
+      "id": "4acbfc7d80ae66c0",
+      "relPath": "Vicente Fernandez\\The Living Legend\\Mexico Lindo Y Querido (2).mp3",
+      "title": "México lindo y querido",
+      "artist": "Vicente Fernández",
+      "album": "The living legend",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 1,
+      "duration": 213,
+      "hasCover": true
+    },
+    {
       "id": "34be670b4e8f052a",
       "relPath": "Vicente Fernandez\\The Living Legend\\Mexico Lindo Y Querido (1).mp3",
       "title": "Mexico Lindo Y Querido (1)",
@@ -9310,6 +11578,18 @@
       "year": 2009,
       "track": 14,
       "duration": 272,
+      "hasCover": true
+    },
+    {
+      "id": "a27bb36fd1cc6515",
+      "relPath": "Alvaro Torres\\15 Romantiquisimas\\Mi Amor Por Ti (2).mp3",
+      "title": "Mi amor por ti",
+      "artist": "Álvaro Torres",
+      "album": "15 romantiquisimas",
+      "genre": "Sin género",
+      "year": null,
+      "track": 8,
+      "duration": 200,
       "hasCover": true
     },
     {
@@ -9347,6 +11627,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "85291aed7e359c01",
+      "relPath": "Alberto Cortez\\21 Black Jack\\Mi Arbol Y Yo (2).mp3",
+      "title": "Mi árbol y yo",
+      "artist": "Alberto Cortez",
+      "album": "21 Black Jack",
+      "genre": "Sin género",
+      "year": null,
+      "track": 12,
+      "duration": 229,
+      "hasCover": true
     },
     {
       "id": "612f70273e580712",
@@ -9397,6 +11689,18 @@
       "hasCover": false
     },
     {
+      "id": "3f071f9e22fbb8ef",
+      "relPath": "Cabas\\CaBas\\Mi Bombon (2).mp3",
+      "title": "Mi bombón",
+      "artist": "Cabas",
+      "album": "CaBas",
+      "genre": "Sin género",
+      "year": 2001,
+      "track": 4,
+      "duration": 194,
+      "hasCover": true
+    },
+    {
       "id": "51aa3d7bd287b40f",
       "relPath": "Cabas\\CaBas\\Mi Bombon (1).mp3",
       "title": "Mi Bombon (1)",
@@ -9418,6 +11722,18 @@
       "year": null,
       "track": 9,
       "duration": 194,
+      "hasCover": true
+    },
+    {
+      "id": "60a08c57a5d733d1",
+      "relPath": "KPaz De La Sierra\\Una Historia\\Mi Credo (2).mp3",
+      "title": "Mi credo",
+      "artist": "K-Paz de la Sierra",
+      "album": "Una historia",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 6,
+      "duration": 183,
       "hasCover": true
     },
     {
@@ -9443,6 +11759,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "e9ca22f7f3afec42",
+      "relPath": "Various Artists\\Sing Meinen Song Das Schweizer Tauschkonzert\\Mi Culpa.mp3",
+      "title": "Mi Culpa",
+      "artist": "Francine Jordi (Loco Escrito)",
+      "album": "Sing meinen Song: das Schweizer Tauschkonzert",
+      "genre": "Sin género",
+      "year": 2020,
+      "track": 11,
+      "duration": 240,
+      "hasCover": true
     },
     {
       "id": "a845ad46a0de3422",
@@ -9481,6 +11809,18 @@
       "hasCover": true
     },
     {
+      "id": "1853cc8a3180b0b1",
+      "relPath": "Noel Schajris\\Grandes Canciones\\Mi Historia Entre Tus Dedos (2).mp3",
+      "title": "Mi historia entre tus dedos",
+      "artist": "Noel Schajris",
+      "album": "Grandes canciones",
+      "genre": "Sin género",
+      "year": 2011,
+      "track": 10,
+      "duration": 334,
+      "hasCover": true
+    },
+    {
       "id": "1867fae13c28e108",
       "relPath": "Noel Schajris\\Grandes Canciones\\Mi Historia Entre Tus Dedos.mp3",
       "title": "Mi Historia Entre Tus Dedos",
@@ -9503,6 +11843,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "5b7a7774109948ab",
+      "relPath": "Los Bukis\\Quiereme\\Mi Mayor Necesidad (2).mp3",
+      "title": "Mi mayor necesidad",
+      "artist": "Los Bukis",
+      "album": "Quiéreme",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 6,
+      "duration": 246,
+      "hasCover": true
     },
     {
       "id": "6350a47ab660bce5",
@@ -9565,6 +11917,30 @@
       "hasCover": false
     },
     {
+      "id": "b7bf7615522bc279",
+      "relPath": "Los Angeles Azules\\La Historia\\Mi Nina Mujer (2).mp3",
+      "title": "Mi niña mujer",
+      "artist": "Los Ángeles Azules",
+      "album": "La historia",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 6,
+      "duration": 193,
+      "hasCover": true
+    },
+    {
+      "id": "1d1eea3306398bb7",
+      "relPath": "Sisa Pacari\\Traditional Music From The Andes\\Mi Pobreza.mp3",
+      "title": "Mi Pobreza",
+      "artist": "Sisa Pacari",
+      "album": "Traditional Music From The Andes",
+      "genre": "Sin género",
+      "year": 1994,
+      "track": 13,
+      "duration": 219,
+      "hasCover": true
+    },
+    {
       "id": "9bb0cc42d794e9e0",
       "relPath": "Los Enanitos Verdes\\Musicos Poetas Y Locos\\Mi Primer Dia Sin Ti.mp3",
       "title": "Mi primer día sin ti",
@@ -9613,6 +11989,18 @@
       "hasCover": false
     },
     {
+      "id": "a2a59f9d905985bf",
+      "relPath": "Ana Gabriel\\Mi Mexico\\Mi Talisman (2).mp3",
+      "title": "Mi talismán",
+      "artist": "Ana Gabriel",
+      "album": "Mi México",
+      "genre": "Sin género",
+      "year": 1991,
+      "track": 1,
+      "duration": 290,
+      "hasCover": true
+    },
+    {
       "id": "2a7de85a1500940e",
       "relPath": "Ana Gabriel\\Mi Mexico\\Mi Talisman (1).mp3",
       "title": "Mi Talisman (1)",
@@ -9637,6 +12025,18 @@
       "hasCover": false
     },
     {
+      "id": "5ad54380a8121607",
+      "relPath": "Banda Los Recoditos\\El Free\\Mi Ultimo Deseo (2).mp3",
+      "title": "Mi último deseo",
+      "artist": "Banda Los Recoditos",
+      "album": "El Free",
+      "genre": "Sin género",
+      "year": 2013,
+      "track": 8,
+      "duration": 164,
+      "hasCover": true
+    },
+    {
       "id": "51fcff048c89727d",
       "relPath": "Banda Los Recoditos\\El Free\\Mi Ultimo Deseo (1).mp3",
       "title": "Mi Ultimo Deseo (1)",
@@ -9658,6 +12058,18 @@
       "year": 2020,
       "track": 12,
       "duration": 146,
+      "hasCover": true
+    },
+    {
+      "id": "4c69ecc95aac94d5",
+      "relPath": "Mana\\Cama Incendiada\\Mi Verdad (2).mp3",
+      "title": "Mi verdad",
+      "artist": "Maná feat. Shakira",
+      "album": "Cama incendiada",
+      "genre": "Sin género",
+      "year": 2015,
+      "track": 6,
+      "duration": 273,
       "hasCover": true
     },
     {
@@ -9685,6 +12097,18 @@
       "hasCover": false
     },
     {
+      "id": "7529119caa4e8c71",
+      "relPath": "Various Artists\\Pura Sangre\\Mi Vida Eres Tu.mp3",
+      "title": "Mi vida eres tú",
+      "artist": "Rudy La Scala & Ricardo Montaner",
+      "album": "Pura sangre",
+      "genre": "Sin género",
+      "year": null,
+      "track": 5,
+      "duration": 215,
+      "hasCover": true
+    },
+    {
       "id": "2925705e194f0e5b",
       "relPath": "Alacranes Musical\\Por Siempre\\Micaela.mp3",
       "title": "Micaela",
@@ -9695,6 +12119,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "ac12c38dbf771c1c",
+      "relPath": "Alacranes Musical\\Por Siempre\\Micaela (2).mp3",
+      "title": "Micaela",
+      "artist": "Alacranes Musical",
+      "album": "Por siempre",
+      "genre": "Sin género",
+      "year": 2010,
+      "track": 17,
+      "duration": 236,
+      "hasCover": true
     },
     {
       "id": "c883c7d8484a39d2",
@@ -9721,6 +12157,18 @@
       "hasCover": false
     },
     {
+      "id": "dcc1a84e9ac8dafe",
+      "relPath": "Pepe Aguilar\\No Soy De Nadie\\Miedo (2).mp3",
+      "title": "Miedo",
+      "artist": "Pepe Aguilar",
+      "album": "No soy de nadie",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 10,
+      "duration": 276,
+      "hasCover": true
+    },
+    {
       "id": "d457ba246b4687a5",
       "relPath": "Pepe Aguilar\\No Soy De Nadie\\Miedo (1).mp3",
       "title": "Miedo (1)",
@@ -9742,6 +12190,18 @@
       "year": 2010,
       "track": 1,
       "duration": 205,
+      "hasCover": true
+    },
+    {
+      "id": "9a90886fcd84762e",
+      "relPath": "Moderatto\\_Queremos Rock\\Mil Demonios (2).mp3",
+      "title": "Mil demonios",
+      "artist": "Moderatto",
+      "album": "¡Queremos rock!",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 3,
+      "duration": 259,
       "hasCover": true
     },
     {
@@ -9767,6 +12227,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "180ea9dc92eea1ae",
+      "relPath": "Los Abuelos De La Nada\\Vasos Y Besos\\Mil Horas (2).mp3",
+      "title": "Mil horas",
+      "artist": "Los Abuelos de la Nada",
+      "album": "Vasos y besos",
+      "genre": "Sin género",
+      "year": 1983,
+      "track": 8,
+      "duration": 165,
+      "hasCover": true
     },
     {
       "id": "eba0766c330831f5",
@@ -9805,6 +12277,18 @@
       "hasCover": false
     },
     {
+      "id": "2538b916cd1e8aab",
+      "relPath": "Paulina Rubio\\I'm So In Love Grandes Exitos\\Mio (2).mp3",
+      "title": "Mio",
+      "artist": "Paulina Rubio",
+      "album": "I'm So in Love: Grandes éxitos",
+      "genre": "Sin género",
+      "year": 2001,
+      "track": 2,
+      "duration": 226,
+      "hasCover": true
+    },
+    {
       "id": "73ede0f670063b43",
       "relPath": "Paulina Rubio\\I'm So In Love Grandes Exitos\\Mio (1).mp3",
       "title": "Mio (1)",
@@ -9827,6 +12311,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "0d07f4756f9e925f",
+      "relPath": "Alejandra Guzman\\Libre\\Mirala, Miralo (2).mp3",
+      "title": "Mírala, míralo",
+      "artist": "Alejandra Guzmán",
+      "album": "Libre",
+      "genre": "Sin género",
+      "year": 1993,
+      "track": 3,
+      "duration": 240,
+      "hasCover": true
     },
     {
       "id": "28ba2f4c33c690a8",
@@ -9865,6 +12361,18 @@
       "hasCover": false
     },
     {
+      "id": "31bf441bb8471024",
+      "relPath": "Noel Schajris\\Uno No Es Uno\\Momentos (2).mp3",
+      "title": "Momentos",
+      "artist": "Noel Schajris",
+      "album": "Uno no es uno",
+      "genre": "Sin género",
+      "year": 2010,
+      "track": 1,
+      "duration": 298,
+      "hasCover": true
+    },
+    {
       "id": "cdcfb667afdd404c",
       "relPath": "Noel Schajris\\Uno No Es Uno\\Momentos (1).mp3",
       "title": "Momentos (1)",
@@ -9875,6 +12383,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "c922025ac9b57497",
+      "relPath": "Miguel Bose\\Miguel\\Morir De Amor (2).mp3",
+      "title": "Morir de amor",
+      "artist": "Miguel Bosé",
+      "album": "Miguel",
+      "genre": "Sin género",
+      "year": 1980,
+      "track": 1,
+      "duration": 251,
+      "hasCover": true
     },
     {
       "id": "1ab4fa86ffd6250c",
@@ -9913,6 +12433,18 @@
       "hasCover": false
     },
     {
+      "id": "27f7a50fc55714a6",
+      "relPath": "Nina Sky\\Nina Sky\\Move Ya Body (2).mp3",
+      "title": "Move Ya Body",
+      "artist": "Nina Sky feat. Jabba",
+      "album": "Nina Sky",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 2,
+      "duration": 232,
+      "hasCover": true
+    },
+    {
       "id": "aecb4bad5a5ffe18",
       "relPath": "Nina Sky\\Nina Sky\\Move Ya Body (1).mp3",
       "title": "Move Ya Body (1)",
@@ -9935,6 +12467,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "43dcbd348ef43be7",
+      "relPath": "Various Artists\\Now That's What I Call Music 40\\Moves Like Jagger (2).mp3",
+      "title": "Moves Like Jagger",
+      "artist": "Maroon 5 feat. Christina Aguilera",
+      "album": "Now That's What I Call Music! 40",
+      "genre": "Sin género",
+      "year": 2011,
+      "track": 1,
+      "duration": 202,
+      "hasCover": true
     },
     {
       "id": "5b4ec96c8e60500c",
@@ -9973,6 +12517,18 @@
       "hasCover": false
     },
     {
+      "id": "9a618f741d078ddd",
+      "relPath": "Various Artists\\Now That's What I Call Music 40\\Mr Saxobeat (2).mp3",
+      "title": "Mr. Saxobeat",
+      "artist": "Alexandra Stan",
+      "album": "Now That's What I Call Music! 40",
+      "genre": "Sin género",
+      "year": 2011,
+      "track": 5,
+      "duration": 195,
+      "hasCover": true
+    },
+    {
       "id": "42e921825b46ca3c",
       "relPath": "Los Fantasmas Del Caribe\\Caramelo\\Muchacha Triste.mp3",
       "title": "Muchacha triste",
@@ -9994,6 +12550,18 @@
       "year": 1996,
       "track": 8,
       "duration": 208,
+      "hasCover": true
+    },
+    {
+      "id": "2bbd4395679f7809",
+      "relPath": "La Mosca TseTse\\Biszzzes\\Muchachos Esta Noche Me Emborracho (2).mp3",
+      "title": "Muchachos esta noche me emborracho",
+      "artist": "La Mosca Tsé-Tsé",
+      "album": "Biszzzes",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 14,
+      "duration": 229,
       "hasCover": true
     },
     {
@@ -10021,6 +12589,18 @@
       "hasCover": false
     },
     {
+      "id": "7334712cb7a613c6",
+      "relPath": "DJ Pablito Presenta Aldo Ranks\\El CD\\Mueve Mami (2).mp3",
+      "title": "Mueve mami",
+      "artist": "Aldo Ranks",
+      "album": "El CD",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 1,
+      "duration": 126,
+      "hasCover": true
+    },
+    {
       "id": "7871344fd8d1e9cd",
       "relPath": "DJ Pablito Presenta Aldo Ranks\\El CD\\Mueve Mami.mp3",
       "title": "Mueve Mami",
@@ -10043,6 +12623,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "56c9685fc5571e75",
+      "relPath": "Sandy & Papo\\La Historia\\Mueve, Mueve (2).mp3",
+      "title": "Mueve, mueve",
+      "artist": "Sandy & Papo",
+      "album": "La historia...",
+      "genre": "Sin género",
+      "year": 2005,
+      "track": 5,
+      "duration": 289,
+      "hasCover": true
     },
     {
       "id": "94daa058077a9909",
@@ -10069,6 +12661,30 @@
       "hasCover": false
     },
     {
+      "id": "141feb5e96ba9294",
+      "relPath": "El Axel\\It Is Wha It Is\\Muevelo.mp3",
+      "title": "Muevelo",
+      "artist": "El Axel",
+      "album": "It Is Wha It Is",
+      "genre": "Sin género",
+      "year": 2007,
+      "track": 7,
+      "duration": 207,
+      "hasCover": true
+    },
+    {
+      "id": "a7bf5d5447519cde",
+      "relPath": "Rata Blanca\\Magos, Espadas Y Rosas\\Mujer Amante (2).mp3",
+      "title": "Mujer amante",
+      "artist": "Rata Blanca",
+      "album": "Magos, espadas y rosas",
+      "genre": "Sin género",
+      "year": 1990,
+      "track": 2,
+      "duration": 363,
+      "hasCover": true
+    },
+    {
       "id": "158e99677df72035",
       "relPath": "Rata Blanca\\Magos, Espadas Y Rosas\\Mujer Amante.mp3",
       "title": "Mujer Amante",
@@ -10091,6 +12707,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "bae5e8538f6dcd27",
+      "relPath": "Various Artists\\Hot Latin Grooves\\Mujer Bonita.mp3",
+      "title": "Mujer Bonita",
+      "artist": "The Golden Nightingale Orchestra",
+      "album": "Hot Latin Grooves",
+      "genre": "Sin género",
+      "year": 1995,
+      "track": 4,
+      "duration": 209,
+      "hasCover": true
     },
     {
       "id": "b4381fd2b3795503",
@@ -10117,6 +12745,18 @@
       "hasCover": false
     },
     {
+      "id": "ea6840ef27ce1cf3",
+      "relPath": "Jose Jose\\Lo Esencial Jose Jose\\Mujeriego (2).mp3",
+      "title": "Mujeriego",
+      "artist": "José José",
+      "album": "Lo esencial José José",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 4,
+      "duration": 229,
+      "hasCover": true
+    },
+    {
       "id": "8ed61830ae4be07d",
       "relPath": "Jose Jose\\Lo Esencial Jose Jose\\Mujeriego (1).mp3",
       "title": "Mujeriego (1)",
@@ -10127,6 +12767,30 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "1fc85b8ded815e03",
+      "relPath": "Los Dinamiteros De Colombia\\Sabor A Cumbia\\Muneca Esquiva.mp3",
+      "title": "Muñeca Esquiva",
+      "artist": "Los Dinamiteros de Colombia",
+      "album": "Sabor A Cumbia",
+      "genre": "Sin género",
+      "year": 2010,
+      "track": 4,
+      "duration": 207,
+      "hasCover": true
+    },
+    {
+      "id": "a9ab6f86f69ab418",
+      "relPath": "Belinda\\Total\\Muriendo Lento (2).mp3",
+      "title": "Muriendo lento",
+      "artist": "Belinda con Moderatto",
+      "album": "Total",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 18,
+      "duration": 251,
+      "hasCover": true
     },
     {
       "id": "dcabd0ff056ecbcd",
@@ -10153,6 +12817,18 @@
       "hasCover": false
     },
     {
+      "id": "c059f205d8f7a8c3",
+      "relPath": "Various Artists\\Harsh Times\\Murio La Flor.mp3",
+      "title": "Murió la flor",
+      "artist": "Los Ángeles Negros",
+      "album": "Harsh Times",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 8,
+      "duration": 202,
+      "hasCover": true
+    },
+    {
       "id": "a6c1e834e869b09b",
       "relPath": "Various Artists\\Top Latino, Volume 2\\Muy Dentro De Mi.mp3",
       "title": "Muy dentro de mí",
@@ -10175,6 +12851,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "c06ee72b47133b4d",
+      "relPath": "Various Artists\\00s Pop Party\\My Humps (2).mp3",
+      "title": "My Humps",
+      "artist": "Black Eyed Peas",
+      "album": "00s Pop Party",
+      "genre": "Sin género",
+      "year": 2021,
+      "track": 8,
+      "duration": 327,
+      "hasCover": true
     },
     {
       "id": "c8596f1a132e2f35",
@@ -10213,6 +12901,18 @@
       "hasCover": false
     },
     {
+      "id": "41c580e715e5c313",
+      "relPath": "Lido Pimienta\\Miss Colombia\\Nada (2).mp3",
+      "title": "Nada",
+      "artist": "Lido Pimienta feat. Li Saumet",
+      "album": "Miss Colombia",
+      "genre": "Sin género",
+      "year": 2020,
+      "track": 3,
+      "duration": 299,
+      "hasCover": true
+    },
+    {
       "id": "81f8482832772475",
       "relPath": "Lido Pimienta\\Miss Colombia\\Nada (1).mp3",
       "title": "Nada (1)",
@@ -10223,6 +12923,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "bf004c0603784c8d",
+      "relPath": "Sergio Denis\\20 Grandes Exitos\\Nada Hara Cambiar Mi Amor Por Ti.mp3",
+      "title": "Nada hará cambiar mi amor por tí",
+      "artist": "Sergio Denis",
+      "album": "20 grandes éxitos",
+      "genre": "Sin género",
+      "year": 1993,
+      "track": 4,
+      "duration": 219,
+      "hasCover": true
     },
     {
       "id": "942c04a102146ca2",
@@ -10246,6 +12958,18 @@
       "year": 2004,
       "track": 5,
       "duration": 196,
+      "hasCover": true
+    },
+    {
+      "id": "0141ad0a823b5243",
+      "relPath": "Marc Anthony\\Todo A Su Tiempo\\Nadie Como Ella (2).mp3",
+      "title": "Nadie como ella",
+      "artist": "Marc Anthony",
+      "album": "Todo a su tiempo",
+      "genre": "Sin género",
+      "year": 1995,
+      "track": 4,
+      "duration": 296,
       "hasCover": true
     },
     {
@@ -10285,6 +13009,18 @@
       "hasCover": false
     },
     {
+      "id": "8ab396dcce31eb5b",
+      "relPath": "Paloma San Basilio\\Nadie Como Tu\\Nadie Como Tu (2).mp3",
+      "title": "Nadie como tú",
+      "artist": "Paloma San Basilio",
+      "album": "Nadie como tú",
+      "genre": "Sin género",
+      "year": 1990,
+      "track": 4,
+      "duration": 178,
+      "hasCover": true
+    },
+    {
       "id": "3ed633e7e41131a9",
       "relPath": "Paloma San Basilio\\Nadie Como Tu\\Nadie Como Tu (1).mp3",
       "title": "Nadie Como Tu (1)",
@@ -10321,6 +13057,18 @@
       "hasCover": false
     },
     {
+      "id": "b775b1df057e4ee5",
+      "relPath": "Jose Guadalupe Esparza\\15 Exitos En Ranchero\\Nalia (2).mp3",
+      "title": "Nalia",
+      "artist": "José Guadalupe Esparza",
+      "album": "15 exitos en ranchero",
+      "genre": "Sin género",
+      "year": 1999,
+      "track": 13,
+      "duration": 331,
+      "hasCover": true
+    },
+    {
       "id": "b2e2e1b1b317c3dd",
       "relPath": "Jose Guadalupe Esparza\\15 Exitos En Ranchero\\Nalia (1).mp3",
       "title": "Nalia (1)",
@@ -10331,6 +13079,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "70b4b53c97a27dc2",
+      "relPath": "Michal Bajor\\Od Piaf Do Garou\\Nathalie.mp3",
+      "title": "Nathalie",
+      "artist": "Michał Bajor",
+      "album": "Od Piaf do Garou",
+      "genre": "Sin género",
+      "year": 2011,
+      "track": 1,
+      "duration": 255,
+      "hasCover": true
     },
     {
       "id": "d0103768cb2b2110",
@@ -10354,6 +13114,18 @@
       "year": 2013,
       "track": 12,
       "duration": 214,
+      "hasCover": true
+    },
+    {
+      "id": "4a2560cae77f2d5f",
+      "relPath": "Los Mismos\\Juntos Para Siempre\\Ni Como Amigos.mp3",
+      "title": "Ni como amigos",
+      "artist": "Los Mismos",
+      "album": "Juntos para siempre",
+      "genre": "Sin género",
+      "year": 1996,
+      "track": 5,
+      "duration": 234,
       "hasCover": true
     },
     {
@@ -10405,6 +13177,18 @@
       "hasCover": false
     },
     {
+      "id": "3ebd86f233fec2de",
+      "relPath": "Antonio Aguilar\\Por El Amor A Mi Madre\\Ni Por Mil Punados De Oro (2).mp3",
+      "title": "Ni por mil puñados de oro",
+      "artist": "Antonio Aguilar",
+      "album": "Por el amor a mi madre",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 4,
+      "duration": 140,
+      "hasCover": true
+    },
+    {
       "id": "dfc5a4d49607febc",
       "relPath": "Moenia\\Stereohits\\Ni Tu Ni Nadie.mp3",
       "title": "Ni Tu Ni Nadie",
@@ -10415,6 +13199,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "516474c6e513a474",
+      "relPath": "Moenia\\Stereohits\\Ni Tu Ni Nadie (2).mp3",
+      "title": "Ni tú ni nadie",
+      "artist": "Mœnia",
+      "album": "Stereohits",
+      "genre": "Sin género",
+      "year": 2005,
+      "track": 1,
+      "duration": 220,
+      "hasCover": true
     },
     {
       "id": "4a50401b6545a375",
@@ -10501,6 +13297,30 @@
       "hasCover": false
     },
     {
+      "id": "bc4072040931dfc1",
+      "relPath": "Caifanes\\El Silencio\\No Dejes Que (2).mp3",
+      "title": "No dejes que...",
+      "artist": "Caifanes",
+      "album": "El silencio",
+      "genre": "Sin género",
+      "year": 1993,
+      "track": 6,
+      "duration": 279,
+      "hasCover": true
+    },
+    {
+      "id": "f9ef6b8fe884fd1d",
+      "relPath": "Ana Gabriel\\Mi Mexico\\No Entiendo (2).mp3",
+      "title": "No entiendo",
+      "artist": "Ana Gabriel",
+      "album": "Mi México",
+      "genre": "Sin género",
+      "year": 1991,
+      "track": 3,
+      "duration": 224,
+      "hasCover": true
+    },
+    {
       "id": "5bbea1f84531e4a7",
       "relPath": "Ana Gabriel\\Mi Mexico\\No Entiendo.mp3",
       "title": "No Entiendo",
@@ -10549,6 +13369,18 @@
       "hasCover": false
     },
     {
+      "id": "90ec18c1fd98dba8",
+      "relPath": "Various Artists\\Now _Esto Es Musica Latino 4\\No Hay Nadie Como Tu (2).mp3",
+      "title": "No hay nadie como tú",
+      "artist": "Calle 13",
+      "album": "Now ¡Esto es música! Latino 4",
+      "genre": "Sin género",
+      "year": 2009,
+      "track": 9,
+      "duration": 293,
+      "hasCover": true
+    },
+    {
       "id": "8b6be5fd6f756929",
       "relPath": "Various Artists\\Now _Esto Es Musica Latino 4\\No Hay Nadie Como Tu (1).mp3",
       "title": "No Hay Nadie Como Tu (1)",
@@ -10573,6 +13405,18 @@
       "hasCover": false
     },
     {
+      "id": "afc43dc3e8f03360",
+      "relPath": "Sebastian Yatra\\No Hay Nadie Mas\\No Hay Nadie Mas (2).mp3",
+      "title": "No hay nadie más",
+      "artist": "Sebastián Yatra",
+      "album": "No hay nadie más",
+      "genre": "Sin género",
+      "year": 2018,
+      "track": 1,
+      "duration": 200,
+      "hasCover": true
+    },
+    {
       "id": "99dd14046c2502ad",
       "relPath": "Sebastian Yatra\\No Hay Nadie Mas\\No Hay Nadie Mas (1).mp3",
       "title": "No Hay Nadie Mas (1)",
@@ -10583,6 +13427,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "450abb465cdb8dec",
+      "relPath": "Maria Jose\\Duetos\\No Importa Que El Sol Se Muera (2).mp3",
+      "title": "No importa que el sol se muera",
+      "artist": "Mœnia feat. María José",
+      "album": "Duetos",
+      "genre": "Sin género",
+      "year": 2018,
+      "track": 4,
+      "duration": 232,
+      "hasCover": true
     },
     {
       "id": "b0c75c20c52f4da1",
@@ -10621,6 +13477,18 @@
       "hasCover": false
     },
     {
+      "id": "2ad2a3bf20ec1912",
+      "relPath": "Pandora\\Con Amor Eterno\\No Lastimes Mas (2).mp3",
+      "title": "No lastimes más",
+      "artist": "Pandora",
+      "album": "Con amor eterno",
+      "genre": "Sin género",
+      "year": 1991,
+      "track": 8,
+      "duration": 182,
+      "hasCover": true
+    },
+    {
       "id": "0b66b8ea5fb3f308",
       "relPath": "Pandora\\Con Amor Eterno\\No Lastimes Mas (1).mp3",
       "title": "No Lastimes Mas (1)",
@@ -10631,6 +13499,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "1b3ed0087ddbaa3a",
+      "relPath": "Los Ladrones Sueltos\\Los Ladrones Sueltos\\No Le Dijo Nada (2).mp3",
+      "title": "No le dijo nada",
+      "artist": "Los Ladrones Sueltos",
+      "album": "Los Ladrones Sueltos",
+      "genre": "Sin género",
+      "year": 1993,
+      "track": 6,
+      "duration": 222,
+      "hasCover": true
     },
     {
       "id": "e485383936a53aa3",
@@ -10681,6 +13561,18 @@
       "hasCover": false
     },
     {
+      "id": "6cc4a26265a540c9",
+      "relPath": "Los De Adentro\\Volver Amar\\No Mas (2).mp3",
+      "title": "No más",
+      "artist": "Los de Adentro",
+      "album": "Volver amar",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 1,
+      "duration": 196,
+      "hasCover": true
+    },
+    {
       "id": "434447f14b677340",
       "relPath": "Los De Adentro\\Volver Amar\\No Mas (1).mp3",
       "title": "No Mas (1)",
@@ -10691,6 +13583,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "337e3d8bdb1e6b23",
+      "relPath": "Juan Luis Guerra 440\\Universo Latino 1\\No Me Acostumbro (2).mp3",
+      "title": "No me acostumbro",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "Universo latino 1",
+      "genre": "Sin género",
+      "year": 2001,
+      "track": 8,
+      "duration": 283,
+      "hasCover": true
     },
     {
       "id": "01fb294bfa598e72",
@@ -10753,6 +13657,18 @@
       "hasCover": true
     },
     {
+      "id": "0d35d1e1e34db5c0",
+      "relPath": "Abel Pintos\\Sueno Dorado\\No Me Olvides (2).mp3",
+      "title": "No me olvides",
+      "artist": "Abel Pintos",
+      "album": "Sueño dorado",
+      "genre": "Sin género",
+      "year": 2012,
+      "track": 6,
+      "duration": 212,
+      "hasCover": true
+    },
+    {
       "id": "734318df403efe0c",
       "relPath": "Abel Pintos\\Sueno Dorado\\No Me Olvides.mp3",
       "title": "No Me Olvides",
@@ -10789,6 +13705,18 @@
       "hasCover": true
     },
     {
+      "id": "25b4de1741f9dc4e",
+      "relPath": "Los Parranderos\\Pare Se A Bailar Todos Los Exitos\\No Me Se Rajar.mp3",
+      "title": "No me se rajar",
+      "artist": "Los Parranderos",
+      "album": "Pare... se a bailar todos los éxitos",
+      "genre": "Sin género",
+      "year": 1983,
+      "track": 5,
+      "duration": 125,
+      "hasCover": true
+    },
+    {
       "id": "7259a110422f6a10",
       "relPath": "Vicente Fernandez\\El Idolo De Mexico (El Tapatio)\\No Me Se Rajar.mp3",
       "title": "No Me Se Rajar",
@@ -10799,6 +13727,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "6110ed422f1188cf",
+      "relPath": "Vicente Fernandez\\El Idolo De Mexico (El Tapatio)\\No Me Se Rajar (2).mp3",
+      "title": "No me sé rajar",
+      "artist": "Vicente Fernández",
+      "album": "El idolo de México (El tapatío)",
+      "genre": "Sin género",
+      "year": 1994,
+      "track": 6,
+      "duration": 145,
+      "hasCover": true
     },
     {
       "id": "8aaec30dde930818",
@@ -10837,6 +13777,18 @@
       "hasCover": false
     },
     {
+      "id": "1175b8276d3803b9",
+      "relPath": "Various Artists\\Power Ballads\\No More Lonely Nights (2).mp3",
+      "title": "No More Lonely Nights",
+      "artist": "Paul McCartney",
+      "album": "Power Ballads",
+      "genre": "Sin género",
+      "year": 2003,
+      "track": 2,
+      "duration": 276,
+      "hasCover": true
+    },
+    {
       "id": "c1419edde28d5c81",
       "relPath": "Various Artists\\Power Ballads\\No More Lonely Nights (1).mp3",
       "title": "No More Lonely Nights (1)",
@@ -10847,6 +13799,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "cbac70c1baeeb814",
+      "relPath": "Raphael\\Enamorado De La Vida\\No Puedo Arrancarte De Mi (2).mp3",
+      "title": "No puedo arrancarte de mi",
+      "artist": "Raphael",
+      "album": "Enamorado de la vida",
+      "genre": "Sin género",
+      "year": 1983,
+      "track": 3,
+      "duration": 238,
+      "hasCover": true
     },
     {
       "id": "b813c5f7ec124a21",
@@ -10871,6 +13835,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "948114cb0c72277b",
+      "relPath": "Kalimba\\NegroKlaro\\No Puedo Dejarte De Amar (2).mp3",
+      "title": "No puedo dejarte de amar",
+      "artist": "Kalimba",
+      "album": "NegroKlaro",
+      "genre": "Sin género",
+      "year": 2007,
+      "track": 13,
+      "duration": 317,
+      "hasCover": true
     },
     {
       "id": "5f8d7685a469df42",
@@ -10921,6 +13897,18 @@
       "hasCover": false
     },
     {
+      "id": "aef42132825bda13",
+      "relPath": "Alberto Cortez\\En Un Rincon Del Alma\\No Soy De Aqui (2).mp3",
+      "title": "No soy de aquí",
+      "artist": "Alberto Cortez",
+      "album": "En un rincón del alma",
+      "genre": "Sin género",
+      "year": 2001,
+      "track": 2,
+      "duration": 247,
+      "hasCover": true
+    },
+    {
       "id": "fa3520fc8e01e478",
       "relPath": "Alberto Cortez\\En Un Rincon Del Alma\\No Soy De Aqui (1).mp3",
       "title": "No Soy De Aqui (1)",
@@ -10945,6 +13933,18 @@
       "hasCover": false
     },
     {
+      "id": "e14e63a8769c52a9",
+      "relPath": "Yahir\\No Te Apartes De Mi\\No Te Apartes De Mi (2).mp3",
+      "title": "No te apartes de mí",
+      "artist": "Yahir",
+      "album": "No te apartes de mí",
+      "genre": "Sin género",
+      "year": 2005,
+      "track": 2,
+      "duration": 245,
+      "hasCover": true
+    },
+    {
       "id": "0d88abb9ac1003d7",
       "relPath": "Yahir\\No Te Apartes De Mi\\No Te Apartes De Mi (1).mp3",
       "title": "No Te Apartes De Mi (1)",
@@ -10966,6 +13966,18 @@
       "year": 2000,
       "track": 1,
       "duration": 299,
+      "hasCover": true
+    },
+    {
+      "id": "39b14d7aff637248",
+      "relPath": "AB Quintanilla III Presents Kumbia Kings\\4\\No Tengo Dinero (2).mp3",
+      "title": "No tengo dinero",
+      "artist": "A.B. Quintanilla III presents Kumbia Kings con Juan Gabriel & El Gran Silencio",
+      "album": "4",
+      "genre": "Sin género",
+      "year": 2003,
+      "track": 1,
+      "duration": 293,
       "hasCover": true
     },
     {
@@ -11014,6 +14026,30 @@
       "year": null,
       "track": 4,
       "duration": 179,
+      "hasCover": true
+    },
+    {
+      "id": "4335c5ad6670fc8d",
+      "relPath": "Los Diablitos & Omar Geles\\10 Anos De Historia\\No Voy A Llorar (2).mp3",
+      "title": "No voy a llorar",
+      "artist": "Los Diablitos & Omar Geles",
+      "album": "10 años de historia",
+      "genre": "Sin género",
+      "year": 1995,
+      "track": 6,
+      "duration": 283,
+      "hasCover": true
+    },
+    {
+      "id": "990908315d0dd814",
+      "relPath": "Lloyd Dobler Effect\\The Lloyd Dobler Effect\\No Voy A Llorar.mp3",
+      "title": "No Voy a Llorar",
+      "artist": "Lloyd Dobler Effect",
+      "album": "The Lloyd Dobler Effect",
+      "genre": "Sin género",
+      "year": 2003,
+      "track": 5,
+      "duration": 287,
       "hasCover": true
     },
     {
@@ -11101,6 +14137,18 @@
       "hasCover": true
     },
     {
+      "id": "e289de515d952818",
+      "relPath": "Various Artists\\2003 Ano De Exitos Bachatas Y Merengue\\Noches De Fantasia (2).mp3",
+      "title": "Noches de fantasía",
+      "artist": "Joseph Fonseca",
+      "album": "2003 año de exitos bachatas y merengue",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 10,
+      "duration": 267,
+      "hasCover": true
+    },
+    {
       "id": "aa34b52d07a88ead",
       "relPath": "Various Artists\\2003 Ano De Exitos Bachatas Y Merengue\\Noches De Fantasia (1).mp3",
       "title": "Noches De Fantasia (1)",
@@ -11135,6 +14183,18 @@
       "track": null,
       "duration": null,
       "hasCover": false
+    },
+    {
+      "id": "58a28d4b24d36cde",
+      "relPath": "Various Artists\\Billboard Top Pop Hits 1962\\Norman (2).mp3",
+      "title": "Norman",
+      "artist": "Sue Thompson",
+      "album": "Billboard Top Pop Hits: 1962",
+      "genre": "Sin género",
+      "year": 1994,
+      "track": 9,
+      "duration": 141,
+      "hasCover": true
     },
     {
       "id": "647cc452429350f3",
@@ -11413,6 +14473,18 @@
       "hasCover": true
     },
     {
+      "id": "93e6cb2f833cb9cc",
+      "relPath": "Tropicalisimo Apache\\Exitos Quemantes Vol IV\\Ojitos Mentirosos.mp3",
+      "title": "Ojitos Mentirosos",
+      "artist": "Tropicalísimo Apache",
+      "album": "Éxitos Quemantes Vol. IV",
+      "genre": "Sin género",
+      "year": 1994,
+      "track": 10,
+      "duration": 186,
+      "hasCover": true
+    },
+    {
       "id": "32fdb5201b89d675",
       "relPath": "Various Artists\\Los 4 Grandes Del Rock\\Olvidalo.mp3",
       "title": "Olvídalo",
@@ -11590,6 +14662,18 @@
       "year": 2001,
       "track": 1,
       "duration": 251,
+      "hasCover": true
+    },
+    {
+      "id": "163d58869153acc8",
+      "relPath": "Joe Arroyo\\El Sonero De America\\Pa'l Bailador (2).mp3",
+      "title": "Pa'l bailador",
+      "artist": "Joe Arroyo",
+      "album": "El sonero de América",
+      "genre": "Sin género",
+      "year": 1999,
+      "track": 1,
+      "duration": 272,
       "hasCover": true
     },
     {
@@ -11809,6 +14893,30 @@
       "hasCover": true
     },
     {
+      "id": "14e79ae1d2875126",
+      "relPath": "Various Artists\\Puro Chucuchucu\\Pasito Tun Tun.mp3",
+      "title": "Pasito tun tún",
+      "artist": "Billo's Caracas Boys",
+      "album": "Puro chucu-chucu",
+      "genre": "Sin género",
+      "year": 2006,
+      "track": 2,
+      "duration": 226,
+      "hasCover": true
+    },
+    {
+      "id": "9bc36cc0125b4191",
+      "relPath": "Lasole\\SANTA SUCIA\\Payaso.mp3",
+      "title": "Payaso",
+      "artist": "Lasole",
+      "album": "SANTA SUCIA",
+      "genre": "Sin género",
+      "year": 2023,
+      "track": 2,
+      "duration": 162,
+      "hasCover": true
+    },
+    {
       "id": "344f379ff0b68103",
       "relPath": "Caballo Dorado\\Caballo Dorado\\Payaso De Rodeo.mp3",
       "title": "Payaso de rodeo",
@@ -11953,6 +15061,18 @@
       "hasCover": true
     },
     {
+      "id": "8552f6832c809d32",
+      "relPath": "Various Artists\\Dance Machine 24\\Perfecta.mp3",
+      "title": "Perfecta",
+      "artist": "Ultraritmo",
+      "album": "Dance Machine 24",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 16,
+      "duration": 218,
+      "hasCover": true
+    },
+    {
       "id": "ba0002ee02a5b15e",
       "relPath": "Los Rabanes\\Rabanes\\Perfidia.mp3",
       "title": "Perfidia",
@@ -11962,6 +15082,30 @@
       "year": 2000,
       "track": 3,
       "duration": 188,
+      "hasCover": true
+    },
+    {
+      "id": "ce395c4c4ebc234f",
+      "relPath": "La Sonora Santanera\\Solo Lo Nuestro 20 Exitos\\Perfume De Gardenias.mp3",
+      "title": "Perfume de gardenias",
+      "artist": "La Sonora Santanera",
+      "album": "Solo lo nuestro: 20 éxitos",
+      "genre": "Sin género",
+      "year": 2007,
+      "track": 13,
+      "duration": 211,
+      "hasCover": true
+    },
+    {
+      "id": "2128340f84819718",
+      "relPath": "Oscar Chavez\\Por Ti\\Perfume De Gardenias.mp3",
+      "title": "Perfume de gardenias",
+      "artist": "Óscar Chávez",
+      "album": "Por ti",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 8,
+      "duration": 192,
       "hasCover": true
     },
     {
@@ -12094,6 +15238,30 @@
       "year": 2002,
       "track": 1,
       "duration": 230,
+      "hasCover": true
+    },
+    {
+      "id": "805bc3c9c08c5f63",
+      "relPath": "Various Artists\\Pobre Diabla\\Pobre Diabla.mp3",
+      "title": "Pobre diabla",
+      "artist": "Maritza Rodriguez",
+      "album": "Pobre diabla",
+      "genre": "Sin género",
+      "year": 2000,
+      "track": 1,
+      "duration": 248,
+      "hasCover": true
+    },
+    {
+      "id": "04b1564417bc5180",
+      "relPath": "Carlos Mejia Godoy Y Luis Enrique Mejia Godoy\\Lo Mejor De Luis Y Carlos Mejia Godoy\\Pobre La Maria.mp3",
+      "title": "Pobre la María",
+      "artist": "Luis Enrique Mejía Godoy",
+      "album": "Lo mejor de Luis y Carlos Mejía Godoy",
+      "genre": "Sin género",
+      "year": null,
+      "track": 8,
+      "duration": 338,
       "hasCover": true
     },
     {
@@ -12373,6 +15541,18 @@
       "hasCover": true
     },
     {
+      "id": "bf327d4509e9a836",
+      "relPath": "DJ Blass\\Sandunguero Hits\\Provocame.mp3",
+      "title": "Provócame",
+      "artist": "Jenay",
+      "album": "Sandunguero Hits",
+      "genre": "Sin género",
+      "year": 2005,
+      "track": 10,
+      "duration": 183,
+      "hasCover": true
+    },
+    {
       "id": "7b4282ce362b83fb",
       "relPath": "Various Artists\\Dancehall Reggaespanol\\Pu Tun Tun.mp3",
       "title": "Pu Tun Tun",
@@ -12454,6 +15634,18 @@
       "year": 1998,
       "track": 10,
       "duration": 127,
+      "hasCover": true
+    },
+    {
+      "id": "c2415b1b00e13409",
+      "relPath": "Damas Gratis\\La Gota Que Rebaso El Vaso\\Que Bello.mp3",
+      "title": "Que bello",
+      "artist": "Damas Gratis",
+      "album": "La gota que rebasó el vaso",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 9,
+      "duration": 294,
       "hasCover": true
     },
     {
@@ -12541,6 +15733,18 @@
       "hasCover": true
     },
     {
+      "id": "e8096b8441d461f8",
+      "relPath": "La Sonora De Margarita\\Hits Tropicales Exitos\\Que Nadie Sepa Mi Sufrir.mp3",
+      "title": "Que nadie sepa mi sufrir",
+      "artist": "La Sonora de Margarita",
+      "album": "Hits tropicales: Éxitos",
+      "genre": "Sin género",
+      "year": 1999,
+      "track": 2,
+      "duration": 268,
+      "hasCover": true
+    },
+    {
       "id": "da68b51f3bcbc9e1",
       "relPath": "La Sonora Dinamita\\Historia Musical Sonora Dinamita\\Que Nadie Sepa Mi Sufrir.mp3",
       "title": "Que Nadie Sepa Mi Sufrir",
@@ -12574,6 +15778,30 @@
       "year": 2013,
       "track": 8,
       "duration": 180,
+      "hasCover": true
+    },
+    {
+      "id": "cf67d33ca186647d",
+      "relPath": "Ram Herrera\\Most Wanted Man\\Que Por Que Te Quiero.mp3",
+      "title": "Que Por Que Te Quiero",
+      "artist": "Ram Herrera",
+      "album": "Most Wanted Man",
+      "genre": "Sin género",
+      "year": 1986,
+      "track": 7,
+      "duration": 179,
+      "hasCover": true
+    },
+    {
+      "id": "96bdc6252265a79a",
+      "relPath": "Raphael\\Yo Soy Aquel\\Que Sabe Nadie.mp3",
+      "title": "Qué sabe nadie",
+      "artist": "Raphael",
+      "album": "Yo soy aquél",
+      "genre": "Sin género",
+      "year": 2000,
+      "track": 4,
+      "duration": 320,
       "hasCover": true
     },
     {
@@ -12769,6 +15997,30 @@
       "hasCover": true
     },
     {
+      "id": "41d5c95ae4950576",
+      "relPath": "Rojo, Fama Contrafama\\Rojo El Color Del Amor 2 13 Exitos Para Enamorarse\\Quitame Ese Hombre.mp3",
+      "title": "Quitame Ese Hombre",
+      "artist": "Mon Laferte",
+      "album": "Rojo El Color Del Amor 2: 13 Éxitos Para Enamorarse",
+      "genre": "Sin género",
+      "year": 2004,
+      "track": 9,
+      "duration": 267,
+      "hasCover": true
+    },
+    {
+      "id": "c4535a1eadf27d2f",
+      "relPath": "Various Artists\\Aquarela\\Quizas Si, Quizas No.mp3",
+      "title": "Quizás sí, quizás no",
+      "artist": "Sabu",
+      "album": "Aquarela",
+      "genre": "Sin género",
+      "year": 2016,
+      "track": 13,
+      "duration": 203,
+      "hasCover": true
+    },
+    {
       "id": "425d6969ac6ba7d6",
       "relPath": "Los Panchos\\Essential Classics, Vol 3 Los Panchos\\Quizas, Quizas, Quizas.mp3",
       "title": "Quizás, Quizás, Quizás",
@@ -12889,6 +16141,18 @@
       "hasCover": false
     },
     {
+      "id": "ab4eab41f65ebc7e",
+      "relPath": "Joe Arroyo\\Lo Salsero De\\Rebelion (2).mp3",
+      "title": "Rebelión",
+      "artist": "Joe Arroyo",
+      "album": "Lo salsero de",
+      "genre": "Sin género",
+      "year": 2003,
+      "track": 6,
+      "duration": 376,
+      "hasCover": true
+    },
+    {
       "id": "c00ee4e47b590fc3",
       "relPath": "Joe Arroyo\\Lo Salsero De\\Rebelion (1).mp3",
       "title": "Rebelion (1)",
@@ -12970,6 +16234,18 @@
       "year": 1991,
       "track": 5,
       "duration": 239,
+      "hasCover": true
+    },
+    {
+      "id": "afa07f5da45160a1",
+      "relPath": "Los Iracundos\\Serie 20 Exitos\\Reten La Noche.mp3",
+      "title": "Reten la noche",
+      "artist": "Los Iracundos",
+      "album": "Serie 20 éxitos",
+      "genre": "Sin género",
+      "year": null,
+      "track": 13,
+      "duration": 197,
       "hasCover": true
     },
     {
@@ -13150,6 +16426,18 @@
       "year": 2004,
       "track": 15,
       "duration": 226,
+      "hasCover": true
+    },
+    {
+      "id": "fb468161c1d3759c",
+      "relPath": "RBD\\Siempre Rebelde\\Salvame.mp3",
+      "title": "Sálvame",
+      "artist": "RBD",
+      "album": "Siempre rebelde",
+      "genre": "Sin género",
+      "year": 2020,
+      "track": 11,
+      "duration": 221,
       "hasCover": true
     },
     {
@@ -13597,6 +16885,18 @@
       "hasCover": true
     },
     {
+      "id": "b7c4a3def08143c4",
+      "relPath": "Bronco\\Bronco La Serie\\Si Te Vuelves A Enamorar (1).mp3",
+      "title": "Si te vuelves a enamorar",
+      "artist": "Bronco",
+      "album": "Bronco: la Serie",
+      "genre": "Sin género",
+      "year": 2019,
+      "track": 17,
+      "duration": 205,
+      "hasCover": true
+    },
+    {
       "id": "ea8b009ecedbd308",
       "relPath": "Bronco\\Bronco La Serie\\Si Te Vuelves A Enamorar.mp3",
       "title": "Si Te Vuelves A Enamorar",
@@ -13681,6 +16981,30 @@
       "hasCover": true
     },
     {
+      "id": "b82c078b0071a001",
+      "relPath": "Sparx\\Si Ya No Hay Amor\\Si Ya No Hay Amor.mp3",
+      "title": "Si ya no hay amor",
+      "artist": "Sparx",
+      "album": "Si ya no hay amor",
+      "genre": "Sin género",
+      "year": 2007,
+      "track": 1,
+      "duration": 197,
+      "hasCover": true
+    },
+    {
+      "id": "4271951a92381a73",
+      "relPath": "Jose Luis Perales\\Por Si Quieres Conocerme\\Si.mp3",
+      "title": "Si...",
+      "artist": "José Luis Perales",
+      "album": "Por si quieres conocerme",
+      "genre": "Sin género",
+      "year": 1976,
+      "track": 1,
+      "duration": 217,
+      "hasCover": true
+    },
+    {
       "id": "123d2c6efbf30fbb",
       "relPath": "Leo Dan\\Solo Para Mujeres\\Siempre Estoy Pensando En Ella.mp3",
       "title": "Siempre estoy pensando en ella",
@@ -13702,6 +17026,18 @@
       "year": 1965,
       "track": 3,
       "duration": 148,
+      "hasCover": true
+    },
+    {
+      "id": "d610a086804ff97b",
+      "relPath": "Calibre 50\\Desde El Rancho\\Siempre Te Voy A Querer.mp3",
+      "title": "Siempre te voy a querer",
+      "artist": "Calibre 50",
+      "album": "Desde el rancho",
+      "genre": "Sin género",
+      "year": 2016,
+      "track": 2,
+      "duration": 234,
       "hasCover": true
     },
     {
@@ -13969,6 +17305,18 @@
       "hasCover": true
     },
     {
+      "id": "42f2763a2dfbcf17",
+      "relPath": "Gradual Hate & Silence In First Degree\\Panopticon\\Sonambulo.mp3",
+      "title": "Sonambulo",
+      "artist": "Gradual Hate",
+      "album": "Panopticon",
+      "genre": "Sin género",
+      "year": 2009,
+      "track": 3,
+      "duration": 261,
+      "hasCover": true
+    },
+    {
       "id": "cc38712970ec15ac",
       "relPath": "Various Artists\\Tropicana Total\\Sopa De Caracol.mp3",
       "title": "Sopa de caracol",
@@ -13978,6 +17326,18 @@
       "year": 2001,
       "track": 7,
       "duration": 288,
+      "hasCover": true
+    },
+    {
+      "id": "89eb5f3f9a595b65",
+      "relPath": "Elvis Crespo\\Sopa De Caracol\\Sopa De Caracol.mp3",
+      "title": "Sopa de caracol",
+      "artist": "Elvis Crespo",
+      "album": "Sopa de caracol",
+      "genre": "Sin género",
+      "year": 2013,
+      "track": 1,
+      "duration": 196,
       "hasCover": true
     },
     {
@@ -14026,6 +17386,18 @@
       "year": 1992,
       "track": 6,
       "duration": 220,
+      "hasCover": true
+    },
+    {
+      "id": "a850ba3d38bf868c",
+      "relPath": "Amarfis Y La Banda De Atakke\\Chillin'\\Spanish Girl.mp3",
+      "title": "Spanish Girl",
+      "artist": "Amarfis y La Banda de Atakke",
+      "album": "Chillin'",
+      "genre": "Sin género",
+      "year": 2010,
+      "track": 7,
+      "duration": 236,
       "hasCover": true
     },
     {
@@ -14173,6 +17545,18 @@
       "hasCover": false
     },
     {
+      "id": "34ad1f02409d9d6b",
+      "relPath": "Jan\\Tierno\\Suenos Compartidos (2).mp3",
+      "title": "Sueños compartidos",
+      "artist": "Jan",
+      "album": "Tierno",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 5,
+      "duration": 258,
+      "hasCover": true
+    },
+    {
       "id": "760a4a94fb0a7efc",
       "relPath": "Various Artists\\You Know Everything International Pops Tv Ver\\Sugar.mp3",
       "title": "Sugar",
@@ -14257,6 +17641,18 @@
       "hasCover": true
     },
     {
+      "id": "05e57f7df0ae6160",
+      "relPath": "Banda Blanca\\Exitos, Vol 1 Musica De Guatemala Para Los Latinos _En Vivo\\Swing Latino.mp3",
+      "title": "Swing latino",
+      "artist": "Banda Blanca",
+      "album": "Éxitos, vol. 1: Música de Guatemala para los latinos ¡En vivo!",
+      "genre": "Sin género",
+      "year": 2014,
+      "track": 7,
+      "duration": 293,
+      "hasCover": true
+    },
+    {
       "id": "6f60405cf13b5b94",
       "relPath": "Bacilos\\Grandes Exitos\\Tabaco Y Chanel.mp3",
       "title": "Tabaco y Chanel",
@@ -14329,6 +17725,18 @@
       "hasCover": true
     },
     {
+      "id": "a750095d14485f3f",
+      "relPath": "Various Artists\\Baladas Clasificadas\\Tantos Deseos De Ella.mp3",
+      "title": "Tantos Deseos De Ella",
+      "artist": "Pooh",
+      "album": "Baladas Clasificadas",
+      "genre": "Sin género",
+      "year": 1993,
+      "track": 6,
+      "duration": 318,
+      "hasCover": true
+    },
+    {
       "id": "0441b880ead6dc04",
       "relPath": "Baltimora\\Living In The Background\\Tarzan Boy.mp3",
       "title": "Tarzan Boy",
@@ -14386,6 +17794,30 @@
       "year": 1995,
       "track": 11,
       "duration": 285,
+      "hasCover": true
+    },
+    {
+      "id": "1b05e8f9ab5179d0",
+      "relPath": "Sparx\\Todo Lo Mejor\\Te Amo, Te Amo, Te Amo.mp3",
+      "title": "Te amo, te amo, te amo",
+      "artist": "Sparx",
+      "album": "Todo lo mejor",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 2,
+      "duration": 192,
+      "hasCover": true
+    },
+    {
+      "id": "6f3072c3d7a957fd",
+      "relPath": "Sara Jaramillo\\Cuando Se Acaba Un Amor\\Te Aprovechas.mp3",
+      "title": "Te aprovechas",
+      "artist": "Sara Jaramillo",
+      "album": "Cuando se acaba un amor",
+      "genre": "Sin género",
+      "year": 2016,
+      "track": 9,
+      "duration": 180,
       "hasCover": true
     },
     {
@@ -14809,6 +18241,18 @@
       "hasCover": true
     },
     {
+      "id": "5b6192d63e2bff3a",
+      "relPath": "Various Artists\\Discomania Mix 6\\The Rhythm Of The Night.mp3",
+      "title": "The Rhythm of the Night",
+      "artist": "Corona",
+      "album": "Discomania Mix 6",
+      "genre": "Sin género",
+      "year": 1994,
+      "track": 11,
+      "duration": 241,
+      "hasCover": true
+    },
+    {
       "id": "4b02e0df3f9cdac6",
       "relPath": "Ace Of Base\\Music Box\\The Sign.mp3",
       "title": "The sign",
@@ -15001,6 +18445,18 @@
       "hasCover": true
     },
     {
+      "id": "7ce84f108b9ddd2e",
+      "relPath": "Adrian Y Los Dados Negros\\Mama Soltera\\Tonta.mp3",
+      "title": "Tonta",
+      "artist": "Adrián y los Dados Negros",
+      "album": "Mamá Soltera",
+      "genre": "Sin género",
+      "year": 1996,
+      "track": 1,
+      "duration": 234,
+      "hasCover": true
+    },
+    {
       "id": "125728597d59f2f7",
       "relPath": "Leo Dan\\La Historia\\Toquen Mariachis, Canten (Con Mariachi).mp3",
       "title": "Toquen mariachis, canten (con mariachi)",
@@ -15181,6 +18637,30 @@
       "hasCover": true
     },
     {
+      "id": "ef4e54f7aa307e2c",
+      "relPath": "Palito Ortega\\Romanticos 60'S\\Tu Cabeza En Mi Hombro.mp3",
+      "title": "Tu cabeza en mi hombro",
+      "artist": "Palito Ortega",
+      "album": "Románticos 60's",
+      "genre": "Sin género",
+      "year": 2018,
+      "track": 4,
+      "duration": 150,
+      "hasCover": true
+    },
+    {
+      "id": "3ff624dc180f3029",
+      "relPath": "Wayra\\Melodias Instrumentales Del Orgullo Hispano, Vol I\\Tu Carcel.mp3",
+      "title": "Tu Carcel",
+      "artist": "Wayra",
+      "album": "Melodías Instrumentales Del Orgullo Hispano, Vol. I",
+      "genre": "Sin género",
+      "year": 2008,
+      "track": 6,
+      "duration": 217,
+      "hasCover": true
+    },
+    {
       "id": "7bc64eda716c1384",
       "relPath": "Los Bukis\\Me Volvi A Acordar De Ti\\Tu Carcel.mp3",
       "title": "Tu cárcel",
@@ -15226,6 +18706,18 @@
       "year": null,
       "track": 10,
       "duration": 261,
+      "hasCover": true
+    },
+    {
+      "id": "86780d89a9b24878",
+      "relPath": "Los Reyes Del Camino\\Con Hambre De Amor\\Tu Con El.mp3",
+      "title": "Tu con el",
+      "artist": "Los Reyes del Camino",
+      "album": "Con hambre de amor",
+      "genre": "Sin género",
+      "year": 2003,
+      "track": 2,
+      "duration": 260,
       "hasCover": true
     },
     {
@@ -15334,6 +18826,18 @@
       "year": 2014,
       "track": 11,
       "duration": 249,
+      "hasCover": true
+    },
+    {
+      "id": "6c6b2e22160cda7b",
+      "relPath": "Roberto Torres\\Roberto Torres Recuerda La Sonora\\Tu Rica Boca.mp3",
+      "title": "Tu rica boca",
+      "artist": "Roberto Torres",
+      "album": "Roberto Torres recuerda la Sonora",
+      "genre": "Sin género",
+      "year": 1994,
+      "track": 2,
+      "duration": 182,
       "hasCover": true
     },
     {
@@ -15613,6 +19117,18 @@
       "hasCover": true
     },
     {
+      "id": "6743d3f7745774f8",
+      "relPath": "Liliana Barrios\\Troileana\\Una Cancion.mp3",
+      "title": "Una canción",
+      "artist": "Liliana Barrios",
+      "album": "Troileana",
+      "genre": "Sin género",
+      "year": 2009,
+      "track": 8,
+      "duration": 240,
+      "hasCover": true
+    },
+    {
       "id": "06cb4cd989293b2a",
       "relPath": "Barrio Boyzz\\12 Super Exitos\\Una Noche De Amor.mp3",
       "title": "Una noche de amor",
@@ -15694,6 +19210,18 @@
       "year": 2000,
       "track": 1,
       "duration": 144,
+      "hasCover": true
+    },
+    {
+      "id": "dd50192d2e3f0861",
+      "relPath": "Los Tres Ases\\Los Mejores Trios\\Vanidad.mp3",
+      "title": "Vanidad",
+      "artist": "Los Tres Ases",
+      "album": "Los Mejores Trios",
+      "genre": "Sin género",
+      "year": 1997,
+      "track": 11,
+      "duration": 235,
       "hasCover": true
     },
     {
@@ -16585,6 +20113,18 @@
       "hasCover": true
     },
     {
+      "id": "a2f546d01d910b53",
+      "relPath": "Georgina Verbaan\\Sugar Spider\\Yo Quiero Bailar.mp3",
+      "title": "Yo Quiero Bailar",
+      "artist": "Georgina Verbaan",
+      "album": "Sugar Spider",
+      "genre": "Sin género",
+      "year": 2002,
+      "track": 11,
+      "duration": 227,
+      "hasCover": true
+    },
+    {
       "id": "b0282962a9cb8037",
       "relPath": "Amaury Gutierrez\\Amaury Gutierrez\\Yo Se Que Es Mentira.mp3",
       "title": "Yo sé que es mentira",
@@ -16729,6 +20269,18 @@
       "hasCover": false
     },
     {
+      "id": "f09910d898a09163",
+      "relPath": "Various Artists\\2007 GRAMMY Nominees\\You're Beautiful (2).mp3",
+      "title": "You're Beautiful",
+      "artist": "James Blunt",
+      "album": "2007 GRAMMY Nominees",
+      "genre": "Sin género",
+      "year": 2007,
+      "track": 15,
+      "duration": 204,
+      "hasCover": true
+    },
+    {
       "id": "ba0832953366d279",
       "relPath": "Various Artists\\2007 GRAMMY Nominees\\You're Beautiful (1).mp3",
       "title": "You're Beautiful (1)",
@@ -16825,6 +20377,6 @@
       "hasCover": true
     }
   ],
-  "scannedAt": 1782896388771,
+  "scannedAt": 1782899502392,
   "musicPath": "D:/musica"
 }

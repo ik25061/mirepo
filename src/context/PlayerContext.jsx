@@ -20,6 +20,12 @@ export function PlayerProvider({ children }) {
   const silenceCheckIntervalRef = useRef(null);
   const playedHistoryRef = useRef(new Set());
   const originalQueueRef = useRef([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detectar móvil
+  useEffect(() => {
+    setIsMobile(/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+  }, []);
 
   const [queue, setQueue] = useState([]);
   const [current, setCurrent] = useState(null);
@@ -46,11 +52,13 @@ export function PlayerProvider({ children }) {
     });
   }, [volume]);
 
+  // Crear elementos de audio
   if (!audiosRef.current && typeof window !== 'undefined') {
     audiosRef.current = [new Audio(), new Audio()];
     audiosRef.current.forEach((a) => {
       a.preload = 'auto';
       a.crossOrigin = 'anonymous';
+      a.playsInline = true;
     });
   }
 
@@ -116,6 +124,7 @@ export function PlayerProvider({ children }) {
     silenceCheckIntervalRef.current = setInterval(checkSilence, SILENCE_ANALYSE_INTERVAL * 1000);
   }, []);
 
+  // ====== FUNCIÓN playIndex ======
   const playIndex = useCallback((idx, { crossfade = true } = {}) => {
     const q = queueRef.current;
     if (idx < 0 || idx >= q.length) return;
@@ -129,7 +138,7 @@ export function PlayerProvider({ children }) {
     const incoming = getIdle();
     const outgoing = getActive();
     const target = volumeRef.current;
-    const fadeTime = crossfade ? crossfadeRef.current : 0.3;
+    const fadeTime = crossfade && !isMobile ? crossfadeRef.current : 0.1;
 
     clearFade();
     if (silenceCheckIntervalRef.current) {
@@ -138,15 +147,25 @@ export function PlayerProvider({ children }) {
     }
     crossfadingRef.current = true;
 
-    incoming.src = audioUrl(song.id);
+    const audioUrlStr = audioUrl(song.id);
+    console.log('[Player] Cargando audio:', audioUrlStr);
+    
+    incoming.src = audioUrlStr;
     incoming.currentTime = 0;
     incoming.volume = 0;
+    incoming.playsInline = true;
     
     const onLoadedMetadata = () => {
       setDuration(incoming.duration || 0);
       incoming.removeEventListener('loadedmetadata', onLoadedMetadata);
     };
     incoming.addEventListener('loadedmetadata', onLoadedMetadata);
+    
+    const onCanPlay = () => {
+      console.log('[Player] Audio listo para reproducir');
+      incoming.removeEventListener('canplay', onCanPlay);
+    };
+    incoming.addEventListener('canplay', onCanPlay);
     
     const onPlay = () => {
       detectAndSkipSilence(incoming);
@@ -155,7 +174,16 @@ export function PlayerProvider({ children }) {
     incoming.addEventListener('play', onPlay);
     
     const playPromise = incoming.play();
-    if (playPromise) playPromise.catch(() => {});
+    if (playPromise) {
+      playPromise.catch((err) => {
+        console.warn('[Player] Error al reproducir:', err);
+        setTimeout(() => {
+          try {
+            incoming.play().catch(() => {});
+          } catch {}
+        }, 100);
+      });
+    }
     setIsPlaying(true);
 
     const steps = Math.max(1, Math.round((fadeTime * 1000) / FADE_MS));
@@ -178,8 +206,9 @@ export function PlayerProvider({ children }) {
         crossfadingRef.current = false;
       }
     }, FADE_MS);
-  }, [detectAndSkipSilence]);
+  }, [detectAndSkipSilence, isMobile]);
 
+  // ====== FUNCIÓN play ======
   const play = useCallback((song, songs) => {
     const list = songs && songs.length ? songs : [song];
     queueRef.current = list;
@@ -188,6 +217,7 @@ export function PlayerProvider({ children }) {
     playIndex(idx === -1 ? 0 : idx, { crossfade: getActive() && !getActive().paused });
   }, [playIndex]);
 
+  // ====== FUNCIÓN shufflePlay ======
   const shufflePlay = useCallback((songs) => {
     if (!songs || songs.length === 0) return;
     
@@ -215,6 +245,7 @@ export function PlayerProvider({ children }) {
     playIndex(firstIndex, { crossfade: getActive() && !getActive().paused });
   }, [playIndex]);
 
+  // ====== FUNCIÓN prev ======
   const prev = useCallback(() => {
     const a = getActive();
     if (a && a.currentTime > 3) {
@@ -225,6 +256,7 @@ export function PlayerProvider({ children }) {
     if (indexRef.current > 0) playIndex(indexRef.current - 1);
   }, [playIndex]);
 
+  // ====== FUNCIÓN next ======
   const next = useCallback(() => {
     const q = queueRef.current;
     if (q.length === 0) return;
@@ -248,11 +280,12 @@ export function PlayerProvider({ children }) {
     }
   }, [playIndex]);
 
+  // ====== FUNCIÓN togglePlay ======
   const togglePlay = useCallback(() => {
     const a = getActive();
     if (!a || !a.src) return;
     if (a.paused) {
-      a.play();
+      a.play().catch(() => {});
       setIsPlaying(true);
     } else {
       a.pause();
@@ -260,6 +293,7 @@ export function PlayerProvider({ children }) {
     }
   }, []);
 
+  // ====== FUNCIÓN seek ======
   const seek = useCallback((time) => {
     const a = getActive();
     if (a && a.duration) {
@@ -268,6 +302,7 @@ export function PlayerProvider({ children }) {
     }
   }, []);
 
+  // ====== FUNCIÓN stop ======
   const stop = useCallback(() => {
     clearFade();
     if (silenceCheckIntervalRef.current) {
@@ -289,6 +324,7 @@ export function PlayerProvider({ children }) {
     activeRef.current = 0;
   }, []);
 
+  // ====== FUNCIÓN removeFromQueue ======
   const removeFromQueue = useCallback((songId) => {
     const currentQueue = queueRef.current;
     const currentIndex = indexRef.current;
@@ -339,6 +375,7 @@ export function PlayerProvider({ children }) {
     return true;
   }, [play, stop]);
 
+  // ====== ACTUALIZAR PROGRESO ======
   useEffect(() => {
     const audios = audiosRef.current;
     if (!audios) return;
@@ -427,6 +464,7 @@ export function PlayerProvider({ children }) {
     }
   }, [current]);
 
+  // ====== MEDIA SESSION API ======
   useEffect(() => {
     const a = getActive();
     if (!a || !current) return;
@@ -484,6 +522,7 @@ export function PlayerProvider({ children }) {
 
   const getActiveAudio = useCallback(() => getActive(), []);
 
+  // ====== VALOR DEL CONTEXTO ======
   const value = {
     queue,
     current,

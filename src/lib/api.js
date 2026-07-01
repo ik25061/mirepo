@@ -1,35 +1,12 @@
-// ====== CONFIGURACIÓN DE IP DINÁMICA ======
-let API_URL = '';
-let SERVER_IP = 'localhost';
-let SERVER_PORT = 5001;
-
-export async function detectServerIP() {
-  try {
-    const response = await fetch('/api/config/ip');
-    if (response.ok) {
-      const data = await response.json();
-      SERVER_IP = data.ip;
-      SERVER_PORT = data.port;
-      API_URL = data.serverUrl || `http://${SERVER_IP}:${SERVER_PORT}`;
-      console.log(`📡 Servidor detectado: ${API_URL}`);
-      return API_URL;
-    }
-  } catch (err) {
-    console.warn('⚠️ No se pudo detectar IP automáticamente, usando localhost');
-  }
-  
-  const host = window.location.hostname;
-  const port = '5001';
-  API_URL = `http://${host}:${port}`;
-  return API_URL;
-}
-
-// Detectar IP al cargar
-detectServerIP();
+// ====== CONFIGURACIÓN - RUTAS RELATIVAS ======
+// Usar rutas relativas para que el proxy de Vite funcione
+const API_URL = '';
 
 export function getApiUrl() {
   return API_URL;
 }
+
+// ====== FUNCIONES DE API ======
 
 async function post(url, body) {
   const res = await fetch(`${API_URL}${url}`, {
@@ -37,7 +14,10 @@ async function post(url, body) {
     headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(`Error ${res.status}`);
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Error ${res.status}: ${errorText}`);
+  }
   return res.json();
 }
 
@@ -67,8 +47,11 @@ export const api = {
     if (params.limit !== undefined) qs.set('limit', String(params.limit));
     if (params.offset !== undefined) qs.set('offset', String(params.offset));
     if (params.userId) qs.set('userId', String(params.userId));
-    const url = `${API_URL}/api/library${qs.toString() ? `?${qs.toString()}` : ''}`;
-    return fetch(url).then((r) => r.json());
+    const url = `/api/library${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return fetch(url).then((r) => {
+      if (!r.ok) throw new Error(`Error ${r.status}`);
+      return r.json();
+    });
   },
   rescan: () => post('/api/rescan'),
   like: (id, liked, userId) => post(`/api/songs/${id}/like`, { liked, userId }),
@@ -76,9 +59,13 @@ export const api = {
   deleteSong: (id, userId) => del('/api/songs', { id, userId }),
   hideArtist: (artist, userId) => post('/api/artists/hide', { artist, userId }),
   getConfigIp: () => fetch('/api/config/ip').then(r => r.json()),
+  scanDuplicates: (folderPath) => post('/api/scan', { folderPath }),
+  deleteDuplicate: (filePath) => del('/api/delete-duplicate', { filePath }),
+  fixMetadata: (filePath) => post('/api/fix-metadata', { filePath }),
 };
 
-export const audioUrl = (id) => `${API_URL}/audio/${id}`;
-export const coverUrl = (id) => `${API_URL}/cover/${id}`;
-export const artistCoverUrl = (artist) => `${API_URL}/artist-cover/${encodeURIComponent(artist)}`;
-export const serverUrl = API_URL;
+// ====== URLs DE AUDIO E IMÁGENES ======
+export const audioUrl = (id) => `/audio/${id}`;
+export const coverUrl = (id) => `/cover/${id}`;
+export const artistCoverUrl = (artist) => `/artist-cover/${encodeURIComponent(artist)}`;
+export const serverUrl = '';

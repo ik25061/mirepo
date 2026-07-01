@@ -1,6 +1,6 @@
 import { Home, Search, Library, Music2, Copy } from 'lucide-react';
 
-export function BottomNav({ activeView, onViewChange, hasCurrentTrack }) {
+export default function BottomNav({ activeView, onViewChange, hasCurrentTrack }) {
   const tabs = [
     { id: 'home', label: 'Inicio', icon: Home },
     { id: 'search', label: 'Buscar', icon: Search },
@@ -11,14 +11,13 @@ export function BottomNav({ activeView, onViewChange, hasCurrentTrack }) {
 
   return (
     <div
-      className="flex items-center w-full"
+      className="flex items-center w-full flex-shrink-0"
       style={{
         height: 64,
         minHeight: 64,
         background: '#121212',
         borderTop: '1px solid rgba(255,255,255,0.08)',
         paddingBottom: 'env(safe-area-inset-bottom)',
-        flexShrink: 0,
         position: 'relative',
         zIndex: 10,
         overflow: 'hidden',

@@ -17,74 +17,108 @@
   }
 }
 
-@layer base {
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  html, body, #root {
-    height: 100%;
-    overflow: hidden;
-  }
-
-  body {
-    background: #121212;
-    color: #ffffff;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    -webkit-tap-highlight-color: transparent;
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: #121212;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #535353;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a7a7a7;
+}
+
+/* ===== ESTILOS PARA CARRUSEL EN MÓVIL ===== */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Scroll horizontal visible en móvil */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Snap scrolling para carrusel */
+.snap-x {
+  scroll-snap-type: x proximity;
+}
+.snap-start {
+  scroll-snap-align: start;
+}
+
+/* Animations */
+@keyframes eq {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}
+
+/* Focus para TV/control remoto */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid #1db954;
+  outline-offset: 2px;
+}
+
+/* ===== CLASES DE UTILIDAD PERSONALIZADAS ===== */
 @layer components {
-  .bg-background { background-color: var(--color-background); }
-  .bg-surface { background-color: var(--color-surface); }
-  .bg-surface-2 { background-color: var(--color-surface-2); }
-  .bg-primary { background-color: var(--color-primary); }
-  .text-foreground { color: var(--color-foreground); }
-  .text-muted-foreground { color: var(--color-muted-foreground); }
-  .text-primary { color: var(--color-primary); }
-  .border-border { border-color: var(--color-border); }
-}
-
-@layer utilities {
-  .no-scrollbar {
-    scrollbar-width: none;
+  .bg-background {
+    background-color: var(--color-background);
   }
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
+  .bg-surface {
+    background-color: var(--color-surface);
   }
-
-  .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
+  .bg-surface-2 {
+    background-color: var(--color-surface-2);
   }
-
-  .snap-x {
-    scroll-snap-type: x proximity;
+  .bg-primary {
+    background-color: var(--color-primary);
   }
-  .snap-start {
-    scroll-snap-align: start;
+  .text-foreground {
+    color: var(--color-foreground);
   }
-
-  .animate-fade-in {
-    animation: fade-in 0.4s ease-out forwards;
+  .text-muted-foreground {
+    color: var(--color-muted-foreground);
   }
-
-  @keyframes eq {
-    0%, 100% { transform: scaleY(0.4); }
-    50% { transform: scaleY(1); }
+  .text-primary {
+    color: var(--color-primary);
   }
-
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  button:focus-visible,
-  [role="button"]:focus-visible {
-    outline: 2px solid #1db954;
-    outline-offset: 2px;
+  .border-border {
+    border-color: var(--color-border);
   }
 }
