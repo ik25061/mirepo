@@ -1,1 +1,12 @@
 .env
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+
+node_modules
+bin/
+certs/
+=======
+/node_modules
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes

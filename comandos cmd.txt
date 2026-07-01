@@ -1,0 +1,3 @@
+crear árbol quitando carpetas 
+dir /s /b /a:-d | findstr /i /v "\node_modules\ \.git\ \.vscode\" > arbol.txt
+dir /s /b /a:-d | findstr /i /v /c:"\node_modules\\" /c:"\.git\\" /c:"\.vscode\\" > arbol.txt
