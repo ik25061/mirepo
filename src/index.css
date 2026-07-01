@@ -1,16 +1,20 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --color-background: #121212;
-  --color-foreground: #ffffff;
-  --color-surface: #1a1a1a;
-  --color-surface-2: #282828;
-  --color-muted: #3a3a3a;
-  --color-muted-foreground: #a7a7a7;
-  --color-primary: #1db954;
-  --color-primary-foreground: #000000;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-danger: #e22134;
+@layer base {
+  :root {
+    --color-background: #121212;
+    --color-foreground: #ffffff;
+    --color-surface: #1a1a1a;
+    --color-surface-2: #282828;
+    --color-muted: #3a3a3a;
+    --color-muted-foreground: #a7a7a7;
+    --color-primary: #1db954;
+    --color-primary-foreground: #000000;
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-danger: #e22134;
+  }
 }
 
 * {
@@ -47,7 +51,6 @@ body {
   background: #a7a7a7;
 }
 
-/* ===== ESTILOS PARA CARRUSEL EN MÓVIL ===== */
 .no-scrollbar {
   scrollbar-width: none;
 }
@@ -55,13 +58,11 @@ body {
   display: none;
 }
 
-/* Scroll horizontal visible en móvil */
 .overflow-x-auto {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 }
 
-/* Snap scrolling para carrusel */
 .snap-x {
   scroll-snap-type: x proximity;
 }
@@ -69,7 +70,6 @@ body {
   scroll-snap-align: start;
 }
 
-/* Animations */
 @keyframes eq {
   0%, 100% { transform: scaleY(0.4); }
   50% { transform: scaleY(1); }
@@ -84,7 +84,6 @@ body {
   animation: fade-in 0.4s ease-out forwards;
 }
 
-/* Focus para TV/control remoto */
 button:focus-visible,
 [role="button"]:focus-visible {
   outline: 2px solid #1db954;

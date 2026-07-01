@@ -1,22 +1,25 @@
-import { useEffect, useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { PlayerProvider, usePlayer } from './context/PlayerContext';
+import { useLibrary } from './hooks/useLibrary';
+import LoginScreen from './components/LoginScreen';
+import Sidebar from './components/Sidebar';
+import BottomNav from './components/BottomNav';
+import MiniPlayer from './components/MiniPlayer';
+import PlayerBar from './components/Player/PlayerBar';
+import HomeView from './components/Home/HomeView';
+import LibraryView from './components/Library/LibraryView';
+import CollectionView from './components/CollectionView';
+import GridView from './components/GridView';
+import DuplicateFinder from './components/DuplicateFinder';
+import NowPlayingScreen from './components/NowPlayingScreen';
+import MobileSearchView from './components/MobileSearchView';
+import { useState, useEffect } from 'react';
 import { Loader2, RefreshCw } from 'lucide-react';
-import { PlayerProvider, usePlayer } from './context/PlayerContext.jsx';
-import { useLibrary } from './hooks/useLibrary.js';
-import Sidebar from './components/Sidebar.jsx';
-import PlayerBar from './components/Player/PlayerBar.jsx';
-import HomeView from './components/Home/HomeView.jsx';
-import LibraryView from './components/Library/LibraryView.jsx';
-import CollectionView from './components/CollectionView.jsx';
-import GridView from './components/GridView.jsx';
-import MobileSearchView from './components/MobileSearchView.jsx';
-import NowPlayingScreen from './components/NowPlayingScreen.jsx';
-import DuplicateFinder from './components/DuplicateFinder.jsx';
-import { MiniPlayer } from './components/MiniPlayer.jsx';
-import { BottomNav } from './components/BottomNav.jsx';
 
 function Shell() {
-  const lib = useLibrary();
-  const { current, stop, isPlaying, togglePlay, prev, next, progress, duration, repeatMode, setRepeatMode } = usePlayer();
+  const { isAuthenticated, loading: authLoading, user } = useAuth();
+  const lib = useLibrary(user?.id);
+  const { current, isPlaying, togglePlay, next, prev, stop } = usePlayer();
   const [view, setView] = useState({ type: 'home' });
   const [showNowPlaying, setShowNowPlaying] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -34,32 +37,54 @@ function Shell() {
     }
   }, [lib.songs, lib.loading, current, next]);
 
-  // Escuchar evento "me gusta" desde la pantalla de bloqueo (Media Session API)
-  useEffect(() => {
-    const handler = (e) => {
-      const songId = e.detail?.id;
-      if (songId) {
-        const song = lib.songs.find((s) => s.id === songId);
-        if (song) lib.toggleLike(song);
-      }
-    };
-    window.addEventListener('music-lock-toggle-like', handler);
-    return () => window.removeEventListener('music-lock-toggle-like', handler);
-  }, [lib.songs, lib.toggleLike]);
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background" style={{ background: '#121212' }}>
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    );
+  }
 
-  // Función para abrir colección (álbum, artista, género)
-  const openCollection = (collection) => {
-    setView({ type: 'collection', collection });
-  };
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
 
-  // Función para abrir GridView
-  const openGridView = (type, items) => {
-    setView({ 
-      type: 'grid', 
-      gridData: { type, items }
-    });
-  };
+  if (lib.loading) {
+    return (
+      <div className="flex h-screen flex-col bg-background" style={{ background: '#121212' }}>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="animate-spin text-primary mx-auto mb-4" size={40} />
+            <p className="text-muted-foreground" style={{ color: '#a7a7a7' }}>Cargando tu biblioteca...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
+  if (lib.error) {
+    return (
+      <div className="flex h-screen flex-col bg-background" style={{ background: '#121212' }}>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-400 mb-4">Error: {lib.error}</p>
+            <button
+              onClick={lib.reload}
+              className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-sm text-foreground"
+              style={{ background: '#282828', color: '#fff' }}
+            >
+              <RefreshCw size={16} /> Reintentar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const openCollection = (collection) => setView({ type: 'collection', collection });
+  const openGridView = (type, items) => setView({ type: 'grid', gridData: { type, items } });
+
+  // ====== PANTALLA DE REPRODUCCIÓN ======
   if (showNowPlaying) {
     return (
       <div className="fixed inset-0 z-50 bg-background">
@@ -72,10 +97,8 @@ function Shell() {
           onLike={lib.toggleLike}
           onDislike={lib.dislikeSong}
           likedIds={new Set(lib.songs.filter(s => s.liked).map(s => s.id))}
-          audioRef={null}
           onClose={() => setShowNowPlaying(false)}
           allTracks={lib.songs}
-          onSync={() => {}}
           onDelete={lib.removeSong}
         />
       </div>
@@ -85,20 +108,9 @@ function Shell() {
   // ====== VISTA MÓVIL ======
   if (isMobile) {
     return (
-      <div className="flex flex-col h-full bg-background text-foreground overflow-hidden">
+      <div className="flex flex-col h-full bg-background text-foreground overflow-hidden" style={{ background: '#121212' }}>
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 pt-3 pb-0">
-          {lib.loading ? (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
-              <Loader2 className="mr-2 animate-spin" size={20} /> Cargando...
-            </div>
-          ) : lib.error ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
-              <p>No se pudo conectar con el servidor.</p>
-              <button onClick={lib.reload} className="rounded-full bg-surface-2 px-4 py-2 text-sm text-white">
-                <RefreshCw size={16} className="inline mr-2" /> Reintentar
-              </button>
-            </div>
-          ) : view.type === 'home' ? (
+          {view.type === 'home' ? (
             <HomeView 
               songs={lib.songs} 
               onOpenCollection={openCollection} 
@@ -122,7 +134,7 @@ function Shell() {
               loading={lib.loading}
             />
           ) : view.type === 'search' ? (
-            <MobileSearchView tracks={lib.songs} currentTrack={current} />
+            <MobileSearchView tracks={lib.songs} currentTrack={current} onPlay={lib.playSong} />
           ) : view.type === 'grid' ? (
             <GridView
               items={view.gridData.items}
@@ -173,23 +185,12 @@ function Shell() {
 
   // ====== VISTA ESCRITORIO ======
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground" style={{ background: '#121212', color: '#fff' }}>
       <Sidebar view={view} onNavigate={setView} trashCount={lib.counts.trash} />
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-10 sm:py-10">
-          {lib.loading ? (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
-              <Loader2 className="mr-2 animate-spin" size={20} /> Cargando biblioteca…
-            </div>
-          ) : lib.error ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
-              <p>No se pudo conectar con el servidor.</p>
-              <button onClick={lib.reload} className="rounded-full bg-surface-2 px-4 py-2 text-sm text-white">
-                <RefreshCw size={16} className="inline mr-2" /> Reintentar
-              </button>
-            </div>
-          ) : view.type === 'home' ? (
+      <div className="flex min-w-0 flex-1 flex-col">
+        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8">
+          {view.type === 'home' ? (
             <HomeView 
               songs={lib.songs} 
               onOpenCollection={openCollection} 
@@ -213,7 +214,7 @@ function Shell() {
               loading={lib.loading}
             />
           ) : view.type === 'search' ? (
-            <MobileSearchView tracks={lib.songs} currentTrack={current} />
+            <MobileSearchView tracks={lib.songs} currentTrack={current} onPlay={lib.playSong} />
           ) : view.type === 'grid' ? (
             <GridView
               items={view.gridData.items}
@@ -247,8 +248,10 @@ function Shell() {
 
 export default function App() {
   return (
-    <PlayerProvider>
-      <Shell />
-    </PlayerProvider>
+    <AuthProvider>
+      <PlayerProvider>
+        <Shell />
+      </PlayerProvider>
+    </AuthProvider>
   );
 }
