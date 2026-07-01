@@ -5,19 +5,10 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Ruta al binario fpcalc descargado
 const FPCALC_PATH = path.join(__dirname, '..', 'bin', 'chromaprint-fpcalc-1.5.1-windows-x86_64', 'fpcalc.exe');
-
-// API key pública de AcoustID (para uso personal/desarrollo)
-// Para producción, registra tu propia API key en https://acoustid.org/
 const ACOUSTID_API_KEY = '8XaBELgH';
 const ACOUSTID_API_URL = 'https://api.acoustid.org/v2/lookup';
 
-/**
- * Calcula la huella digital de un archivo de audio usando fpcalc.
- * @param {string} filePath - Ruta absoluta al archivo de audio
- * @returns {Promise<{fingerprint: string, duration: number} | null>}
- */
 export function computeFingerprint(filePath) {
   return new Promise((resolve) => {
     if (!fs.existsSync(FPCALC_PATH)) {
@@ -26,7 +17,6 @@ export function computeFingerprint(filePath) {
       return;
     }
 
-    // -length 100 es suficiente para fingerprinting y evita errores en archivos cortos
     const args = ['-raw', '-length', '120', filePath];
     const cp = spawn(FPCALC_PATH, args);
     
@@ -37,17 +27,13 @@ export function computeFingerprint(filePath) {
     cp.stderr.on('data', (data) => { stderr += data.toString(); });
 
     cp.on('close', (code) => {
-      // Si hay stderr con ERROR: pero exit code 0, algunos binarios de fpcalc 
-      // reportan así (chromaprint bug conocido). Verificamos stdout de todas formas.
       const hasErrorStderr = stderr && stderr.trim().toUpperCase().startsWith('ERROR:');
       
       if ((code !== 0 || !stdout) && hasErrorStderr) {
-        // Error real - no se pudo calcular fingerprint
         resolve(null);
         return;
       }
 
-      // Parsear la salida de fpcalc
       const result = {};
       for (const line of stdout.trim().split('\n')) {
         const idx = line.indexOf('=');
@@ -75,12 +61,6 @@ export function computeFingerprint(filePath) {
   });
 }
 
-/**
- * Consulta la API de AcoustID para identificar una canción por su huella digital.
- * @param {string} fingerprint - Huella digital de AcoustID
- * @param {number} duration - Duración en segundos
- * @returns {Promise<Array<{id: string, title: string, artist: string, album: string, score: number}>>}
- */
 export async function lookupAcoustId(fingerprint, duration) {
   try {
     const params = new URLSearchParams({
@@ -128,7 +108,6 @@ export async function lookupAcoustId(fingerprint, duration) {
       }
     }
 
-    // Ordenar por score descendente
     matches.sort((a, b) => b.score - a.score);
     return matches;
   } catch (err) {
@@ -141,13 +120,6 @@ export async function lookupAcoustId(fingerprint, duration) {
   }
 }
 
-/**
- * Calcula la similitud entre dos huellas digitales (strings de fingerprint raw).
- * Compara los valores de los fingerprints y devuelve un score entre 0 y 1.
- * @param {string} fp1 - Primera huella digital
- * @param {string} fp2 - Segunda huella digital
- * @returns {number}
- */
 export function fingerprintSimilarity(fp1, fp2) {
   if (!fp1 || !fp2) return 0;
   
@@ -156,12 +128,11 @@ export function fingerprintSimilarity(fp1, fp2) {
   
   if (arr1.length === 0 || arr2.length === 0) return 0;
   
-  // Alinear por el más corto
   const minLen = Math.min(arr1.length, arr2.length);
   if (minLen < 10) return 0;
   
   let matches = 0;
-  const compareLen = Math.min(minLen, 1000); // Limitar a 1000 valores para performance
+  const compareLen = Math.min(minLen, 1000);
   
   for (let i = 0; i < compareLen; i++) {
     if (Math.abs(arr1[i] - arr2[i]) <= 1) {
@@ -172,11 +143,6 @@ export function fingerprintSimilarity(fp1, fp2) {
   return matches / compareLen;
 }
 
-/**
- * Calcula la huella digital de un archivo y la compara con la API de AcoustID.
- * @param {string} filePath - Ruta absoluta al archivo de audio
- * @returns {Promise<{fingerprint: string|null, duration: number|null, acoustIdResults: Array}>}
- */
 export async function identifyTrack(filePath) {
   const fp = await computeFingerprint(filePath);
   if (!fp) {

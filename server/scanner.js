@@ -10,10 +10,7 @@ export const CACHE_PATH = path.join(process.cwd(), 'server', 'songs_cache.json')
 
 const AUDIO_EXT = new Set(['.mp3', '.m4a', '.aac', '.flac', '.wav', '.ogg', '.opus', '.webm']);
 
-// Cache en memoria
 let cache = { songs: [], byId: new Map(), scannedAt: 0, musicPath: MUSIC_DIR };
-
-// ====== PERSISTENCIA EN JSON ======
 
 function loadCache() {
   try {
@@ -51,8 +48,6 @@ function saveCache() {
     console.warn('[scanner] Error guardando caché:', err.message);
   }
 }
-
-// ====== ESCANEO ======
 
 function ensureDirs() {
   fs.mkdirSync(MUSIC_DIR, { recursive: true });
@@ -108,9 +103,7 @@ async function readSong(file) {
     const meta = await parseFile(file, { duration: true });
     common = meta.common || {};
     format = meta.format || {};
-  } catch (err) {
-    // Silencioso
-  }
+  } catch (err) {}
 
   const picture = common.picture && common.picture[0];
   return {
@@ -126,8 +119,6 @@ async function readSong(file) {
     hasCover: Boolean(picture),
   };
 }
-
-// ====== ESCANEO COMPLETO ======
 
 async function scanFullLibrary() {
   ensureDirs();
@@ -151,14 +142,12 @@ async function scanFullLibrary() {
     processed++;
     if (processed % 10 === 0 || processed === total) {
       console.log(`[scanner] ⏳ Progreso: ${processed}/${total} archivos procesados`);
-      process.stdout.write(`\x1b[F\x1b[K`); // Mover cursor arriba y limpiar línea en terminal
+      process.stdout.write(`\x1b[F\x1b[K`);
     }
     try {
       const song = await readSong(file);
       songs.push(song);
-    } catch (err) {
-      // Silencioso
-    }
+    } catch (err) {}
   }
   
   songs.sort((a, b) => a.title.localeCompare(b.title, 'es'));
@@ -169,11 +158,8 @@ async function scanFullLibrary() {
   return cache;
 }
 
-// ====== ESCANEO PRINCIPAL (con caché) ======
-
 export async function scanLibrary() {
   console.log(`[scanner] 🔍 Iniciando escaneo de biblioteca...`);
-  // Intentar cargar desde caché
   if (loadCache()) {
     try {
       const currentFiles = new Set();
@@ -190,12 +176,10 @@ export async function scanLibrary() {
       
       if (newFiles.length === 0 && deletedFiles.length === 0) {
         console.log(`[scanner] ✅ Sin cambios detectados. ${cache.songs.length} canciones cargadas.`);
-        console.log(`[scanner] 🎵 Escaneo rápido completado.`);
         return cache;
       }
       
       console.log(`[scanner] 🔄 Cambios detectados: +${newFiles.length} nuevos, -${deletedFiles.length} eliminados`);
-      console.log(`[scanner] ⏳ Procesando archivos nuevos...`);
       
       const songs = cache.songs.filter(s => !deletedFiles.includes(s.relPath));
       let processed = 0;
@@ -221,18 +205,13 @@ export async function scanLibrary() {
     }
     return cache;
   }
-  
   return await scanFullLibrary();
 }
-
-// ====== FORZAR RESCAN ======
 
 export async function rescanLibrary() {
   console.log('[scanner] 🔄 Forzando rescan completo...');
   return await scanFullLibrary();
 }
-
-// ====== ELIMINAR CANCIÓN DEL CACHÉ ======
 
 export function removeSongFromCache(songId) {
   const songIndex = cache.songs.findIndex(s => s.id === songId);
@@ -246,9 +225,9 @@ export function removeSongFromCache(songId) {
   return false;
 }
 
-// ====== EXPORTACIONES ======
-
+// Al final del archivo scanner.js
 export function getCache() {
+  console.log('[scanner] getCache() llamado, canciones:', cache.songs?.length || 0);
   return cache;
 }
 
@@ -260,5 +239,4 @@ export function absolutePath(relPath) {
   return path.join(MUSIC_DIR, relPath);
 }
 
-// Inicializar cargando caché al importar
 loadCache();

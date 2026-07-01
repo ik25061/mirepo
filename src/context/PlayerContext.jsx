@@ -28,7 +28,7 @@ export function PlayerProvider({ children }) {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.9);
   const [crossfadeSec, setCrossfadeSec] = useState(3);
-  const [repeatMode, setRepeatMode] = useState(0); // 0=none, 1=all, 2=one
+  const [repeatMode, setRepeatMode] = useState(0);
 
   const volumeRef = useRef(volume);
   const crossfadeRef = useRef(crossfadeSec);
@@ -38,7 +38,6 @@ export function PlayerProvider({ children }) {
   useEffect(() => { crossfadeRef.current = crossfadeSec; }, [crossfadeSec]);
   useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
 
-  // Sincronizar volumen con los elementos de audio al cambiar
   useEffect(() => {
     const audios = audiosRef.current;
     if (!audios) return;
@@ -65,7 +64,6 @@ export function PlayerProvider({ children }) {
     }
   };
 
-  // Detectar y saltar silencio al inicio
   const detectAndSkipSilence = useCallback((audio) => {
     if (!audio || !audio.src) return;
     if (silenceSkipDoneRef.current) return;
@@ -190,35 +188,28 @@ export function PlayerProvider({ children }) {
     playIndex(idx === -1 ? 0 : idx, { crossfade: getActive() && !getActive().paused });
   }, [playIndex]);
 
-  // Reproducción aleatoria SIN repetición hasta completar toda la lista
   const shufflePlay = useCallback((songs) => {
     if (!songs || songs.length === 0) return;
     
     const list = [...songs];
     
-    // Si ya se reprodujeron todas las canciones, reiniciar historial
     if (playedHistoryRef.current.size >= list.length) {
       playedHistoryRef.current = new Set();
     }
     
-    // Filtrar canciones no reproducidas
     const unplayed = list.filter((s) => !playedHistoryRef.current.has(s.id));
     
-    // Mezclar las canciones no reproducidas
     for (let i = unplayed.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [unplayed[i], unplayed[j]] = [unplayed[j], unplayed[i]];
     }
     
-    // Actualizar historial: marcar todas como reproducidas para este ciclo
     unplayed.forEach((s) => playedHistoryRef.current.add(s.id));
     
-    // Establecer cola completa (para next/prev funcionen correctamente)
     originalQueueRef.current = list;
     queueRef.current = list;
     setQueue(list);
     
-    // Reproducir la primera canción del subset aleatorio
     const firstSong = unplayed[0];
     const firstIndex = list.findIndex((s) => s.id === firstSong.id);
     playIndex(firstIndex, { crossfade: getActive() && !getActive().paused });
@@ -237,7 +228,6 @@ export function PlayerProvider({ children }) {
   const next = useCallback(() => {
     const q = queueRef.current;
     if (q.length === 0) return;
-    // Repeat one: replay current song
     if (repeatModeRef.current === 2 && indexRef.current >= 0 && indexRef.current < q.length) {
       playIndex(indexRef.current);
       return;
@@ -245,11 +235,9 @@ export function PlayerProvider({ children }) {
     if (indexRef.current < q.length - 1) {
       playIndex(indexRef.current + 1);
     } else {
-      // Repeat all: loop to beginning
       if (repeatModeRef.current === 1) {
         playIndex(0);
       } else {
-        // No repeat: stop at end
         setIsPlaying(false);
         const a = getActive();
         if (a) {
@@ -301,80 +289,66 @@ export function PlayerProvider({ children }) {
     activeRef.current = 0;
   }, []);
 
-// ====== ELIMINAR CANCIÓN DE LA COLA Y PASAR A LA SIGUIENTE ======
-const removeFromQueue = useCallback((songId) => {
-  const currentQueue = queueRef.current;
-  const currentIndex = indexRef.current;
-  
-  // Encontrar la canción en la cola
-  const songIndex = currentQueue.findIndex(s => s.id === songId);
-  if (songIndex === -1) return false;
-  
-  // Crear nueva cola sin la canción
-  const newQueue = currentQueue.filter(s => s.id !== songId);
-  queueRef.current = newQueue;
-  setQueue(newQueue);
-  
-  // Si la cola quedó vacía
-  if (newQueue.length === 0) {
-    stop();
-    return true;
-  }
-  
-  // Si la canción eliminada era la actual o estaba antes
-  if (songIndex === currentIndex) {
-    // La canción actual fue eliminada
-    // Buscar la siguiente canción en la nueva cola
-    let nextIndex = songIndex;
-    if (nextIndex >= newQueue.length) {
-      nextIndex = 0;
-    }
-    const nextSong = newQueue[nextIndex];
-    if (nextSong) {
-      // Detener reproducción actual
-      const active = getActive();
-      if (active) {
-        active.pause();
-        active.removeAttribute('src');
-        active.currentTime = 0;
-      }
-      // Reproducir la siguiente
-      setTimeout(() => {
-        play(nextSong, newQueue);
-      }, 150);
-      return true;
-    } else {
+  const removeFromQueue = useCallback((songId) => {
+    const currentQueue = queueRef.current;
+    const currentIndex = indexRef.current;
+    
+    const songIndex = currentQueue.findIndex(s => s.id === songId);
+    if (songIndex === -1) return false;
+    
+    const newQueue = currentQueue.filter(s => s.id !== songId);
+    queueRef.current = newQueue;
+    setQueue(newQueue);
+    
+    if (newQueue.length === 0) {
       stop();
       return true;
     }
-  } else if (songIndex < currentIndex) {
-    // La canción eliminada estaba antes de la actual, ajustar índice
-    const newIndex = currentIndex - 1;
-    indexRef.current = newIndex;
-    // Actualizar current si es necesario
-    if (newIndex < newQueue.length) {
-      setCurrent(newQueue[newIndex]);
-    } else {
-      setCurrent(newQueue[newQueue.length - 1] || null);
+    
+    if (songIndex === currentIndex) {
+      let nextIndex = songIndex;
+      if (nextIndex >= newQueue.length) {
+        nextIndex = 0;
+      }
+      const nextSong = newQueue[nextIndex];
+      if (nextSong) {
+        const active = getActive();
+        if (active) {
+          active.pause();
+          active.removeAttribute('src');
+          active.currentTime = 0;
+        }
+        setTimeout(() => {
+          play(nextSong, newQueue);
+        }, 150);
+        return true;
+      } else {
+        stop();
+        return true;
+      }
+    } else if (songIndex < currentIndex) {
+      const newIndex = currentIndex - 1;
+      indexRef.current = newIndex;
+      if (newIndex < newQueue.length) {
+        setCurrent(newQueue[newIndex]);
+      } else {
+        setCurrent(newQueue[newQueue.length - 1] || null);
+      }
     }
-  }
-  
-  return true;
-}, [play, stop]);
+    
+    return true;
+  }, [play, stop]);
 
-  // Actualizar progreso
   useEffect(() => {
     const audios = audiosRef.current;
     if (!audios) return;
 
     let intervalId = null;
 
-    // Inline next-track logic to avoid circular dependency with next() const
     const advanceTrack = () => {
       const q = queueRef.current;
       const repeat = repeatModeRef.current;
       if (q.length === 0) return;
-      // Repeat one: replay current song
       if (repeat === 2 && indexRef.current >= 0 && indexRef.current < q.length) {
         playIndex(indexRef.current);
         return;
@@ -382,11 +356,9 @@ const removeFromQueue = useCallback((songId) => {
       if (indexRef.current < q.length - 1) {
         playIndex(indexRef.current + 1);
       } else {
-        // Repeat all: loop to beginning
         if (repeat === 1) {
           playIndex(0);
         } else {
-          // No repeat: stop at end
           setIsPlaying(false);
           const a = getActive();
           if (a) {
@@ -455,7 +427,6 @@ const removeFromQueue = useCallback((songId) => {
     }
   }, [current]);
 
-  // Media Session API para controles de pantalla de bloqueo
   useEffect(() => {
     const a = getActive();
     if (!a || !current) return;
@@ -489,14 +460,11 @@ const removeFromQueue = useCallback((songId) => {
         }
       });
 
-      // Botón "Me gusta" (corazón) - mapeado a 'togglemicrophone' en algunos dispositivos
       try {
         navigator.mediaSession.setActionHandler('togglemicrophone', () => {
-          // Disparar evento personalizado para que App.jsx lo capture
           window.dispatchEvent(new CustomEvent('music-lock-toggle-like', { detail: current }));
         });
       } catch (err) {
-        // Alternativa: API de Rating
         try {
           navigator.mediaSession.setActionHandler('setrating', (details) => {
             if (details.rating === 1) {
@@ -506,7 +474,6 @@ const removeFromQueue = useCallback((songId) => {
         } catch (_) {}
       }
 
-      // Botón "No me gusta" / Bloquear (icono prohibido) - mapeado a 'hangup'
       try {
         navigator.mediaSession.setActionHandler('hangup', () => {
           next();
@@ -515,7 +482,6 @@ const removeFromQueue = useCallback((songId) => {
     }
   }, [current, isPlaying, togglePlay, prev, next, seek]);
 
-  // Exponer el audio activo para WaveSurfer
   const getActiveAudio = useCallback(() => getActive(), []);
 
   const value = {
