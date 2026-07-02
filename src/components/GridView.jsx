@@ -7,7 +7,7 @@
  * Quita el recuadro gris alrededor de la imagen del artista.
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ArrowLeft, Play } from 'lucide-react';
 import Cover from './Cover.jsx';
 import { usePlayer } from '../context/PlayerContext.jsx';
@@ -73,7 +73,7 @@ export default function GridView({
   // ============================================================
   useEffect(() => {
     if (!onLoadMore || !hasMore) return;
-    
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
@@ -88,7 +88,7 @@ export default function GridView({
       }
     );
 
-    const target = loadMoreRef || internalLoaderRef.current;
+    const target = (loadMoreRef && loadMoreRef.current) || internalLoaderRef.current;
     if (target) {
       observer.observe(target);
     }
@@ -110,6 +110,28 @@ export default function GridView({
     }
   };
 
+  // ============================================================
+  // ORDENAMIENTO
+  // ============================================================
+  const [sortBy, setSortBy] = useState('name'); // 'name' | 'songs_asc' | 'songs_desc'
+
+  const sorted = useMemo(() => {
+    const list = [...items];
+    switch (sortBy) {
+      case 'songs_asc':
+        list.sort((a, b) => (a.songs?.length || 0) - (b.songs?.length || 0));
+        break;
+      case 'songs_desc':
+        list.sort((a, b) => (b.songs?.length || 0) - (a.songs?.length || 0));
+        break;
+      case 'name':
+      default:
+        list.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'es'));
+        break;
+    }
+    return list;
+  }, [items, sortBy]);
+
   const getIcon = () => {
     switch(type) {
       case 'albums': return '💿';
@@ -121,7 +143,8 @@ export default function GridView({
 
   const getSubtitle = (item) => {
     if (type === 'albums') return item.artist;
-    return `${item.songs.length} ${item.songs.length === 1 ? 'canción' : 'canciones'}`;
+    const count = item.songs?.length || 0;
+    return `${count} ${count === 1 ? 'canción' : 'canciones'}`;
   };
 
   // ============================================================
@@ -152,9 +175,25 @@ export default function GridView({
 
       {/* ===== HEADER ===== */}
       <header className="flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{getIcon()}</span>
-          <h1 className="font-display text-3xl font-700 tracking-tight text-white">{getTitle()}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{getIcon()}</span>
+            <h1 className="font-display text-3xl font-700 tracking-tight text-white">{getTitle()}</h1>
+          </div>
+          {type !== 'genres' && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Ordenar:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              >
+                <option value="name">A - Z</option>
+                <option value="songs_desc">Más canciones</option>
+                <option value="songs_asc">Menos canciones</option>
+              </select>
+            </div>
+          )}
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {items.length} {items.length === 1 ? 'elemento' : 'elementos'}
@@ -169,7 +208,7 @@ export default function GridView({
         style={{ overscrollBehavior: 'contain' }}
       >
         <div className="grid grid-cols-4 gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
-          {items.map((item, idx) => {
+          {sorted.map((item, idx) => {
             const artistKey = type === 'artists' ? item.name : null;
             const cachedArtist = artistKey ? artistCache[artistKey] : null;
 
