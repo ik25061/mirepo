@@ -177,7 +177,7 @@ export default function NowPlayingScreen({
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            filter: 'blur(5px) brightness(0.4) saturate(1.3)',
+            filter: 'blur(20px) brightness(0.4) saturate(1.3)',
             transform: 'scale(1.2)',
           }}
         />
