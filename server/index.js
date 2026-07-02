@@ -466,6 +466,126 @@ app.delete('/api/songs', async (req, res) => {
   }
 });
 
+// ====== ENDPOINTS PARA OBTENER TODOS LOS ARTISTAS/ALBUMES/GENEROS ======
+// Estos endpoints devuelven directamente desde el caché del scanner,
+// sin paginación, para que la búsqueda funcione correctamente.
+
+function buildArtistsFromCache(songs, hiddenArtists = new Set()) {
+  const map = new Map();
+  const pref = (str) => String(str || '').trim();
+  
+  for (const s of songs) {
+    if (hiddenArtists.has(s.artist)) continue;
+    const raw = pref(s.artist) || 'Artista desconocido';
+    const key = raw.toLowerCase();
+    let entry = map.get(key);
+    if (!entry) {
+      entry = { name: raw, songs: [] };
+      map.set(key, entry);
+    }
+    entry.songs.push(s);
+  }
+  
+  return [...map.values()]
+    .map((g) => ({
+      name: g.name,
+      songs: g.songs,
+      coverId: g.songs.find((s) => s.hasCover)?.id || g.songs[0].id,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'));
+}
+
+function buildAlbumsFromCache(songs) {
+  const map = new Map();
+  const pref = (str) => String(str || '').trim();
+  
+  for (const s of songs) {
+    const raw = pref(s.album) || 'Sin álbum';
+    const key = `${raw.toLowerCase()}-${s.artist}`;
+    let entry = map.get(key);
+    if (!entry) {
+      entry = { name: raw, artist: s.artist, songs: [] };
+      map.set(key, entry);
+    } else {
+      if (!entry.artist && s.artist) entry.artist = s.artist;
+    }
+    entry.songs.push(s);
+  }
+  
+  return [...map.values()]
+    .map((g) => ({
+      name: g.name,
+      artist: g.artist,
+      songs: g.songs,
+      coverId: g.songs.find((s) => s.hasCover)?.id || g.songs[0].id,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'));
+}
+
+function buildGenresFromCache(songs) {
+  const map = new Map();
+  const pref = (str) => String(str || '').trim();
+  
+  for (const s of songs) {
+    const raw = pref(s.genre) || 'Sin género';
+    const key = raw.toLowerCase();
+    let entry = map.get(key);
+    if (!entry) {
+      entry = { name: raw, songs: [] };
+      map.set(key, entry);
+    }
+    entry.songs.push(s);
+  }
+  
+  return [...map.values()]
+    .map((g) => ({
+      name: g.name,
+      songs: g.songs,
+      coverId: g.songs.find((s) => s.hasCover)?.id || g.songs[0].id,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'));
+}
+
+app.get('/api/artists', async (req, res) => {
+  try {
+    const cache = getCache();
+    const userId = req.query.userId || null;
+    let hiddenArtists = new Set();
+    
+    try {
+      hiddenArtists = await db.getHiddenArtists(userId);
+    } catch {}
+
+    const artists = buildArtistsFromCache(cache.songs, hiddenArtists);
+    res.json({ artists, count: artists.length });
+  } catch (err) {
+    console.error('[api/artists] Error:', err);
+    res.status(500).json({ error: 'Error al obtener artistas' });
+  }
+});
+
+app.get('/api/albums', async (req, res) => {
+  try {
+    const cache = getCache();
+    const albums = buildAlbumsFromCache(cache.songs);
+    res.json({ albums, count: albums.length });
+  } catch (err) {
+    console.error('[api/albums] Error:', err);
+    res.status(500).json({ error: 'Error al obtener álbumes' });
+  }
+});
+
+app.get('/api/genres', async (req, res) => {
+  try {
+    const cache = getCache();
+    const genres = buildGenresFromCache(cache.songs);
+    res.json({ genres, count: genres.length });
+  } catch (err) {
+    console.error('[api/genres] Error:', err);
+    res.status(500).json({ error: 'Error al obtener géneros' });
+  }
+});
+
 app.post('/api/artists/hide', async (req, res) => {
   const { artist, userId } = req.body;
   if (!artist) return res.status(400).json({ error: 'Falta el artista' });

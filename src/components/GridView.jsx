@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { ArrowLeft, Play } from 'lucide-react';
+import { ArrowLeft, Play, Search } from 'lucide-react';
 import Cover from './Cover.jsx';
 import { usePlayer } from '../context/PlayerContext.jsx';
 import { artistCoverUrl } from '../lib/api.js';
@@ -106,6 +106,7 @@ export default function GridView({
       case 'albums': return 'Álbumes';
       case 'artists': return 'Artistas';
       case 'genres': return 'Géneros';
+      case 'years': return 'Años';
       default: return 'Todos';
     }
   };
@@ -114,9 +115,29 @@ export default function GridView({
   // ORDENAMIENTO
   // ============================================================
   const [sortBy, setSortBy] = useState('name'); // 'name' | 'songs_asc' | 'songs_desc'
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Función para normalizar texto (sin acentos ni casos especiales)
+  const normalizeText = (text) => {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  };
+
+  const filtered = useMemo(() => {
+    if (!searchQuery.trim()) return items;
+
+    const query = normalizeText(searchQuery);
+    return items.filter((item) => {
+      const name = normalizeText(item.name || '');
+      return name.includes(query);
+    });
+  }, [items, searchQuery]);
 
   const sorted = useMemo(() => {
-    const list = [...items];
+    const list = [...filtered];
     switch (sortBy) {
       case 'songs_asc':
         list.sort((a, b) => (a.songs?.length || 0) - (b.songs?.length || 0));
@@ -130,13 +151,14 @@ export default function GridView({
         break;
     }
     return list;
-  }, [items, sortBy]);
+  }, [filtered, sortBy]);
 
   const getIcon = () => {
     switch(type) {
       case 'albums': return '💿';
       case 'artists': return '🎤';
       case 'genres': return '🎵';
+      case 'years': return '📅';
       default: return '📀';
     }
   };
@@ -157,10 +179,12 @@ export default function GridView({
       onOpenCollection({ kind: 'Artista', name: item.name, songs: item.songs });
     } else if (type === 'genres') {
       onOpenCollection({ kind: 'Género', name: item.name, songs: item.songs });
+    } else if (type === 'years') {
+      onOpenCollection({ kind: 'Año', name: item.name, songs: item.songs });
     }
   };
 
-  const isRound = type === 'artists';
+  const isRound = type === 'artists' || type === 'years';
 
   return (
     <div className="flex flex-col gap-6 pb-20 w-full h-full">
@@ -175,28 +199,39 @@ export default function GridView({
 
       {/* ===== HEADER ===== */}
       <header className="flex-shrink-0">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{getIcon()}</span>
             <h1 className="font-display text-3xl font-700 tracking-tight text-white">{getTitle()}</h1>
           </div>
-          {type !== 'genres' && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Ordenar:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              >
-                <option value="name">A - Z</option>
-                <option value="songs_desc">Más canciones</option>
-                <option value="songs_asc">Menos canciones</option>
-              </select>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Ordenar:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              <option value="name">A - Z</option>
+              <option value="songs_desc">Más canciones</option>
+              <option value="songs_asc">Menos canciones</option>
+            </select>
+          </div>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {items.length} {items.length === 1 ? 'elemento' : 'elementos'}
+
+        {/* ===== BUSCADOR ===== */}
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={`Buscar ${getTitle().toLowerCase()}...`}
+            className="w-full rounded-lg border border-border bg-surface pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          />
+        </div>
+
+        <p className="text-sm text-muted-foreground">
+          {sorted.length} {sorted.length === 1 ? 'elemento' : 'elementos'}
           {hasMore && <span className="text-muted-foreground/60"> · Desplázate para cargar más</span>}
         </p>
       </header>
@@ -242,7 +277,7 @@ export default function GridView({
                       onClick={(e) => {
                         e.stopPropagation();
                         if (item.songs?.length) {
-                          const contextType = type === 'artists' ? 'artist' : type === 'albums' ? 'album' : 'genre';
+                          const contextType = type === 'artists' ? 'artist' : type === 'albums' ? 'album' : type === 'genres' ? 'genre' : 'year';
                           const context = { type: contextType, value: item.name };
                           play(item.songs[0], songs, context);
                         }

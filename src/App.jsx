@@ -253,6 +253,7 @@ function Shell() {
               onDislikeArtist={lib.dislikeArtist}
               onDelete={lib.removeSong}
               onOpenDuplicates={() => setView({ type: 'duplicates' })}
+              userId={user?.id}
             />
           ) : view.type === 'library' ? (
             <LibraryView
@@ -347,6 +348,7 @@ function Shell() {
               onDislikeArtist={lib.dislikeArtist}
               onDelete={lib.removeSong}
               onOpenDuplicates={() => setView({ type: 'duplicates' })}
+              userId={user?.id}
             />
           ) : view.type === 'library' ? (
             <LibraryView
