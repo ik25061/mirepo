@@ -35,17 +35,18 @@ async function del(url, body) {
 }
 
 export const api = {
-  getLibrary: (params = {}) => {
-    const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set('limit', String(params.limit));
-    if (params.offset !== undefined) qs.set('offset', String(params.offset));
-    if (params.userId) qs.set('userId', String(params.userId));
-    const url = `/api/library${qs.toString() ? `?${qs.toString()}` : ''}`;
-    return fetch(url).then((r) => {
-      if (!r.ok) throw new Error(`Error ${r.status}`);
-      return r.json();
-    });
-  },
+getLibrary: (params = {}) => {
+  const qs = new URLSearchParams();
+  if (params.limit !== undefined) qs.set('limit', String(params.limit));
+  if (params.offset !== undefined) qs.set('offset', String(params.offset));
+  if (params.userId) qs.set('userId', String(params.userId));
+  const url = `/api/library${qs.toString() ? `?${qs.toString()}` : ''}`;
+  console.log('[api] GET Library:', url);
+  return fetch(url).then((r) => {
+    if (!r.ok) throw new Error(`Error ${r.status}`);
+    return r.json();
+  });
+},
   rescan: () => post('/api/rescan'),
   like: (id, liked, userId) => post(`/api/songs/${id}/like`, { liked, userId }),
   hideSong: (id, userId) => post(`/api/songs/${id}/hide`, { userId }),

@@ -103,9 +103,9 @@ export default function NowPlayingScreen({
   useEffect(() => {
     if (!wavesurferInstance.current || !wavesurferReady) return;
     if (isPlaying) {
-      try { wavesurferInstance.current.play(); } catch(e) {}
+      try { wavesurferInstance.current.play(); } catch (e) { }
     } else {
-      try { wavesurferInstance.current.pause(); } catch(e) {}
+      try { wavesurferInstance.current.pause(); } catch (e) { }
     }
   }, [isPlaying, wavesurferReady]);
 
@@ -125,17 +125,17 @@ export default function NowPlayingScreen({
     if (confirmDelete) {
       const songId = track?.id;
       if (!songId) return;
-      
+
       const currentQueue = queue || [];
-      
+
       removeFromQueue(songId);
-      
+
       await onDelete(track);
-      
+
       if (currentQueue.length <= 1) {
         onClose();
       }
-      
+
       setConfirmDelete(false);
     } else {
       setConfirmDelete(true);
@@ -177,7 +177,7 @@ export default function NowPlayingScreen({
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            filter: 'blur(60px) brightness(0.4) saturate(1.3)',
+            filter: 'blur(5px) brightness(0.4) saturate(1.3)',
             transform: 'scale(1.2)',
           }}
         />
@@ -223,13 +223,12 @@ export default function NowPlayingScreen({
                   e.stopPropagation();
                   handleDelete();
                 }}
-                className={`p-2 rounded-full transition-colors ${
-                  confirmDelete ? 'bg-red-500/30' : 'hover:bg-red-500/20'
-                }`}
-                style={{ 
+                className={`p-2 rounded-full transition-colors ${confirmDelete ? 'bg-red-500/30' : 'hover:bg-red-500/20'
+                  }`}
+                style={{
                   color: confirmDelete ? '#ff4444' : '#ff4444',
-                  minWidth: 40, 
-                  minHeight: 40 
+                  minWidth: 40,
+                  minHeight: 40
                 }}
                 title={confirmDelete ? 'Pulsa de nuevo para confirmar' : 'Eliminar canción'}
               >
@@ -246,6 +245,7 @@ export default function NowPlayingScreen({
         {/* Cuerpo principal centrado */}
         <div className="flex-1 flex flex-col" style={{ justifyContent: 'center' }}>
           <div className="flex flex-col">
+
             {/* Portada del álbum/artista centrada */}
             <div className="flex items-center justify-center" style={{ padding: '8px 0' }}>
               <div
@@ -254,8 +254,8 @@ export default function NowPlayingScreen({
                   width: 'min(65vw, 260px)',
                   height: 'min(65vw, 260px)',
                   borderRadius: '12px',
-                  background: '#282828',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.7), 0 0 80px rgba(0,0,0,0.4)',
+                  background: '#bbb5b5',
+                  boxShadow: '0 8px 32px rgba(73, 0, 51, 0.7), 0 0 80px rgba(80, 0, 56, 0.4)',
                 }}
               >
                 {centerImage ? (
@@ -272,7 +272,7 @@ export default function NowPlayingScreen({
 
             {/* Info del tema */}
             <div className="flex items-center justify-between" style={{ padding: '12px 0 4px 0' }}>
-            <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1">
                 <div className="group flex items-center gap-3">
                   {onDislike && (
                     <button
@@ -388,7 +388,7 @@ export default function NowPlayingScreen({
                 style={{ color: repeatMode > 0 ? '#1db954' : '#a7a7a7', padding: 8 }}
                 title={
                   repeatMode === 0 ? 'Sin repetición' :
-                  repeatMode === 1 ? 'Repetir todas' : 'Repetir una'
+                    repeatMode === 1 ? 'Repetir todas' : 'Repetir una'
                 }
               >
                 {repeatMode === 2 ? (
@@ -416,7 +416,7 @@ export default function NowPlayingScreen({
                 value={volume}
                 onChange={(e) => setVolume(parseFloat(e.target.value))}
                 className="flex-1 h-2 cursor-pointer"
-                style={{ 
+                style={{
                   accentColor: '#1db954',
                   WebkitAppearance: 'none',
                   appearance: 'none',

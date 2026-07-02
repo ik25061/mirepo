@@ -35,6 +35,7 @@ export default function CollectionCard({ title, subtitle, coverSong, songs, onOp
       style={{
         scrollSnapAlign: 'start',
         touchAction: 'manipulation',
+        width: 'clamp(120px, 20vw, 160px)' 
       }}
     >
       <div className="relative mb-1.5 sm:mb-3">

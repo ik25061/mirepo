@@ -18,6 +18,7 @@ export default function SongRow({
   showFixMetadata = false,
   showCover = true,
   fixingMetadata = false,
+  context = null, // <-- NUEVO: contexto para reproducción
 }) {
   const { current, isPlaying, play, togglePlay, removeFromQueue } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -32,7 +33,8 @@ export default function SongRow({
     if (isCurrent) {
       togglePlay();
     } else {
-      play(song, queue);
+      console.log('[SongRow] Reproduciendo con contexto:', context);
+      play(song, queue, context); // <-- Pasar contexto a play
     }
   };
 
@@ -69,6 +71,7 @@ export default function SongRow({
       }`}
       style={{ minHeight: 36 }}
     >
+      {/* ===== BOTÓN DE REPRODUCCIÓN ===== */}
       <button
         onClick={handlePlay}
         className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-xs text-muted-foreground sm:h-9 sm:w-9 sm:text-sm"
@@ -88,12 +91,14 @@ export default function SongRow({
         </span>
       </button>
 
+      {/* ===== PORTADA ===== */}
       {showCover && (
         <div onClick={handlePlay} className="cursor-pointer shrink-0">
           <Cover song={song} className="h-7 w-7 sm:h-10 sm:w-10" rounded="rounded-md" />
         </div>
       )}
 
+      {/* ===== TÍTULO Y ARTISTA ===== */}
       <div className="min-w-0 flex-1 cursor-pointer" onClick={handlePlay}>
         <p className={`truncate text-xs font-medium sm:text-sm ${isCurrent ? 'text-primary' : 'text-foreground'}`}>
           {song.title}
@@ -101,11 +106,14 @@ export default function SongRow({
         <p className="truncate text-[10px] text-muted-foreground sm:text-xs">{song.artist}</p>
       </div>
 
+      {/* ===== ÁLBUM (solo escritorio) ===== */}
       <p className="hidden min-w-0 flex-1 truncate text-[10px] text-muted-foreground sm:block sm:text-xs md:block">
         {song.album}
       </p>
 
+      {/* ===== BOTONES DE ACCIÓN ===== */}
       <div className="flex items-center gap-0.5 sm:gap-0.5">
+        {/* Me gusta */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -116,6 +124,7 @@ export default function SongRow({
           <Heart size={12} fill={song.liked ? 'currentColor' : 'none'} className="sm:size-4" />
         </button>
 
+        {/* No me gusta canción */}
         {onDislike && (
           <button
             onClick={(e) => { e.stopPropagation(); onDislike(song); }}
@@ -126,6 +135,7 @@ export default function SongRow({
           </button>
         )}
 
+        {/* No me gusta artista */}
         {onDislikeArtist && (
           <button
             onClick={(e) => { e.stopPropagation(); onDislikeArtist(song.artist); }}
@@ -136,7 +146,7 @@ export default function SongRow({
           </button>
         )}
 
-        {/* Botón corregir metadatos */}
+        {/* Corregir metadatos */}
         {showFixMetadata && onFixMetadata && (
           <button
             onClick={(e) => {
@@ -159,7 +169,7 @@ export default function SongRow({
           </button>
         )}
 
-        {/* Botón eliminar - con confirmación visible */}
+        {/* Eliminar */}
         {showDelete && onDelete && (
           <button
             onClick={handleDelete}
@@ -174,6 +184,7 @@ export default function SongRow({
           </button>
         )}
 
+        {/* Duración */}
         <span className="ml-1 w-7 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground sm:w-9 sm:text-xs">
           {formatTime(song.duration)}
         </span>

@@ -1,28 +1,71 @@
-import { Heart, Play, Copy, Shuffle } from 'lucide-react';
+import { Heart, Play, Copy, Shuffle, Music2 } from 'lucide-react';
 import Carousel from './Carousel.jsx';
 import CollectionCard from './CollectionCard.jsx';
 import SongRow from '../SongRow.jsx';
 import { buildAlbums, buildArtists, buildGenres } from '../../lib/format.js';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 
-export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLike, onDislike, onDislikeArtist, onDelete, onOpenDuplicates }) {
+export default function HomeView({ 
+  songs, 
+  onOpenCollection, 
+  onOpenGridView, 
+  onLike, 
+  onDislike, 
+  onDislikeArtist, 
+  onDelete, 
+  onOpenDuplicates 
+}) {
   const { play, shufflePlay } = usePlayer();
+  
+  // ============================================================
+  // FILTRAR CANCIONES
+  // ============================================================
   const liked = songs.filter((s) => s.liked);
   const albums = buildAlbums(songs);
   const artists = buildArtists(songs);
   const genres = buildGenres(songs);
+  
+  // ============================================================
+  // CANCIONES SIN ARTISTA O SIN ÁLBUM
+  // ============================================================
+  const unknownSongs = songs.filter(s => 
+    !s.artist || s.artist === 'Artista desconocido' || 
+    !s.album || s.album === 'Álbum desconocido' ||
+    s.artist === 'Desconocido' || s.album === 'Desconocido'
+  );
+
+  // ============================================================
+  // AGRUPAR ARTISTAS PARA DETECTAR DUPLICADOS (case insensitive)
+  // ============================================================
+  const normalizedArtists = artists.reduce((acc, artist) => {
+    const normalizedName = artist.name.toLowerCase().trim();
+    const existing = acc.find(a => a.name.toLowerCase().trim() === normalizedName);
+    if (existing) {
+      // Combinar canciones
+      existing.songs = [...existing.songs, ...artist.songs];
+      // Mantener el nombre original más común
+      if (artist.name.length < existing.name.length) {
+        existing.name = artist.name;
+      }
+    } else {
+      acc.push({ ...artist });
+    }
+    return acc;
+  }, []);
 
   const hour = new Date().getHours();
   const greeting = hour < 6 ? 'Buenas noches' : hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
 
   return (
     <div className="flex flex-col gap-4 pb-24 w-full">
+      
+      {/* ===== HEADER ===== */}
       <header className="animate-fade-in">
         <h1 className="text-xl font-700 tracking-tight text-white sm:text-3xl">{greeting}</h1>
         <p className="text-xs text-muted-foreground sm:text-sm">Tu música, sin distracciones.</p>
       </header>
 
-      {/* Canciones que me gustan */}
+      {/* ===== SECCIÓN: CANCIONES QUE ME GUSTAN ===== */}
       <section className="animate-fade-in overflow-hidden rounded-xl border border-border bg-gradient-to-b from-primary/10 to-surface sm:rounded-2xl">
         <div className="flex items-center gap-4 p-4 sm:p-6 sm:pb-4">
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-lg sm:h-20 sm:w-20 sm:rounded-xl">
@@ -51,26 +94,40 @@ export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLi
               >
                 <Play size={18} fill="currentColor" className="ml-0.5 sm:size-6" />
               </button>
+              {/* ===== BOTÓN PARA VER LISTA COMPLETA ===== */}
+              {liked.length > 5 && (
+                <button
+                  onClick={() => onOpenCollection({ 
+                    kind: 'Lista', 
+                    name: 'Canciones que me gustan', 
+                    songs: liked 
+                  })}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Ver todas
+                </button>
+              )}
             </div>
           )}
         </div>
 
-          {liked.length > 0 ? (
-            <div className="flex flex-col gap-1.5 px-3 pb-4 sm:px-5 sm:pb-5">
-              {liked.slice(0, 5).map((song, i) => (
-                <SongRow
-                  key={song.id}
-                  song={song}
-                  index={i}
-                  queue={liked}
-                  onLike={onLike}
-                  onDislike={onDislike}
-                  onDislikeArtist={onDislikeArtist}
-                  onDelete={onDelete}
-                  showDelete
-                />
-              ))}
-            </div>
+        {liked.length > 0 ? (
+          <div className="flex flex-col gap-1.5 px-3 pb-4 sm:px-5 sm:pb-5">
+            {liked.slice(0, 5).map((song, i) => (
+              <SongRow
+                key={song.id}
+                song={song}
+                index={i}
+                queue={liked}
+                onLike={onLike}
+                onDislike={onDislike}
+                onDislikeArtist={onDislikeArtist}
+                onDelete={onDelete}
+                showDelete
+                context={null}
+              />
+            ))}
+          </div>
         ) : (
           <p className="px-4 pb-4 text-xs text-muted-foreground sm:px-6 sm:pb-6 sm:text-sm">
             Marca canciones con el corazón para verlas aquí.
@@ -78,17 +135,20 @@ export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLi
         )}
       </section>
 
-      {/* Por álbum - con Ver todo */}
-      <Carousel title="Álbumes" action={
-        albums.length > 10 && (
-          <button
-            onClick={() => onOpenGridView('albums', albums)}
-            className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
-          >
-            Ver todo
-          </button>
-        )
-      }>
+      {/* ===== SECCIÓN: ÁLBUMES ===== */}
+      <Carousel 
+        title="Álbumes" 
+        action={
+          albums.length > 10 && (
+            <button
+              onClick={() => onOpenGridView('albums', albums)}
+              className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
+            >
+              Ver todo
+            </button>
+          )
+        }
+      >
         {albums.slice(0, 10).map((al) => (
           <CollectionCard
             key={al.name}
@@ -101,18 +161,21 @@ export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLi
         ))}
       </Carousel>
 
-      {/* Por artista - con Ver todo */}
-      <Carousel title="Artistas" action={
-        artists.length > 10 && (
-          <button
-            onClick={() => onOpenGridView('artists', artists)}
-            className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
-          >
-            Ver todo
-          </button>
-        )
-      }>
-        {artists.slice(0, 10).map((ar) => (
+      {/* ===== SECCIÓN: ARTISTAS (CON NORMALIZACIÓN) ===== */}
+      <Carousel 
+        title="Artistas" 
+        action={
+          normalizedArtists.length > 10 && (
+            <button
+              onClick={() => onOpenGridView('artists', normalizedArtists)}
+              className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
+            >
+              Ver todo
+            </button>
+          )
+        }
+      >
+        {normalizedArtists.slice(0, 10).map((ar) => (
           <CollectionCard
             key={ar.name}
             round
@@ -126,17 +189,20 @@ export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLi
         ))}
       </Carousel>
 
-      {/* Por género - con Ver todo */}
-      <Carousel title="Géneros" action={
-        genres.length > 10 && (
-          <button
-            onClick={() => onOpenGridView('genres', genres)}
-            className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
-          >
-            Ver todo
-          </button>
-        )
-      }>
+      {/* ===== SECCIÓN: GÉNEROS ===== */}
+      <Carousel 
+        title="Géneros" 
+        action={
+          genres.length > 10 && (
+            <button
+              onClick={() => onOpenGridView('genres', genres)}
+              className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
+            >
+              Ver todo
+            </button>
+          )
+        }
+      >
         {genres.slice(0, 10).map((ge) => (
           <CollectionCard
             key={ge.name}
@@ -149,7 +215,43 @@ export default function HomeView({ songs, onOpenCollection, onOpenGridView, onLi
         ))}
       </Carousel>
 
-      {/* Buscar duplicados */}
+      {/* ===== SECCIÓN: SIN ARTISTA O ÁLBUM ===== */}
+      {unknownSongs.length > 0 && (
+        <Carousel 
+          title="🎵 Sin artista o álbum" 
+          action={
+            unknownSongs.length > 10 && (
+              <button
+                onClick={() => onOpenCollection({ 
+                  kind: 'Lista', 
+                  name: 'Sin artista o álbum', 
+                  songs: unknownSongs 
+                })}
+                className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
+              >
+                Ver todo
+              </button>
+            )
+          }
+        >
+          {unknownSongs.slice(0, 10).map((song) => (
+            <CollectionCard
+              key={song.id}
+              title={song.title}
+              subtitle={song.artist || 'Artista desconocido'}
+              coverSong={{ coverId: song.id, hasCover: song.hasCover }}
+              songs={[song]}
+              onOpen={() => onOpenCollection({ 
+                kind: 'Lista', 
+                name: 'Sin artista o álbum', 
+                songs: unknownSongs 
+              })}
+            />
+          ))}
+        </Carousel>
+      )}
+
+      {/* ===== SECCIÓN: BUSCAR DUPLICADOS ===== */}
       {onOpenDuplicates && (
         <button
           onClick={onOpenDuplicates}

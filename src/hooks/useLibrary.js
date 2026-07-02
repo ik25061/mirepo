@@ -1,6 +1,18 @@
-import { useCallback, useEffect, useState } from 'react';
+/**
+ * ============================================================
+ * USE LIBRARY - HOOK PARA GESTIONAR LA BIBLIOTECA
+ * ============================================================
+ * 
+ * Implementa scroll infinito usando IntersectionObserver.
+ * Basado en: https://dev.to/franklin030601/creando-un-scroll-infinito-con-react-js-27gf
+ */
+
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { api } from '../lib/api.js';
 
+// ============================================================
+// FUNCIÓN AUXILIAR: Mezclar array
+// ============================================================
 function shuffleArray(array) {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
@@ -10,82 +22,164 @@ function shuffleArray(array) {
   return result;
 }
 
+// ============================================================
+// HOOK PRINCIPAL
+// ============================================================
 export function useLibrary(userId) {
+  // ============================================================
+  // ESTADO
+  // ============================================================
   const [songs, setSongs] = useState([]);
   const [counts, setCounts] = useState({ total: 0, trash: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(false);
-  const [serverOffset, setServerOffset] = useState(0);
+  const [page, setPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  // ============================================================
+  // REFERENCIAS
+  // ============================================================
+  const initialLoadDoneRef = useRef(false);
+  const PAGE_SIZE = 100;
 
-  const load = useCallback(async ({ limit, offset } = {}) => {
+  // ============================================================
+  // CARGA INICIAL
+  // ============================================================
+  const loadInitial = useCallback(async () => {
+    if (initialLoadDoneRef.current) {
+      console.log('[useLibrary] 📚 Carga inicial ya hecha');
+      return;
+    }
+    
     try {
-      const data = await api.getLibrary({ limit, offset, userId });
+      console.log('[useLibrary] 📥 Carga inicial...');
+      setLoading(true);
+      
+      const data = await api.getLibrary({ limit: PAGE_SIZE, offset: 0, userId });
+      console.log('[useLibrary] 📊 Datos recibidos:', data.songs?.length || 0, 'canciones');
+      
       const incoming = data.songs || [];
       const total = typeof data.counts?.total === 'number' ? data.counts.total : incoming.length;
       const paging = data.pagination || { offset: 0, limit: incoming.length, total };
 
-      if (!offset || offset === 0) {
-        const shuffled = shuffleArray(incoming);
-        setSongs(shuffled);
-        setServerOffset(incoming.length);
-      } else {
-        setSongs((prev) => {
-          const combined = [...prev, ...incoming];
-          return shuffleArray(combined);
-        });
-        setServerOffset((prev) => prev + incoming.length);
-      }
-      setCounts({ total, trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 });
+      const shuffled = shuffleArray(incoming);
+      setSongs(shuffled);
+      setCounts({ 
+        total, 
+        trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 
+      });
       setError(null);
       setHasMore(paging.offset + paging.limit < paging.total);
-      return data;
+      setPage(1);
+      initialLoadDoneRef.current = true;
+      
+      console.log('[useLibrary] ✅ Carga inicial completada, canciones:', shuffled.length);
+      console.log('[useLibrary] 📌 hasMore:', paging.offset + paging.limit < paging.total);
+      
     } catch (err) {
+      console.error('[useLibrary] ❌ Error cargando:', err);
       setError(err.message);
       setHasMore(false);
-      return null;
     } finally {
       setLoading(false);
     }
   }, [userId]);
 
+  // ============================================================
+  // CARGA DE MÁS CANCIONES (SCROLL INFINITO)
+  // ============================================================
   const loadMore = useCallback(async () => {
-    if (loading || error || !hasMore) return;
-    setLoading(true);
+    // ============================================================
+    // PREVENIR CARGAS MÚLTIPLES
+    // ============================================================
+    if (isLoadingMore) {
+      console.log('[useLibrary] ⏳ Ya cargando más, ignorando...');
+      return;
+    }
+    
+    if (loading) {
+      console.log('[useLibrary] ⏳ Ya está cargando...');
+      return;
+    }
+    
+    if (!hasMore) {
+      console.log('[useLibrary] 🚫 No hay más canciones');
+      return;
+    }
+    
+    if (error) {
+      console.log('[useLibrary] ❌ Error detectado');
+      return;
+    }
+    
+    console.log('[useLibrary] 📥 Cargando más canciones, página:', page + 1);
+    setIsLoadingMore(true);
+    
     try {
-      const nextOffset = serverOffset;
-      const data = await api.getLibrary({ limit: 100, offset: nextOffset, userId });
+      const offset = page * PAGE_SIZE;
+      const data = await api.getLibrary({ limit: PAGE_SIZE, offset, userId });
+      
       const incoming = data.songs || [];
-      const total = typeof data.counts?.total === 'number' ? data.counts.total : serverOffset + incoming.length;
-      const paging = data.pagination || { offset: nextOffset, limit: incoming.length, total };
+      const total = typeof data.counts?.total === 'number' ? data.counts.total : offset + incoming.length;
+      const paging = data.pagination || { offset, limit: incoming.length, total };
 
-      setSongs((prev) => {
-        const combined = [...prev, ...incoming];
-        return shuffleArray(combined);
+      if (incoming.length === 0) {
+        console.log('[useLibrary] ⚠️ No llegaron canciones nuevas');
+        setHasMore(false);
+        setIsLoadingMore(false);
+        return;
+      }
+
+      // ============================================================
+      // AGREGAR NUEVAS CANCIONES (NO REEMPLAZAR)
+      // ============================================================
+      const shuffledNew = shuffleArray(incoming);
+      
+      setSongs(prev => {
+        const combined = [...prev, ...shuffledNew];
+        console.log('[useLibrary] 📊 Total canciones:', combined.length);
+        return combined;
       });
-      setServerOffset((prev) => prev + incoming.length);
-      setCounts((prev) => ({ ...prev, total }));
+      
+      setPage(prev => prev + 1);
+      setCounts(prev => ({ ...prev, total }));
       setHasMore(paging.offset + paging.limit < paging.total);
+      
+      console.log('[useLibrary] ✅ Carga completada, hasMore:', paging.offset + paging.limit < paging.total);
+      
     } catch (err) {
+      console.error('[useLibrary] ❌ Error cargando más:', err);
       setError(err.message);
     } finally {
-      setLoading(false);
+      setIsLoadingMore(false);
     }
-  }, [loading, error, hasMore, serverOffset, userId]);
+  }, [isLoadingMore, loading, hasMore, error, page, userId]);
 
+  // ============================================================
+  // RESCANEAR BIBLIOTECA
+  // ============================================================
   const rescan = useCallback(async () => {
     setLoading(true);
+    initialLoadDoneRef.current = false;
+    setSongs([]);
+    setPage(1);
+    setIsLoadingMore(false);
+    
     try {
       const data = await api.rescan();
       const incoming = data.songs || [];
       const total = typeof data.counts?.total === 'number' ? data.counts.total : incoming.length;
       const shuffled = shuffleArray(incoming);
       setSongs(shuffled);
-      setServerOffset(incoming.length);
-      setCounts({ total, trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 });
+      setCounts({ 
+        total, 
+        trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 
+      });
       setError(null);
       const paging = data.pagination || { offset: 0, limit: incoming.length, total };
       setHasMore(paging.offset + paging.limit < paging.total);
+      initialLoadDoneRef.current = true;
     } catch (err) {
       setError(err.message);
     } finally {
@@ -93,10 +187,28 @@ export function useLibrary(userId) {
     }
   }, []);
 
-  useEffect(() => {
-    load({ limit: 100 });
-  }, [load]);
+  // ============================================================
+  // RECARGAR
+  // ============================================================
+  const reload = useCallback(() => {
+    initialLoadDoneRef.current = false;
+    setSongs([]);
+    setPage(1);
+    setLoading(true);
+    loadInitial();
+  }, [loadInitial]);
 
+  // ============================================================
+  // CARGA INICIAL - SOLO UNA VEZ
+  // ============================================================
+  useEffect(() => {
+    console.log('[useLibrary] 🔄 useEffect - cargando inicial...');
+    loadInitial();
+  }, []);
+
+  // ============================================================
+  // TOGGLE LIKE
+  // ============================================================
   const toggleLike = useCallback(async (songOrId) => {
     const songId = typeof songOrId === 'string' ? songOrId : songOrId.id;
     
@@ -115,16 +227,25 @@ export function useLibrary(userId) {
     }
   }, [userId]);
 
+  // ============================================================
+  // DISLIKE CANCIÓN
+  // ============================================================
   const dislikeSong = useCallback(async (song) => {
     setSongs((prev) => prev.filter((s) => s.id !== song.id));
     await api.hideSong(song.id, userId);
   }, [userId]);
 
+  // ============================================================
+  // DISLIKE ARTISTA
+  // ============================================================
   const dislikeArtist = useCallback(async (artist) => {
     setSongs((prev) => prev.filter((s) => s.artist !== artist));
     await api.hideArtist(artist, userId);
   }, [userId]);
 
+  // ============================================================
+  // ELIMINAR CANCIÓN
+  // ============================================================
   const removeSong = useCallback(async (song) => {
     try {
       setSongs((prev) => prev.filter((s) => s.id !== song.id));
@@ -136,25 +257,28 @@ export function useLibrary(userId) {
       await api.deleteSong(song.id, userId);
       return true;
     } catch (error) {
-      console.error('Error al eliminar:', error);
-      await load({ limit: 100 });
+      console.error('❌ Error al eliminar:', error);
       alert('❌ Error al eliminar la canción');
       return false;
     }
-  }, [load, userId]);
+  }, [userId]);
 
+  // ============================================================
+  // RETORNAR VALORES
+  // ============================================================
   return {
     songs,
     counts,
     loading,
     error,
-    reload: load,
+    hasMore,
+    isLoadingMore,
+    reload,
+    loadMore,
     rescan,
     toggleLike,
     dislikeSong,
     dislikeArtist,
     removeSong,
-    loadMore,
-    hasMore,
   };
 }

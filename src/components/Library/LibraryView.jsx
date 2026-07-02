@@ -1,3 +1,12 @@
+/**
+ * ============================================================
+ * LIBRARY VIEW - VISTA DE BIBLIOTECA
+ * ============================================================
+ * 
+ * Implementa scroll infinito usando IntersectionObserver.
+ * Basado en: https://dev.to/franklin030601/creando-un-scroll-infinito-con-react-js-27gf
+ */
+
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Play, Trash2, Wand2 } from 'lucide-react';
 import SongRow from '../SongRow.jsx';
@@ -5,7 +14,9 @@ import { usePlayer } from '../../context/PlayerContext.jsx';
 import { api } from '../../lib/api.js';
 import path from 'node:path';
 
-// Componente para el loading skeleton
+// ============================================================
+// LOADING SKELETON
+// ============================================================
 function TrackSkeleton() {
   return (
     <div className="flex items-center gap-3 py-2 px-2 rounded-xl animate-pulse">
@@ -18,15 +29,35 @@ function TrackSkeleton() {
   );
 }
 
-export default function LibraryView({ songs, counts, onLike, onDislike, onDislikeArtist, onDelete, onLoadMore, hasMore, loading }) {
-  const { play } = usePlayer();
+// ============================================================
+// COMPONENTE PRINCIPAL
+// ============================================================
+export default function LibraryView({ 
+  songs, 
+  counts, 
+  onLike, 
+  onDislike, 
+  onDislikeArtist, 
+  onDelete,
+  loading,
+  hasMore,
+  isLoadingMore,
+  onLoadMore
+}) {
+  const { play, current } = usePlayer();
   const [query, setQuery] = useState('');
   const [fixingMetadata, setFixingMetadata] = useState(null);
-  const loadMoreRef = useRef(null);
+  
+  // ============================================================
+  // REFERENCIAS PARA INTERSECTION OBSERVER
+  // ============================================================
   const listRef = useRef(null);
-  const isLoading = loading;
+  const loaderRef = useRef(null);
+  const observerRef = useRef(null);
 
-  // Filtrar canciones
+  // ============================================================
+  // FILTRAR CANCIONES
+  // ============================================================
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return songs;
@@ -38,10 +69,11 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
     );
   }, [songs, query]);
 
+  // ============================================================
+  // CORREGIR METADATOS
+  // ============================================================
   const handleFixMetadata = async (song) => {
-    if (!confirm(`¿Corregir metadatos de "${song.title}"?\nSe buscará información en AcoustID y se renombrará el archivo.`)) {
-      return;
-    }
+    if (!confirm(`¿Corregir metadatos de "${song.title}"?`)) return;
 
     setFixingMetadata(song.id);
     try {
@@ -55,41 +87,58 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
     }
   };
 
-  // Cargar más canciones
+  // ============================================================
+  // FUNCIÓN PARA CARGAR MÁS CANCIONES (wrapper)
+  // ============================================================
   const handleLoadMore = useCallback(() => {
-    if (!onLoadMore || loading) return;
+    if (isLoadingMore || !hasMore || loading) {
+      console.log('[LibraryView] ⏳ No se puede cargar más:', { isLoadingMore, hasMore, loading });
+      return;
+    }
+    console.log('[LibraryView] 📥 Cargando más canciones...');
     onLoadMore();
-  }, [onLoadMore, loading]);
+  }, [isLoadingMore, hasMore, loading, onLoadMore]);
 
-  // Observer para lazy loading (Intersection Observer)
+  // ============================================================
+  // CONFIGURAR INTERSECTION OBSERVER
+  // ============================================================
   useEffect(() => {
-    const currentRef = loadMoreRef.current;
-    if (!currentRef) return;
+    // Si no hay más canciones, no configurar el observer
+    if (!hasMore) return;
     
-    const observer = new IntersectionObserver(
+    // Crear el observer
+    observerRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
+        // Si el elemento es visible y hay más canciones
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore && !loading) {
+          console.log('[LibraryView] 👁️ Elemento visible, cargando más...');
           handleLoadMore();
         }
       },
-      { 
+      {
         root: listRef.current,
-        rootMargin: '100px',
+        rootMargin: '0px 0px 200px 0px',
         threshold: 0.1
       }
     );
 
-    observer.observe(currentRef);
+    // Observar el elemento loader
+    if (loaderRef.current) {
+      observerRef.current.observe(loaderRef.current);
+    }
 
+    // Limpiar observer al desmontar
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
+      if (observerRef.current) {
+        observerRef.current.disconnect();
       }
     };
-  }, [hasMore, loading, handleLoadMore]);
+  }, [hasMore, isLoadingMore, loading, handleLoadMore]);
 
   return (
     <div className="flex flex-col gap-4 h-full w-full">
+      
+      {/* ===== HEADER ===== */}
       <header className="animate-fade-in flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
         <div>
           <h1 className="font-display text-3xl font-700 tracking-tight">Biblioteca</h1>
@@ -101,8 +150,9 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
             </span>
           </p>
         </div>
+        
+        {/* ===== BUSCADOR ===== */}
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          {/* Buscador - ancho completo en móvil */}
           <div className="relative flex-1 sm:flex-initial">
             <Search size={16} className="absolute left-3 text-muted-foreground" style={{ top: '50%', transform: 'translateY(-50%)', zIndex: 1 }} />
             <input
@@ -124,19 +174,19 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
         </div>
       </header>
 
-      {/* Contador de resultados */}
+      {/* ===== CONTADOR DE RESULTADOS ===== */}
       {filtered.length > 0 && (
         <div className="flex-shrink-0">
           <p className="text-xs text-muted-foreground">
             {filtered.length} {filtered.length === 1 ? 'canción' : 'canciones'}
             {hasMore && (
-              <span className="text-muted-foreground/60"> · Cargando más...</span>
+              <span className="text-muted-foreground/60"> · Desplázate para cargar más</span>
             )}
           </p>
         </div>
       )}
 
-      {/* Lista de canciones con scroll infinito */}
+      {/* ===== LISTA DE CANCIONES ===== */}
       <div 
         ref={listRef}
         className="flex-1 overflow-y-auto rounded-xl border border-border bg-surface/50 p-2"
@@ -148,29 +198,38 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
               ? 'No hay canciones. Agrega archivos a la carpeta /music del servidor.'
               : 'No se encontraron coincidencias.'}
           </p>
-         ) : (
-           <div className="flex flex-col gap-1">
-             {filtered.map((song, i) => (
-              <SongRow
-                key={song.id}
-                song={song}
-                index={i}
-                queue={filtered}
-                onLike={onLike}
-                onDislike={onDislike}
-                onDislikeArtist={onDislikeArtist}
-                onDelete={onDelete}
-                onFixMetadata={() => handleFixMetadata(song)}
-                showFixMetadata
-                fixingMetadata={fixingMetadata === song.id}
-                showDelete
-              />
-            ))}
+        ) : (
+          <div className="flex flex-col gap-1">
+            {filtered.map((song, i) => {
+              const isCurrent = current?.id === song.id;
+              
+              return (
+                <div
+                  key={song.id}
+                  className={isCurrent ? 'bg-primary/10 rounded-lg' : ''}
+                >
+                  <SongRow
+                    song={song}
+                    index={i}
+                    queue={filtered}
+                    onLike={onLike}
+                    onDislike={onDislike}
+                    onDislikeArtist={onDislikeArtist}
+                    onDelete={onDelete}
+                    onFixMetadata={() => handleFixMetadata(song)}
+                    showFixMetadata
+                    fixingMetadata={fixingMetadata === song.id}
+                    showDelete
+                    context={null}
+                  />
+                </div>
+              );
+            })}
 
-            {/* Loader y elemento para observar */}
+            {/* ===== ELEMENTO LOADER PARA INFINITE SCROLL ===== */}
             {hasMore && (
-              <div ref={loadMoreRef} className="py-4">
-                {isLoading ? (
+              <div ref={loaderRef} className="py-4">
+                {isLoadingMore ? (
                   <>
                     <TrackSkeleton />
                     <TrackSkeleton />
@@ -179,14 +238,14 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
                   </>
                 ) : (
                   <p className="text-center text-xs text-muted-foreground/60">
-                    Desplázate para cargar más...
+                    Desplázate para cargar más canciones...
                   </p>
                 )}
               </div>
             )}
 
-            {/* Mensaje final */}
-            {!hasMore && filtered.length > 20 && (
+            {/* ===== MENSAJE FINAL ===== */}
+            {!hasMore && filtered.length > 0 && (
               <p className="text-center text-xs text-muted-foreground/60 py-4">
                 🎵 {filtered.length} canciones cargadas
               </p>
@@ -195,7 +254,6 @@ export default function LibraryView({ songs, counts, onLike, onDislike, onDislik
         )}
       </div>
 
-      {/* Animación para el skeleton */}
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 0.4; }
