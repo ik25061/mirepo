@@ -10,19 +10,6 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { api } from '../lib/api.js';
 
-// ============================================================
-// FUNCIÓN AUXILIAR: Mezclar array
-// ============================================================
-function shuffleArray(array) {
-  const result = [...array];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
-
-// ============================================================
 // HOOK PRINCIPAL
 // ============================================================
 export function useLibrary(userId) {
@@ -63,8 +50,7 @@ export function useLibrary(userId) {
       const total = typeof data.counts?.total === 'number' ? data.counts.total : incoming.length;
       const paging = data.pagination || { offset: 0, limit: incoming.length, total };
 
-      const shuffled = shuffleArray(incoming);
-      setSongs(shuffled);
+      setSongs(incoming);
       setCounts({ 
         total, 
         trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 
@@ -74,7 +60,7 @@ export function useLibrary(userId) {
       setPage(1);
       initialLoadDoneRef.current = true;
       
-      console.log('[useLibrary] ✅ Carga inicial completada, canciones:', shuffled.length);
+      console.log('[useLibrary] ✅ Carga inicial completada, canciones:', incoming.length);
       console.log('[useLibrary] 📌 hasMore:', paging.offset + paging.limit < paging.total);
       
     } catch (err) {
@@ -134,10 +120,8 @@ export function useLibrary(userId) {
       // ============================================================
       // AGREGAR NUEVAS CANCIONES (NO REEMPLAZAR)
       // ============================================================
-      const shuffledNew = shuffleArray(incoming);
-      
       setSongs(prev => {
-        const combined = [...prev, ...shuffledNew];
+        const combined = [...prev, ...incoming];
         console.log('[useLibrary] 📊 Total canciones:', combined.length);
         return combined;
       });
@@ -170,8 +154,7 @@ export function useLibrary(userId) {
       const data = await api.rescan();
       const incoming = data.songs || [];
       const total = typeof data.counts?.total === 'number' ? data.counts.total : incoming.length;
-      const shuffled = shuffleArray(incoming);
-      setSongs(shuffled);
+      setSongs(incoming);
       setCounts({ 
         total, 
         trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 

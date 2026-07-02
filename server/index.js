@@ -60,6 +60,24 @@ async function ensureDb() {
 }
 
 // ====== FUNCIÓN PARA CONSTRUIR BIBLIOTECA ======
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function shuffleArray(array, seed) {
+  const rng = seededRandom(seed);
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 async function buildLibrary({ limit, offset, userId } = {}) {
   console.log('[buildLibrary] 🏗️ Construyendo...');
   
@@ -104,6 +122,20 @@ async function buildLibrary({ limit, offset, userId } = {}) {
     }
   }
 
+  // Generar semilla aleatoria por usuario y día para que la biblioteca sea aleatoria cada sesión
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const seedBase = `${userId || 'anon'}-${today}`;
+  let seed = 0;
+  for (let i = 0; i < seedBase.length; i++) {
+    seed = ((seed << 5) - seed) + seedBase.charCodeAt(i);
+    seed = seed & seed; // Convertir a 32-bit integer
+  }
+  seed = Math.abs(seed) || 1;
+  
+  // Mezclar todas las canciones visibles con semilla
+  const shuffled = shuffleArray(visible, seed);
+  console.log(`[buildLibrary] 🔀 ${shuffled.length} canciones mezcladas con semilla ${seed}`);
+
   let trashCount = 0;
   try {
     if (fs.existsSync(TRASH_DIR)) {
@@ -111,10 +143,10 @@ async function buildLibrary({ limit, offset, userId } = {}) {
     }
   } catch {}
 
-  const total = visible.length;
+  const total = shuffled.length;
   const start = typeof offset === 'number' ? offset : 0;
   const end = typeof limit === 'number' ? start + limit : total;
-  const paged = visible.slice(start, end);
+  const paged = shuffled.slice(start, end);
 
   console.log(`[buildLibrary] ✅ ${paged.length} canciones devueltas`);
   
