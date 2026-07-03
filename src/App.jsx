@@ -287,10 +287,7 @@ function Shell() {
             <DuplicateFinder onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'collection' ? (
             <CollectionView
-              collection={{
-                ...view.collection,
-                songs: view.collection.songs.filter((s) => lib.songs.some((ls) => ls.id === s.id)),
-              }}
+              collection={view.collection}
               onBack={() => setView({ type: 'home' })}
               onLike={lib.toggleLike}
               onDislike={lib.dislikeSong}
@@ -382,10 +379,7 @@ function Shell() {
             <DuplicateFinder onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'collection' ? (
             <CollectionView
-              collection={{
-                ...view.collection,
-                songs: view.collection.songs.filter((s) => lib.songs.some((ls) => ls.id === s.id)),
-              }}
+              collection={view.collection}
               onBack={() => setView({ type: 'home' })}
               onLike={lib.toggleLike}
               onDislike={lib.dislikeSong}

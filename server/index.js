@@ -565,12 +565,22 @@ app.get('/api/artists', async (req, res) => {
     const cache = getCache();
     const userId = req.query.userId || null;
     let hiddenArtists = new Set();
+    let prefs = {};
     
     try {
       hiddenArtists = await db.getHiddenArtists(userId);
+      prefs = await db.getSongPrefs(userId);
     } catch {}
 
-    const artists = buildArtistsFromCache(cache.songs, hiddenArtists);
+    // Filtrar canciones ocultas/eliminadas además de artistas ocultos
+    const visibleSongs = cache.songs.filter(s => {
+      if (hiddenArtists.has(s.artist)) return false;
+      const p = prefs[s.id];
+      if (p && (p.deleted || p.hidden)) return false;
+      return true;
+    });
+
+    const artists = buildArtistsFromCache(visibleSongs);
     res.json({ artists, count: artists.length });
   } catch (err) {
     console.error('[api/artists] Error:', err);
@@ -581,7 +591,24 @@ app.get('/api/artists', async (req, res) => {
 app.get('/api/albums', async (req, res) => {
   try {
     const cache = getCache();
-    const albums = buildAlbumsFromCache(cache.songs);
+    const userId = req.query.userId || null;
+    let hiddenArtists = new Set();
+    let prefs = {};
+    
+    try {
+      hiddenArtists = await db.getHiddenArtists(userId);
+      prefs = await db.getSongPrefs(userId);
+    } catch {}
+
+    // Filtrar canciones ocultas/eliminadas además de artistas ocultos
+    const visibleSongs = cache.songs.filter(s => {
+      if (hiddenArtists.has(s.artist)) return false;
+      const p = prefs[s.id];
+      if (p && (p.deleted || p.hidden)) return false;
+      return true;
+    });
+
+    const albums = buildAlbumsFromCache(visibleSongs);
     res.json({ albums, count: albums.length });
   } catch (err) {
     console.error('[api/albums] Error:', err);
@@ -592,7 +619,24 @@ app.get('/api/albums', async (req, res) => {
 app.get('/api/genres', async (req, res) => {
   try {
     const cache = getCache();
-    const genres = buildGenresFromCache(cache.songs);
+    const userId = req.query.userId || null;
+    let hiddenArtists = new Set();
+    let prefs = {};
+    
+    try {
+      hiddenArtists = await db.getHiddenArtists(userId);
+      prefs = await db.getSongPrefs(userId);
+    } catch {}
+
+    // Filtrar canciones ocultas/eliminadas además de artistas ocultos
+    const visibleSongs = cache.songs.filter(s => {
+      if (hiddenArtists.has(s.artist)) return false;
+      const p = prefs[s.id];
+      if (p && (p.deleted || p.hidden)) return false;
+      return true;
+    });
+
+    const genres = buildGenresFromCache(visibleSongs);
     res.json({ genres, count: genres.length });
   } catch (err) {
     console.error('[api/genres] Error:', err);
