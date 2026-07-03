@@ -78,8 +78,8 @@ function shuffleArray(array, seed) {
   return result;
 }
 
-async function buildLibrary({ limit, offset, userId } = {}) {
-  console.log('[buildLibrary] 🏗️ Construyendo...');
+async function buildLibrary({ limit, offset, userId, likedOnly = false } = {}) {
+  console.log('[buildLibrary] 🏗️ Construyendo...', { likedOnly });
   
   let songs = [];
   let prefs = {};
@@ -116,10 +116,23 @@ async function buildLibrary({ limit, offset, userId } = {}) {
       const p = prefs[s.id];
       if (p && (p.deleted || p.hidden)) continue;
       if (hiddenArtists.has(s.artist)) continue;
-      visible.push({ ...s, liked: Boolean(p && p.liked) });
+      const liked = Boolean(p && p.liked);
+      if (likedOnly && !liked) continue;
+      visible.push({ ...s, liked });
     } catch (err) {
       console.warn('[buildLibrary] Error procesando canción:', s?.id);
     }
+  }
+
+  const total = visible.length;
+
+  if (likedOnly) {
+    return {
+      songs: visible,
+      hiddenArtists: [...hiddenArtists],
+      counts: { total, trash: 0 },
+      pagination: { offset: 0, limit: total, total },
+    };
   }
 
   // Generar semilla aleatoria por usuario y día para que la biblioteca sea aleatoria cada sesión
@@ -143,7 +156,6 @@ async function buildLibrary({ limit, offset, userId } = {}) {
     }
   } catch {}
 
-  const total = shuffled.length;
   const start = typeof offset === 'number' ? offset : 0;
   const end = typeof limit === 'number' ? start + limit : total;
   const paged = shuffled.slice(start, end);
@@ -309,10 +321,11 @@ app.get('/api/library', async (req, res) => {
     const userId = req.query.userId || null;
     const limit = req.query.limit !== undefined ? parseInt(req.query.limit, 10) : 100;
     const offset = req.query.offset !== undefined ? parseInt(req.query.offset, 10) : 0;
+    const likedOnly = req.query.liked === 'true';
     
-    console.log('[api/library] 🔍 Parámetros:', { userId, limit, offset });
+    console.log('[api/library] 🔍 Parámetros:', { userId, limit, offset, likedOnly });
     
-    const result = await buildLibrary({ limit, offset, userId });
+    const result = await buildLibrary({ limit, offset, userId, likedOnly });
     console.log('[api/library] ✅ Éxito');
     res.json(result);
   } catch (err) {
@@ -483,6 +496,7 @@ function buildArtistsFromCache(songs, hiddenArtists = new Set()) {
       entry = { name: raw, songs: [] };
       map.set(key, entry);
     }
+    // Agregar esta canción al artista
     entry.songs.push(s);
   }
   

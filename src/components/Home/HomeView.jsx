@@ -26,20 +26,23 @@ export default function HomeView({
   const [fullArtists, setFullArtists] = useState([]);
   const [fullAlbums, setFullAlbums] = useState([]);
   const [fullGenres, setFullGenres] = useState([]);
+  const [likedSongs, setLikedSongs] = useState([]);
   const [loadingLists, setLoadingLists] = useState(true);
 
   useEffect(() => {
     const loadCompleteLists = async () => {
       try {
         setLoadingLists(true);
-        const [artistsRes, albumsRes, genresRes] = await Promise.all([
+        const [artistsRes, albumsRes, genresRes, likedRes] = await Promise.all([
           api.getArtists(userId),
           api.getAlbums(userId),
-          api.getGenres()
+          api.getGenres(),
+          api.getLikedSongs(userId)
         ]);
         setFullArtists(artistsRes.artists || []);
         setFullAlbums(albumsRes.albums || []);
         setFullGenres(genresRes.genres || []);
+        setLikedSongs(likedRes.songs || []);
       } catch (err) {
         console.error('Error cargando listas completas:', err);
       } finally {
@@ -52,10 +55,10 @@ export default function HomeView({
   // ============================================================
   // FILTRAR CANCIONES
   // ============================================================
-  const liked = songs.filter((s) => s.liked);
-  const albums = fullAlbums.length > 0 ? fullAlbums : buildAlbums(songs);
-  const artists = fullArtists.length > 0 ? fullArtists : buildArtists(songs);
-  const genres = fullGenres.length > 0 ? fullGenres : buildGenres(songs);
+  const liked = likedSongs;
+  const albums = fullAlbums; // Siempre usar álbumes completos del servidor
+  const artists = fullArtists; // Siempre usar artistas completos del servidor
+  const genres = fullGenres; // Siempre usar géneros completos del servidor
   const years = buildYears(songs);
   
   // ============================================================
