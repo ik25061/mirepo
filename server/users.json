@@ -5,8 +5,16 @@
       "username": "rafael",
       "salt": "15903d7ea33637995bdaaedc5fab4bfe",
       "password_hash": "c0011f2624cdf33bfe2496ecd1c6bcd9b90e5dbd965ab00e6c97ae9e8bbe92c2cddea241bc7d1434f5aecff47f1fee30cc29c7de09801893cc71485909b57bec",
-      "session_token": "bb60fb4c7e1f34bea57665e1155c9c2e64a28d5b716c3a86ad8bdd3475abf7b9",
+      "session_token": "9694c1ad1b266294f94b734099cd59bb6a3c3769fb6285a2c8c3c08bef8cb010",
       "created_at": "2026-07-01T10:37:03.537Z"
+    },
+    {
+      "id": 2,
+      "username": "angela",
+      "salt": "2b6b20fd066eb220e9932e0b43d549b5",
+      "password_hash": "b436cf32e7f7b1ee61561d8252ecb3e1a59b146092d3fdf0d3e9f1715d47b79b8ff8f090c79d59e2153f789730dfe9b1b4c23bbbb234e6421370216fd38455b7",
+      "session_token": "74a08bd2799a3d12c36632db754a80a42bff2b948ade7373521dd8210c5ffd08",
+      "created_at": "2026-07-06T06:52:58.855Z"
     }
   ]
 }
