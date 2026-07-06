@@ -64,7 +64,14 @@ export const api = {
     const qs = userId ? `?userId=${userId}` : '';
     return fetch(`/api/albums${qs}`).then(r => r.json());
   },
-  getGenres: () => fetch('/api/genres').then(r => r.json()),
+  getGenres: (userId) => {
+    const qs = userId ? `?userId=${userId}` : '';
+    return fetch(`/api/genres${qs}`).then(r => r.json());
+  },
+  getYears: (userId) => {
+    const qs = userId ? `?userId=${userId}` : '';
+    return fetch(`/api/years${qs}`).then(r => r.json());
+  },
   getLikedSongs: (userId) => {
     const qs = userId ? `?userId=${userId}&liked=true` : '?liked=true';
     return fetch(`/api/library${qs}`).then(r => r.json());

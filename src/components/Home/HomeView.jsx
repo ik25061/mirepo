@@ -28,6 +28,7 @@ export default function HomeView({
   const [fullArtists, setFullArtists] = useState([]);
   const [fullAlbums, setFullAlbums] = useState([]);
   const [fullGenres, setFullGenres] = useState([]);
+  const [fullYears, setFullYears] = useState([]);
   const [likedSongs, setLikedSongs] = useState([]);
   const [loadingLists, setLoadingLists] = useState(true);
 
@@ -35,15 +36,17 @@ export default function HomeView({
     const loadCompleteLists = async () => {
       try {
         setLoadingLists(true);
-        const [artistsRes, albumsRes, genresRes, likedRes] = await Promise.all([
+        const [artistsRes, albumsRes, genresRes, yearsRes, likedRes] = await Promise.all([
           api.getArtists(userId),
           api.getAlbums(userId),
-          api.getGenres(),
+          api.getGenres(userId),
+          api.getYears(userId),
           api.getLikedSongs(userId)
         ]);
         setFullArtists(artistsRes.artists || []);
         setFullAlbums(albumsRes.albums || []);
         setFullGenres(genresRes.genres || []);
+        setFullYears(yearsRes.years || []);
         setLikedSongs(likedRes.songs || []);
       } catch (err) {
         console.error('Error cargando listas completas:', err);
@@ -61,7 +64,7 @@ export default function HomeView({
   const albums = fullAlbums; // Siempre usar álbumes completos del servidor
   const artists = fullArtists; // Siempre usar artistas completos del servidor
   const genres = fullGenres; // Siempre usar géneros completos del servidor
-  const years = buildYears(songs);
+  const years = fullYears; // Siempre usar años completos del servidor
   
   // ============================================================
   // CANCIONES SIN ARTISTA O SIN ÁLBUM

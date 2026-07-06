@@ -337,6 +337,8 @@ const getNextContextTrack = useCallback((currentSong, currentQueue, contextType,
     contextSongs = allSongs.filter(s => s.album === contextValue);
   } else if (contextType === 'genre') {
     contextSongs = allSongs.filter(s => s.genre === contextValue);
+  } else if (contextType === 'year') {
+    contextSongs = allSongs.filter(s => String(s.year) === contextValue);
   } else {
     return null;
   }
@@ -378,6 +380,8 @@ const getNextContextTrack = useCallback((currentSong, currentQueue, contextType,
       contextValue = song.album;
     } else if (contextType === 'genre') {
       contextValue = song.genre;
+    } else if (contextType === 'year') {
+      contextValue = String(song.year);
     }
     
     if (contextValue && !seenValues.has(contextValue)) {
@@ -423,6 +427,8 @@ const getNextContextTrack = useCallback((currentSong, currentQueue, contextType,
       nextContextSongs = allSongs.filter(s => s.album === nextContextValue);
     } else if (contextType === 'genre') {
       nextContextSongs = allSongs.filter(s => s.genre === nextContextValue);
+    } else if (contextType === 'year') {
+      nextContextSongs = allSongs.filter(s => String(s.year) === nextContextValue);
     }
     
     if (nextContextSongs.length > 0) {

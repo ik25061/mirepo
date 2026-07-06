@@ -536,6 +536,38 @@ function buildAlbumsFromCache(songs) {
     .sort((a, b) => a.name.localeCompare(b.name, 'es'));
 }
 
+function buildYearsFromCache(songs) {
+  const map = new Map();
+  const pref = (str) => String(str || '').trim();
+  
+  for (const s of songs) {
+    const raw = pref(s.year) || 'Sin año';
+    if (!raw || raw === 'Sin año') continue;
+    const key = raw.toLowerCase();
+    let entry = map.get(key);
+    if (!entry) {
+      entry = { name: raw, songs: [] };
+      map.set(key, entry);
+    }
+    entry.songs.push(s);
+  }
+  
+  return [...map.values()]
+    .map((g) => ({
+      name: g.name,
+      songs: g.songs,
+      coverId: g.songs.find((s) => s.hasCover)?.id || g.songs[0].id,
+    }))
+    .sort((a, b) => {
+      const ya = parseInt(a.name, 10);
+      const yb = parseInt(b.name, 10);
+      if (!isNaN(ya) && !isNaN(yb)) return yb - ya;
+      if (!isNaN(ya)) return -1;
+      if (!isNaN(yb)) return 1;
+      return a.name.localeCompare(b.name, 'es');
+    });
+}
+
 function buildGenresFromCache(songs) {
   const map = new Map();
   const pref = (str) => String(str || '').trim();
@@ -641,6 +673,34 @@ app.get('/api/genres', async (req, res) => {
   } catch (err) {
     console.error('[api/genres] Error:', err);
     res.status(500).json({ error: 'Error al obtener géneros' });
+  }
+});
+
+app.get('/api/years', async (req, res) => {
+  try {
+    const cache = getCache();
+    const userId = req.query.userId || null;
+    let hiddenArtists = new Set();
+    let prefs = {};
+    
+    try {
+      hiddenArtists = await db.getHiddenArtists(userId);
+      prefs = await db.getSongPrefs(userId);
+    } catch {}
+
+    // Filtrar canciones ocultas/eliminadas además de artistas ocultos
+    const visibleSongs = cache.songs.filter(s => {
+      if (hiddenArtists.has(s.artist)) return false;
+      const p = prefs[s.id];
+      if (p && (p.deleted || p.hidden)) return false;
+      return true;
+    });
+
+    const years = buildYearsFromCache(visibleSongs);
+    res.json({ years, count: years.length });
+  } catch (err) {
+    console.error('[api/years] Error:', err);
+    res.status(500).json({ error: 'Error al obtener años' });
   }
 });
 

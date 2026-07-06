@@ -279,7 +279,8 @@ export default function GridView({
                         if (item.songs?.length) {
                           const contextType = type === 'artists' ? 'artist' : type === 'albums' ? 'album' : type === 'genres' ? 'genre' : 'year';
                           const context = { type: contextType, value: item.name };
-                          play(item.songs[0], songs, context);
+                          // Usar SOLO las canciones del item como cola (no toda la biblioteca)
+                          play(item.songs[0], item.songs, context);
                         }
                       }}
                       className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-xl transition hover:scale-105"

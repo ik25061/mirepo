@@ -31,14 +31,14 @@ export default function CollectionView({
   const coverId = songs.find((s) => s.hasCover)?.id || songs[0]?.id;
 
   // Crear contexto para reproducción continua
-  const contextType = kind === 'Artista' ? 'artist' : kind === 'Álbum' ? 'album' : 'genre';
+  const contextType = kind === 'Artista' ? 'artist' : kind === 'Álbum' ? 'album' : kind === 'Año' ? 'year' : 'genre';
   const context = { type: contextType, value: name };
 
   // ============================================================
-  // IMPORTANTE: Usar TODAS las canciones para la cola
-  // Si allSongs está vacío, usar las canciones de la colección
+  // Usar las canciones de la COLECCIÓN como cola principal
+  // (álbum, artista, género o año)
   // ============================================================
-  const queueSongs = allSongs && allSongs.length > 0 ? allSongs : songs;
+  const queueSongs = songs;
 
   return (
     <div className="flex flex-col gap-6 pb-20">
