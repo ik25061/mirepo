@@ -11,7 +11,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ArrowLeft, Play, Search } from 'lucide-react';
 import Cover from './Cover.jsx';
 import { usePlayer } from '../context/PlayerContext.jsx';
-import { artistCoverUrl } from '../lib/api.js';
 
 // ============================================================
 // SKELETON PARA GRID
@@ -41,32 +40,8 @@ export default function GridView({
   loadMoreRef = null
 }) {
   const { play } = usePlayer();
-  const [artistCache, setArtistCache] = useState({});
   const gridRef = useRef(null);
   const internalLoaderRef = useRef(null);
-
-  // ============================================================
-  // PRECARGAR IMÁGENES DE ARTISTAS
-  // ============================================================
-  useEffect(() => {
-    if (type !== 'artists') return;
-    const newCache = { ...artistCache };
-    let changed = false;
-    for (const item of items) {
-      if (!newCache[item.name]) {
-        const url = artistCoverUrl(item.name);
-        const img = new Image();
-        img.onload = () => {
-          setArtistCache(prev => ({ ...prev, [item.name]: { url } }));
-        };
-        img.onerror = () => {};
-        img.src = url;
-        newCache[item.name] = { loading: true };
-        changed = true;
-      }
-    }
-    if (changed) setArtistCache(newCache);
-  }, [items, type]);
 
   // ============================================================
   // CONFIGURAR INTERSECTION OBSERVER PARA SCROLL INFINITO
@@ -244,9 +219,6 @@ export default function GridView({
       >
         <div className="grid grid-cols-4 gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
           {sorted.map((item, idx) => {
-            const artistKey = type === 'artists' ? item.name : null;
-            const cachedArtist = artistKey ? artistCache[artistKey] : null;
-
             return (
               <div
                 key={item.name + idx}
@@ -256,19 +228,11 @@ export default function GridView({
                 {/* ===== PORTADA SIN RECUADRO GRIS ===== */}
                 <div className="relative overflow-hidden rounded-lg transition hover:scale-105 duration-200">
                   <div className="aspect-square w-full">
-                    {cachedArtist?.url ? (
-                      <img
-                        src={cachedArtist.url}
-                        alt={item.name}
-                        className={`w-full h-full object-cover ${isRound ? 'rounded-full' : ''}`}
-                      />
-                    ) : (
-                      <Cover
-                        song={{ coverId: item.coverId, hasCover: true }}
-                        rounded={isRound ? 'rounded-full' : 'rounded-none'}
-                        className={`w-full h-full ${isRound ? 'rounded-full' : ''}`}
-                      />
-                    )}
+                    <Cover
+                      song={{ coverId: item.coverId, hasCover: true }}
+                      rounded={isRound ? 'rounded-full' : 'rounded-none'}
+                      className={`w-full h-full ${isRound ? 'rounded-full' : ''}`}
+                    />
                   </div>
 
                   {/* ===== BOTÓN REPRODUCIR (hover) ===== */}

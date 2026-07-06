@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Play } from 'lucide-react';
-import Cover from '../Cover.jsx';
+import Cover from '../../components/Cover.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import { artistCoverUrl } from '../../lib/api.js';
 

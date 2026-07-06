@@ -385,6 +385,49 @@ app.get('/cover/:id', async (req, res) => {
   res.status(404).send('No cover');
 });
 
+// Endpoint para obtener portada de artista (artist.jpg en la carpeta del álbum)
+app.get('/artist-cover/:artist', async (req, res) => {
+  const artist = decodeURIComponent(req.params.artist);
+  const cache = getCache();
+  
+  if (!cache.songs || cache.songs.length === 0) {
+    return res.status(404).end();
+  }
+  
+  // Buscar primera canción del artista para obtener su directorio
+  const song = cache.songs.find(s => s.artist === artist);
+  if (!song) return res.status(404).end();
+  
+  const albumDir = path.dirname(absolutePath(song.relPath));
+  const artistCoverPath = path.join(albumDir, 'artist.jpg');
+  
+  if (fs.existsSync(artistCoverPath)) {
+    res.set('Content-Type', 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.sendFile(artistCoverPath);
+    return;
+  }
+  
+  // Buscar en otros directorios por artist.jpg
+  for (const s of cache.songs) {
+    const dir = path.dirname(absolutePath(s.relPath));
+    const candidatePath = path.join(dir, 'artist.jpg');
+    if (fs.existsSync(candidatePath)) {
+      try {
+        const stats = fs.statSync(candidatePath);
+        if (stats.size > 0) {
+          res.set('Content-Type', 'image/jpeg');
+          res.set('Cache-Control', 'public, max-age=86400');
+          res.sendFile(candidatePath);
+          return;
+        }
+      } catch {}
+    }
+  }
+  
+  res.status(404).end();
+});
+
 app.get('/audio/:id', (req, res) => {
   const song = getSongById(req.params.id);
   if (!song) return res.status(404).end();

@@ -25,24 +25,18 @@ export function useLibrary(userId) {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   // ============================================================
-  // REFERENCIAS
+  // CONSTANTES
   // ============================================================
-  const initialLoadDoneRef = useRef(false);
   const PAGE_SIZE = 100;
 
   // ============================================================
   // CARGA INICIAL
   // ============================================================
   const loadInitial = useCallback(async () => {
-    if (initialLoadDoneRef.current) {
-      console.log('[useLibrary] 📚 Carga inicial ya hecha');
-      return;
-    }
+    console.log('[useLibrary] 📥 Carga inicial...', { userId });
+    setLoading(true);
     
     try {
-      console.log('[useLibrary] 📥 Carga inicial...');
-      setLoading(true);
-      
       const data = await api.getLibrary({ limit: PAGE_SIZE, offset: 0, userId });
       console.log('[useLibrary] 📊 Datos recibidos:', data.songs?.length || 0, 'canciones');
       
@@ -58,7 +52,6 @@ export function useLibrary(userId) {
       setError(null);
       setHasMore(paging.offset + paging.limit < paging.total);
       setPage(1);
-      initialLoadDoneRef.current = true;
       
       console.log('[useLibrary] ✅ Carga inicial completada, canciones:', incoming.length);
       console.log('[useLibrary] 📌 hasMore:', paging.offset + paging.limit < paging.total);
@@ -70,6 +63,14 @@ export function useLibrary(userId) {
     } finally {
       setLoading(false);
     }
+  }, [userId]);
+
+  // ============================================================
+  // CARGA INICIAL - REACTION A CAMBIOS DE USERID
+  // ============================================================
+  useEffect(() => {
+    console.log('[useLibrary] 🔄 useEffect - cargando inicial...', { userId });
+    loadInitial();
   }, [userId]);
 
   // ============================================================
@@ -145,7 +146,6 @@ export function useLibrary(userId) {
   // ============================================================
   const rescan = useCallback(async () => {
     setLoading(true);
-    initialLoadDoneRef.current = false;
     setSongs([]);
     setPage(1);
     setIsLoadingMore(false);
@@ -162,7 +162,6 @@ export function useLibrary(userId) {
       setError(null);
       const paging = data.pagination || { offset: 0, limit: incoming.length, total };
       setHasMore(paging.offset + paging.limit < paging.total);
-      initialLoadDoneRef.current = true;
     } catch (err) {
       setError(err.message);
     } finally {
@@ -174,20 +173,11 @@ export function useLibrary(userId) {
   // RECARGAR
   // ============================================================
   const reload = useCallback(() => {
-    initialLoadDoneRef.current = false;
     setSongs([]);
     setPage(1);
     setLoading(true);
     loadInitial();
   }, [loadInitial]);
-
-  // ============================================================
-  // CARGA INICIAL - SOLO UNA VEZ
-  // ============================================================
-  useEffect(() => {
-    console.log('[useLibrary] 🔄 useEffect - cargando inicial...');
-    loadInitial();
-  }, []);
 
   // ============================================================
   // TOGGLE LIKE

@@ -53,9 +53,6 @@ export const api = {
   deleteSong: (id, userId) => del('/api/songs', { id, userId }),
   hideArtist: (artist, userId) => post('/api/artists/hide', { artist, userId }),
   getConfigIp: () => fetch('/api/config/ip').then(r => r.json()),
-  scanDuplicates: (folderPath) => post('/api/scan', { folderPath }),
-  deleteDuplicate: (filePath) => del('/api/delete-duplicate', { filePath }),
-  fixMetadata: (filePath) => post('/api/fix-metadata', { filePath }),
   getArtists: (userId) => {
     const qs = userId ? `?userId=${userId}` : '';
     return fetch(`/api/artists${qs}`).then(r => r.json());

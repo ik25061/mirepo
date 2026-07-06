@@ -25,7 +25,7 @@ import HomeView from './components/Home/HomeView';
 import LibraryView from './components/Library/LibraryView';
 import CollectionView from './components/CollectionView';
 import GridView from './components/GridView';
-import DuplicateFinder from './components/DuplicateFinder';
+
 import NowPlayingScreen from './components/NowPlayingScreen';
 import MobileSearchView from './components/MobileSearchView';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -269,9 +269,9 @@ function Shell() {
               onLoadMore={lib.loadMore}
               shouldScrollToCurrent={shouldScrollToCurrent}
             />
-          ) : view.type === 'search' ? (
-            <MobileSearchView tracks={lib.songs} currentTrack={current} onPlay={lib.playSong} />
-          ) : view.type === 'grid' ? (
+           ) : view.type === 'search' ? (
+             <MobileSearchView tracks={lib.songs} currentTrack={current} />
+           ) : view.type === 'grid' ? (
             <GridView
               items={view.gridData.items}
               type={view.gridData.type}
@@ -283,8 +283,8 @@ function Shell() {
               onLoadMore={loadMoreGridItems}
               loadMoreRef={gridLoaderRef}
             />
-          ) : view.type === 'duplicates' ? (
-            <DuplicateFinder onBack={() => setView({ type: 'home' })} />
+          
+     
           ) : view.type === 'collection' ? (
             <CollectionView
               collection={view.collection}
@@ -362,7 +362,7 @@ function Shell() {
               shouldScrollToCurrent={shouldScrollToCurrent}
             />
           ) : view.type === 'search' ? (
-            <MobileSearchView tracks={lib.songs} currentTrack={current} onPlay={lib.playSong} />
+            <MobileSearchView tracks={lib.songs} currentTrack={current} />
           ) : view.type === 'grid' ? (
             <GridView
               items={view.gridData.items}
@@ -375,8 +375,7 @@ function Shell() {
               onLoadMore={loadMoreGridItems}
               loadMoreRef={gridLoaderRef}
             />
-          ) : view.type === 'duplicates' ? (
-            <DuplicateFinder onBack={() => setView({ type: 'home' })} />
+         
           ) : view.type === 'collection' ? (
             <CollectionView
               collection={view.collection}

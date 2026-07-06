@@ -1,20 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import os from 'node:os';
 
-function getLocalLanIp() {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal && !iface.address.startsWith('127.')) {
-        return iface.address;
-      }
-    }
-  }
-  return 'localhost';
-}
-
-const localIP = getLocalLanIp();
+// Usar localhost como target para el proxy (más confiable)
+// El backend siempre escucha en localhost:5001
 const BACKEND_PORT = 5001;
 
 export default defineConfig({
@@ -25,27 +13,27 @@ export default defineConfig({
     https: false,
     proxy: {
       '/api': {
-        target: `http://${localIP}:${BACKEND_PORT}`,
+        target: `http://localhost:${BACKEND_PORT}`,
         changeOrigin: true,
         secure: false,
       },
       '/audio': {
-        target: `http://${localIP}:${BACKEND_PORT}`,
+        target: `http://localhost:${BACKEND_PORT}`,
         changeOrigin: true,
         secure: false,
       },
       '/cover': {
-        target: `http://${localIP}:${BACKEND_PORT}`,
+        target: `http://localhost:${BACKEND_PORT}`,
         changeOrigin: true,
         secure: false,
       },
       '/artist-cover': {
-        target: `http://${localIP}:${BACKEND_PORT}`,
+        target: `http://localhost:${BACKEND_PORT}`,
         changeOrigin: true,
         secure: false,
       },
       '/songs': {
-        target: `http://${localIP}:${BACKEND_PORT}`,
+        target: `http://localhost:${BACKEND_PORT}`,
         changeOrigin: true,
         secure: false,
       },

@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
 import { Search, Music2, Play, Mic, MicOff, Loader2, X } from 'lucide-react';
-import { api } from '../lib/api.js';
 
 export default function MobileSearchView({ tracks, currentTrack }) {
   const [query, setQuery] = useState('');
@@ -56,16 +55,8 @@ export default function MobileSearchView({ tracks, currentTrack }) {
         if (chunksRef.current.length === 0) return;
 
         setIsRecognizing(true);
-        try {
-          const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType });
-          const data = await api.recognize(blob);
-          setRecognitionResult(data);
-        } catch (err) {
-          console.error('Error reconociendo canción:', err);
-          setRecognitionResult({ error: 'Error al reconocer la canción' });
-        } finally {
-          setIsRecognizing(false);
-        }
+        setRecognitionResult({ error: 'Reconocimiento de audio no disponible' });
+        setIsRecognizing(false);
       };
 
       mediaRecorder.start(100);
@@ -183,54 +174,6 @@ export default function MobileSearchView({ tracks, currentTrack }) {
       )}
 
       <div className="flex-1 overflow-y-auto">
-        {recognitionResult && !recognitionResult.error && recognitionResult.recognized && (
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <p style={{ fontSize: 13, color: '#1db954', fontWeight: 600 }}>
-                🎤 Canción reconocida
-              </p>
-              <button
-                onClick={clearRecognition}
-                className="p-1 rounded-full hover:bg-white/10"
-                style={{ color: '#a7a7a7' }}
-              >
-                <X size={14} />
-              </button>
-            </div>
-
-            <div
-              className="rounded-xl p-3 mb-3"
-              style={{ background: '#1a1a2e', border: '1px solid #1db95433' }}
-            >
-              <div className="flex items-center gap-3">
-                {recognitionResult.recognized.imageUrl ? (
-                  <img
-                    src={recognitionResult.recognized.imageUrl}
-                    alt={recognitionResult.recognized.title}
-                    className="rounded-lg"
-                    style={{ width: 52, height: 52, objectFit: 'cover' }}
-                  />
-                ) : (
-                  <div
-                    className="flex items-center justify-center rounded-lg"
-                    style={{ width: 52, height: 52, background: '#282828' }}
-                  >
-                    <Music2 size={20} style={{ color: '#535353' }} />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="truncate" style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
-                    {recognitionResult.recognized.title}
-                  </p>
-                  <p className="truncate" style={{ fontSize: 13, color: '#a7a7a7' }}>
-                    {recognitionResult.recognized.artist}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {recognitionResult?.error && (
           <div
             className="flex items-center justify-between mb-4 py-3 px-4 rounded-xl"
@@ -252,15 +195,6 @@ export default function MobileSearchView({ tracks, currentTrack }) {
             <p style={{ fontSize: 13, color: '#a7a7a7', marginBottom: 16 }}>
               Busca por canción, artista o álbum
             </p>
-            <div
-              className="flex items-center gap-2 py-2 px-4 rounded-full"
-              style={{ background: '#1db95420', border: '1px solid #1db95440' }}
-            >
-              <Mic size={14} style={{ color: '#1db954' }} />
-              <p style={{ fontSize: 12, color: '#1db954' }}>
-                O presiona el micrófono para identificar una canción
-              </p>
-            </div>
           </div>
         ) : query.trim() !== '' && results.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
