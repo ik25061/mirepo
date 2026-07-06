@@ -24,10 +24,9 @@
     "node-id3": "^0.2.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "wavesurfer.js": "^7.12.8"    ,
+    "wavesurfer.js": "^7.12.8",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
-    "vite-plugin-pwa": "^0.20.5"
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
