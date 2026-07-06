@@ -14,9 +14,41 @@ export async function initDatabase() {
     fs.writeFileSync(USERS_PATH, JSON.stringify({ users: [] }, null, 2));
   }
   if (!fs.existsSync(PREFS_PATH)) {
-    fs.writeFileSync(PREFS_PATH, JSON.stringify({ songs: {}, artists: {} }, null, 2));
+    fs.writeFileSync(PREFS_PATH, JSON.stringify({}, null, 2));
+  } else {
+    // Migrar formato antiguo (global) a nuevo formato (por usuario)
+    migrateOldPrefs();
   }
   return true;
+}
+
+// ====== MIGRACIÓN DE FORMATO ANTIGUO A NUEVO ======
+function migrateOldPrefs() {
+  try {
+    const data = JSON.parse(fs.readFileSync(PREFS_PATH, 'utf8'));
+    
+    // Si ya tiene el nuevo formato (objeto con userId como clave), no migrar
+    if (!data.songs && !data.artists) return;
+    
+    // Si está vacío, inicializar
+    if (Object.keys(data).length === 0) return;
+    
+    console.log('[db] 🔄 Migrando preferencias del formato antiguo al nuevo...');
+    
+    // El formato antiguo era { songs: { [songId]: {...} }, artists: { [artist]: true/false } }
+    // Convertir a: { "0": { songs: {...}, artists: {...} } } (userId "0" = anónimo)
+    const newPrefs = {
+      "0": {
+        songs: data.songs || {},
+        artists: data.artists || {}
+      }
+    };
+    
+    fs.writeFileSync(PREFS_PATH, JSON.stringify(newPrefs, null, 2));
+    console.log('[db] ✅ Migración completada');
+  } catch (err) {
+    console.warn('[db] ⚠️ Error en migración:', err.message);
+  }
 }
 
 // ====== USUARIOS ======
@@ -120,7 +152,7 @@ export async function clearUserSession(token) {
   }
 }
 
-// ====== PREFERENCIAS ======
+// ====== PREFERENCIAS (ahora por usuario) ======
 let prefsCache = null;
 
 function loadPrefs() {
@@ -128,14 +160,16 @@ function loadPrefs() {
     if (fs.existsSync(PREFS_PATH)) {
       const data = fs.readFileSync(PREFS_PATH, 'utf8');
       prefsCache = JSON.parse(data);
-      if (!prefsCache.songs) prefsCache.songs = {};
-      if (!prefsCache.artists) prefsCache.artists = {};
+      // Asegurar que sea un objeto
+      if (typeof prefsCache !== 'object' || prefsCache === null) {
+        prefsCache = {};
+      }
       return prefsCache;
     }
   } catch (err) {
     console.warn('[db] Error cargando prefs:', err.message);
   }
-  prefsCache = { songs: {}, artists: {} };
+  prefsCache = {};
   return prefsCache;
 }
 
@@ -147,15 +181,27 @@ function savePrefs() {
   }
 }
 
+function getUserPrefs(userId) {
+  const uid = String(userId || '0');
+  if (!prefsCache[uid]) {
+    prefsCache[uid] = { songs: {}, artists: {} };
+  }
+  if (!prefsCache[uid].songs) prefsCache[uid].songs = {};
+  if (!prefsCache[uid].artists) prefsCache[uid].artists = {};
+  return prefsCache[uid];
+}
+
 loadPrefs();
 
 export async function getSongPrefs(userId) {
-  return { ...prefsCache.songs };
+  const userPrefs = getUserPrefs(userId);
+  return { ...userPrefs.songs };
 }
 
 export async function getHiddenArtists(userId) {
+  const userPrefs = getUserPrefs(userId);
   const hidden = new Set();
-  for (const [artist, data] of Object.entries(prefsCache.artists || {})) {
+  for (const [artist, data] of Object.entries(userPrefs.artists || {})) {
     if (data === true || data?.hidden === true) {
       hidden.add(artist);
     }
@@ -164,21 +210,24 @@ export async function getHiddenArtists(userId) {
 }
 
 export async function setSongFlag(song, field, value, userId) {
-  if (!prefsCache.songs[song.id]) {
-    prefsCache.songs[song.id] = {};
+  const userPrefs = getUserPrefs(userId);
+  if (!userPrefs.songs[song.id]) {
+    userPrefs.songs[song.id] = {};
   }
-  prefsCache.songs[song.id][field] = value;
+  userPrefs.songs[song.id][field] = value;
   savePrefs();
 }
 
 export async function setArtistHidden(artist, hidden, userId) {
-  prefsCache.artists[artist] = hidden;
+  const userPrefs = getUserPrefs(userId);
+  userPrefs.artists[artist] = hidden;
   savePrefs();
 }
 
 export async function deleteSongFromPrefs(songId, userId) {
-  if (prefsCache.songs[songId]) {
-    delete prefsCache.songs[songId];
+  const userPrefs = getUserPrefs(userId);
+  if (userPrefs.songs[songId]) {
+    delete userPrefs.songs[songId];
     savePrefs();
   }
 }
