@@ -298,7 +298,7 @@ export default function HomeView({
       )}
 
       {/* ===== SECCIÓN: BUSCAR DUPLICADOS ===== */}
-      {onOpenDuplicates && (
+      {/* {onOpenDuplicates && (
         <button
           onClick={onOpenDuplicates}
           className="animate-fade-in flex items-center gap-4 p-4 rounded-xl border border-border bg-gradient-to-r from-surface to-surface-2 hover:from-surface-2 hover:to-muted transition-all group"
@@ -314,7 +314,7 @@ export default function HomeView({
             Abrir →
           </span>
         </button>
-      )}
+      )} */}
 
       <div className="h-4" />
     </div>

@@ -161,7 +161,7 @@ export default function DuplicateFinder({ onBack }) {
   return (
     <div className="flex flex-col h-full w-full animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-5">
+      {/* buscando duplicados <div className="flex items-center gap-3 mb-5">
         <button
           onClick={onBack}
           className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:bg-surface-2 hover:text-foreground transition"
@@ -174,7 +174,7 @@ export default function DuplicateFinder({ onBack }) {
             Encuentra y elimina canciones duplicadas en tu biblioteca
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Input section */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-5">

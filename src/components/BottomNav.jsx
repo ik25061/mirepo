@@ -5,7 +5,7 @@ export default function BottomNav({ activeView, onViewChange, hasCurrentTrack })
     { id: 'home', label: 'Inicio', icon: Home },
     { id: 'search', label: 'Buscar', icon: Search },
     { id: 'library', label: 'Biblioteca', icon: Library },
-    { id: 'duplicates', label: 'Duplicados', icon: Copy },
+    // { id: 'duplicates', label: 'Duplicados', icon: Copy },
     { id: 'nowplaying', label: 'Reproduciendo', icon: Music2 },
   ];
 

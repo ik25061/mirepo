@@ -5,7 +5,7 @@ export default function Sidebar({ view, onNavigate, trashCount = 0 }) {
     { id: 'home', label: 'Inicio', icon: Home },
     { id: 'search', label: 'Buscar', icon: Search },
     { id: 'library', label: 'Biblioteca', icon: Library },
-    { id: 'duplicates', label: 'Duplicados', icon: Copy },
+    // { id: 'duplicates', label: 'Duplicados', icon: Copy },
   ];
 
   return (
