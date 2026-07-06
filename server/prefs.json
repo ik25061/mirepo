@@ -1,0 +1,34 @@
+{
+  "0": {
+    "songs": {},
+    "artists": {}
+  },
+  "1": {
+    "songs": {
+      "cacefad6d2284c98": {
+        "liked": true
+      },
+      "255c7ba008978632": {
+        "liked": true
+      },
+      "729e9cb4f37fe1a0": {
+        "hidden": true
+      },
+      "38b22ef4cbfdc1a1": {
+        "liked": true
+      },
+      "3889393fcf837a9d": {
+        "liked": true
+      }
+    },
+    "artists": {}
+  },
+  "2": {
+    "songs": {
+      "f26ce8fe3a666ae4": {
+        "liked": true
+      }
+    },
+    "artists": {}
+  }
+}
