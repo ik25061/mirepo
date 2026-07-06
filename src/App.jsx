@@ -28,6 +28,9 @@ import GridView from './components/GridView';
 import DuplicateFinder from './components/DuplicateFinder';
 import NowPlayingScreen from './components/NowPlayingScreen';
 import MobileSearchView from './components/MobileSearchView';
+import LikedSongsView from './components/LikedSongsView';
+import PlayListsManager from './components/PlayListsManager';
+import AddToPlayListModal from './components/AddToPlayListModal';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2, RefreshCw } from 'lucide-react';
 
@@ -253,6 +256,8 @@ function Shell() {
               onDislikeArtist={lib.dislikeArtist}
               onDelete={lib.removeSong}
               onOpenDuplicates={() => setView({ type: 'duplicates' })}
+              onOpenLikedSongs={() => setView({ type: 'likedSongs' })}
+              onOpenPlayLists={() => setView({ type: 'playlists' })}
               userId={user?.id}
             />
           ) : view.type === 'library' ? (
@@ -288,6 +293,25 @@ function Shell() {
           ) : view.type === 'collection' ? (
             <CollectionView
               collection={view.collection}
+              onBack={() => setView({ type: 'home' })}
+              onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
+              onDislikeArtist={lib.dislikeArtist}
+              onDelete={lib.removeSong}
+              allSongs={lib.songs}
+            />
+          ) : view.type === 'likedSongs' ? (
+            <LikedSongsView
+              userId={user?.id}
+              onBack={() => setView({ type: 'home' })}
+              onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
+              onDislikeArtist={lib.dislikeArtist}
+              onDelete={lib.removeSong}
+            />
+          ) : view.type === 'playlists' ? (
+            <PlayListsManager
+              userId={user?.id}
               onBack={() => setView({ type: 'home' })}
               onLike={lib.toggleLike}
               onDislike={lib.dislikeSong}
@@ -345,6 +369,8 @@ function Shell() {
               onDislikeArtist={lib.dislikeArtist}
               onDelete={lib.removeSong}
               onOpenDuplicates={() => setView({ type: 'duplicates' })}
+              onOpenLikedSongs={() => setView({ type: 'likedSongs' })}
+              onOpenPlayLists={() => setView({ type: 'playlists' })}
               userId={user?.id}
             />
           ) : view.type === 'library' ? (
@@ -380,6 +406,25 @@ function Shell() {
           ) : view.type === 'collection' ? (
             <CollectionView
               collection={view.collection}
+              onBack={() => setView({ type: 'home' })}
+              onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
+              onDislikeArtist={lib.dislikeArtist}
+              onDelete={lib.removeSong}
+              allSongs={lib.songs}
+            />
+          ) : view.type === 'likedSongs' ? (
+            <LikedSongsView
+              userId={user?.id}
+              onBack={() => setView({ type: 'home' })}
+              onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
+              onDislikeArtist={lib.dislikeArtist}
+              onDelete={lib.removeSong}
+            />
+          ) : view.type === 'playlists' ? (
+            <PlayListsManager
+              userId={user?.id}
               onBack={() => setView({ type: 'home' })}
               onLike={lib.toggleLike}
               onDislike={lib.dislikeSong}

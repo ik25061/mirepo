@@ -58,11 +58,11 @@ cd frontend
 npm run dev
 ```
 
-**Esperado:** Vite abre en `http://localhost:5172`
+**Esperado:** Vite abre en `http://localhost:5171`
 
 ### 2. Verificar Carga de Canciones
 
-1. Abre `http://localhost:5172`
+1. Abre `http://localhost:5171`
 2. Debería mostrar:
    - ✅ Sección de Géneros (bloques)
    - ✅ Sección de Artistas (círculos)
@@ -141,7 +141,7 @@ Get-Item "C:\Users\rafael\Music\cancion_artist.jpg" | Select-Object Length, Last
 ### Scenario 1: Primera Sincronización
 
 1. ✅ Backend corriendo en puerto 5001
-2. ✅ Frontend corriendo en puerto 5172
+2. ✅ Frontend corriendo en puerto 5171
 3. ✅ Carpeta de música tiene canciones sin sincronizar
 4. Click en 🔍 Search de canción
 5. Esperar respuesta de MusicBrainz (2-5 segundos)

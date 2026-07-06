@@ -658,6 +658,77 @@ app.post('/api/artists/unhide', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ====== RUTAS DE PLAY LISTS ======
+app.get('/api/playlists', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const playlists = await db.getPlayLists(userId);
+    res.json({ playlists });
+  } catch (err) {
+    console.error('[api/playlists] Error:', err);
+    res.status(500).json({ error: 'Error al obtener listas de reproducción' });
+  }
+});
+
+app.get('/api/playlists/:id', async (req, res) => {
+  try {
+    const playlist = await db.getPlayList(req.params.id);
+    if (!playlist) return res.status(404).json({ error: 'Lista no encontrada' });
+    res.json({ playlist });
+  } catch (err) {
+    console.error('[api/playlists/:id] Error:', err);
+    res.status(500).json({ error: 'Error al obtener la lista' });
+  }
+});
+
+app.post('/api/playlists', async (req, res) => {
+  try {
+    const { name, description, userId } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    const playlist = await db.createPlayList(name, description, userId);
+    res.json({ playlist });
+  } catch (err) {
+    console.error('[api/playlists POST] Error:', err);
+    res.status(500).json({ error: 'Error al crear lista' });
+  }
+});
+
+app.post('/api/playlists/:id/songs', async (req, res) => {
+  try {
+    const { songId } = req.body;
+    if (!songId) return res.status(400).json({ error: 'songId requerido' });
+    const playlist = await db.addSongToPlayList(req.params.id, songId);
+    if (!playlist) return res.status(404).json({ error: 'Lista no encontrada' });
+    res.json({ playlist });
+  } catch (err) {
+    console.error('[api/playlists/:id/songs POST] Error:', err);
+    res.status(500).json({ error: 'Error al agregar canción' });
+  }
+});
+
+app.delete('/api/playlists/:id/songs', async (req, res) => {
+  try {
+    const { songId } = req.body;
+    if (!songId) return res.status(400).json({ error: 'songId requerido' });
+    const playlist = await db.removeSongFromPlayList(req.params.id, songId);
+    if (!playlist) return res.status(404).json({ error: 'Lista no encontrada' });
+    res.json({ playlist });
+  } catch (err) {
+    console.error('[api/playlists/:id/songs DELETE] Error:', err);
+    res.status(500).json({ error: 'Error al eliminar canción' });
+  }
+});
+
+app.delete('/api/playlists/:id', async (req, res) => {
+  try {
+    await db.deletePlayList(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/playlists/:id DELETE] Error:', err);
+    res.status(500).json({ error: 'Error al eliminar lista' });
+  }
+});
+
 // ====== INICIAR SERVIDOR ======
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🎵 ==========================================`);

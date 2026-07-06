@@ -98,7 +98,7 @@ for (const ip of localIPs) {
   console.log(`   - ${ip}`);
 }
 console.log(`\n⚠️  Para eliminar la advertencia de seguridad:`);
-console.log(`   Opción 1: Usa https://localhost:5172 desde este equipo`);
+console.log(`   Opción 1: Usa https://localhost:5171 desde este equipo`);
 console.log(`   Opción 2: Instala el certificado como confiable en el otro dispositivo:`);
 console.log(`     - Windows: Abrir server.cert → "Instalar certificado" → "Entidad raíz de confianza"`);
 console.log(`     - Android: Ajustes → Seguridad → Instalar desde almacenamiento (server.cert)`);

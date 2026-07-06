@@ -69,6 +69,24 @@ export const api = {
     const qs = userId ? `?userId=${userId}&liked=true` : '?liked=true';
     return fetch(`/api/library${qs}`).then(r => r.json());
   },
+  // ====== PLAY LISTS ======
+  getPlayLists: (userId) => {
+    const qs = userId ? `?userId=${userId}` : '';
+    return fetch(`/api/playlists${qs}`).then(r => r.json());
+  },
+  getPlayList: (id) => fetch(`/api/playlists/${id}`).then(r => r.json()),
+  createPlayList: (name, description, userId) => post('/api/playlists', { name, description, userId }),
+  addSongToPlayList: (playlistId, songId) => post(`/api/playlists/${playlistId}/songs`, { songId }),
+  removeSongFromPlayList: (playlistId, songId) => {
+    return fetch(`/api/playlists/${playlistId}/songs`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ songId })
+    }).then(r => r.json());
+  },
+  deletePlayList: (id) => {
+    return fetch(`/api/playlists/${id}`, { method: 'DELETE' }).then(r => r.json());
+  },
 };
 
 // ====== URLs DE AUDIO E IMÁGENES ======

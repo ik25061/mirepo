@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, Pause, Heart, ThumbsDown, UserX, Trash2, Check, Wand2 } from 'lucide-react';
+import { Play, Pause, Heart, ThumbsDown, UserX, Trash2, Check, Wand2, ListMusic } from 'lucide-react';
 import Cover from './Cover.jsx';
 import NowPlayingBars from './Player/NowPlayingBars.jsx';
 import { formatTime } from '../lib/format.js';

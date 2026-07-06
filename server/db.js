@@ -240,4 +240,84 @@ export async function getPlayHistory(userId, limit = 100) {
   return [];
 }
 
+// ====== PLAY LISTS ======
+const PLAY_LISTS_PATH = path.join(__dirname, 'playlists.json');
+
+function loadPlayLists() {
+  try {
+    if (fs.existsSync(PLAY_LISTS_PATH)) {
+      return JSON.parse(fs.readFileSync(PLAY_LISTS_PATH, 'utf8'));
+    }
+  } catch (err) {
+    console.warn('[db] Error cargando playlists:', err.message);
+  }
+  return { playlists: [] };
+}
+
+function savePlayLists(data) {
+  try {
+    fs.writeFileSync(PLAY_LISTS_PATH, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.warn('[db] Error guardando playlists:', err.message);
+  }
+}
+
+export async function createPlayList(name, description, userId) {
+  const data = loadPlayLists();
+  const playlist = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    name: name.trim(),
+    description: description?.trim() || '',
+    userId: userId || null,
+    songIds: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  data.playlists.push(playlist);
+  savePlayLists(data);
+  return playlist;
+}
+
+export async function getPlayLists(userId) {
+  const data = loadPlayLists();
+  if (userId) {
+    return data.playlists.filter(p => p.userId === null || p.userId === String(userId));
+  }
+  return data.playlists;
+}
+
+export async function getPlayList(id) {
+  const data = loadPlayLists();
+  return data.playlists.find(p => p.id === id) || null;
+}
+
+export async function addSongToPlayList(playlistId, songId) {
+  const data = loadPlayLists();
+  const playlist = data.playlists.find(p => p.id === playlistId);
+  if (!playlist) return null;
+  if (!playlist.songIds.includes(songId)) {
+    playlist.songIds.push(songId);
+    playlist.updated_at = new Date().toISOString();
+    savePlayLists(data);
+  }
+  return playlist;
+}
+
+export async function removeSongFromPlayList(playlistId, songId) {
+  const data = loadPlayLists();
+  const playlist = data.playlists.find(p => p.id === playlistId);
+  if (!playlist) return null;
+  playlist.songIds = playlist.songIds.filter(id => id !== songId);
+  playlist.updated_at = new Date().toISOString();
+  savePlayLists(data);
+  return playlist;
+}
+
+export async function deletePlayList(id) {
+  const data = loadPlayLists();
+  data.playlists = data.playlists.filter(p => p.id !== id);
+  savePlayLists(data);
+  return true;
+}
+
 export { prefsCache as prefs };
