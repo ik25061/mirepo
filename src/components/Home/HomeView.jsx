@@ -1,4 +1,4 @@
-import { Heart, Play, Copy, Shuffle, ListMusic } from 'lucide-react';
+import { Heart, Play, Copy, Shuffle } from 'lucide-react';
 import Carousel from './Carousel.jsx';
 import CollectionCard from './CollectionCard.jsx';
 import SongRow from '../SongRow.jsx';
@@ -16,8 +16,6 @@ export default function HomeView({
   onDislikeArtist, 
   onDelete, 
   onOpenDuplicates,
-  onOpenLikedSongs,
-  onOpenPlayLists,
   userId
 }) {
   const { play, shufflePlay } = usePlayer();
@@ -119,7 +117,11 @@ export default function HomeView({
               {/* ===== BOTÓN PARA VER LISTA COMPLETA ===== */}
               {liked.length > 5 && (
                 <button
-                  onClick={() => onOpenLikedSongs?.()}
+                  onClick={() => onOpenCollection({ 
+                    kind: 'Lista', 
+                    name: 'Canciones que me gustan', 
+                    songs: liked 
+                  })}
                   className="text-xs text-primary hover:underline"
                 >
                   Ver todas
