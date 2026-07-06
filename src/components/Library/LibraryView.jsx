@@ -11,8 +11,6 @@ import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Play, Trash2, Wand2 } from 'lucide-react';
 import SongRow from '../SongRow.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
-import { api } from '../../lib/api.js';
-import path from 'node:path';
 
 // ============================================================
 // LOADING SKELETON
@@ -46,8 +44,7 @@ export default function LibraryView({
 }) {
   const { play, current } = usePlayer();
   const [query, setQuery] = useState('');
-  const [fixingMetadata, setFixingMetadata] = useState(null);
-  
+
   // ============================================================
   // REFERENCIAS PARA INTERSECTION OBSERVER
   // ============================================================
@@ -68,24 +65,6 @@ export default function LibraryView({
         s.album.toLowerCase().includes(q)
     );
   }, [songs, query]);
-
-  // ============================================================
-  // CORREGIR METADATOS
-  // ============================================================
-  const handleFixMetadata = async (song) => {
-    if (!confirm(`¿Corregir metadatos de "${song.title}"?`)) return;
-
-    setFixingMetadata(song.id);
-    try {
-      const fullPath = song.relPath.startsWith('music/') ? song.relPath : `music/${song.relPath}`;
-      const result = await api.fixMetadata(fullPath);
-      alert(`✅ ${result.message}\n\nNuevo nombre: ${path.basename(result.newPath)}`);
-    } catch (err) {
-      alert('Error al corregir metadatos: ' + err.message);
-    } finally {
-      setFixingMetadata(null);
-    }
-  };
 
   // ============================================================
   // FUNCIÓN PARA CARGAR MÁS CANCIONES (wrapper)
@@ -216,9 +195,6 @@ export default function LibraryView({
                     onDislike={onDislike}
                     onDislikeArtist={onDislikeArtist}
                     onDelete={onDelete}
-                    onFixMetadata={() => handleFixMetadata(song)}
-                    showFixMetadata
-                    fixingMetadata={fixingMetadata === song.id}
                     showDelete
                     context={null}
                   />
