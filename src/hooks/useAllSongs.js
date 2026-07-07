@@ -2,9 +2,6 @@
  * ============================================================
  * USE ALL SONGS - HOOK PARA OBTENER TODAS LAS CANCIONES
  * ============================================================
- * 
- * Obtiene TODAS las canciones del servidor sin límite,
- * para usar en GridView, CollectionView y NowPlayingScreen.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -15,14 +12,22 @@ export function useAllSongs(userId) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const mountedRef = useRef(true);
+  const loadedRef = useRef(false);
 
   const loadAllSongs = useCallback(async () => {
+    if (loadedRef.current) {
+      console.log('[useAllSongs] 📚 Ya cargadas, saltando');
+      return;
+    }
+    
     try {
       setLoading(true);
+      console.log('[useAllSongs] 📥 Cargando todas las canciones...');
       const data = await api.getLibrary({ limit: 99999, offset: 0, userId });
       if (mountedRef.current) {
         setAllSongs(data.songs || []);
         setError(null);
+        loadedRef.current = true;
         console.log('[useAllSongs] ✅ Cargadas:', data.songs?.length || 0, 'canciones');
       }
     } catch (err) {
@@ -43,5 +48,10 @@ export function useAllSongs(userId) {
     return () => { mountedRef.current = false; };
   }, [loadAllSongs]);
 
-  return { allSongs, loading, error, reload: loadAllSongs };
+  const reload = useCallback(() => {
+    loadedRef.current = false;
+    loadAllSongs();
+  }, [loadAllSongs]);
+
+  return { allSongs, loading, error, reload };
 }

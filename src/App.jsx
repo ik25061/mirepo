@@ -2,10 +2,6 @@
  * ============================================================
  * APP - COMPONENTE PRINCIPAL
  * ============================================================
- * 
- * Gestiona la autenticación, la biblioteca, la reproducción
- * y la navegación entre vistas (Home, Biblioteca, Colección, etc.)
- * Soporta vista móvil (con barra inferior) y escritorio (con sidebar).
  */
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -36,17 +32,17 @@ function Shell() {
   const { isAuthenticated, loading: authLoading, user } = useAuth();
   
   // ============================================================
-  // REPRODUCTOR - DECLARADO ANTES DE useLibrary
+  // REPRODUCTOR
   // ============================================================
   const { current, isPlaying, togglePlay, next, prev, stop } = usePlayer();
   
   // ============================================================
-  // BIBLIOTECA (100 canciones para scroll infinito)
+  // BIBLIOTECA
   // ============================================================
   const lib = useLibrary(user?.id);
   
   // ============================================================
-  // TODAS LAS CANCIONES (sin límite)
+  // TODAS LAS CANCIONES
   // ============================================================
   const { allSongs, loading: allSongsLoading } = useAllSongs(user?.id);
   
@@ -58,7 +54,7 @@ function Shell() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
   // ============================================================
-  // CONTROL DE SCROLL EN BIBLIOTECA
+  // CONTROL DE SCROLL
   // ============================================================
   const [shouldScrollToCurrent, setShouldScrollToCurrent] = useState(false);
 
@@ -74,7 +70,7 @@ function Shell() {
   const [gridType, setGridType] = useState('artists');
 
   // ============================================================
-  // DETECTAR CAMBIO DE TAMAÑO (móvil/escritorio)
+  // DETECTAR CAMBIO DE TAMAÑO
   // ============================================================
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
@@ -86,21 +82,21 @@ function Shell() {
   // SI LA CANCIÓN QUE SUENA SE ELIMINA, PASAR A LA SIGUIENTE
   // ============================================================
   useEffect(() => {
-    if (current && !lib.loading && !lib.songs.some((s) => s.id === current.id)) {
+    if (current && !allSongsLoading && !allSongs.some((s) => s.id === current.id)) {
       next();
     }
-  }, [lib.songs, lib.loading, current, next]);
+  }, [allSongs, allSongsLoading, current, next]);
 
   // ============================================================
-  // FUNCIÓN PARA CERRAR NOWPLAYING Y ACTIVAR SCROLL
+  // FUNCIÓN PARA CERRAR NOWPLAYING
   // ============================================================
-  const handleCloseNowPlaying = () => {
+  const handleCloseNowPlaying = useCallback(() => {
     setShowNowPlaying(false);
     setShouldScrollToCurrent(true);
     setTimeout(() => {
       setShouldScrollToCurrent(false);
     }, 2500);
-  };
+  }, []);
 
   // ============================================================
   // FUNCIONES DE NAVEGACIÓN
@@ -115,9 +111,6 @@ function Shell() {
     setView({ type: 'grid', gridData: { type, items: items.slice(0, GRID_PAGE_SIZE) } });
   }, []);
 
-  // ============================================================
-  // FUNCIÓN PARA CARGAR MÁS ELEMENTOS EN GRID
-  // ============================================================
   const loadMoreGridItems = useCallback(() => {
     if (gridLoading || !gridHasMore) return;
     
@@ -151,17 +144,14 @@ function Shell() {
     }, 300);
   }, [gridLoading, gridHasMore, gridOffset, gridItems]);
 
-  // ============================================================
-  // ABRIR ARTISTA DESDE NOWPLAYING
-  // ============================================================
   const openArtistFromNowPlaying = (collection) => {
     setView({ type: 'collection', collection });
   };
 
   // ============================================================
-  // PANTALLA DE CARGA (autenticación)
+  // PANTALLA DE CARGA
   // ============================================================
-  if (authLoading) {
+  if (authLoading || lib.loading || allSongsLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background" style={{ background: '#121212' }}>
         <Loader2 className="animate-spin text-primary" size={32} />
@@ -174,22 +164,6 @@ function Shell() {
   // ============================================================
   if (!isAuthenticated) {
     return <LoginScreen />;
-  }
-
-  // ============================================================
-  // PANTALLA DE CARGA (biblioteca)
-  // ============================================================
-  if (lib.loading || allSongsLoading) {
-    return (
-      <div className="flex h-screen flex-col bg-background" style={{ background: '#121212' }}>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="animate-spin text-primary mx-auto mb-4" size={40} />
-            <p className="text-muted-foreground" style={{ color: '#a7a7a7' }}>Cargando tu biblioteca...</p>
-          </div>
-        </div>
-      </div>
-    );
   }
 
   // ============================================================
@@ -220,7 +194,7 @@ function Shell() {
   const openCollectionHandler = (collection) => setView({ type: 'collection', collection });
 
   // ============================================================
-  // PANTALLA DE REPRODUCCIÓN (Now Playing)
+  // PANTALLA DE REPRODUCCIÓN
   // ============================================================
   if (showNowPlaying) {
     return (
@@ -244,13 +218,11 @@ function Shell() {
   }
 
   // ============================================================
-  // VISTA MÓVIL (con barra inferior)
+  // VISTA MÓVIL
   // ============================================================
   if (isMobile) {
     return (
       <div className="flex flex-col h-full bg-background text-foreground overflow-hidden" style={{ background: '#121212' }}>
-        
-        {/* ===== CONTENIDO PRINCIPAL ===== */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 pt-3 pb-0">
           {view.type === 'home' ? (
             <HomeView 
@@ -328,7 +300,6 @@ function Shell() {
           ) : null}
         </div>
 
-        {/* ===== MINI PLAYER ===== */}
         <MiniPlayer
           track={current}
           isPlaying={isPlaying}
@@ -337,7 +308,6 @@ function Shell() {
           onOpen={() => current && setShowNowPlaying(true)}
         />
 
-        {/* ===== BARRA INFERIOR DE NAVEGACIÓN ===== */}
         <BottomNav
           activeView={view.type}
           onViewChange={(v) => {
@@ -354,15 +324,12 @@ function Shell() {
   }
 
   // ============================================================
-  // VISTA ESCRITORIO (con sidebar izquierda)
+  // VISTA ESCRITORIO
   // ============================================================
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground" style={{ background: '#121212', color: '#fff' }}>
-      
-      {/* ===== SIDEBAR ===== */}
       <Sidebar view={view} onNavigate={setView} trashCount={lib.counts.trash} />
 
-      {/* ===== CONTENIDO PRINCIPAL ===== */}
       <div className="flex min-w-0 flex-1 flex-col">
         <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8">
           {view.type === 'home' ? (
@@ -441,16 +408,12 @@ function Shell() {
           ) : null}
         </main>
 
-        {/* ===== PLAYER BAR (escritorio) ===== */}
         <PlayerBar onLike={lib.toggleLike} onDislike={lib.dislikeSong} />
       </div>
     </div>
   );
 }
 
-// ============================================================
-// EXPORTACIÓN PRINCIPAL
-// ============================================================
 export default function App() {
   return (
     <AuthProvider>

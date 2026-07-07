@@ -248,39 +248,39 @@ export function PlayerProvider({ children }) {
     }, FADE_MS);
   }, [detectAndSkipSilence]);
 
-// ============================================================
-// 3.10 FUNCIÓN - play (Reproducir una canción con contexto)
-// ============================================================
-  
-const play = useCallback((song, songs, context = null) => {
-  console.log('[Player] play - Canción:', song?.title);
-  console.log('[Player] play - Contexto recibido:', context);
-  console.log('[Player] play - Canciones recibidas:', songs?.length || 0);
-  
-  // Si hay contexto, usar TODAS las canciones para la cola,
-  // no solo las del contexto, para poder saltar a otros contextos
-  let list = songs && songs.length ? songs : [song];
-  
-  // Si hay contexto y las canciones son solo del contexto,
-  // necesitamos obtener todas las canciones de la biblioteca
-  if (context && list.length === 1) {
-    // Intentar obtener todas las canciones del estado global
-    // Nota: esto requiere que pasemos todas las canciones desde el componente padre
-    console.log('[Player] play - Contexto con una sola canción, buscando más canciones...');
-    // Usamos las canciones recibidas, si solo es 1, esa es la que tenemos
-  }
-  
-  queueRef.current = list;
-  setQueue(list);
-  
-  // Guardar contexto para navegación continua
-  contextRef.current = context;
-  console.log('[Player] play - Contexto guardado:', contextRef.current);
-  console.log('[Player] play - Cola total:', list.length);
-  
-  const idx = list.findIndex((s) => s.id === song.id);
-  playIndex(idx === -1 ? 0 : idx, { crossfade: getActive() && !getActive().paused });
-}, [playIndex]);
+  // ============================================================
+  // 3.10 FUNCIÓN - play (Reproducir una canción con contexto)
+  // ============================================================
+
+  const play = useCallback((song, songs, context = null) => {
+    console.log('[Player] play - Canción:', song?.title);
+    console.log('[Player] play - Contexto recibido:', context);
+    console.log('[Player] play - Canciones recibidas:', songs?.length || 0);
+
+    // Si hay contexto, usar TODAS las canciones para la cola,
+    // no solo las del contexto, para poder saltar a otros contextos
+    let list = songs && songs.length ? songs : [song];
+
+    // Si hay contexto y las canciones son solo del contexto,
+    // necesitamos obtener todas las canciones de la biblioteca
+    if (context && list.length === 1) {
+      // Intentar obtener todas las canciones del estado global
+      // Nota: esto requiere que pasemos todas las canciones desde el componente padre
+      console.log('[Player] play - Contexto con una sola canción, buscando más canciones...');
+      // Usamos las canciones recibidas, si solo es 1, esa es la que tenemos
+    }
+
+    queueRef.current = list;
+    setQueue(list);
+
+    // Guardar contexto para navegación continua
+    contextRef.current = context;
+    console.log('[Player] play - Contexto guardado:', contextRef.current);
+    console.log('[Player] play - Cola total:', list.length);
+
+    const idx = list.findIndex((s) => s.id === song.id);
+    playIndex(idx === -1 ? 0 : idx, { crossfade: getActive() && !getActive().paused });
+  }, [playIndex]);
 
   // ============================================================
   // 3.11 FUNCIÓN - shufflePlay (Reproducción aleatoria)
@@ -317,149 +317,197 @@ const play = useCallback((song, songs, context = null) => {
     playIndex(firstIndex, { crossfade: getActive() && !getActive().paused });
   }, [playIndex]);
 
-// ============================================================
-// 3.12 FUNCIÓN - getNextContextTrack (Buscar siguiente canción en el contexto)
-// ============================================================
-  
-const getNextContextTrack = useCallback((currentSong, currentQueue, contextType, contextValue) => {
-  console.log('[Player] getNextContextTrack - Buscando siguiente en:', contextType, contextValue);
-  console.log('[Player] getNextContextTrack - Canción actual:', currentSong?.title);
-  
-  if (!contextType || !contextValue) return null;
-  
-  const allSongs = currentQueue;
-  
-  // Obtener todas las canciones del mismo contexto
-  let contextSongs = [];
-  if (contextType === 'artist') {
-    contextSongs = allSongs.filter(s => s.artist === contextValue);
-  } else if (contextType === 'album') {
-    contextSongs = allSongs.filter(s => s.album === contextValue);
-  } else if (contextType === 'genre') {
-    contextSongs = allSongs.filter(s => s.genre === contextValue);
-  } else {
-    return null;
-  }
-  
-  console.log('[Player] getNextContextTrack - Canciones en contexto:', contextSongs.length);
-  
-  if (contextSongs.length === 0) return null;
-  
-  // Encontrar la canción actual en el contexto
-  const currentIndex = contextSongs.findIndex(s => s.id === currentSong.id);
-  console.log('[Player] getNextContextTrack - Índice actual en contexto:', currentIndex);
-  
   // ============================================================
-  // CASO 1: Hay siguiente en el mismo contexto
+  // 3.12 FUNCIÓN - getNextContextTrack (VERSIÓN SIMPLIFICADA)
   // ============================================================
-  if (currentIndex < contextSongs.length - 1 && currentIndex !== -1) {
-    const nextSong = contextSongs[currentIndex + 1];
-    console.log('[Player] getNextContextTrack - ✅ Siguiente en mismo contexto:', nextSong?.title);
-    return nextSong;
-  }
-  
-  // ============================================================
-  // CASO 2: Es la última canción del contexto
-  // Buscar el SIGUIENTE contexto en la lista (en orden)
-  // ============================================================
-  console.log('[Player] getNextContextTrack - 🎯 Última del contexto, buscando siguiente contexto en orden');
-  
-  const currentAllIndex = allSongs.findIndex(s => s.id === currentSong.id);
-  
-  // Recopilar todos los contextos únicos en orden de aparición
-  const uniqueContexts = [];
-  const seenValues = new Set();
-  
-  for (const song of allSongs) {
-    let contextValue = '';
+
+  const getNextContextTrack = useCallback((currentSong, currentQueue, contextType, contextValue) => {
+    console.log('[Player] getNextContextTrack - Buscando siguiente:', { contextType, contextValue, currentSong: currentSong?.title });
+
+    if (!contextType || !contextValue || !currentSong) return null;
+
+    const allSongs = currentQueue;
+
+    // ============================================================
+    // PASO 1: Obtener TODAS las canciones del mismo contexto
+    // ============================================================
+    let contextSongs = [];
     if (contextType === 'artist') {
-      contextValue = song.artist;
+      contextSongs = allSongs.filter(s => s.artist === contextValue);
     } else if (contextType === 'album') {
-      contextValue = song.album;
+      contextSongs = allSongs.filter(s => s.album === contextValue);
     } else if (contextType === 'genre') {
-      contextValue = song.genre;
+      contextSongs = allSongs.filter(s => s.genre === contextValue);
+    } else if (contextType === 'year') {
+      contextSongs = allSongs.filter(s => s.year === parseInt(contextValue));
+    } else {
+      console.log('[Player] getNextContextTrack - Contexto desconocido:', contextType);
+      return null;
     }
-    
-    if (contextValue && !seenValues.has(contextValue)) {
-      seenValues.add(contextValue);
-      uniqueContexts.push(contextValue);
+
+    console.log('[Player] getNextContextTrack - Canciones en contexto:', contextSongs.length);
+
+    if (contextSongs.length === 0) {
+      console.log('[Player] getNextContextTrack - ❌ No hay canciones en este contexto');
+      return null;
     }
-  }
-  
-  console.log('[Player] getNextContextTrack - 📋 Contextos únicos en orden:', uniqueContexts);
-  
-  // Encontrar el índice del contexto actual en la lista de contextos únicos
-  const currentContextIndex = uniqueContexts.findIndex(c => c === contextValue);
-  console.log('[Player] getNextContextTrack - 📍 Índice del contexto actual:', currentContextIndex);
-  
-  // Buscar el siguiente contexto en la lista (saltando el actual)
-  let nextContextValue = null;
-  for (let i = currentContextIndex + 1; i < uniqueContexts.length; i++) {
-    const candidate = uniqueContexts[i];
-    if (candidate !== contextValue) {
-      nextContextValue = candidate;
-      break;
+
+    // ============================================================
+    // PASO 2: Encontrar la canción actual dentro del contexto
+    // ============================================================
+    const currentIndexInContext = contextSongs.findIndex(s => s.id === currentSong.id);
+    console.log('[Player] getNextContextTrack - Índice en contexto:', currentIndexInContext);
+
+    // ============================================================
+    // PASO 3: Si hay siguiente en el mismo contexto, devolverla
+    // ============================================================
+    if (currentIndexInContext !== -1 && currentIndexInContext < contextSongs.length - 1) {
+      const nextSong = contextSongs[currentIndexInContext + 1];
+      console.log('[Player] getNextContextTrack - ✅ Siguiente en mismo contexto:', nextSong?.title);
+      return nextSong;
     }
-  }
-  
-  // Si no hay siguiente contexto, buscar desde el principio (loop)
-  if (!nextContextValue && uniqueContexts.length > 1) {
+
+    // ============================================================
+    // PASO 4: Es la última canción del contexto
+    // Buscar el PRÓXIMO contexto diferente
+    // ============================================================
+    console.log('[Player] getNextContextTrack - 🎯 Última del contexto, buscando siguiente contexto');
+
+    // Obtener TODOS los contextos únicos en orden de aparición
+    const uniqueContexts = [];
+    const seen = new Set();
+
+    for (const song of allSongs) {
+      let value = '';
+      if (contextType === 'artist') {
+        value = song.artist || '';
+      } else if (contextType === 'album') {
+        value = song.album || '';
+      } else if (contextType === 'genre') {
+        value = song.genre || '';
+      } else if (contextType === 'year') {
+        value = String(song.year || '');
+      }
+
+      // Normalizar y evitar duplicados
+      const normalized = value.toLowerCase().trim();
+      if (normalized && !seen.has(normalized)) {
+        seen.add(normalized);
+        uniqueContexts.push(value);
+      }
+    }
+
+    console.log('[Player] getNextContextTrack - 📋 Total contextos únicos:', uniqueContexts.length);
+
+    // Encontrar el índice del contexto actual
+    const currentContextNormalized = String(contextValue).toLowerCase().trim();
+    let currentContextIndex = -1;
     for (let i = 0; i < uniqueContexts.length; i++) {
+      if (String(uniqueContexts[i]).toLowerCase().trim() === currentContextNormalized) {
+        currentContextIndex = i;
+        break;
+      }
+    }
+
+    console.log('[Player] getNextContextTrack - 📍 Índice del contexto actual:', currentContextIndex);
+
+    // Si no se encuentra, buscar cualquier otro contexto
+    if (currentContextIndex === -1) {
+      console.log('[Player] getNextContextTrack - ⚠️ Contexto actual no encontrado en la lista');
+      // Intentar encontrar el primer contexto diferente
+      for (const song of allSongs) {
+        let value = '';
+        if (contextType === 'artist') {
+          value = song.artist || '';
+        } else if (contextType === 'album') {
+          value = song.album || '';
+        } else if (contextType === 'genre') {
+          value = song.genre || '';
+        } else if (contextType === 'year') {
+          value = String(song.year || '');
+        }
+        if (value && String(value).toLowerCase().trim() !== currentContextNormalized) {
+          const nextContextSongs = allSongs.filter(s => {
+            if (contextType === 'artist') return s.artist === value;
+            if (contextType === 'album') return s.album === value;
+            if (contextType === 'genre') return s.genre === value;
+            if (contextType === 'year') return String(s.year) === value;
+            return false;
+          });
+          if (nextContextSongs.length > 0) {
+            contextRef.current = { type: contextType, value };
+            console.log('[Player] getNextContextTrack - 🔄 NUEVO CONTEXTO encontrado:', value);
+            return nextContextSongs[0];
+          }
+        }
+      }
+      return null;
+    }
+
+    // Buscar el siguiente contexto diferente (después del actual)
+    let nextContextValue = null;
+    for (let i = currentContextIndex + 1; i < uniqueContexts.length; i++) {
       const candidate = uniqueContexts[i];
-      if (candidate !== contextValue) {
+      if (String(candidate).toLowerCase().trim() !== currentContextNormalized) {
         nextContextValue = candidate;
         break;
       }
     }
-    console.log('[Player] getNextContextTrack - 🔄 No hay más contextos, looping al principio');
-  }
-  
-  // Si encontramos un siguiente contexto, devolver su primera canción
-  if (nextContextValue) {
-    let nextContextSongs = [];
-    if (contextType === 'artist') {
-      nextContextSongs = allSongs.filter(s => s.artist === nextContextValue);
-    } else if (contextType === 'album') {
-      nextContextSongs = allSongs.filter(s => s.album === nextContextValue);
-    } else if (contextType === 'genre') {
-      nextContextSongs = allSongs.filter(s => s.genre === nextContextValue);
+
+    // Si no hay siguiente, buscar desde el principio (loop)
+    if (!nextContextValue) {
+      for (let i = 0; i < uniqueContexts.length; i++) {
+        const candidate = uniqueContexts[i];
+        if (String(candidate).toLowerCase().trim() !== currentContextNormalized) {
+          nextContextValue = candidate;
+          break;
+        }
+      }
+      console.log('[Player] getNextContextTrack - 🔄 No hay más contextos, looping al principio');
     }
-    
-    if (nextContextSongs.length > 0) {
-      // ACTUALIZAR EL CONTEXTO AL NUEVO
-      contextRef.current = { type: contextType, value: nextContextValue };
-      const firstSong = nextContextSongs[0];
-      console.log('[Player] getNextContextTrack - 🎵 SIGUIENTE CONTEXTO:', nextContextValue);
-      console.log('[Player] getNextContextTrack - 🎵 Primera canción:', firstSong?.title);
-      return firstSong;
-    }
-  }
-  
-  // ============================================================
-  // CASO 3: Solo hay un contexto en toda la lista
-  // ============================================================
-  console.log('[Player] getNextContextTrack - ℹ️ Solo hay un contexto en toda la lista');
-  
-  // Si hay más de una canción del mismo contexto, volver a la primera
-  if (contextSongs.length > 1) {
-    const firstSong = contextSongs[0];
-    if (firstSong && firstSong.id !== currentSong.id) {
-      console.log('[Player] getNextContextTrack - 🔁 Volviendo a la primera canción:', firstSong?.title);
-      return firstSong;
-    }
-    if (contextSongs.length > 1) {
-      const nextSong = contextSongs[1];
-      if (nextSong) {
-        console.log('[Player] getNextContextTrack - 🔁 Siguiente canción:', nextSong?.title);
-        return nextSong;
+
+    // Si encontramos un contexto, devolver su primera canción
+    if (nextContextValue) {
+      const nextContextSongs = allSongs.filter(s => {
+        if (contextType === 'artist') return s.artist === nextContextValue;
+        if (contextType === 'album') return s.album === nextContextValue;
+        if (contextType === 'genre') return s.genre === nextContextValue;
+        if (contextType === 'year') return String(s.year) === nextContextValue;
+        return false;
+      });
+
+      if (nextContextSongs.length > 0) {
+        contextRef.current = { type: contextType, value: nextContextValue };
+        console.log('[Player] getNextContextTrack - 🎵 SIGUIENTE CONTEXTO:', nextContextValue);
+        console.log('[Player] getNextContextTrack - 🎵 Primera canción:', nextContextSongs[0]?.title);
+        return nextContextSongs[0];
       }
     }
-  }
-  
-  // Si solo hay una canción en toda la lista, detener
-  console.log('[Player] getNextContextTrack - ⏹️ Solo una canción en toda la lista, deteniendo');
-  return null;
-}, []);
+
+    // ============================================================
+    // CASO 5: Solo hay un contexto en toda la lista
+    // ============================================================
+    console.log('[Player] getNextContextTrack - ℹ️ Solo hay un contexto en toda la lista');
+
+    // Si hay más de una canción, volver a la primera
+    if (contextSongs.length > 1) {
+      const firstSong = contextSongs[0];
+      if (firstSong && firstSong.id !== currentSong.id) {
+        console.log('[Player] getNextContextTrack - 🔁 Volviendo a la primera:', firstSong?.title);
+        return firstSong;
+      }
+      if (contextSongs.length > 1) {
+        const nextSong = contextSongs[1];
+        if (nextSong) {
+          console.log('[Player] getNextContextTrack - 🔁 Siguiente canción:', nextSong?.title);
+          return nextSong;
+        }
+      }
+    }
+
+    console.log('[Player] getNextContextTrack - ⏹️ No hay más canciones, deteniendo');
+    return null;
+  }, []);
 
   // ============================================================
   // 3.13 FUNCIÓN - prev (Canción anterior)
@@ -476,75 +524,86 @@ const getNextContextTrack = useCallback((currentSong, currentQueue, contextType,
     if (indexRef.current > 0) playIndex(indexRef.current - 1);
   }, [playIndex]);
 
-// ============================================================
-// 3.14 FUNCIÓN - next (Siguiente canción)
-// ============================================================
-  
-const next = useCallback(() => {
-  const q = queueRef.current;
-  if (q.length === 0) {
-    console.log('[Player] next - Cola vacía');
-    return;
-  }
-  
-  console.log('[Player] next - Índice actual:', indexRef.current, 'Total:', q.length);
-  
-  // Repeat one: replay current song
-  if (repeatModeRef.current === 2 && indexRef.current >= 0 && indexRef.current < q.length) {
-    console.log('[Player] next - Repeat one, reproduciendo de nuevo');
-    playIndex(indexRef.current);
-    return;
-  }
-  
-  // Obtener contexto si existe
-  const currentSong = q[indexRef.current];
-  const context = contextRef.current;
-  const contextType = context?.type || null;
-  const contextValue = context?.value || null;
-  
-  console.log('[Player] next - Contexto:', { 
-    contextType: contextType, 
-    contextValue: contextValue, 
-    currentSong: currentSong?.title 
-  });
-  
-  // Si hay contexto, buscar la siguiente canción en el contexto
-  if (contextType && contextValue && currentSong) {
-    const nextTrack = getNextContextTrack(currentSong, q, contextType, contextValue);
-    console.log('[Player] next - Siguiente canción en contexto:', nextTrack?.title || 'No encontrada');
-    
-    if (nextTrack) {
-      const nextIndex = q.findIndex(s => s.id === nextTrack.id);
-      if (nextIndex !== -1 && nextIndex !== indexRef.current) {
-        console.log('[Player] next - Reproduciendo:', nextTrack.title);
-        playIndex(nextIndex);
-        return;
+  // ============================================================
+  // 3.14 FUNCIÓN - next (Siguiente canción)
+  // ============================================================
+
+  const next = useCallback(() => {
+    const q = queueRef.current;
+    if (q.length === 0) {
+      console.log('[Player] next - Cola vacía');
+      return;
+    }
+
+    // Repeat one: replay current song
+    if (repeatModeRef.current === 2 && indexRef.current >= 0 && indexRef.current < q.length) {
+      console.log('[Player] next - Repeat one, reproduciendo de nuevo');
+      playIndex(indexRef.current);
+      return;
+    }
+
+    // Obtener la canción actual
+    const currentSong = q[indexRef.current];
+    if (!currentSong) {
+      console.log('[Player] next - ❌ No hay canción actual');
+      return;
+    }
+
+    // Obtener contexto
+    const context = contextRef.current;
+    const contextType = context?.type || null;
+    const contextValue = context?.value || null;
+
+    console.log('[Player] next - Contexto:', {
+      contextType,
+      contextValue,
+      currentSong: currentSong?.title,
+      currentIndex: indexRef.current,
+      total: q.length
+    });
+
+    // ============================================================
+    // Si hay contexto, buscar la siguiente canción en el contexto
+    // ============================================================
+    if (contextType && contextValue) {
+      const nextTrack = getNextContextTrack(currentSong, q, contextType, contextValue);
+      console.log('[Player] next - Siguiente en contexto:', nextTrack?.title || 'No encontrada');
+
+      if (nextTrack) {
+        // Buscar el índice de la canción en la cola
+        const nextIndex = q.findIndex(s => s.id === nextTrack.id);
+        if (nextIndex !== -1 && nextIndex !== indexRef.current) {
+          console.log('[Player] next - Reproduciendo:', nextTrack.title, '(índice:', nextIndex, ')');
+          playIndex(nextIndex);
+          return;
+        }
       }
     }
-  }
-  
-  // Si no hay contexto o no se encontró, comportamiento normal
-  console.log('[Player] next - Comportamiento normal (sin contexto o sin siguiente)');
-  if (indexRef.current < q.length - 1) {
-    const nextIndex = indexRef.current + 1;
-    console.log('[Player] next - Siguiente canción en la lista:', q[nextIndex]?.title);
-    playIndex(nextIndex);
-  } else {
-    console.log('[Player] next - Fin de la lista');
-    if (repeatModeRef.current === 1) {
-      console.log('[Player] next - Repeat all, volviendo al principio');
-      playIndex(0);
+
+    // ============================================================
+    // Si no hay contexto o no se encontró, comportamiento normal
+    // ============================================================
+    console.log('[Player] next - Comportamiento normal (sin contexto o sin siguiente)');
+    if (indexRef.current < q.length - 1) {
+      const nextIndex = indexRef.current + 1;
+      console.log('[Player] next - Siguiente canción en la lista:', q[nextIndex]?.title);
+      playIndex(nextIndex);
     } else {
-      console.log('[Player] next - Deteniendo reproducción');
-      setIsPlaying(false);
-      const a = getActive();
-      if (a) {
-        a.currentTime = 0;
-        setProgress(0);
+      console.log('[Player] next - Fin de la lista');
+      if (repeatModeRef.current === 1) {
+        console.log('[Player] next - Repeat all, volviendo al principio');
+        playIndex(0);
+      } else {
+        console.log('[Player] next - Deteniendo reproducción');
+        setIsPlaying(false);
+        const a = getActive();
+        if (a) {
+          a.currentTime = 0;
+          setProgress(0);
+        }
       }
     }
-  }
-}, [playIndex, getNextContextTrack]);
+  }, [playIndex, getNextContextTrack]);
 
   // ============================================================
   // 3.15 FUNCIÓN - togglePlay (Pausar / Reanudar)
