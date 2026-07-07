@@ -4,6 +4,7 @@ import Cover from './Cover.jsx';
 import NowPlayingBars from './Player/NowPlayingBars.jsx';
 import { formatTime } from '../lib/format.js';
 import { usePlayer } from '../context/PlayerContext.jsx';
+import { FileText } from 'lucide-react';
 
 export default function SongRow({
   song,
@@ -20,6 +21,7 @@ export default function SongRow({
   fixingMetadata = false,
   context = null,
   likedIds, // Set de IDs de canciones favoritas
+  onShowLyrics = null,
 }) {
   const { current, isPlaying, play, togglePlay, removeFromQueue } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -45,16 +47,16 @@ export default function SongRow({
   // Eliminar canción - usa removeFromQueue para pasar a la siguiente
   const handleDelete = async (e) => {
     e.stopPropagation();
-    
+
     if (confirmDelete) {
       const songId = song.id;
-      
+
       // Eliminar de la cola de reproducción (esto maneja el paso a la siguiente)
       removeFromQueue(songId);
-      
+
       // Ejecutar eliminación en el servidor
       await onDelete(song);
-      
+
       setConfirmDelete(false);
     } else {
       setConfirmDelete(true);
@@ -69,9 +71,8 @@ export default function SongRow({
 
   return (
     <div
-      className={`group flex items-center gap-1.5 rounded-lg px-1.5 py-1 transition hover:bg-surface-2 sm:gap-3 sm:px-2 sm:py-2 ${
-        isCurrent ? 'bg-surface-2' : ''
-      }`}
+      className={`group flex items-center gap-1.5 rounded-lg px-1.5 py-1 transition hover:bg-surface-2 sm:gap-3 sm:px-2 sm:py-2 ${isCurrent ? 'bg-surface-2' : ''
+        }`}
       style={{ minHeight: 36 }}
     >
       {/* ===== BOTÓN DE REPRODUCCIÓN ===== */}
@@ -186,7 +187,18 @@ export default function SongRow({
             {confirmDelete ? <Check size={12} className="sm:size-4" /> : <Trash2 size={12} className="sm:size-4" />}
           </button>
         )}
-
+        {onShowLyrics && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onShowLyrics(song);
+            }}
+            className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary`}
+            title="Ver letra"
+          >
+            <FileText size={12} className="sm:size-4" />
+          </button>
+        )}
         {/* Duración */}
         <span className="ml-1 w-7 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground sm:w-9 sm:text-xs">
           {formatTime(song.duration)}

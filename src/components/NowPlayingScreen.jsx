@@ -18,12 +18,15 @@ import {
 import { formatTime } from '../lib/format.js';
 import { usePlayer } from '../context/PlayerContext.jsx';
 import { artistCoverUrl, coverUrl } from '../lib/api.js';
+import { FileText } from 'lucide-react';
+
 
 export default function NowPlayingScreen({
   track, isPlaying, onPlayPause, onNext, onPrev, onLike, onDislike, likedIds, onClose,
   onSync, onDelete,
   allTracks = [],
   onOpenArtist = null,
+  onShowLyrics = null,
 }) {
   const { removeFromQueue, queue, progress, duration, volume, setVolume, repeatMode, setRepeatMode, shufflePlay, seek } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -120,7 +123,7 @@ export default function NowPlayingScreen({
 
   return (
     <div className="flex flex-col h-full relative overflow-hidden" style={{ background: '#0d0d0d', padding: '12px 16px 0 16px' }}>
-      
+
       {/* ===== FONDO DIFUMINADO DEL ÁLBUM ===== */}
       {bgImage && (
         <div
@@ -145,7 +148,7 @@ export default function NowPlayingScreen({
 
       {/* ===== CONTENIDO ===== */}
       <div className="relative z-10 flex flex-col h-full">
-        
+
         {/* ===== BARRA SUPERIOR ===== */}
         <div className="flex items-center justify-between" style={{ flexShrink: 0 }}>
           <button
@@ -155,6 +158,16 @@ export default function NowPlayingScreen({
           >
             <ChevronDown size={28} style={{ color: '#fff' }} />
           </button>
+          {onShowLyrics && (
+            <button
+              onClick={onShowLyrics}
+              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              style={{ color: '#a7a7a7', minWidth: 40, minHeight: 40 }}
+              title="Ver letra"
+            >
+              <FileText size={20} />
+            </button>
+          )}
           <div className="text-center">
             <p style={{ fontSize: 11, color: '#a7a7a7', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
               Reproduciendo ahora
@@ -177,7 +190,7 @@ export default function NowPlayingScreen({
         {/* ===== CUERPO PRINCIPAL ===== */}
         <div className="flex-1 flex flex-col" style={{ justifyContent: 'center' }}>
           <div className="flex flex-col">
-            
+
             {/* ===== PORTADA CENTRAL (ARTISTA O ÁLBUM) ===== */}
             <div className="flex items-center justify-center" style={{ padding: '8px 0' }}>
               <div
@@ -212,7 +225,7 @@ export default function NowPlayingScreen({
                       {track.title}
                     </h2>
                     {/* ===== CLICK EN ARTISTA ===== */}
-                    <p 
+                    <p
                       className="truncate cursor-pointer hover:text-primary transition-colors"
                       style={{ fontSize: 15, color: '#b3b3b3' }}
                       onClick={handleArtistClick}

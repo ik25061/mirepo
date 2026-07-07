@@ -758,6 +758,79 @@ app.delete('/api/playlists/:id', async (req, res) => {
 });
 
 // ============================================================
+// RUTAS - LETRAS DE CANCIONES
+// ============================================================
+
+import { getLyrics } from './lyrics.js';
+
+// GET - Obtener letra de una canción
+app.get('/api/lyrics/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const song = getSongById(id);
+    
+    if (!song) {
+      return res.status(404).json({ error: 'Canción no encontrada' });
+    }
+    
+    const result = await getLyrics(id, song.title, song.artist);
+    
+    if (!result.lyrics) {
+      return res.json({ 
+        success: false, 
+        message: 'No se encontraron letras para esta canción',
+        hasLyrics: false
+      });
+    }
+    
+    res.json({
+      success: true,
+      hasLyrics: true,
+      lyrics: result.lyrics,
+      translatedLyrics: result.translatedLyrics,
+      title: song.title,
+      artist: song.artist
+    });
+  } catch (err) {
+    console.error('[api/lyrics] Error:', err);
+    res.status(500).json({ error: 'Error al obtener la letra' });
+  }
+});
+
+// POST - Forzar búsqueda de letra (refrescar caché)
+app.post('/api/lyrics/:id/refresh', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const song = getSongById(id);
+    
+    if (!song) {
+      return res.status(404).json({ error: 'Canción no encontrada' });
+    }
+    
+    // Eliminar del caché
+    const { loadCache, saveCache } = await import('./lyrics.js');
+    const cache = loadCache();
+    if (cache[id]) {
+      delete cache[id];
+      saveCache(cache);
+    }
+    
+    // Buscar de nuevo
+    const result = await getLyrics(id, song.title, song.artist);
+    
+    res.json({
+      success: true,
+      hasLyrics: !!result.lyrics,
+      lyrics: result.lyrics || null,
+      translatedLyrics: result.translatedLyrics || null
+    });
+  } catch (err) {
+    console.error('[api/lyrics/refresh] Error:', err);
+    res.status(500).json({ error: 'Error al refrescar la letra' });
+  }
+});
+
+// ============================================================
 // INICIAR SERVIDOR
 // ============================================================
 app.listen(PORT, '0.0.0.0', () => {

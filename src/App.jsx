@@ -30,30 +30,30 @@ function Shell() {
   // AUTENTICACIÓN
   // ============================================================
   const { isAuthenticated, loading: authLoading, user } = useAuth();
-  
+
   // ============================================================
   // REPRODUCTOR
   // ============================================================
   const { current, isPlaying, togglePlay, next, prev, stop } = usePlayer();
-  
+
   // ============================================================
   // TODAS LAS CANCIONES
   // ============================================================
   const { allSongs, loading: allSongsLoading, toggleLiked, removeSong: removeSongFromAllSongs } = useAllSongs(user?.id);
-  
+
   // ============================================================
   // BIBLIOTECA
   // ============================================================
   const lib = useLibrary(user?.id, toggleLiked, removeSongFromAllSongs);
 
-  
+
   // ============================================================
   // NAVEGACIÓN
   // ============================================================
   const [view, setView] = useState({ type: 'home' });
   const [showNowPlaying, setShowNowPlaying] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  
+
   // ============================================================
   // CONTROL DE SCROLL
   // ============================================================
@@ -69,6 +69,15 @@ function Shell() {
   const GRID_PAGE_SIZE = 30;
   const [gridItems, setGridItems] = useState([]);
   const [gridType, setGridType] = useState('artists');
+
+  const [showLyrics, setShowLyrics] = useState(false);
+  const [lyricsSong, setLyricsSong] = useState(null);
+
+  const handleShowLyrics = (song) => {
+    setLyricsSong(song);
+    setShowLyrics(true);
+  };
+
 
   // ============================================================
   // DETECTAR CAMBIO DE TAMAÑO
@@ -103,7 +112,7 @@ function Shell() {
   // FUNCIONES DE NAVEGACIÓN
   // ============================================================
   const openCollection = (collection) => setView({ type: 'collection', collection });
-  
+
   const openGridView = useCallback((type, items) => {
     setGridType(type);
     setGridItems(items);
@@ -114,17 +123,17 @@ function Shell() {
 
   const loadMoreGridItems = useCallback(() => {
     if (gridLoading || !gridHasMore) return;
-    
+
     setGridLoading(true);
-    
+
     setTimeout(() => {
       const nextOffset = gridOffset;
       const nextItems = gridItems.slice(nextOffset, nextOffset + GRID_PAGE_SIZE);
-      
+
       if (nextItems.length > 0) {
         setGridOffset(prev => prev + nextItems.length);
         setGridHasMore(gridItems.length > nextOffset + nextItems.length);
-        
+
         setView(prev => {
           if (prev.type === 'grid' && prev.gridData) {
             return {
@@ -140,7 +149,7 @@ function Shell() {
       } else {
         setGridHasMore(false);
       }
-      
+
       setGridLoading(false);
     }, 300);
   }, [gridLoading, gridHasMore, gridOffset, gridItems]);
@@ -218,6 +227,16 @@ function Shell() {
     );
   }
 
+  {showLyrics && (
+  <LyricsViewer
+    song={lyricsSong}
+    onClose={() => {
+      setShowLyrics(false);
+      setLyricsSong(null);
+    }}
+  />
+)}
+onShowLyrics={handleShowLyrics}
   // ============================================================
   // VISTA MÓVIL
   // ============================================================
@@ -226,9 +245,9 @@ function Shell() {
       <div className="flex flex-col h-full bg-background text-foreground overflow-hidden" style={{ background: '#121212' }}>
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 pt-3 pb-0">
           {view.type === 'home' ? (
-            <HomeView 
-              songs={lib.songs} 
-              onOpenCollection={openCollectionHandler} 
+            <HomeView
+              songs={lib.songs}
+              onOpenCollection={openCollectionHandler}
               onOpenGridView={openGridView}
               onLike={lib.toggleLike}
               onDislike={lib.dislikeSong}
@@ -336,9 +355,9 @@ function Shell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8">
           {view.type === 'home' ? (
-            <HomeView 
-              songs={lib.songs} 
-              onOpenCollection={openCollectionHandler} 
+            <HomeView
+              songs={lib.songs}
+              onOpenCollection={openCollectionHandler}
               onOpenGridView={openGridView}
               onLike={lib.toggleLike}
               onDislike={lib.dislikeSong}
