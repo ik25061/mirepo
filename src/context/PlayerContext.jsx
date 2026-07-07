@@ -253,33 +253,28 @@ export function PlayerProvider({ children }) {
   // ============================================================
 
   const play = useCallback((song, songs, context = null) => {
-    console.log('[Player] play - Canción:', song?.title);
+    if (!song) return;
+
+    console.log('[Player] play - Cancion:', song?.title);
     console.log('[Player] play - Contexto recibido:', context);
     console.log('[Player] play - Canciones recibidas:', songs?.length || 0);
 
-    // Si hay contexto, usar TODAS las canciones para la cola,
-    // no solo las del contexto, para poder saltar a otros contextos
-    let list = songs && songs.length ? songs : [song];
+    let list = songs && songs.length ? [...songs] : [song];
+    let idx = list.findIndex((s) => s.id === song.id);
 
-    // Si hay contexto y las canciones son solo del contexto,
-    // necesitamos obtener todas las canciones de la biblioteca
-    if (context && list.length === 1) {
-      // Intentar obtener todas las canciones del estado global
-      // Nota: esto requiere que pasemos todas las canciones desde el componente padre
-      console.log('[Player] play - Contexto con una sola canción, buscando más canciones...');
-      // Usamos las canciones recibidas, si solo es 1, esa es la que tenemos
+    if (idx === -1) {
+      list = [song, ...list];
+      idx = 0;
     }
 
     queueRef.current = list;
     setQueue(list);
 
-    // Guardar contexto para navegación continua
     contextRef.current = context;
     console.log('[Player] play - Contexto guardado:', contextRef.current);
     console.log('[Player] play - Cola total:', list.length);
 
-    const idx = list.findIndex((s) => s.id === song.id);
-    playIndex(idx === -1 ? 0 : idx, { crossfade: getActive() && !getActive().paused });
+    playIndex(idx, { crossfade: getActive() && !getActive().paused });
   }, [playIndex]);
 
   // ============================================================
@@ -484,28 +479,7 @@ export function PlayerProvider({ children }) {
       }
     }
 
-    // ============================================================
-    // CASO 5: Solo hay un contexto en toda la lista
-    // ============================================================
-    console.log('[Player] getNextContextTrack - ℹ️ Solo hay un contexto en toda la lista');
-
-    // Si hay más de una canción, volver a la primera
-    if (contextSongs.length > 1) {
-      const firstSong = contextSongs[0];
-      if (firstSong && firstSong.id !== currentSong.id) {
-        console.log('[Player] getNextContextTrack - 🔁 Volviendo a la primera:', firstSong?.title);
-        return firstSong;
-      }
-      if (contextSongs.length > 1) {
-        const nextSong = contextSongs[1];
-        if (nextSong) {
-          console.log('[Player] getNextContextTrack - 🔁 Siguiente canción:', nextSong?.title);
-          return nextSong;
-        }
-      }
-    }
-
-    console.log('[Player] getNextContextTrack - ⏹️ No hay más canciones, deteniendo');
+    console.log('[Player] getNextContextTrack - Fin del contexto');
     return null;
   }, []);
 

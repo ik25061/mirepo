@@ -199,8 +199,8 @@ const handlePlay = (item, e) => {
   const context = { type: contextType, value: item.name };
   console.log('[GridView] ▶️ Reproduciendo con contexto:', context);
   
-  // IMPORTANTE: Usar TODAS las canciones (songs) como cola
-  play(item.songs[0], songs, context);
+  // La cola debe ser la coleccion completa, no la biblioteca paginada.
+  play(item.songs[0], item.songs, context);
 };
   return (
     <div className="flex flex-col gap-6 pb-20 w-full h-full">
