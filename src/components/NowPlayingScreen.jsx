@@ -4,9 +4,9 @@
  * ============================================================
  * 
  * Muestra la canción actual con:
- * - Imagen del artista en el centro
  * - Portada del álbum de fondo con blur y capa oscura
  * - Click en artista para ir a la colección del artista
+ * - Botón de letras integrado (como Spotify) que reemplaza la carátula
  */
 
 import { useRef, useState, useEffect } from 'react';
@@ -18,7 +18,7 @@ import {
 import { formatTime } from '../lib/format.js';
 import { usePlayer } from '../context/PlayerContext.jsx';
 import { artistCoverUrl, coverUrl } from '../lib/api.js';
-import { FileText } from 'lucide-react';
+import { FileText, Loader2 } from 'lucide-react';
 
 
 export default function NowPlayingScreen({
@@ -26,13 +26,23 @@ export default function NowPlayingScreen({
   onSync, onDelete,
   allTracks = [],
   onOpenArtist = null,
-  onShowLyrics = null,
 }) {
   const { removeFromQueue, queue, progress, duration, volume, setVolume, repeatMode, setRepeatMode, shufflePlay, seek } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const progressRef = useRef(null);
   const [artistImageUrl, setArtistImageUrl] = useState(null);
   const [artistImageFailed, setArtistImageFailed] = useState(false);
+
+  // ===== ESTADO PARA LETRAS INTEGRADAS =====
+  const [showLyrics, setShowLyrics] = useState(false);
+  const [lyrics, setLyrics] = useState(null);
+  const [translatedLyrics, setTranslatedLyrics] = useState(null);
+  const [lyricsLoading, setLyricsLoading] = useState(false);
+  const [lyricsError, setLyricsError] = useState(null);
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [syncedLines, setSyncedLines] = useState(null);
+  const lyricsContainerRef = useRef(null);
+  const [currentLineIndex, setCurrentLineIndex] = useState(-1);
 
   // Generar URL de la portada del álbum
   const coverId = track?.coverId || track?.id;
@@ -59,6 +69,48 @@ export default function NowPlayingScreen({
     img.src = url;
     return () => { img.onload = null; img.onerror = null; };
   }, [track?.artist]);
+
+  // Resetear letras al cambiar de canción
+  useEffect(() => {
+    setShowLyrics(false);
+    setLyrics(null);
+    setTranslatedLyrics(null);
+    setLyricsError(null);
+    setShowTranslation(false);
+    setSyncedLines(null);
+    setCurrentLineIndex(-1);
+  }, [track?.id]);
+
+  // ===== KARAOKE: calcular línea actual según el progreso =====
+  useEffect(() => {
+    if (!syncedLines || syncedLines.length === 0) return;
+    
+    // Encontrar la última línea cuyo tiempo sea <= progress actual
+    let idx = -1;
+    for (let i = 0; i < syncedLines.length; i++) {
+      if (syncedLines[i].time <= progress) {
+        idx = i;
+      } else {
+        break;
+      }
+    }
+    
+    if (idx !== currentLineIndex) {
+      setCurrentLineIndex(idx);
+      
+      // Auto-scroll a la línea actual
+      if (lyricsContainerRef.current && idx >= 0) {
+        const container = lyricsContainerRef.current;
+        const lineEl = container.querySelector(`[data-lyric-index="${idx}"]`);
+        if (lineEl) {
+          const containerRect = container.getBoundingClientRect();
+          const lineRect = lineEl.getBoundingClientRect();
+          const offset = lineRect.top - containerRect.top - containerRect.height * 0.4;
+          container.scrollBy({ top: offset, behavior: 'smooth' });
+        }
+      }
+    }
+  }, [progress, syncedLines]);
 
   // Imagen central: artista (si existe) o portada del álbum
   const centerImage = (artistImageUrl && !artistImageFailed) ? artistImageUrl : albumCoverUrl;
@@ -107,6 +159,75 @@ export default function NowPlayingScreen({
       setConfirmDelete(true);
       setTimeout(() => setConfirmDelete(false), 3000);
     }
+  };
+
+  // ============================================================
+  // CARGAR LETRAS
+  // ============================================================
+  const loadLyrics = async () => {
+    if (!track) return;
+    setLyricsLoading(true);
+    setLyricsError(null);
+    try {
+      const response = await fetch(`/api/lyrics/${track.id}`);
+      const data = await response.json();
+      if (data.success && data.hasLyrics) {
+        setLyrics(data.lyrics);
+        setSyncedLines(data.syncedLines || null);
+        setTranslatedLyrics(data.translatedLyrics || null);
+        setShowTranslation(!!data.translatedLyrics);
+      } else {
+        setLyricsError(data.message || 'No se encontraron letras');
+        setLyrics(null);
+      }
+    } catch (err) {
+      console.error('[NowPlaying] Error cargando letras:', err);
+      setLyricsError('Error al cargar la letra');
+    } finally {
+      setLyricsLoading(false);
+    }
+  };
+
+  // Alternar vista de letras
+  const toggleLyrics = () => {
+    const newState = !showLyrics;
+    setShowLyrics(newState);
+    if (newState && !lyrics && !lyricsError && !lyricsLoading) {
+      loadLyrics();
+    }
+  };
+
+  // ===== RENDERIZAR LETRAS CON EFECTO KARAOKE =====
+  const renderLyrics = (text) => {
+    if (!text) return null;
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    
+    // Si tenemos líneas sincronizadas, usar el índice actual para colorear
+    const useSynced = syncedLines && syncedLines.length > 0;
+    
+    return lines.map((line, i) => {
+      const isCurrent = useSynced && i === currentLineIndex;
+      const isPast = useSynced && i < currentLineIndex;
+      const isFuture = useSynced && i > currentLineIndex;
+      
+      return (
+        <p
+          key={i}
+          data-lyric-index={i}
+          className="text-sm leading-relaxed transition-all duration-300"
+          style={{
+            color: isCurrent ? '#1db954' : isPast ? 'rgba(255,255,255,0.6)' : isFuture ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.9)',
+            fontWeight: isCurrent ? 700 : isPast ? 400 : 400,
+            fontSize: isCurrent ? 16 : 14,
+            padding: '4px 0',
+            transform: isCurrent ? 'scale(1.02)' : 'scale(1)',
+            transformOrigin: 'left center',
+          }}
+        >
+          {line}
+        </p>
+      );
+    });
   };
 
   if (!track) {
@@ -158,22 +279,21 @@ export default function NowPlayingScreen({
           >
             <ChevronDown size={28} style={{ color: '#fff' }} />
           </button>
-          {onShowLyrics && (
-            <button
-              onClick={onShowLyrics}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
-              style={{ color: '#a7a7a7', minWidth: 40, minHeight: 40 }}
-              title="Ver letra"
-            >
-              <FileText size={20} />
-            </button>
-          )}
           <div className="text-center">
             <p style={{ fontSize: 11, color: '#a7a7a7', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
               Reproduciendo ahora
             </p>
           </div>
           <div className="flex items-center" style={{ gap: 12 }}>
+            {/* Botón de letras - integrado como Spotify */}
+            <button
+              onClick={toggleLyrics}
+              className={`p-2 rounded-full transition-colors ${showLyrics ? 'bg-primary/20 text-primary' : 'hover:bg-white/10'}`}
+              style={{ color: showLyrics ? '#1db954' : '#a7a7a7', minWidth: 40, minHeight: 40 }}
+              title={showLyrics ? 'Ocultar letra' : 'Ver letra'}
+            >
+              <FileText size={20} />
+            </button>
             {onSync && (
               <button onClick={() => onSync(track)} className="p-2 rounded-full hover:bg-white/10 transition-colors" style={{ color: '#a7a7a7', minWidth: 40, minHeight: 40 }}>
                 <Search size={20} />
@@ -188,31 +308,90 @@ export default function NowPlayingScreen({
         </div>
 
         {/* ===== CUERPO PRINCIPAL ===== */}
-        <div className="flex-1 flex flex-col" style={{ justifyContent: 'center' }}>
-          <div className="flex flex-col">
+        <div className="flex-1 flex flex-col" style={{ justifyContent: 'center', overflow: 'hidden' }}>
+          <div className="flex flex-col" style={{ maxHeight: '100%' }}>
 
-            {/* ===== PORTADA CENTRAL (ARTISTA O ÁLBUM) ===== */}
-            <div className="flex items-center justify-center" style={{ padding: '8px 0' }}>
+            {/* ===== PORTADA CENTRAL / LETRAS ===== */}
+            {showLyrics ? (
+              /* ===== VISTA DE LETRAS (COMO SPOTIFY) ===== */
               <div
-                className="relative flex items-center justify-center overflow-hidden"
+                className="flex flex-col overflow-y-auto"
                 style={{
-                  width: 'min(65vw, 260px)',
-                  height: 'min(65vw, 260px)',
-                  borderRadius: '50%',
-                  background: '#5c0303',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.7), 0 0 80px rgba(0,0,0,0.4)',
+                  flex: '1 1 auto',
+                  minHeight: 0,
+                  padding: '8px 16px',
+                  margin: '0 -16px',
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: 'rgba(255,255,255,0.2) transparent',
                 }}
               >
-                {centerImage ? (
-                  <img src={centerImage} alt={track.title} className="w-full h-full object-cover" />
+                {lyricsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <Loader2 size={32} className="animate-spin" style={{ color: '#1db954' }} />
+                    <p className="mt-4" style={{ color: '#a7a7a7', fontSize: 14 }}>Cargando letras...</p>
+                  </div>
+                ) : lyricsError ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <Music2 size={48} style={{ color: '#535353' }} />
+                    <p className="mt-3" style={{ color: '#fff', fontSize: 15, fontWeight: 600 }}>Sin letras disponibles</p>
+                    <p className="mt-1" style={{ color: '#a7a7a7', fontSize: 13 }}>{lyricsError}</p>
+                    <button
+                      onClick={loadLyrics}
+                      className="mt-4 px-4 py-2 rounded-full transition-colors"
+                      style={{ background: 'rgba(29,185,84,0.2)', color: '#1db954', fontSize: 13, fontWeight: 600 }}
+                    >
+                      Reintentar
+                    </button>
+                  </div>
                 ) : (
-                  <Music2 size={80} style={{ color: '#535353' }} />
+                  <div className="space-y-1" style={{ padding: '4px 0' }}>
+                    {showTranslation && translatedLyrics ? (
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-xs uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>Original</p>
+                          <div className="space-y-1" style={{ opacity: 0.8 }}>
+                            {renderLyrics(lyrics)}
+                          </div>
+                        </div>
+                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 12 }}>
+                          <p className="text-xs uppercase tracking-wider mb-2" style={{ color: '#1db954', opacity: 0.7 }}>Traducción</p>
+                          <div className="space-y-1">
+                            {renderLyrics(translatedLyrics)}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        {renderLyrics(lyrics)}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-            </div>
+            ) : (
+              /* ===== PORTADA CENTRAL (ARTISTA O ÁLBUM) ===== */
+              <div className="flex items-center justify-center" style={{ padding: '8px 0' }}>
+                <div
+                  className="relative flex items-center justify-center overflow-hidden"
+                  style={{
+                    width: 'min(65vw, 260px)',
+                    height: 'min(65vw, 260px)',
+                    borderRadius: '50%',
+                    background: '#5c0303',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.7), 0 0 80px rgba(0,0,0,0.4)',
+                  }}
+                >
+                  {centerImage ? (
+                    <img src={centerImage} alt={track.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <Music2 size={80} style={{ color: '#535353' }} />
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* ===== INFO DEL TEMA ===== */}
-            <div className="flex items-center justify-between" style={{ padding: '12px 0 4px 0' }}>
+            <div className="flex items-center justify-between" style={{ padding: '12px 0 4px 0', flexShrink: 0 }}>
               <div className="min-w-0 flex-1">
                 <div className="group flex items-center gap-3">
                   {onDislike && (
@@ -246,7 +425,7 @@ export default function NowPlayingScreen({
             </div>
 
             {/* ===== PROGRESS BAR ===== */}
-            <div style={{ padding: '4px 0' }}>
+            <div style={{ padding: '4px 0', flexShrink: 0 }}>
               <div
                 ref={progressRef}
                 onClick={seekTo}
@@ -270,7 +449,7 @@ export default function NowPlayingScreen({
             </div>
 
             {/* ===== CONTROLES ===== */}
-            <div className="flex items-center justify-between" style={{ padding: '8px 0' }}>
+            <div className="flex items-center justify-between" style={{ padding: '8px 0', flexShrink: 0 }}>
               <button onClick={() => shufflePlay(allTracks)} style={{ color: '#1db954', padding: 8 }} title="Reproducción aleatoria">
                 <Shuffle size={22} />
               </button>
@@ -319,7 +498,7 @@ export default function NowPlayingScreen({
             </div>
 
             {confirmDelete && (
-              <div className="text-center py-2">
+              <div className="text-center py-2" style={{ flexShrink: 0 }}>
                 <span style={{ fontSize: 13, color: '#ff4444', fontWeight: 600 }}>⚠️ Pulsa de nuevo el botón basura para confirmar</span>
               </div>
             )}

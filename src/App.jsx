@@ -70,14 +70,6 @@ function Shell() {
   const [gridItems, setGridItems] = useState([]);
   const [gridType, setGridType] = useState('artists');
 
-  const [showLyrics, setShowLyrics] = useState(false);
-  const [lyricsSong, setLyricsSong] = useState(null);
-
-  const handleShowLyrics = (song) => {
-    setLyricsSong(song);
-    setShowLyrics(true);
-  };
-
 
   // ============================================================
   // DETECTAR CAMBIO DE TAMAÑO
@@ -227,16 +219,6 @@ function Shell() {
     );
   }
 
-  {showLyrics && (
-  <LyricsViewer
-    song={lyricsSong}
-    onClose={() => {
-      setShowLyrics(false);
-      setLyricsSong(null);
-    }}
-  />
-)}
-onShowLyrics={handleShowLyrics}
   // ============================================================
   // VISTA MÓVIL
   // ============================================================

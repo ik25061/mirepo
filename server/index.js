@@ -773,7 +773,8 @@ app.get('/api/lyrics/:id', async (req, res) => {
       return res.status(404).json({ error: 'Canción no encontrada' });
     }
     
-    const result = await getLyrics(id, song.title, song.artist);
+    const songPath = absolutePath(song.relPath);
+    const result = await getLyrics(id, song.title, song.artist, songPath);
     
     if (!result.lyrics) {
       return res.json({ 
@@ -787,6 +788,7 @@ app.get('/api/lyrics/:id', async (req, res) => {
       success: true,
       hasLyrics: true,
       lyrics: result.lyrics,
+      syncedLines: result.syncedLines || null,
       translatedLyrics: result.translatedLyrics,
       title: song.title,
       artist: song.artist
@@ -816,12 +818,14 @@ app.post('/api/lyrics/:id/refresh', async (req, res) => {
     }
     
     // Buscar de nuevo
-    const result = await getLyrics(id, song.title, song.artist);
+    const songPath = absolutePath(song.relPath);
+    const result = await getLyrics(id, song.title, song.artist, songPath);
     
     res.json({
       success: true,
       hasLyrics: !!result.lyrics,
       lyrics: result.lyrics || null,
+      syncedLines: result.syncedLines || null,
       translatedLyrics: result.translatedLyrics || null
     });
   } catch (err) {
