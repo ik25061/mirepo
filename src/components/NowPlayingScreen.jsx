@@ -130,8 +130,7 @@ export default function NowPlayingScreen({
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            filter: 'blur(40px) brightness(0.3) saturate(1.3)',
-            transform: 'scale(1.3)',
+            filter: 'blur(20px) brightness(0.5) saturate(1.5)',
           }}
         />
       )}
@@ -187,7 +186,7 @@ export default function NowPlayingScreen({
                   width: 'min(65vw, 260px)',
                   height: 'min(65vw, 260px)',
                   borderRadius: '50%',
-                  background: '#282828',
+                  background: '#5c0303',
                   boxShadow: '0 8px 32px rgba(0,0,0,0.7), 0 0 80px rgba(0,0,0,0.4)',
                 }}
               >
