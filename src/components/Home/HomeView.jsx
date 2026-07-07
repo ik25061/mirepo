@@ -1,11 +1,11 @@
-import { Heart, Play, Copy, Shuffle, ListMusic } from 'lucide-react';
+import { Heart, Play, Copy, Shuffle } from 'lucide-react';
 import Carousel from './Carousel.jsx';
 import CollectionCard from './CollectionCard.jsx';
 import SongRow from '../SongRow.jsx';
-import { buildAlbums, buildArtists, buildGenres, buildYears } from '../../lib/format.js';
+import { buildYears } from '../../lib/format.js';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import { api } from '../../lib/api.js';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function HomeView({ 
   songs, 
@@ -23,50 +23,66 @@ export default function HomeView({
   const { play, shufflePlay } = usePlayer();
   
   // ============================================================
-  // CARGAR LISTAS COMPLETAS DESDE EL SERVIDOR
+  // ESTADO PARA DATOS COMPLETOS DEL SERVIDOR
   // ============================================================
   const [fullArtists, setFullArtists] = useState([]);
   const [fullAlbums, setFullAlbums] = useState([]);
   const [fullGenres, setFullGenres] = useState([]);
   const [likedSongs, setLikedSongs] = useState([]);
   const [loadingLists, setLoadingLists] = useState(true);
+  const [allSongsFromServer, setAllSongsFromServer] = useState([]);
+  const mountedRef = useRef(true);
 
+  // ============================================================
+  // CARGAR TODOS LOS DATOS DESDE EL SERVIDOR
+  // ============================================================
   useEffect(() => {
+    mountedRef.current = true;
+    
     const loadCompleteLists = async () => {
       try {
         setLoadingLists(true);
-        const [artistsRes, albumsRes, genresRes, likedRes] = await Promise.all([
+        const [allSongsRes, artistsRes, albumsRes, genresRes, likedRes] = await Promise.all([
+          api.getLibrary({ limit: 99999, offset: 0, userId }),
           api.getArtists(userId),
           api.getAlbums(userId),
           api.getGenres(),
           api.getLikedSongs(userId)
         ]);
-        setFullArtists(artistsRes.artists || []);
-        setFullAlbums(albumsRes.albums || []);
-        setFullGenres(genresRes.genres || []);
-        setLikedSongs(likedRes.songs || []);
+        
+        if (mountedRef.current) {
+          setAllSongsFromServer(allSongsRes.songs || []);
+          setFullArtists(artistsRes.artists || []);
+          setFullAlbums(albumsRes.albums || []);
+          setFullGenres(genresRes.genres || []);
+          setLikedSongs(likedRes.songs || []);
+          setLoadingLists(false);
+        }
       } catch (err) {
         console.error('Error cargando listas completas:', err);
-      } finally {
-        setLoadingLists(false);
+        if (mountedRef.current) {
+          setLoadingLists(false);
+        }
       }
     };
     loadCompleteLists();
+    
+    return () => { mountedRef.current = false; };
   }, [userId]);
 
   // ============================================================
-  // FILTRAR CANCIONES
+  // CANCIONES FILTRADAS
   // ============================================================
   const liked = likedSongs;
-  const albums = fullAlbums; // Siempre usar álbumes completos del servidor
-  const artists = fullArtists; // Siempre usar artistas completos del servidor
-  const genres = fullGenres; // Siempre usar géneros completos del servidor
-  const years = buildYears(songs);
+  const albums = fullAlbums;
+  const artists = fullArtists;
+  const genres = fullGenres;
+  const years = buildYears(allSongsFromServer);
   
   // ============================================================
   // CANCIONES SIN ARTISTA O SIN ÁLBUM
   // ============================================================
-  const unknownSongs = songs.filter(s => 
+  const unknownSongs = allSongsFromServer.filter(s => 
     !s.artist || s.artist === 'Artista desconocido' || 
     !s.album || s.album === 'Álbum desconocido' ||
     s.artist === 'Desconocido' || s.album === 'Desconocido'
@@ -113,7 +129,6 @@ export default function HomeView({
               >
                 <Play size={18} fill="currentColor" className="ml-0.5 sm:size-6" />
               </button>
-              {/* ===== BOTÓN PARA VER LISTA COMPLETA ===== */}
               {liked.length > 5 && (
                 <button
                   onClick={() => onOpenLikedSongs?.()}
@@ -155,12 +170,12 @@ export default function HomeView({
         title="Álbumes" 
         action={
           albums.length > 10 && (
-          <button
-            onClick={() => onOpenGridView('albums', albums)}
-            disabled={loadingLists}
-            className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50"
-          >
-            Ver todo
+            <button
+              onClick={() => onOpenGridView('albums', albums)}
+              disabled={loadingLists}
+              className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50"
+            >
+              Ver todo
             </button>
           )
         }
@@ -169,7 +184,7 @@ export default function HomeView({
           <CollectionCard
             key={al.name}
             title={al.name}
-            subtitle={`${al.artist} · ${al.songs.length}`}
+            subtitle={al.artist}
             coverSong={{ coverId: al.coverId, hasCover: true }}
             songs={al.songs}
             onOpen={() => onOpenCollection({ kind: 'Álbum', name: al.name, songs: al.songs })}
@@ -182,12 +197,12 @@ export default function HomeView({
         title="Artistas" 
         action={
           artists.length > 10 && (
-          <button
-            onClick={() => onOpenGridView('artists', artists)}
-            disabled={loadingLists}
-            className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50"
-          >
-            Ver todo
+            <button
+              onClick={() => onOpenGridView('artists', artists)}
+              disabled={loadingLists}
+              className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50"
+            >
+              Ver todo
             </button>
           )
         }
@@ -211,12 +226,12 @@ export default function HomeView({
         title="Géneros" 
         action={
           genres.length > 10 && (
-          <button
-            onClick={() => onOpenGridView('genres', genres)}
-            disabled={loadingLists}
-            className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50"
-          >
-            Ver todo
+            <button
+              onClick={() => onOpenGridView('genres', genres)}
+              disabled={loadingLists}
+              className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50"
+            >
+              Ver todo
             </button>
           )
         }
@@ -294,25 +309,6 @@ export default function HomeView({
           ))}
         </Carousel>
       )}
-
-      {/* ===== SECCIÓN: BUSCAR DUPLICADOS ===== */}
-      {/* {onOpenDuplicates && (
-        <button
-          onClick={onOpenDuplicates}
-          className="animate-fade-in flex items-center gap-4 p-4 rounded-xl border border-border bg-gradient-to-r from-surface to-surface-2 hover:from-surface-2 hover:to-muted transition-all group"
-        >
-          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-danger/20 text-danger group-hover:bg-danger/30 transition-colors">
-            <Copy size={22} />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-600 text-white">Buscar música duplicada</p>
-            <p className="text-xs text-muted-foreground">Encuentra canciones repetidas y libera espacio</p>
-          </div>
-          <span className="ml-auto text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-            Abrir →
-          </span>
-        </button>
-      )} */}
 
       <div className="h-4" />
     </div>

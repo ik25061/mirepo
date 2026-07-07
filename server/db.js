@@ -1,3 +1,17 @@
+/**
+ * ============================================================
+ * DB - BASE DE DATOS (JSON)
+ * ============================================================
+ * 
+ * Gestiona usuarios, preferencias (likes, hides) y playlists.
+ * Todos los datos se almacenan en archivos JSON.
+ * 
+ * Archivos:
+ * - users.json: Usuarios registrados
+ * - prefs.json: Preferencias por usuario (likes, hides)
+ * - playlists.json: Listas de reproducción
+ */
+
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -6,52 +20,66 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PREFS_PATH = path.join(__dirname, 'prefs.json');
 const USERS_PATH = path.join(__dirname, 'users.json');
+const PLAY_LISTS_PATH = path.join(__dirname, 'playlists.json');
 
-// ====== INICIALIZAR ======
+// ============================================================
+// 1. INICIALIZACIÓN
+// ============================================================
+
 export async function initDatabase() {
-  console.log('[db] 📚 Base de datos JSON inicializada');
+  console.log('[db] 📚 Inicializando base de datos...');
+  
+  // Asegurar que el directorio existe
+  const serverDir = path.dirname(PREFS_PATH);
+  if (!fs.existsSync(serverDir)) {
+    fs.mkdirSync(serverDir, { recursive: true });
+  }
+  
+  // Crear users.json si no existe
   if (!fs.existsSync(USERS_PATH)) {
     fs.writeFileSync(USERS_PATH, JSON.stringify({ users: [] }, null, 2));
+    console.log('[db] ✅ users.json creado');
   }
+  
+  // Crear prefs.json si no existe
   if (!fs.existsSync(PREFS_PATH)) {
     fs.writeFileSync(PREFS_PATH, JSON.stringify({}, null, 2));
+    console.log('[db] ✅ prefs.json creado');
   } else {
-    // Migrar formato antiguo (global) a nuevo formato (por usuario)
-    migrateOldPrefs();
+    // Migrar formato antiguo a nuevo si es necesario
+    try {
+      const data = JSON.parse(fs.readFileSync(PREFS_PATH, 'utf8'));
+      // Si el formato es antiguo (tiene 'songs' o 'artists' en la raíz)
+      if (data.songs !== undefined || data.artists !== undefined) {
+        console.log('[db] 🔄 Migrando preferencias del formato antiguo al nuevo...');
+        const newPrefs = {
+          "0": {
+            songs: data.songs || {},
+            artists: data.artists || {}
+          }
+        };
+        fs.writeFileSync(PREFS_PATH, JSON.stringify(newPrefs, null, 2));
+        console.log('[db] ✅ Migración completada');
+      }
+    } catch (err) {
+      console.warn('[db] ⚠️ Error en migración:', err.message);
+    }
   }
+  
+  // Crear playlists.json si no existe
+  if (!fs.existsSync(PLAY_LISTS_PATH)) {
+    fs.writeFileSync(PLAY_LISTS_PATH, JSON.stringify({ playlists: [] }, null, 2));
+    console.log('[db] ✅ playlists.json creado');
+  }
+  
+  console.log('[db] ✅ Base de datos inicializada');
   return true;
 }
 
-// ====== MIGRACIÓN DE FORMATO ANTIGUO A NUEVO ======
-function migrateOldPrefs() {
-  try {
-    const data = JSON.parse(fs.readFileSync(PREFS_PATH, 'utf8'));
-    
-    // Si ya tiene el nuevo formato (objeto con userId como clave), no migrar
-    if (!data.songs && !data.artists) return;
-    
-    // Si está vacío, inicializar
-    if (Object.keys(data).length === 0) return;
-    
-    console.log('[db] 🔄 Migrando preferencias del formato antiguo al nuevo...');
-    
-    // El formato antiguo era { songs: { [songId]: {...} }, artists: { [artist]: true/false } }
-    // Convertir a: { "0": { songs: {...}, artists: {...} } } (userId "0" = anónimo)
-    const newPrefs = {
-      "0": {
-        songs: data.songs || {},
-        artists: data.artists || {}
-      }
-    };
-    
-    fs.writeFileSync(PREFS_PATH, JSON.stringify(newPrefs, null, 2));
-    console.log('[db] ✅ Migración completada');
-  } catch (err) {
-    console.warn('[db] ⚠️ Error en migración:', err.message);
-  }
-}
+// ============================================================
+// 2. USUARIOS
+// ============================================================
 
-// ====== USUARIOS ======
 function loadUsers() {
   try {
     if (fs.existsSync(USERS_PATH)) {
@@ -152,7 +180,15 @@ export async function clearUserSession(token) {
   }
 }
 
-// ====== PREFERENCIAS (ahora por usuario) ======
+export async function getAllUsers() {
+  const data = loadUsers();
+  return data.users;
+}
+
+// ============================================================
+// 3. PREFERENCIAS (por usuario)
+// ============================================================
+
 let prefsCache = null;
 
 function loadPrefs() {
@@ -160,7 +196,6 @@ function loadPrefs() {
     if (fs.existsSync(PREFS_PATH)) {
       const data = fs.readFileSync(PREFS_PATH, 'utf8');
       prefsCache = JSON.parse(data);
-      // Asegurar que sea un objeto
       if (typeof prefsCache !== 'object' || prefsCache === null) {
         prefsCache = {};
       }
@@ -182,6 +217,10 @@ function savePrefs() {
 }
 
 function getUserPrefs(userId) {
+  // Asegurar que prefsCache está cargado
+  if (prefsCache === null) {
+    loadPrefs();
+  }
   const uid = String(userId || '0');
   if (!prefsCache[uid]) {
     prefsCache[uid] = { songs: {}, artists: {} };
@@ -191,6 +230,7 @@ function getUserPrefs(userId) {
   return prefsCache[uid];
 }
 
+// Cargar preferencias al iniciar
 loadPrefs();
 
 export async function getSongPrefs(userId) {
@@ -216,12 +256,14 @@ export async function setSongFlag(song, field, value, userId) {
   }
   userPrefs.songs[song.id][field] = value;
   savePrefs();
+  console.log(`[db] ✅ ${field}=${value} para canción ${song.id} (usuario ${userId || 'anon'})`);
 }
 
 export async function setArtistHidden(artist, hidden, userId) {
   const userPrefs = getUserPrefs(userId);
   userPrefs.artists[artist] = hidden;
   savePrefs();
+  console.log(`[db] ✅ Artista "${artist}" ${hidden ? 'oculto' : 'visible'} (usuario ${userId || 'anon'})`);
 }
 
 export async function deleteSongFromPrefs(songId, userId) {
@@ -229,6 +271,7 @@ export async function deleteSongFromPrefs(songId, userId) {
   if (userPrefs.songs[songId]) {
     delete userPrefs.songs[songId];
     savePrefs();
+    console.log(`[db] 🗑️ Preferencias eliminadas para canción ${songId}`);
   }
 }
 
@@ -240,8 +283,9 @@ export async function getPlayHistory(userId, limit = 100) {
   return [];
 }
 
-// ====== PLAY LISTS ======
-const PLAY_LISTS_PATH = path.join(__dirname, 'playlists.json');
+// ============================================================
+// 4. PLAY LISTS
+// ============================================================
 
 function loadPlayLists() {
   try {
@@ -275,6 +319,7 @@ export async function createPlayList(name, description, userId) {
   };
   data.playlists.push(playlist);
   savePlayLists(data);
+  console.log(`[db] 📋 Playlist "${name}" creada (ID: ${playlist.id})`);
   return playlist;
 }
 
@@ -299,6 +344,7 @@ export async function addSongToPlayList(playlistId, songId) {
     playlist.songIds.push(songId);
     playlist.updated_at = new Date().toISOString();
     savePlayLists(data);
+    console.log(`[db] ➕ Canción ${songId} agregada a playlist ${playlistId}`);
   }
   return playlist;
 }
@@ -310,6 +356,7 @@ export async function removeSongFromPlayList(playlistId, songId) {
   playlist.songIds = playlist.songIds.filter(id => id !== songId);
   playlist.updated_at = new Date().toISOString();
   savePlayLists(data);
+  console.log(`[db] ➖ Canción ${songId} eliminada de playlist ${playlistId}`);
   return playlist;
 }
 
@@ -317,7 +364,12 @@ export async function deletePlayList(id) {
   const data = loadPlayLists();
   data.playlists = data.playlists.filter(p => p.id !== id);
   savePlayLists(data);
+  console.log(`[db] 🗑️ Playlist ${id} eliminada`);
   return true;
 }
 
-export { prefsCache as prefs };
+// ============================================================
+// 5. EXPORTACIONES
+// ============================================================
+
+export const prefs = prefsCache;

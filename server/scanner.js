@@ -4,59 +4,33 @@ import crypto from 'node:crypto';
 import { parseFile } from 'music-metadata';
 import 'dotenv/config';
 
+// ====== CONFIGURACIÓN ======
 export const MUSIC_DIR = process.env.VITE_MUSIC_PATH || path.join(process.cwd(), 'music');
 export const TRASH_DIR = path.join(MUSIC_DIR, 'trash');
 export const CACHE_PATH = path.join(process.cwd(), 'server', 'songs_cache.json');
 
+console.log('[scanner] 📂 MUSIC_DIR:', MUSIC_DIR);
+console.log('[scanner] 📂 CACHE_PATH:', CACHE_PATH);
+
 const AUDIO_EXT = new Set(['.mp3', '.m4a', '.aac', '.flac', '.wav', '.ogg', '.opus', '.webm']);
 
-// Cache en memoria
+// ====== CACHE EN MEMORIA ======
 let cache = { songs: [], byId: new Map(), scannedAt: 0, musicPath: MUSIC_DIR };
 
-// ====== PERSISTENCIA EN JSON ======
-
-function loadCache() {
-  try {
-    if (fs.existsSync(CACHE_PATH)) {
-      const data = fs.readFileSync(CACHE_PATH, 'utf8');
-      const parsed = JSON.parse(data);
-      if (parsed.songs && parsed.musicPath === MUSIC_DIR) {
-        const byId = new Map(parsed.songs.map((s) => [s.id, s]));
-        cache = { 
-          songs: parsed.songs, 
-          byId, 
-          scannedAt: parsed.scannedAt || 0,
-          musicPath: parsed.musicPath
-        };
-        console.log(`[scanner] 📚 ${cache.songs.length} canciones cargadas desde caché.`);
-        return true;
-      }
-    }
-  } catch (err) {
-    console.warn('[scanner] Error cargando caché:', err.message);
-  }
-  return false;
-}
-
-function saveCache() {
-  try {
-    const data = {
-      songs: cache.songs,
-      scannedAt: cache.scannedAt,
-      musicPath: MUSIC_DIR
-    };
-    fs.writeFileSync(CACHE_PATH, JSON.stringify(data, null, 2));
-    console.log(`[scanner] 💾 ${cache.songs.length} canciones guardadas en caché.`);
-  } catch (err) {
-    console.warn('[scanner] Error guardando caché:', err.message);
-  }
-}
-
-// ====== ESCANEO ======
+// ====== FUNCIONES AUXILIARES ======
 
 function ensureDirs() {
-  fs.mkdirSync(MUSIC_DIR, { recursive: true });
-  fs.mkdirSync(TRASH_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(MUSIC_DIR)) {
+      fs.mkdirSync(MUSIC_DIR, { recursive: true });
+      console.log(`[scanner] 📁 Directorio creado: ${MUSIC_DIR}`);
+    }
+    if (!fs.existsSync(TRASH_DIR)) {
+      fs.mkdirSync(TRASH_DIR, { recursive: true });
+    }
+  } catch (err) {
+    console.error('[scanner] Error creando directorios:', err);
+  }
 }
 
 function walk(dir, files = []) {
@@ -129,7 +103,7 @@ async function readSong(file) {
 
 // ====== ESCANEO COMPLETO ======
 
-async function scanFullLibrary() {
+export async function scanFullLibrary() {
   ensureDirs();
   console.log(`[scanner] 🔍 Escaneando ${MUSIC_DIR}...`);
   
@@ -151,95 +125,84 @@ async function scanFullLibrary() {
     processed++;
     if (processed % 10 === 0 || processed === total) {
       console.log(`[scanner] ⏳ Progreso: ${processed}/${total} archivos procesados`);
-      process.stdout.write(`\x1b[F\x1b[K`); // Mover cursor arriba y limpiar línea en terminal
     }
     try {
       const song = await readSong(file);
       songs.push(song);
     } catch (err) {
-      // Silencioso
+      console.warn('[scanner] Error procesando archivo:', file, err.message);
     }
   }
   
   songs.sort((a, b) => a.title.localeCompare(b.title, 'es'));
   const byId = new Map(songs.map((s) => [s.id, s]));
   cache = { songs, byId, scannedAt: Date.now(), musicPath: MUSIC_DIR };
-  saveCache();
+  
+  // Guardar caché
+  try {
+    fs.writeFileSync(CACHE_PATH, JSON.stringify({
+      songs: cache.songs,
+      scannedAt: cache.scannedAt,
+      musicPath: MUSIC_DIR
+    }, null, 2));
+    console.log(`[scanner] 💾 ${cache.songs.length} canciones guardadas en caché.`);
+  } catch (err) {
+    console.warn('[scanner] Error guardando caché:', err.message);
+  }
+  
   console.log(`[scanner] ✅ ${songs.length} canciones indexadas.`);
   return cache;
 }
 
-// ====== ESCANEO PRINCIPAL (con caché) ======
+// ====== ESCANEO PRINCIPAL ======
 
 export async function scanLibrary() {
   console.log(`[scanner] 🔍 Iniciando escaneo de biblioteca...`);
+  
   // Intentar cargar desde caché
-  if (loadCache()) {
-    try {
-      const currentFiles = new Set();
-      const files = walk(MUSIC_DIR);
-      for (const f of files) {
-        const relPath = path.relative(MUSIC_DIR, f);
-        currentFiles.add(relPath);
-      }
-      
-      const cachedFiles = new Set(cache.songs.map(s => s.relPath));
-      
-      const newFiles = [...currentFiles].filter(f => !cachedFiles.has(f));
-      const deletedFiles = [...cachedFiles].filter(f => !currentFiles.has(f));
-      
-      if (newFiles.length === 0 && deletedFiles.length === 0) {
-        console.log(`[scanner] ✅ Sin cambios detectados. ${cache.songs.length} canciones cargadas.`);
-        console.log(`[scanner] 🎵 Escaneo rápido completado.`);
+  try {
+    if (fs.existsSync(CACHE_PATH)) {
+      const data = fs.readFileSync(CACHE_PATH, 'utf8');
+      const parsed = JSON.parse(data);
+      if (parsed.songs && parsed.musicPath === MUSIC_DIR && parsed.songs.length > 0) {
+        const byId = new Map(parsed.songs.map((s) => [s.id, s]));
+        cache = { 
+          songs: parsed.songs, 
+          byId, 
+          scannedAt: parsed.scannedAt || 0,
+          musicPath: parsed.musicPath
+        };
+        console.log(`[scanner] 📚 ${cache.songs.length} canciones cargadas desde caché.`);
         return cache;
       }
-      
-      console.log(`[scanner] 🔄 Cambios detectados: +${newFiles.length} nuevos, -${deletedFiles.length} eliminados`);
-      console.log(`[scanner] ⏳ Procesando archivos nuevos...`);
-      
-      const songs = cache.songs.filter(s => !deletedFiles.includes(s.relPath));
-      let processed = 0;
-      const total = newFiles.length;
-      
-      for (const relPath of newFiles) {
-        processed++;
-        if (processed % 5 === 0 || processed === total) {
-          console.log(`[scanner] ⏳ Procesando: ${processed}/${total} archivos nuevos`);
-        }
-        const fullPath = path.join(MUSIC_DIR, relPath);
-        const song = await readSong(fullPath);
-        songs.push(song);
-      }
-      
-      songs.sort((a, b) => a.title.localeCompare(b.title, 'es'));
-      const byId = new Map(songs.map((s) => [s.id, s]));
-      cache = { songs, byId, scannedAt: Date.now(), musicPath: MUSIC_DIR };
-      saveCache();
-      console.log(`[scanner] ✅ ${songs.length} canciones indexadas.`);
-    } catch (err) {
-      console.error('[scanner] Error verificando cambios:', err.message);
     }
-    return cache;
+  } catch (err) {
+    console.warn('[scanner] Error cargando caché:', err.message);
   }
   
+  // Si no hay caché, escanear completo
   return await scanFullLibrary();
 }
-
-// ====== FORZAR RESCAN ======
 
 export async function rescanLibrary() {
   console.log('[scanner] 🔄 Forzando rescan completo...');
   return await scanFullLibrary();
 }
 
-// ====== ELIMINAR CANCIÓN DEL CACHÉ ======
-
 export function removeSongFromCache(songId) {
   const songIndex = cache.songs.findIndex(s => s.id === songId);
   if (songIndex !== -1) {
     cache.songs.splice(songIndex, 1);
     cache.byId.delete(songId);
-    saveCache();
+    try {
+      fs.writeFileSync(CACHE_PATH, JSON.stringify({
+        songs: cache.songs,
+        scannedAt: cache.scannedAt,
+        musicPath: MUSIC_DIR
+      }, null, 2));
+    } catch (err) {
+      console.warn('[scanner] Error guardando caché:', err.message);
+    }
     console.log(`[scanner] 🗑️ Canción ${songId} eliminada del caché`);
     return true;
   }
@@ -249,6 +212,7 @@ export function removeSongFromCache(songId) {
 // ====== EXPORTACIONES ======
 
 export function getCache() {
+  console.log('[scanner] getCache() - Canciones:', cache.songs?.length || 0);
   return cache;
 }
 
@@ -260,5 +224,23 @@ export function absolutePath(relPath) {
   return path.join(MUSIC_DIR, relPath);
 }
 
-// Inicializar cargando caché al importar
-loadCache();
+// ====== INICIALIZAR ======
+// Cargar caché al importar
+try {
+  if (fs.existsSync(CACHE_PATH)) {
+    const data = fs.readFileSync(CACHE_PATH, 'utf8');
+    const parsed = JSON.parse(data);
+    if (parsed.songs && parsed.musicPath === MUSIC_DIR && parsed.songs.length > 0) {
+      const byId = new Map(parsed.songs.map((s) => [s.id, s]));
+      cache = { 
+        songs: parsed.songs, 
+        byId, 
+        scannedAt: parsed.scannedAt || 0,
+        musicPath: parsed.musicPath
+      };
+      console.log(`[scanner] 📚 ${cache.songs.length} canciones cargadas desde caché.`);
+    }
+  }
+} catch (err) {
+  console.warn('[scanner] Error en inicialización:', err.message);
+}

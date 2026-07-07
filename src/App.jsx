@@ -6,16 +6,12 @@
  * Gestiona la autenticación, la biblioteca, la reproducción
  * y la navegación entre vistas (Home, Biblioteca, Colección, etc.)
  * Soporta vista móvil (con barra inferior) y escritorio (con sidebar).
- * 
- * MEJORAS IMPLEMENTADAS:
- * - Scroll infinito en GridView (álbumes, artistas, géneros)
- * - Botón "Ver todas" en canciones que me gustan
- * - Sección "Sin artista o álbum"
  */
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PlayerProvider, usePlayer } from './context/PlayerContext';
 import { useLibrary } from './hooks/useLibrary';
+import { useAllSongs } from './hooks/useAllSongs';
 import LoginScreen from './components/LoginScreen';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
@@ -30,7 +26,6 @@ import NowPlayingScreen from './components/NowPlayingScreen';
 import MobileSearchView from './components/MobileSearchView';
 import LikedSongsView from './components/LikedSongsView';
 import PlayListsManager from './components/PlayListsManager';
-import AddToPlayListModal from './components/AddToPlayListModal';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2, RefreshCw } from 'lucide-react';
 
@@ -41,14 +36,19 @@ function Shell() {
   const { isAuthenticated, loading: authLoading, user } = useAuth();
   
   // ============================================================
-  // BIBLIOTECA
+  // REPRODUCTOR - DECLARADO ANTES DE useLibrary
+  // ============================================================
+  const { current, isPlaying, togglePlay, next, prev, stop } = usePlayer();
+  
+  // ============================================================
+  // BIBLIOTECA (100 canciones para scroll infinito)
   // ============================================================
   const lib = useLibrary(user?.id);
   
   // ============================================================
-  // REPRODUCTOR
+  // TODAS LAS CANCIONES (sin límite)
   // ============================================================
-  const { current, isPlaying, togglePlay, next, prev, stop } = usePlayer();
+  const { allSongs, loading: allSongsLoading } = useAllSongs(user?.id);
   
   // ============================================================
   // NAVEGACIÓN
@@ -123,7 +123,6 @@ function Shell() {
     
     setGridLoading(true);
     
-    // Simular carga asíncrona
     setTimeout(() => {
       const nextOffset = gridOffset;
       const nextItems = gridItems.slice(nextOffset, nextOffset + GRID_PAGE_SIZE);
@@ -132,7 +131,6 @@ function Shell() {
         setGridOffset(prev => prev + nextItems.length);
         setGridHasMore(gridItems.length > nextOffset + nextItems.length);
         
-        // Actualizar la vista con los nuevos elementos
         setView(prev => {
           if (prev.type === 'grid' && prev.gridData) {
             return {
@@ -152,6 +150,13 @@ function Shell() {
       setGridLoading(false);
     }, 300);
   }, [gridLoading, gridHasMore, gridOffset, gridItems]);
+
+  // ============================================================
+  // ABRIR ARTISTA DESDE NOWPLAYING
+  // ============================================================
+  const openArtistFromNowPlaying = (collection) => {
+    setView({ type: 'collection', collection });
+  };
 
   // ============================================================
   // PANTALLA DE CARGA (autenticación)
@@ -174,7 +179,7 @@ function Shell() {
   // ============================================================
   // PANTALLA DE CARGA (biblioteca)
   // ============================================================
-  if (lib.loading) {
+  if (lib.loading || allSongsLoading) {
     return (
       <div className="flex h-screen flex-col bg-background" style={{ background: '#121212' }}>
         <div className="flex-1 flex items-center justify-center">
@@ -230,8 +235,9 @@ function Shell() {
           onDislike={lib.dislikeSong}
           likedIds={new Set(lib.songs.filter(s => s.liked).map(s => s.id))}
           onClose={handleCloseNowPlaying}
-          allTracks={lib.songs}
+          allTracks={allSongs}
           onDelete={lib.removeSong}
+          onOpenArtist={openArtistFromNowPlaying}
         />
       </div>
     );
@@ -275,14 +281,14 @@ function Shell() {
               shouldScrollToCurrent={shouldScrollToCurrent}
             />
           ) : view.type === 'search' ? (
-            <MobileSearchView tracks={lib.songs} currentTrack={current} onPlay={lib.playSong} />
+            <MobileSearchView tracks={lib.songs} currentTrack={current} />
           ) : view.type === 'grid' ? (
             <GridView
               items={view.gridData.items}
               type={view.gridData.type}
               onBack={() => setView({ type: 'home' })}
               onOpenCollection={openCollectionHandler}
-              songs={lib.songs}
+              songs={allSongs}
               hasMore={gridHasMore}
               isLoadingMore={gridLoading}
               onLoadMore={loadMoreGridItems}
@@ -298,7 +304,7 @@ function Shell() {
               onDislike={lib.dislikeSong}
               onDislikeArtist={lib.dislikeArtist}
               onDelete={lib.removeSong}
-              allSongs={lib.songs}
+              allSongs={allSongs}
             />
           ) : view.type === 'likedSongs' ? (
             <LikedSongsView
@@ -317,7 +323,7 @@ function Shell() {
               onDislike={lib.dislikeSong}
               onDislikeArtist={lib.dislikeArtist}
               onDelete={lib.removeSong}
-              allSongs={lib.songs}
+              allSongs={allSongs}
             />
           ) : null}
         </div>
@@ -388,14 +394,14 @@ function Shell() {
               shouldScrollToCurrent={shouldScrollToCurrent}
             />
           ) : view.type === 'search' ? (
-            <MobileSearchView tracks={lib.songs} currentTrack={current} onPlay={lib.playSong} />
+            <MobileSearchView tracks={lib.songs} currentTrack={current} />
           ) : view.type === 'grid' ? (
             <GridView
               items={view.gridData.items}
               type={view.gridData.type}
               onBack={() => setView({ type: 'home' })}
               onOpenCollection={openCollectionHandler}
-              songs={lib.songs}
+              songs={allSongs}
               hasMore={gridHasMore}
               isLoadingMore={gridLoading}
               onLoadMore={loadMoreGridItems}
@@ -411,7 +417,7 @@ function Shell() {
               onDislike={lib.dislikeSong}
               onDislikeArtist={lib.dislikeArtist}
               onDelete={lib.removeSong}
-              allSongs={lib.songs}
+              allSongs={allSongs}
             />
           ) : view.type === 'likedSongs' ? (
             <LikedSongsView
@@ -430,7 +436,7 @@ function Shell() {
               onDislike={lib.dislikeSong}
               onDislikeArtist={lib.dislikeArtist}
               onDelete={lib.removeSong}
-              allSongs={lib.songs}
+              allSongs={allSongs}
             />
           ) : null}
         </main>

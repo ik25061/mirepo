@@ -29,15 +29,14 @@ export default function SongRow({
     setConfirmDelete(false);
   }, [song.id]);
 
-  const handlePlay = () => {
-    if (isCurrent) {
-      togglePlay();
-    } else {
-      console.log('[SongRow] Reproduciendo con contexto:', context);
-      play(song, queue, context); // <-- Pasar contexto a play
-    }
-  };
-
+const handlePlay = () => {
+  if (isCurrent) {
+    togglePlay();
+  } else {
+    console.log('[SongRow] Reproduciendo con contexto:', context);
+    play(song, queue, context);
+  }
+};
   // Eliminar canción - usa removeFromQueue para pasar a la siguiente
   const handleDelete = async (e) => {
     e.stopPropagation();

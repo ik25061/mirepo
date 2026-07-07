@@ -4,10 +4,10 @@
  * ============================================================
  * 
  * Muestra álbumes, artistas o géneros con scroll infinito.
- * Quita el recuadro gris alrededor de la imagen del artista.
+ * CORREGIDO: Reproducción con contexto correcto.
  */
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { ArrowLeft, Play, Search } from 'lucide-react';
 import Cover from './Cover.jsx';
 import { usePlayer } from '../context/PlayerContext.jsx';
@@ -31,7 +31,7 @@ function GridSkeleton() {
 // ============================================================
 export default function GridView({ 
   items,          // Lista de elementos
-  type,           // 'albums', 'artists', 'genres'
+  type,           // 'albums', 'artists', 'genres', 'years'
   onBack,         // Función para volver
   onOpenCollection, // Función para abrir una colección
   songs,          // TODAS las canciones
@@ -114,10 +114,9 @@ export default function GridView({
   // ============================================================
   // ORDENAMIENTO
   // ============================================================
-  const [sortBy, setSortBy] = useState('name'); // 'name' | 'songs_asc' | 'songs_desc'
+  const [sortBy, setSortBy] = useState('name');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Función para normalizar texto (sin acentos ni casos especiales)
   const normalizeText = (text) => {
     return text
       .toLowerCase()
@@ -128,7 +127,6 @@ export default function GridView({
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return items;
-
     const query = normalizeText(searchQuery);
     return items.filter((item) => {
       const name = normalizeText(item.name || '');
@@ -186,6 +184,24 @@ export default function GridView({
 
   const isRound = type === 'artists' || type === 'years';
 
+  // ============================================================
+  // REPRODUCIR CANCIÓN CON CONTEXTO
+  // ============================================================
+const handlePlay = (item, e) => {
+  e.stopPropagation();
+  if (!item.songs?.length) return;
+  
+  let contextType = 'album';
+  if (type === 'artists') contextType = 'artist';
+  else if (type === 'genres') contextType = 'genre';
+  else if (type === 'years') contextType = 'year';
+  
+  const context = { type: contextType, value: item.name };
+  console.log('[GridView] ▶️ Reproduciendo con contexto:', context);
+  
+  // IMPORTANTE: Usar TODAS las canciones (songs) como cola
+  play(item.songs[0], songs, context);
+};
   return (
     <div className="flex flex-col gap-6 pb-20 w-full h-full">
       
@@ -253,7 +269,7 @@ export default function GridView({
                 onClick={() => handleOpen(item)}
                 className="group relative cursor-pointer"
               >
-                {/* ===== PORTADA SIN RECUADRO GRIS ===== */}
+                {/* ===== PORTADA ===== */}
                 <div className="relative overflow-hidden rounded-lg transition hover:scale-105 duration-200">
                   <div className="aspect-square w-full">
                     {cachedArtist?.url ? (
@@ -274,14 +290,7 @@ export default function GridView({
                   {/* ===== BOTÓN REPRODUCIR (hover) ===== */}
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (item.songs?.length) {
-                          const contextType = type === 'artists' ? 'artist' : type === 'albums' ? 'album' : type === 'genres' ? 'genre' : 'year';
-                          const context = { type: contextType, value: item.name };
-                          play(item.songs[0], songs, context);
-                        }
-                      }}
+                      onClick={(e) => handlePlay(item, e)}
                       className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-xl transition hover:scale-105"
                     >
                       <Play size={22} fill="currentColor" className="ml-0.5" />
