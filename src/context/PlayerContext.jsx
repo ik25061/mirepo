@@ -634,7 +634,34 @@ export function PlayerProvider({ children }) {
   }, []);
 
   // ============================================================
-  // 3.18 FUNCIÓN - removeFromQueue (Eliminar canción de la cola)
+  // 3.18 FUNCIÓN - addToQueue (Añadir canción a la cola)
+  // ============================================================
+
+  const addToQueue = useCallback((song, position = 'next') => {
+    if (!song) return;
+
+    const currentQueue = queueRef.current;
+    const currentIndex = indexRef.current;
+
+    if (currentQueue.length === 0 || currentIndex === -1) {
+      play(song, [song]);
+      return;
+    }
+
+    const newQueue = [...currentQueue];
+
+    if (position === 'next') {
+      newQueue.splice(currentIndex + 1, 0, song);
+    } else {
+      newQueue.push(song);
+    }
+
+    queueRef.current = newQueue;
+    setQueue(newQueue);
+  }, [play]);
+
+  // ============================================================
+  // 3.19 FUNCIÓN - removeFromQueue (Eliminar canción de la cola)
   // ============================================================
 
   const removeFromQueue = useCallback((songId) => {
@@ -860,6 +887,7 @@ export function PlayerProvider({ children }) {
     togglePlay,
     seek,
     stop,
+    addToQueue,
     removeFromQueue,
     getActiveAudio,
   };

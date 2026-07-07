@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, Pause, Heart, ThumbsDown, UserX, Trash2, Check, Wand2, ListMusic } from 'lucide-react';
+import { Play, Pause, Heart, ThumbsDown, UserX, Trash2, Check, Wand2, ListMusic, PlayCircle, ListEnd } from 'lucide-react';
 import Cover from './Cover.jsx';
 import NowPlayingBars from './Player/NowPlayingBars.jsx';
 import { formatTime } from '../lib/format.js';
@@ -23,7 +23,7 @@ export default function SongRow({
   likedIds, // Set de IDs de canciones favoritas
   onShowLyrics = null,
 }) {
-  const { current, isPlaying, play, togglePlay, removeFromQueue } = usePlayer();
+  const { current, isPlaying, play, togglePlay, addToQueue, removeFromQueue } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isCurrent = current?.id === song.id;
 
@@ -117,6 +117,30 @@ export default function SongRow({
 
       {/* ===== BOTONES DE ACCIÓN ===== */}
       <div className="flex items-center gap-0.5 sm:gap-0.5">
+        {/* Añadir a cola - siguiente */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            addToQueue(song, 'next');
+          }}
+          className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary`}
+          title="Reproducir después de la actual"
+        >
+          <PlayCircle size={12} className="sm:size-4" />
+        </button>
+
+        {/* Añadir a cola - al final */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            addToQueue(song, 'end');
+          }}
+          className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary`}
+          title="Añadir al final de la cola"
+        >
+          <ListEnd size={12} className="sm:size-4" />
+        </button>
+
         {/* Me gusta */}
         <button
           onClick={(e) => {
