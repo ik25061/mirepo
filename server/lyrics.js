@@ -336,10 +336,23 @@ async function searchLyrics(title, artist) {
       const data = await response.json();
       const plainLyrics = data.plainLyrics || null;
       const syncedLyrics = data.syncedLyrics || null;
-      const lyrics = plainLyrics || syncedLyrics || null;
+      
+      // Filtrar texto basura de LRCLib (como "7 Contributors" o metadatos)
+      const isValidLyrics = (text) => {
+        if (!text || text.length < 50) return false;
+        const firstLines = text.split('\n').slice(0, 5).join(' ').toLowerCase();
+        if (firstLines.includes('contributor')) return false;
+        if (/^\d+\s+\w+\s+\w+/.test(text.split('\n')[0]?.trim() || '')) return false;
+        return true;
+      };
+      
+      const validPlain = plainLyrics && isValidLyrics(plainLyrics) ? plainLyrics : null;
+      const validSynced = syncedLyrics && isValidLyrics(syncedLyrics) ? syncedLyrics : null;
+      const lyrics = validPlain || validSynced || null;
+      
       if (lyrics) {
-        console.log('[lyrics] ✅ Letra encontrada en LRCLib.net' + (syncedLyrics ? ' (con timestamps)' : ''));
-        return { lyrics, syncedLyrics: syncedLyrics || null };
+        console.log('[lyrics] ✅ Letra encontrada en LRCLib.net' + (validSynced ? ' (con timestamps)' : ''));
+        return { lyrics, syncedLyrics: validSynced || null };
       }
     }
   } catch (err) {
