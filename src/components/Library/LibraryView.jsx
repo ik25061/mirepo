@@ -222,11 +222,7 @@ export default function LibraryView({
                     queue={filtered}
                     onLike={onLike}
                     onDislike={onDislike}
-                    onDislikeArtist={onDislikeArtist}
                     onDelete={onDelete}
-                    onFixMetadata={() => handleFixMetadata(song)}
-                    showFixMetadata
-                    fixingMetadata={fixingMetadata === song.id}
                     showDelete
                     context={null}
                     likedIds={likedIds}

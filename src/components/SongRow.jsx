@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, Pause, Heart, ThumbsDown, UserX, Trash2, Check, Wand2, ListMusic, PlayCircle, ListEnd } from 'lucide-react';
+import { Play, Pause, Heart, ThumbsDown, Trash2, Check, Wand2, ListMusic, PlayCircle, ListEnd } from 'lucide-react';
 import Cover from './Cover.jsx';
 import NowPlayingBars from './Player/NowPlayingBars.jsx';
 import { formatTime } from '../lib/format.js';
@@ -12,13 +12,9 @@ export default function SongRow({
   queue,
   onLike,
   onDislike,
-  onDislikeArtist,
   onDelete,
-  onFixMetadata,
   showDelete = false,
-  showFixMetadata = false,
   showCover = true,
-  fixingMetadata = false,
   context = null,
   likedIds, // Set de IDs de canciones favoritas
   onShowLyrics = null,
@@ -163,42 +159,8 @@ export default function SongRow({
           </button>
         )}
 
-        {/* No me gusta artista */}
-        {onDislikeArtist && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onDislikeArtist(song.artist); }}
-            className={iconBtn + ' sm:opacity-0 sm:group-hover:opacity-100'}
-            title={'No mostrar al artista ' + song.artist}
-          >
-            <UserX size={12} className="sm:size-4" />
-          </button>
-        )}
-
-        {/* Corregir metadatos */}
-        {showFixMetadata && onFixMetadata && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onFixMetadata();
-            }}
-            disabled={fixingMetadata}
-            className={iconBtn + ' ' + (
-              fixingMetadata
-                ? 'text-primary opacity-100'
-                : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary'
-            )}
-            title={fixingMetadata ? 'Corrigiendo metadatos...' : 'Corregir metadatos (AcoustID)'}
-          >
-            {fixingMetadata ? (
-              <span className="animate-spin">⚙️</span>
-            ) : (
-              <Wand2 size={12} className="sm:size-4" />
-            )}
-          </button>
-        )}
-
         {/* Eliminar */}
-        {showDelete && onDelete && (
+        {/* {showDelete && onDelete && (
           <button
             onClick={handleDelete}
             className={iconBtn + ' ' + (
@@ -210,7 +172,7 @@ export default function SongRow({
           >
             {confirmDelete ? <Check size={12} className="sm:size-4" /> : <Trash2 size={12} className="sm:size-4" />}
           </button>
-        )}
+        )} */}
         {onShowLyrics && (
           <button
             onClick={(e) => {

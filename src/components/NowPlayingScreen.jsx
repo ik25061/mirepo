@@ -14,7 +14,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import {
   ChevronDown, Heart, Play, Pause,
   SkipBack, SkipForward, Shuffle, Repeat, Volume2, Music2,
-  Search, Trash2, ThumbsDown,
+  Search, Trash2, ThumbsDown, UserX, Wand2, MoreVertical,
 } from 'lucide-react';
 import { formatTime } from '../lib/format.js';
 import { usePlayer } from '../context/PlayerContext.jsx';
@@ -23,13 +23,14 @@ import { FileText, Loader2 } from 'lucide-react';
 
 
 export default function NowPlayingScreen({
-  track, isPlaying, onPlayPause, onNext, onPrev, onLike, onDislike, likedIds, onClose,
-  onSync, onDelete,
+  track, isPlaying, onPlayPause, onNext, onPrev, onLike, onDislike, onDislikeArtist, likedIds, onClose,
+  onSync, onDelete, onFixMetadata,
   allTracks = [],
   onOpenArtist = null,
 }) {
   const { removeFromQueue, queue, progress, duration, volume, setVolume, repeatMode, setRepeatMode, shufflePlay, seek } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const progressRef = useRef(null);
   const [artistImageUrl, setArtistImageUrl] = useState(null);
   const [artistImageFailed, setArtistImageFailed] = useState(false);
@@ -330,7 +331,7 @@ export default function NowPlayingScreen({
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            filter: 'blur(20px) brightness(0.5) saturate(1.5)',
+            filter: 'blur(20px) brightness(0.4) saturate(1.5)',
           }}
         />
       )}
@@ -375,11 +376,60 @@ export default function NowPlayingScreen({
                 <Search size={20} />
               </button>
             )}
-            {onDelete && (
-              <button onClick={handleDelete} className={`p-2 rounded-full transition-colors ${confirmDelete ? 'bg-red-500/30' : 'hover:bg-red-500/20'}`} style={{ color: confirmDelete ? '#ff4444' : '#ff4444', minWidth: 40, minHeight: 40 }} title={confirmDelete ? 'Pulsa de nuevo para confirmar' : 'Eliminar canción'}>
-                {confirmDelete ? <span style={{ fontSize: 12, fontWeight: 700 }}>✓</span> : <Trash2 size={20} />}
+
+            {/* ===== MENÚ DESPLEGABLE DE 3 PUNTOS ===== */}
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                style={{ color: '#a7a7a7', minWidth: 40, minHeight: 40 }}
+                title="Más opciones"
+              >
+                <MoreVertical size={20} />
               </button>
-            )}
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                  <div
+                    className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl overflow-hidden shadow-2xl border border-white/10"
+                    style={{ background: '#282828' }}
+                  >
+                    {onDislikeArtist && (
+                      <button
+                        onClick={() => { setShowMenu(false); onDislikeArtist(track.artist); }}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-sm text-left text-red-400 hover:bg-white/10 transition-colors"
+                      >
+                        <UserX size={18} /> No me gusta artista
+                      </button>
+                    )}
+                    {onFixMetadata && (
+                      <button
+                        onClick={() => { setShowMenu(false); onFixMetadata(track); }}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-sm text-left text-white hover:bg-white/10 transition-colors"
+                      >
+                        <Wand2 size={18} /> Corregir metadatos
+                      </button>
+                    )}
+                    {onDelete && (
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          if (confirmDelete) {
+                            handleDelete();
+                          } else {
+                            setConfirmDelete(true);
+                            setTimeout(() => setConfirmDelete(false), 3000);
+                          }
+                        }}
+                        className={`flex w-full items-center gap-3 px-4 py-3 text-sm text-left transition-colors ${confirmDelete ? 'bg-red-500/30 text-red-400' : 'text-red-400 hover:bg-white/10'}`}
+                      >
+                        <Trash2 size={18} /> {confirmDelete ? 'Confirmar eliminar' : 'Eliminar canción'}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -574,11 +624,6 @@ export default function NowPlayingScreen({
               />
             </div>
 
-            {confirmDelete && (
-              <div className="text-center py-2" style={{ flexShrink: 0 }}>
-                <span style={{ fontSize: 13, color: '#ff4444', fontWeight: 600 }}>⚠️ Pulsa de nuevo el botón basura para confirmar</span>
-              </div>
-            )}
           </div>
         </div>
       </div>

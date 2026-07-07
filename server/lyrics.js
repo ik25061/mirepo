@@ -457,18 +457,42 @@ async function scrapeGeniusLyrics(songPath) {
     if (response.ok) {
       const html = await response.text();
       
+      // Eliminar scripts, estilos y metadatos del HTML primero
+      const cleanHtml = html
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<header[\s\S]*?<\/header>/gi, '')
+        .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+        .replace(/<footer[\s\S]*?<\/footer>/gi, '');
+      
       // Nuevo formato (data-lyrics-container)
-      const match = html.match(/<div[^>]*data-lyrics-container="true"[^>]*>([\s\S]*?)<\/div>/i);
-      if (match) {
-        let lyrics = match[1];
-        lyrics = lyrics.replace(/<br\s*\/?>\n?/gi, '\n');
-        lyrics = lyrics.replace(/<a[^>]*>[\s\S]*?<\/a>/g, '');
-        lyrics = lyrics.replace(/<[^>]+>/g, '');
-        lyrics = lyrics.replace(/&/g, '&');
-        lyrics = lyrics.replace(/"/g, '"');
-        lyrics = lyrics.replace(/&#x27;/g, "'");
+      const lyricsRegex = /<div[^>]*data-lyrics-container="true"[^>]*>([\s\S]*?)<\/div>/gi;
+      const lyricsMatches = [...cleanHtml.matchAll(lyricsRegex)];
+      
+      if (lyricsMatches.length > 0) {
+        // Concatenar todos los fragmentos de letra
+        let lyrics = lyricsMatches.map(m => {
+          let text = m[1];
+          text = text.replace(/<br\s*\/?>\n?/gi, '\n');
+          text = text.replace(/<a[^>]*>[\s\S]*?<\/a>/g, '');
+          text = text.replace(/<[^>]+>/g, '');
+          text = text.replace(/"/g, '"');
+          text = text.replace(/&/g, '&');
+          text = text.replace(/&#x27;/g, "'");
+          text = text.replace(/'/g, "'");
+          return text;
+        }).join('\n');
+        
         lyrics = lyrics.trim();
-        if (lyrics.length > 50) return { lyrics, syncedLyrics: null };
+        
+        // Filtrar texto basura: si empieza por "contributors" o tiene muchos números/nombres de colaboradores, rechazar
+        const firstLines = lyrics.split('\n').slice(0, 5).join(' ').toLowerCase();
+        if (lyrics.length > 50 && 
+            !firstLines.includes('contributor') && 
+            !firstLines.includes('contributors') &&
+            !/^\d+\s+\w+\s+\w+/.test(lyrics.split('\n')[0]?.trim() || '')) {
+          return { lyrics, syncedLyrics: null };
+        }
       }
       
       // Formato antiguo (class="lyrics")

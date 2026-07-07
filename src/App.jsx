@@ -209,10 +209,21 @@ function Shell() {
           onPrev={prev}
           onLike={lib.toggleLike}
           onDislike={lib.dislikeSong}
+          onDislikeArtist={lib.dislikeArtist}
           likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
           onClose={handleCloseNowPlaying}
           allTracks={allSongs}
           onDelete={lib.removeSong}
+          onFixMetadata={(song) => {
+            const fullPath = song.relPath?.startsWith('music/') ? song.relPath : 'music/' + (song.relPath || song.id);
+            if (confirm('¿Corregir metadatos de "' + song.title + '"?')) {
+              import('./lib/api.js').then(({ api }) =>
+                api.fixMetadata(fullPath).then((result) => {
+                  alert('✅ ' + result.message + (result.newPath ? '\n\nNuevo nombre: ' + result.newPath.split('/').pop() : ''));
+                }).catch((err) => alert('Error al corregir metadatos: ' + err.message))
+              );
+            }
+          }}
           onOpenArtist={openArtistFromNowPlaying}
         />
       </div>

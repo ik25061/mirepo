@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Play } from 'lucide-react';
+import { ArrowLeft, Play, UserX } from 'lucide-react';
 import Cover from './Cover.jsx';
 import SongRow from './SongRow.jsx';
 import { usePlayer } from '../context/PlayerContext.jsx';
@@ -77,12 +77,23 @@ export default function CollectionView({
             {formatTime(totalSec)}
           </p>
           
-          <button
-            onClick={handlePlayAll}
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow transition hover:scale-105"
-          >
-            <Play size={18} fill="currentColor" /> Reproducir
-          </button>
+          <div className="mt-4 flex items-center gap-2">
+            <button
+              onClick={handlePlayAll}
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow transition hover:scale-105"
+            >
+              <Play size={18} fill="currentColor" /> Reproducir
+            </button>
+            {kind === 'Artista' && onDislikeArtist && (
+              <button
+                onClick={() => onDislikeArtist(name)}
+                className="inline-flex items-center gap-2 rounded-full bg-red-500/20 px-4 py-2.5 text-sm font-semibold text-red-400 shadow transition hover:bg-red-500/30"
+                title={`No mostrar al artista ${name}`}
+              >
+                <UserX size={18} /> No me gusta artista
+              </button>
+            )}
+          </div>
         </div>
       </header>
 

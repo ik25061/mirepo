@@ -45,6 +45,7 @@ export function PlayerProvider({ children }) {
   const fadeTimerRef = useRef(null); // Timer para el fade
   const crossfadingRef = useRef(false); // Indica si está en crossfade
   const queueRef = useRef([]); // Cola de canciones actual
+  const upNextRef = useRef([]); // Cola de canciones añadidas manualmente
   const indexRef = useRef(-1); // Índice de la canción actual
   const silenceSkipDoneRef = useRef(false); // Ya se saltó el silencio
   const silenceCheckIntervalRef = useRef(null); // Intervalo para check de silencio
@@ -57,6 +58,7 @@ export function PlayerProvider({ children }) {
   // ============================================================
 
   const [queue, setQueue] = useState([]); // Cola visible
+  const [upNextQueue, setUpNextQueue] = useState([]); // Cola "up next" visible
   const [current, setCurrent] = useState(null); // Canción actual
   const [isPlaying, setIsPlaying] = useState(false); // Estado de reproducción
   const [progress, setProgress] = useState(0); // Progreso en segundos
@@ -516,6 +518,24 @@ export function PlayerProvider({ children }) {
       return;
     }
 
+    // ============================================================
+    // PASO PRIORITARIO: Consumir canciones de "up next" primero
+    // ============================================================
+    const upNext = upNextRef.current;
+    if (upNext.length > 0) {
+      const nextSong = upNext[0];
+      upNextRef.current = upNext.slice(1);
+      setUpNextQueue(upNextRef.current);
+
+      // Buscar el índice de la canción en la cola principal
+      const nextIndex = q.findIndex(s => s.id === nextSong.id);
+      if (nextIndex !== -1) {
+        console.log('[Player] next - Reproduciendo desde up-next:', nextSong.title, '(índice:', nextIndex, ')');
+        playIndex(nextIndex);
+        return;
+      }
+    }
+
     // Obtener la canción actual
     const currentSong = q[indexRef.current];
     if (!currentSong) {
@@ -628,6 +648,8 @@ export function PlayerProvider({ children }) {
     setDuration(0);
     queueRef.current = [];
     setQueue([]);
+    upNextRef.current = [];
+    setUpNextQueue([]);
     indexRef.current = -1;
     activeRef.current = 0;
     contextRef.current = null;
@@ -648,16 +670,16 @@ export function PlayerProvider({ children }) {
       return;
     }
 
-    const newQueue = [...currentQueue];
+    const newUpNext = [...upNextRef.current];
 
     if (position === 'next') {
-      newQueue.splice(currentIndex + 1, 0, song);
+      newUpNext.splice(0, 0, song);
     } else {
-      newQueue.push(song);
+      newUpNext.push(song);
     }
 
-    queueRef.current = newQueue;
-    setQueue(newQueue);
+    upNextRef.current = newUpNext;
+    setUpNextQueue(newUpNext);
   }, [play]);
 
   // ============================================================
@@ -870,6 +892,7 @@ export function PlayerProvider({ children }) {
 
   const value = {
     queue,
+    upNextQueue,
     current,
     isPlaying,
     progress,
