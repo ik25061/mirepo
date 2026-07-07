@@ -48,10 +48,26 @@ export function useAllSongs(userId) {
     return () => { mountedRef.current = false; };
   }, [loadAllSongs]);
 
+  // ============================================================
+  // TOGGLE LIKE EN ALLSONGS - ACTUALIZA EL ESTADO LIKED
+  // ============================================================
+  const toggleLiked = useCallback((songId, liked) => {
+    setAllSongs(prev => prev.map(s => s.id === songId ? { ...s, liked } : s));
+  }, []);
+
+  // ============================================================
+  // REMOVE SONG EN ALLSONGS - ELIMINA UNA CANCIÓN (DISLIKE)
+  // ============================================================
+  const removeSong = useCallback((songId) => {
+    setAllSongs(prev => prev.filter(s => s.id !== songId));
+  }, []);
+
   const reload = useCallback(() => {
     loadedRef.current = false;
     loadAllSongs();
   }, [loadAllSongs]);
 
-  return { allSongs, loading, error, reload };
+  return { allSongs, loading, error, reload, toggleLiked, removeSong };
 }
+
+

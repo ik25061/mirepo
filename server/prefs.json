@@ -105,7 +105,7 @@
         "liked": false
       },
       "21e35607cce359b4": {
-        "liked": false
+        "liked": true
       },
       "cb60862aac583191": {
         "liked": false
@@ -115,6 +115,31 @@
       },
       "82ba6660d5acc537": {
         "liked": false
+      },
+      "7e5af8fbd52a4c0d": {
+        "hidden": true,
+        "liked": true
+      },
+      "a4bffe90fe106ab0": {
+        "hidden": true
+      },
+      "cc269b28572d6fab": {
+        "liked": true
+      },
+      "0d600c24acf530f4": {
+        "hidden": true
+      },
+      "3dd90fe5de096b0d": {
+        "liked": true
+      },
+      "46a495478fb207b5": {
+        "hidden": true
+      },
+      "c6b8f3b1e4f95309": {
+        "hidden": true
+      },
+      "053ef05204e4a4b4": {
+        "liked": true
       }
     },
     "artists": {}

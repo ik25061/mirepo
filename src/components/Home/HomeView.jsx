@@ -80,8 +80,14 @@ export default function HomeView({
   const years = buildYears(allSongsFromServer);
   
   // ============================================================
+  // LIKED IDS - Set de IDs de canciones favoritas
+  // ============================================================
+  const likedIds = new Set(allSongsFromServer.filter(s => s.liked).map(s => s.id));
+
+  // ============================================================
   // CANCIONES SIN ARTISTA O SIN ÁLBUM
   // ============================================================
+
   const unknownSongs = allSongsFromServer.filter(s => 
     !s.artist || s.artist === 'Artista desconocido' || 
     !s.album || s.album === 'Álbum desconocido' ||
@@ -144,7 +150,7 @@ export default function HomeView({
         {liked.length > 0 ? (
           <div className="flex flex-col gap-1.5 px-3 pb-4 sm:px-5 sm:pb-5">
             {liked.slice(0, 5).map((song, i) => (
-              <SongRow
+            <SongRow
                 key={song.id}
                 song={song}
                 index={i}
@@ -155,7 +161,9 @@ export default function HomeView({
                 onDelete={onDelete}
                 showDelete
                 context={null}
+                likedIds={likedIds}
               />
+
             ))}
           </div>
         ) : (

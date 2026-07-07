@@ -18,25 +18,30 @@ export default function SongRow({
   showFixMetadata = false,
   showCover = true,
   fixingMetadata = false,
-  context = null, // <-- NUEVO: contexto para reproducción
+  context = null,
+  likedIds, // Set de IDs de canciones favoritas
 }) {
   const { current, isPlaying, play, togglePlay, removeFromQueue } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isCurrent = current?.id === song.id;
+
+  // Calcular si la canción está liked a partir del Set de likedIds
+  const isLiked = likedIds?.has(song.id) ?? song.liked ?? false;
 
   // Resetear confirmación cuando cambia la canción
   useEffect(() => {
     setConfirmDelete(false);
   }, [song.id]);
 
-const handlePlay = () => {
-  if (isCurrent) {
-    togglePlay();
-  } else {
-    console.log('[SongRow] Reproduciendo con contexto:', context);
-    play(song, queue, context);
-  }
-};
+  const handlePlay = () => {
+    if (isCurrent) {
+      togglePlay();
+    } else {
+      console.log('[SongRow] Reproduciendo con contexto:', context);
+      play(song, queue, context);
+    }
+  };
+
   // Eliminar canción - usa removeFromQueue para pasar a la siguiente
   const handleDelete = async (e) => {
     e.stopPropagation();
@@ -60,8 +65,7 @@ const handlePlay = () => {
     }
   };
 
-  const iconBtn =
-    'grid h-6 w-6 place-items-center rounded-full text-muted-foreground transition hover:text-foreground hover:bg-muted sm:h-8 sm:w-8';
+  const iconBtn = 'grid h-6 w-6 place-items-center rounded-full text-muted-foreground transition hover:text-foreground hover:bg-muted sm:h-8 sm:w-8';
 
   return (
     <div
@@ -74,7 +78,7 @@ const handlePlay = () => {
       <button
         onClick={handlePlay}
         className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-xs text-muted-foreground sm:h-9 sm:w-9 sm:text-sm"
-        aria-label={isCurrent && isPlaying ? 'Pausar' : `Reproducir ${song.title}`}
+        aria-label={isCurrent && isPlaying ? 'Pausar' : 'Reproducir ' + song.title}
       >
         {isCurrent && isPlaying ? (
           <span className="hidden group-hover:block">
@@ -85,7 +89,7 @@ const handlePlay = () => {
             <Play size={12} className="text-foreground sm:size-4" />
           </span>
         )}
-        <span className={`group-hover:hidden text-[10px] sm:text-sm ${isCurrent ? 'text-primary' : ''}`}>
+        <span className={'group-hover:hidden text-[10px] sm:text-sm ' + (isCurrent ? 'text-primary' : '')}>
           {isCurrent && isPlaying ? <NowPlayingBars /> : typeof index === 'number' ? index + 1 : ''}
         </span>
       </button>
@@ -99,7 +103,7 @@ const handlePlay = () => {
 
       {/* ===== TÍTULO Y ARTISTA ===== */}
       <div className="min-w-0 flex-1 cursor-pointer" onClick={handlePlay}>
-        <p className={`truncate text-xs font-medium sm:text-sm ${isCurrent ? 'text-primary' : 'text-foreground'}`}>
+        <p className={'truncate text-xs font-medium sm:text-sm ' + (isCurrent ? 'text-primary' : 'text-foreground')}>
           {song.title}
         </p>
         <p className="truncate text-[10px] text-muted-foreground sm:text-xs">{song.artist}</p>
@@ -118,16 +122,16 @@ const handlePlay = () => {
             e.stopPropagation();
             onLike?.(song);
           }}
-          className={`${iconBtn} ${song.liked ? 'text-primary hover:text-primary' : 'sm:opacity-0 sm:group-hover:opacity-100'}`}
+          className={iconBtn + ' ' + (isLiked ? 'text-primary hover:text-primary' : 'sm:opacity-0 sm:group-hover:opacity-100')}
         >
-          <Heart size={12} fill={song.liked ? 'currentColor' : 'none'} className="sm:size-4" />
+          <Heart size={12} fill={isLiked ? 'currentColor' : 'none'} className="sm:size-4" />
         </button>
 
         {/* No me gusta canción */}
         {onDislike && (
           <button
             onClick={(e) => { e.stopPropagation(); onDislike(song); }}
-            className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100`}
+            className={iconBtn + ' sm:opacity-0 sm:group-hover:opacity-100'}
             title="No me gusta esta canción"
           >
             <ThumbsDown size={12} className="sm:size-4" />
@@ -138,8 +142,8 @@ const handlePlay = () => {
         {onDislikeArtist && (
           <button
             onClick={(e) => { e.stopPropagation(); onDislikeArtist(song.artist); }}
-            className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100`}
-            title={`No mostrar al artista ${song.artist}`}
+            className={iconBtn + ' sm:opacity-0 sm:group-hover:opacity-100'}
+            title={'No mostrar al artista ' + song.artist}
           >
             <UserX size={12} className="sm:size-4" />
           </button>
@@ -153,11 +157,11 @@ const handlePlay = () => {
               onFixMetadata();
             }}
             disabled={fixingMetadata}
-            className={`${iconBtn} ${
+            className={iconBtn + ' ' + (
               fixingMetadata
                 ? 'text-primary opacity-100'
                 : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary'
-            }`}
+            )}
             title={fixingMetadata ? 'Corrigiendo metadatos...' : 'Corregir metadatos (AcoustID)'}
           >
             {fixingMetadata ? (
@@ -172,11 +176,11 @@ const handlePlay = () => {
         {showDelete && onDelete && (
           <button
             onClick={handleDelete}
-            className={`${iconBtn} ${
+            className={iconBtn + ' ' + (
               confirmDelete
                 ? 'bg-red-500/20 text-red-500 opacity-100'
                 : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-500'
-            }`}
+            )}
             title={confirmDelete ? 'Pulsa de nuevo para confirmar' : 'Eliminar (mover a papelera)'}
           >
             {confirmDelete ? <Check size={12} className="sm:size-4" /> : <Trash2 size={12} className="sm:size-4" />}

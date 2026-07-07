@@ -12,7 +12,8 @@ import { api } from '../lib/api.js';
 
 // HOOK PRINCIPAL
 // ============================================================
-export function useLibrary(userId) {
+export function useLibrary(userId, onToggleLiked, onRemoveSong) {
+
   // ============================================================
   // ESTADO
   // ============================================================
@@ -190,33 +191,43 @@ export function useLibrary(userId) {
   }, []);
 
   // ============================================================
-  // TOGGLE LIKE
+  // TOGGLE LIKE - INDEPENDIENTE DE SI LA CANCIÓN ESTÁ EN LA LISTA
   // ============================================================
   const toggleLike = useCallback(async (songOrId) => {
     const songId = typeof songOrId === 'string' ? songOrId : songOrId.id;
-    
-    let newLiked;
+    const fallbackLiked = typeof songOrId === 'object' && typeof songOrId.liked === 'boolean'
+      ? songOrId.liked
+      : false;
+    const existingSong = songs.find((s) => s.id === songId);
+    const newLiked = !(existingSong ? existingSong.liked : fallbackLiked);
+
+    // Actualizar en songs (las 100 cargadas)
     setSongs((prev) => {
-      const song = prev.find((s) => s.id === songId);
-      if (!song) return prev;
-      newLiked = !song.liked;
       return prev.map((s) => (s.id === songId ? { ...s, liked: newLiked } : s));
     });
+    
+    // Notificar a allSongs para que también actualice su estado
+    onToggleLiked?.(songId, newLiked);
     
     try {
       await api.like(songId, newLiked, userId);
     } catch {
       setSongs((prev) => prev.map((s) => (s.id === songId ? { ...s, liked: !newLiked } : s)));
+      // Revertir en allSongs también
+      onToggleLiked?.(songId, !newLiked);
     }
-  }, [userId]);
+  }, [songs, userId, onToggleLiked]);
 
   // ============================================================
   // DISLIKE CANCIÓN
   // ============================================================
   const dislikeSong = useCallback(async (song) => {
     setSongs((prev) => prev.filter((s) => s.id !== song.id));
+    // Notificar a allSongs para remover la canción
+    onRemoveSong?.(song.id);
     await api.hideSong(song.id, userId);
-  }, [userId]);
+  }, [userId, onRemoveSong]);
+
 
   // ============================================================
   // DISLIKE ARTISTA

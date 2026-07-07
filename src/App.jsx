@@ -37,14 +37,15 @@ function Shell() {
   const { current, isPlaying, togglePlay, next, prev, stop } = usePlayer();
   
   // ============================================================
-  // BIBLIOTECA
-  // ============================================================
-  const lib = useLibrary(user?.id);
-  
-  // ============================================================
   // TODAS LAS CANCIONES
   // ============================================================
-  const { allSongs, loading: allSongsLoading } = useAllSongs(user?.id);
+  const { allSongs, loading: allSongsLoading, toggleLiked, removeSong: removeSongFromAllSongs } = useAllSongs(user?.id);
+  
+  // ============================================================
+  // BIBLIOTECA
+  // ============================================================
+  const lib = useLibrary(user?.id, toggleLiked, removeSongFromAllSongs);
+
   
   // ============================================================
   // NAVEGACIÓN
@@ -207,7 +208,7 @@ function Shell() {
           onPrev={prev}
           onLike={lib.toggleLike}
           onDislike={lib.dislikeSong}
-          likedIds={new Set(lib.songs.filter(s => s.liked).map(s => s.id))}
+          likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
           onClose={handleCloseNowPlaying}
           allTracks={allSongs}
           onDelete={lib.removeSong}
@@ -251,8 +252,10 @@ function Shell() {
               isLoadingMore={lib.isLoadingMore}
               onLoadMore={lib.loadMore}
               shouldScrollToCurrent={shouldScrollToCurrent}
+              allSongs={allSongs}
             />
           ) : view.type === 'search' ? (
+
             <MobileSearchView tracks={lib.songs} currentTrack={current} />
           ) : view.type === 'grid' ? (
             <GridView
@@ -359,8 +362,10 @@ function Shell() {
               isLoadingMore={lib.isLoadingMore}
               onLoadMore={lib.loadMore}
               shouldScrollToCurrent={shouldScrollToCurrent}
+              allSongs={allSongs}
             />
           ) : view.type === 'search' ? (
+
             <MobileSearchView tracks={lib.songs} currentTrack={current} />
           ) : view.type === 'grid' ? (
             <GridView
@@ -408,11 +413,12 @@ function Shell() {
           ) : null}
         </main>
 
-        <PlayerBar onLike={lib.toggleLike} onDislike={lib.dislikeSong} />
+        <PlayerBar onLike={lib.toggleLike} onDislike={lib.dislikeSong} likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))} />
       </div>
     </div>
   );
 }
+
 
 export default function App() {
   return (

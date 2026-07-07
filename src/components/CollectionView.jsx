@@ -18,10 +18,15 @@ export default function CollectionView({
   onDislike,
   onDislikeArtist,
   onDelete,
+  allSongs, // todas las canciones para calcular likedIds
 }) {
   const { play } = usePlayer();
   const { kind, name, songs } = collection;
   const round = kind === 'Artista';
+  
+  // Calcular likedIds a partir de allSongs
+  const likedIds = new Set(allSongs?.filter(s => s.liked).map(s => s.id) || []);
+
   const totalSec = songs.reduce((acc, s) => acc + (s.duration || 0), 0);
   const coverId = songs.find((s) => s.hasCover)?.id || songs[0]?.id;
 
@@ -39,8 +44,8 @@ export default function CollectionView({
   // Función para reproducir la colección
   const handlePlayAll = () => {
     if (songs.length) {
-      console.log('[CollectionView] 📀 Reproduciendo colección:', { kind, name, songs: songs.length });
-      console.log('[CollectionView] 📊 Contexto:', context);
+      console.log('[CollectionView] Reproduciendo colección:', { kind, name, songs: songs.length });
+      console.log('[CollectionView] Contexto:', context);
       play(songs[0], queueSongs, context);
     }
   };
@@ -96,6 +101,7 @@ export default function CollectionView({
             showDelete={true}
             showCover={!round}
             context={context}
+            likedIds={likedIds}
           />
         ))}
       </div>

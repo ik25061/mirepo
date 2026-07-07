@@ -32,28 +32,36 @@ function TrackSkeleton() {
 // ============================================================
 // COMPONENTE PRINCIPAL
 // ============================================================
-export default function LibraryView({ 
-  songs, 
-  counts, 
-  onLike, 
-  onDislike, 
-  onDislikeArtist, 
+export default function LibraryView({
+  songs,
+  counts,
+  onLike,
+  onDislike,
+  onDislikeArtist,
   onDelete,
   loading,
   hasMore,
   isLoadingMore,
-  onLoadMore
+  onLoadMore,
+  allSongs
 }) {
   const { play, current } = usePlayer();
   const [query, setQuery] = useState('');
   const [fixingMetadata, setFixingMetadata] = useState(null);
-  
+
   // ============================================================
   // REFERENCIAS PARA INTERSECTION OBSERVER
   // ============================================================
   const listRef = useRef(null);
   const loaderRef = useRef(null);
   const observerRef = useRef(null);
+
+  // ============================================================
+  // LIKED IDS - Set de IDs de canciones favoritas
+  // ============================================================
+  const likedIds = useMemo(() => {
+    return new Set(allSongs?.filter(s => s.liked).map(s => s.id) || []);
+  }, [allSongs]);
 
   // ============================================================
   // FILTRAR CANCIONES
@@ -73,13 +81,13 @@ export default function LibraryView({
   // CORREGIR METADATOS
   // ============================================================
   const handleFixMetadata = async (song) => {
-    if (!confirm(`¿Corregir metadatos de "${song.title}"?`)) return;
+    if (!confirm('¿Corregir metadatos de "' + song.title + '"?')) return;
 
     setFixingMetadata(song.id);
     try {
-      const fullPath = song.relPath.startsWith('music/') ? song.relPath : `music/${song.relPath}`;
+      const fullPath = song.relPath.startsWith('music/') ? song.relPath : 'music/' + song.relPath;
       const result = await api.fixMetadata(fullPath);
-      alert(`✅ ${result.message}\n\nNuevo nombre: ${path.basename(result.newPath)}`);
+      alert('✅ ' + result.message + '\n\nNuevo nombre: ' + path.basename(result.newPath));
     } catch (err) {
       alert('Error al corregir metadatos: ' + err.message);
     } finally {
@@ -105,7 +113,7 @@ export default function LibraryView({
   useEffect(() => {
     // Si no hay más canciones, no configurar el observer
     if (!hasMore) return;
-    
+
     // Crear el observer
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -137,7 +145,7 @@ export default function LibraryView({
 
   return (
     <div className="flex flex-col gap-4 h-full w-full">
-      
+
       {/* ===== HEADER ===== */}
       <header className="animate-fade-in flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
         <div>
@@ -150,7 +158,7 @@ export default function LibraryView({
             </span>
           </p>
         </div>
-        
+
         {/* ===== BUSCADOR ===== */}
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:flex-initial">
@@ -187,7 +195,7 @@ export default function LibraryView({
       )}
 
       {/* ===== LISTA DE CANCIONES ===== */}
-      <div 
+      <div
         ref={listRef}
         className="flex-1 overflow-y-auto rounded-xl border border-border bg-surface/50 p-2"
         style={{ overscrollBehavior: 'contain' }}
@@ -202,7 +210,7 @@ export default function LibraryView({
           <div className="flex flex-col gap-1">
             {filtered.map((song, i) => {
               const isCurrent = current?.id === song.id;
-              
+
               return (
                 <div
                   key={song.id}
@@ -221,6 +229,7 @@ export default function LibraryView({
                     fixingMetadata={fixingMetadata === song.id}
                     showDelete
                     context={null}
+                    likedIds={likedIds}
                   />
                 </div>
               );
@@ -254,15 +263,7 @@ export default function LibraryView({
         )}
       </div>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.8; }
-        }
-        .animate-pulse {
-          animation: pulse 1.5s ease-in-out infinite;
-        }
-      `}</style>
+      <style>{'\n        @keyframes pulse {\n          0%, 100% { opacity: 0.4; }\n          50% { opacity: 0.8; }\n        }\n        .animate-pulse {\n          animation: pulse 1.5s ease-in-out infinite;\n        }\n      '}</style>
     </div>
   );
 }

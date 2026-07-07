@@ -61,8 +61,12 @@ export default function LikedSongsView({
   }, [likedSongs, selectedGenre]);
 
   const totalSec = filteredSongs.reduce((acc, s) => acc + (s.duration || 0), 0);
+  
+  // Calcular likedIds a partir de likedSongs (todas están liked en esta vista)
+  const likedIds = new Set(likedSongs.map(s => s.id));
 
   return (
+
     <div className="flex flex-col gap-4 pb-20">
       
       {/* ===== BOTÓN VOLVER ===== */}
@@ -134,7 +138,7 @@ export default function LikedSongsView({
       {filteredSongs.length > 0 ? (
         <div className="rounded-xl border border-border bg-surface/50 p-2">
           {filteredSongs.map((song, i) => (
-            <SongRow
+          <SongRow
               key={song.id}
               song={song}
               index={i}
@@ -145,7 +149,9 @@ export default function LikedSongsView({
               onDelete={onDelete}
               showDelete
               context={null}
+              likedIds={likedIds}
             />
+
           ))}
         </div>
       ) : (
