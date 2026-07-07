@@ -11,11 +11,15 @@
  * - Lyrics.com (scraping gratuito)
  * 
  * Las letras se guardan como archivos .lrc junto a la canción
- * y se cachean en memoria para acceso rápido.
+ * y se inyectan en las etiquetas ID3 del MP3:
+ * - USLT (Unsynchronized Lyrics): letra plana
+ * - SYLT (Synchronized Lyrics): letra con timestamps (karaoke)
+ * El caché JSON es secundario para respuestas rápidas.
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
+import NodeID3 from 'node-id3';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -114,18 +118,83 @@ function saveLrcFile(songPath, plainLyrics, syncedContent) {
       return;
     }
     
-    // Añadir metadatos al principio
-    const metadataLines = [];
-    if (content.startsWith('[')) {
-      // Ya está en formato LRC, no añadir cabeceras extra
-    } else {
-      content = content;
-    }
-    
     fs.writeFileSync(lrcPath, content, 'utf8');
     console.log('[lyrics] 💾 .lrc guardado:', lrcPath);
   } catch (err) {
     console.warn('[lyrics] Error guardando .lrc:', err.message);
+  }
+}
+
+// ============================================================
+// INYECCIÓN DE LETRAS EN ETIQUETAS ID3 DEL MP3
+// ============================================================
+
+/**
+ * Inyecta las letras en las etiquetas ID3 del archivo MP3.
+ * 
+ * - USLT (Unsynchronized Lyrics): letra plana (texto sin timestamps)
+ * - SYLT (Synchronized Lyrics): letra con timestamps para karaoke
+ * 
+ * Solo funciona con archivos .mp3 (node-id3 solo soporta MP3).
+ */
+function injectLyricsToMp3(songPath, plainLyrics, syncedLines) {
+  // node-id3 solo funciona con archivos .mp3
+  const ext = path.extname(songPath).toLowerCase();
+  if (ext !== '.mp3') {
+    return; // Silencioso para no-MP3
+  }
+  
+  if (!fs.existsSync(songPath)) {
+    console.warn('[lyrics] ⚠️ Archivo no encontrado para inyectar letras:', songPath);
+    return;
+  }
+
+  try {
+    const tags = {};
+
+    // === USLT: Unsynchronized Lyrics (letra plana) ===
+    if (plainLyrics) {
+      tags.unsynchronisedLyrics = {
+        language: 'eng',
+        text: plainLyrics
+      };
+    }
+
+    // === SYLT: Synchronized Lyrics (letra con timestamps) ===
+    if (syncedLines && syncedLines.length > 0) {
+      // Convertir syncedLines a formato SYLT (timestamps en milisegundos)
+      const synchronisedText = syncedLines.map(line => ({
+        text: line.text,
+        timeStamp: Math.round(line.time * 1000) // segundos -> milisegundos
+      }));
+
+      tags.synchronisedLyrics = [{
+        language: 'eng',
+        timeStampFormat: 2, // MILLISECONDS
+        contentType: 1,     // LYRICS
+        shortText: '',
+        synchronisedText
+      }];
+    }
+
+    // Solo escribir si hay algo que inyectar
+    if (Object.keys(tags).length === 0) {
+      return;
+    }
+
+    // Usar update para mantener las etiquetas existentes y solo añadir/modificar letras
+    const success = NodeID3.update(tags, songPath);
+    
+    if (success) {
+      const hasSynced = syncedLines && syncedLines.length > 0;
+      console.log('[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3:' + 
+        (tags.unsynchronisedLyrics ? ' USLT' : '') + 
+        (hasSynced ? ' SYLT' : ''));
+    } else {
+      console.warn('[lyrics] ⚠️ Fallo al inyectar etiquetas ID3 en:', songPath);
+    }
+  } catch (err) {
+    console.warn('[lyrics] ⚠️ Error inyectando letras en MP3:', err.message);
   }
 }
 
@@ -518,7 +587,12 @@ export async function getLyrics(songId, title, artist, songPath) {
     saveLrcFile(songPath, lyrics, rawSyncedLyrics);
   }
   
-  // 5. Guardar en caché JSON
+  // 5. Inyectar letras en etiquetas ID3 del MP3 (USLT y SYLT)
+  if (lyrics && songPath) {
+    injectLyricsToMp3(songPath, lyrics, syncedLines);
+  }
+  
+  // 6. Guardar en caché JSON
   const entry = {
     lyrics,
     syncedLines,
