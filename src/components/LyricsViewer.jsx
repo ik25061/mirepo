@@ -147,7 +147,7 @@ export default function LyricsViewer({ song, onClose }) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-surface to-surface/0">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16">
               <Loader2 size={40} className="animate-spin text-primary" />

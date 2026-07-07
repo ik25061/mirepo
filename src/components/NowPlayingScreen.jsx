@@ -7,9 +7,10 @@
  * - Portada del álbum de fondo con blur y capa oscura
  * - Click en artista para ir a la colección del artista
  * - Botón de letras integrado (como Spotify) que reemplaza la carátula
+ * - Efecto karaoke palabra por palabra (time-synced)
  */
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import {
   ChevronDown, Heart, Play, Pause,
   SkipBack, SkipForward, Shuffle, Repeat, Volume2, Music2,
@@ -43,6 +44,7 @@ export default function NowPlayingScreen({
   const [syncedLines, setSyncedLines] = useState(null);
   const lyricsContainerRef = useRef(null);
   const [currentLineIndex, setCurrentLineIndex] = useState(-1);
+  const [wordProgress, setWordProgress] = useState(0); // 0..1 dentro de la línea actual
 
   // Generar URL de la portada del álbum
   const coverId = track?.coverId || track?.id;
@@ -79,38 +81,60 @@ export default function NowPlayingScreen({
     setShowTranslation(false);
     setSyncedLines(null);
     setCurrentLineIndex(-1);
+    setWordProgress(0);
   }, [track?.id]);
 
-  // ===== KARAOKE: calcular línea actual según el progreso =====
+  // ===== KARAOKE TIME-SYNCED: línea y palabra actuales =====
   useEffect(() => {
     if (!syncedLines || syncedLines.length === 0) return;
-    
-    // Encontrar la última línea cuyo tiempo sea <= progress actual
-    let idx = -1;
+
+    // Encontrar la línea actual (última cuyo tiempo <= progress)
+    let lineIdx = -1;
     for (let i = 0; i < syncedLines.length; i++) {
       if (syncedLines[i].time <= progress) {
-        idx = i;
+        lineIdx = i;
       } else {
         break;
       }
     }
-    
-    if (idx !== currentLineIndex) {
-      setCurrentLineIndex(idx);
-      
-      // Auto-scroll a la línea actual
-      if (lyricsContainerRef.current && idx >= 0) {
-        const container = lyricsContainerRef.current;
-        const lineEl = container.querySelector(`[data-lyric-index="${idx}"]`);
-        if (lineEl) {
-          const containerRect = container.getBoundingClientRect();
-          const lineRect = lineEl.getBoundingClientRect();
-          const offset = lineRect.top - containerRect.top - containerRect.height * 0.4;
-          container.scrollBy({ top: offset, behavior: 'smooth' });
-        }
+
+    setCurrentLineIndex(lineIdx);
+
+    // Calcular progreso palabra por palabra dentro de la línea actual
+    if (lineIdx >= 0 && lineIdx < syncedLines.length - 1) {
+      const currentTime = syncedLines[lineIdx].time;
+      const nextTime = syncedLines[lineIdx + 1].time;
+      const lineDuration = nextTime - currentTime;
+
+      if (lineDuration > 0) {
+        const elapsedInLine = Math.max(0, Math.min(lineDuration, progress - currentTime));
+        setWordProgress(elapsedInLine / lineDuration);
+      } else {
+        setWordProgress(1);
+      }
+    } else if (lineIdx >= 0) {
+      // Última línea: usar el progreso restante de la canción
+      const currentTime = syncedLines[lineIdx].time;
+      const remaining = Math.max(0, duration - currentTime);
+      if (remaining > 0) {
+        setWordProgress(Math.min(1, (progress - currentTime) / remaining));
+      } else {
+        setWordProgress(1);
       }
     }
-  }, [progress, syncedLines]);
+
+    // Auto-scroll suave a la línea actual
+    if (lyricsContainerRef.current && lineIdx >= 0) {
+      const container = lyricsContainerRef.current;
+      const lineEl = container.querySelector(`[data-lyric-index="${lineIdx}"]`);
+      if (lineEl) {
+        const containerRect = container.getBoundingClientRect();
+        const lineRect = lineEl.getBoundingClientRect();
+        const offset = lineRect.top - containerRect.top - containerRect.height * 0.35;
+        container.scrollBy({ top: offset, behavior: 'smooth' });
+      }
+    }
+  }, [progress, syncedLines, duration]);
 
   // Imagen central: artista (si existe) o portada del álbum
   const centerImage = (artistImageUrl && !artistImageFailed) ? artistImageUrl : albumCoverUrl;
@@ -197,38 +221,90 @@ export default function NowPlayingScreen({
     }
   };
 
-  // ===== RENDERIZAR LETRAS CON EFECTO KARAOKE =====
-  const renderLyrics = (text) => {
+  // ===== RENDERIZAR LETRAS CON KARAOKE PALABRA POR PALABRA =====
+  const renderLyrics = useCallback((text) => {
     if (!text) return null;
     const lines = text.split('\n').filter(line => line.trim() !== '');
-    
-    // Si tenemos líneas sincronizadas, usar el índice actual para colorear
-    const useSynced = syncedLines && syncedLines.length > 0;
-    
-    return lines.map((line, i) => {
-      const isCurrent = useSynced && i === currentLineIndex;
-      const isPast = useSynced && i < currentLineIndex;
-      const isFuture = useSynced && i > currentLineIndex;
-      
+    const hasSynced = syncedLines && syncedLines.length > 0;
+
+    return lines.map((line, lineIndex) => {
+      const words = line.split(/(\s+)/).filter(Boolean);
+      const isCurrentLine = hasSynced && lineIndex === currentLineIndex;
+      const isPastLine = hasSynced && lineIndex < currentLineIndex;
+      const isFutureLine = hasSynced && lineIndex > currentLineIndex;
+
+      // Determinar cuántas palabras están "iluminadas" en la línea actual
+      let wordsHighlighted = 0;
+      if (isCurrentLine && words.length > 0) {
+        wordsHighlighted = Math.floor(wordProgress * words.length);
+      }
+
       return (
         <p
-          key={i}
-          data-lyric-index={i}
-          className="text-sm leading-relaxed transition-all duration-300"
+          key={lineIndex}
+          data-lyric-index={lineIndex}
+          className="transition-all duration-200"
           style={{
-            color: isCurrent ? '#1db954' : isPast ? 'rgba(255,255,255,0.6)' : isFuture ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.9)',
-            fontWeight: isCurrent ? 700 : isPast ? 400 : 400,
-            fontSize: isCurrent ? 16 : 14,
-            padding: '4px 0',
-            transform: isCurrent ? 'scale(1.02)' : 'scale(1)',
-            transformOrigin: 'left center',
+            fontSize: isCurrentLine ? 16 : isPastLine ? 14 : 14,
+            fontWeight: isCurrentLine ? 600 : 400,
+            padding: '3px 0',
+            margin: '2px 0',
+            textAlign: 'center',
+            lineHeight: 1.8,
           }}
         >
-          {line}
+          {hasSynced ? (
+            // Modo karaoke: cada palabra se colorea individualmente
+            words.map((word, wordIdx) => {
+              if (word.trim() === '') {
+                // Espacios: solo renderizar el espacio
+                return <span key={wordIdx}>{word}</span>;
+              }
+
+              // Determinar el color según karaoke
+              let color;
+              if (isPastLine) {
+                color = 'rgba(255,255,255,0.55)';
+              } else if (isCurrentLine) {
+                if (wordIdx < wordsHighlighted) {
+                  // Palabra ya cantada → verde brillante
+                  color = '#1db954';
+                } else if (wordIdx === wordsHighlighted) {
+                  // Palabra actual → verde claro con transición
+                  const fadeProgress = (wordProgress * words.length) - wordsHighlighted;
+                  const opacity = 0.4 + (fadeProgress * 0.6);
+                  color = `rgba(29,185,84,${opacity})`;
+                } else {
+                  // Palabra futura → tenue
+                  color = 'rgba(255,255,255,0.35)';
+                }
+              } else if (isFutureLine) {
+                color = 'rgba(255,255,255,0.3)';
+              } else {
+                color = 'rgba(255,255,255,0.9)';
+              }
+
+              return (
+                <span
+                  key={wordIdx}
+                  className="transition-colors duration-150"
+                  style={{
+                    color,
+                    textShadow: color === '#1db954' ? '0 0 8px rgba(29,185,84,0.5)' : 'none',
+                  }}
+                >
+                  {word}
+                </span>
+              );
+            })
+          ) : (
+            // Sin sincronización: mostrar todo igual
+            <span style={{ color: 'rgba(255,255,255,0.9)' }}>{line}</span>
+          )}
         </p>
       );
     });
-  };
+  }, [syncedLines, currentLineIndex, wordProgress]);
 
   if (!track) {
     return (
@@ -313,13 +389,14 @@ export default function NowPlayingScreen({
 
             {/* ===== PORTADA CENTRAL / LETRAS ===== */}
             {showLyrics ? (
-              /* ===== VISTA DE LETRAS (COMO SPOTIFY) ===== */
+              /* ===== VISTA DE LETRAS KARAOKE ===== */
               <div
+                ref={lyricsContainerRef}
                 className="flex flex-col overflow-y-auto"
                 style={{
                   flex: '1 1 auto',
                   minHeight: 0,
-                  padding: '8px 16px',
+                  padding: '16px 16px',
                   margin: '0 -16px',
                   scrollbarWidth: 'thin',
                   scrollbarColor: 'rgba(255,255,255,0.2) transparent',
