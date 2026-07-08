@@ -13,9 +13,11 @@ export function useAllSongs(userId) {
   const [error, setError] = useState(null);
   const mountedRef = useRef(true);
   const loadedRef = useRef(false);
+  const prevUserIdRef = useRef(userId);
 
-  const loadAllSongs = useCallback(async () => {
-    if (loadedRef.current) {
+  // Siempre cargar sin caché para obtener datos actualizados
+  const loadAllSongs = useCallback(async (force = false) => {
+    if (loadedRef.current && !force) {
       console.log('[useAllSongs] 📚 Ya cargadas, saltando');
       return;
     }
@@ -23,6 +25,7 @@ export function useAllSongs(userId) {
     try {
       setLoading(true);
       console.log('[useAllSongs] 📥 Cargando todas las canciones...');
+      // Obtener todas las canciones (sin likedOnly para tener la lista completa con liked)
       const data = await api.getLibrary({ limit: 99999, offset: 0, userId });
       if (mountedRef.current) {
         setAllSongs(data.songs || []);
@@ -44,6 +47,11 @@ export function useAllSongs(userId) {
 
   useEffect(() => {
     mountedRef.current = true;
+    // Si el userId cambió, forzar recarga
+    if (prevUserIdRef.current !== userId) {
+      loadedRef.current = false;
+      prevUserIdRef.current = userId;
+    }
     loadAllSongs();
     return () => { mountedRef.current = false; };
   }, [loadAllSongs]);
@@ -64,10 +72,10 @@ export function useAllSongs(userId) {
 
   const reload = useCallback(() => {
     loadedRef.current = false;
-    loadAllSongs();
+    loadAllSongs(true);
   }, [loadAllSongs]);
 
-  return { allSongs, loading, error, reload, toggleLiked, removeSong };
+  return { allSongs, loading, error, reload, toggleLiked, removeSong, loadAllSongs };
 }
 
 
