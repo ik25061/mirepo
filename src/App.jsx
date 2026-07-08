@@ -34,7 +34,7 @@ function Shell() {
   // ============================================================
   // REPRODUCTOR
   // ============================================================
-  const { current, isPlaying, togglePlay, next, prev, stop } = usePlayer();
+  const { current, isPlaying, togglePlay, next, prev, stop, removeFromQueue } = usePlayer();
 
   // ============================================================
   // TODAS LAS CANCIONES
@@ -313,6 +313,9 @@ function Shell() {
           onPlayPause={togglePlay}
           onNext={next}
           onOpen={() => current && setShowNowPlaying(true)}
+          onLike={lib.toggleLike}
+          onDislike={(song) => { removeFromQueue(song.id); lib.dislikeSong(song); }}
+          likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
         />
 
         <BottomNav

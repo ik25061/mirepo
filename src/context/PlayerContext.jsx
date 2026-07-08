@@ -52,6 +52,7 @@ export function PlayerProvider({ children }) {
   const playedHistoryRef = useRef(new Set()); // Historial de canciones reproducidas (shuffle)
   const originalQueueRef = useRef([]); // Cola original (para shuffle)
   const contextRef = useRef(null); // Contexto actual (artista, álbum, género)
+  const advancingRef = useRef(false); // Flag para evitar avances múltiples
 
   // ============================================================
   // 3.2 ESTADO (useState)
@@ -191,6 +192,7 @@ export function PlayerProvider({ children }) {
     setDuration(0);
     setProgress(0);
     silenceSkipDoneRef.current = false;
+    advancingRef.current = false; // Resetear flag al cambiar de canción
 
     const incoming = getIdle();
     const outgoing = getActive();
@@ -533,6 +535,14 @@ export function PlayerProvider({ children }) {
         console.log('[Player] next - Reproduciendo desde up-next:', nextSong.title, '(índice:', nextIndex, ')');
         playIndex(nextIndex);
         return;
+      } else {
+        // La canción no está en la cola, agregarla y reproducirla
+        console.log('[Player] next - Up-next canción no encontrada en cola, añadiendo:', nextSong.title);
+        const newQueue = [...q, nextSong];
+        queueRef.current = newQueue;
+        setQueue(newQueue);
+        playIndex(newQueue.length - 1);
+        return;
       }
     }
 
@@ -703,11 +713,8 @@ export function PlayerProvider({ children }) {
     }
 
     if (songIndex === currentIndex) {
-      let nextIndex = songIndex;
-      if (nextIndex >= newQueue.length) {
-        nextIndex = 0;
-      }
-      const nextSong = newQueue[nextIndex];
+      // Si se eliminó la canción actual, reproducir la siguiente inmediatamente
+      const nextSong = newQueue[songIndex] || newQueue[0];
       if (nextSong) {
         const active = getActive();
         if (active) {
@@ -715,15 +722,21 @@ export function PlayerProvider({ children }) {
           active.removeAttribute('src');
           active.currentTime = 0;
         }
-        setTimeout(() => {
-          play(nextSong, newQueue);
-        }, 150);
+        // Reproducir inmediatamente la siguiente canción con la nueva cola
+        // Usar playIndex directamente para evitar condiciones de carrera
+        queueRef.current = newQueue;
+        setQueue(newQueue);
+        const nextIdx = newQueue.findIndex(s => s.id === nextSong.id);
+        if (nextIdx !== -1) {
+          playIndex(nextIdx, { crossfade: false });
+        }
         return true;
       } else {
         stop();
         return true;
       }
     } else if (songIndex < currentIndex) {
+      // Ajustar índice si se eliminó una canción anterior
       const newIndex = currentIndex - 1;
       indexRef.current = newIndex;
       if (newIndex < newQueue.length) {
@@ -734,7 +747,7 @@ export function PlayerProvider({ children }) {
     }
 
     return true;
-  }, [play, stop]);
+  }, [playIndex, play, stop]);
 
   // ============================================================
   // 3.19 EFFECT - Actualizar progreso y manejar fin de canción
@@ -745,11 +758,10 @@ export function PlayerProvider({ children }) {
     if (!audios) return;
 
     let intervalId = null;
-    let advancing = false;
 
     const advanceTrack = () => {
-      if (advancing) return;
-      advancing = true;
+      if (advancingRef.current) return;
+      advancingRef.current = true;
       console.log('[Player] advanceTrack - Llamando a next()');
       next();
     };
@@ -780,7 +792,7 @@ export function PlayerProvider({ children }) {
     // Evento: cuando la canción termina
     const onEnded = () => {
       console.log('[Player] Evento ended - canción terminada');
-      if (!crossfadingRef.current) {
+      if (!crossfadingRef.current && !advancingRef.current) {
         advanceTrack();
       }
     };

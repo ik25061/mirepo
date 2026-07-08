@@ -1,6 +1,6 @@
-import { Play, Pause, SkipForward, Music2 } from 'lucide-react';
+import { Play, Pause, SkipForward, Music2, Heart, ThumbsDown } from 'lucide-react';
 
-export default function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOpen }) {
+export default function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOpen, onLike, onDislike, likedIds }) {
   // Si no hay canción, mostrar mini player vacío
   if (!track) {
     return (
@@ -59,7 +59,27 @@ export default function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOp
         <p className="truncate text-[10px] text-muted-foreground">{track.artist}</p>
       </div>
 
-      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+        {/* Botón Like */}
+        {onLike && (
+          <button
+            onClick={() => onLike(track)}
+            className="flex items-center justify-center w-6 h-6 rounded-full"
+          >
+            <Heart size={12} fill={likedIds?.has(track.id) ? 'currentColor' : 'none'} className={likedIds?.has(track.id) ? 'text-primary' : 'text-white'} />
+          </button>
+        )}
+
+        {/* Botón Dislike */}
+        {onDislike && (
+          <button
+            onClick={() => onDislike(track)}
+            className="flex items-center justify-center w-6 h-6 rounded-full"
+          >
+            <ThumbsDown size={12} className="text-white" />
+          </button>
+        )}
+
         <button
           onClick={onPlayPause}
           className="flex items-center justify-center w-7 h-7 rounded-full"

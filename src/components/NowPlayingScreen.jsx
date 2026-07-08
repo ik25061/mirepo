@@ -28,9 +28,10 @@ export default function NowPlayingScreen({
   allTracks = [],
   onOpenArtist = null,
 }) {
-  const { removeFromQueue, queue, progress, duration, volume, setVolume, repeatMode, setRepeatMode, shufflePlay, seek } = usePlayer();
+  const { removeFromQueue, queue, progress, duration, volume, setVolume, repeatMode, setRepeatMode, shufflePlay, seek, upNextQueue } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showQueue, setShowQueue] = useState(false);
   const progressRef = useRef(null);
   const [artistImageUrl, setArtistImageUrl] = useState(null);
   const [artistImageFailed, setArtistImageFailed] = useState(false);
@@ -522,7 +523,7 @@ export default function NowPlayingScreen({
               <div className="min-w-0 flex-1">
                 <div className="group flex items-center gap-3">
                   {onDislike && (
-                    <button onClick={() => onDislike(track)} className="grid h-6 w-6 place-items-center rounded-full text-muted-foreground transition hover:text-foreground hover:bg-muted sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100" title="No me gusta (pasa a la siguiente)">
+                    <button onClick={() => { removeFromQueue(track.id); onDislike(track); }} className="grid h-6 w-6 place-items-center rounded-full text-muted-foreground transition hover:text-foreground hover:bg-muted sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100" title="No me gusta (pasa a la siguiente)">
                       <ThumbsDown size={26} className="sm:size-4" />
                     </button>
                   )}
@@ -623,6 +624,42 @@ export default function NowPlayingScreen({
                 style={{ accentColor: '#1db954', WebkitAppearance: 'none', appearance: 'none', background: 'rgba(255,255,255,0.2)', borderRadius: '2px', outline: 'none' }}
               />
             </div>
+
+            {/* ===== BOTÓN PARA VER COLA ===== */}
+            <div className="flex justify-center" style={{ padding: '4px 0', flexShrink: 0 }}>
+              <button
+                onClick={() => setShowQueue(!showQueue)}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                style={{ color: '#a7a7a7' }}
+                title={showQueue ? 'Ocultar cola' : 'Ver cola de reproducción'}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showQueue ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+                  <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+              </button>
+            </div>
+
+            {/* ===== LISTA DE COLA ===== */}
+            {showQueue && (
+              <div className="overflow-y-auto" style={{ maxHeight: 200, flexShrink: 0, padding: '4px 0' }}>
+                <p style={{ fontSize: 11, color: '#a7a7a7', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 8 }}>Próximas canciones</p>
+                {upNextQueue.length === 0 ? (
+                  <p style={{ fontSize: 13, color: '#a7a7a7' }}>No hay canciones en cola</p>
+                ) : (
+                  <div className="space-y-2">
+                    {upNextQueue.slice(0, 10).map((song, idx) => (
+                      <div key={song.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 transition-colors">
+                        <span style={{ fontSize: 12, color: '#a7a7a7', minWidth: 20 }}>{idx + 1}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate" style={{ fontSize: 13, color: '#fff' }}>{song.title}</p>
+                          <p className="truncate" style={{ fontSize: 11, color: '#a7a7a7' }}>{song.artist}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
           </div>
         </div>

@@ -30,7 +30,15 @@ export default function PlayerBar({ onLike, onDislike, likedIds }) {
     next,
     prev,
     seek,
+    removeFromQueue,
   } = usePlayer();
+
+  const handleDislike = () => {
+    if (onDislike && current) {
+      removeFromQueue(current.id);
+      onDislike(current);
+    }
+  };
 
   const [showCrossfade, setShowCrossfade] = useState(false);
 
@@ -65,7 +73,7 @@ export default function PlayerBar({ onLike, onDislike, likedIds }) {
 
           {onDislike && (
             <button
-              onClick={() => onDislike(current)}
+              onClick={handleDislike}
               className="ml-1 hidden shrink-0 rounded-full p-2 transition text-muted-foreground hover:text-foreground sm:block"
               title="No me gusta"
             >
