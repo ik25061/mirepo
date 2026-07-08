@@ -745,9 +745,11 @@ export function PlayerProvider({ children }) {
     if (!audios) return;
 
     let intervalId = null;
+    let advancing = false;
 
-    // Avanzar a la siguiente canción
     const advanceTrack = () => {
+      if (advancing) return;
+      advancing = true;
       console.log('[Player] advanceTrack - Llamando a next()');
       next();
     };
@@ -760,9 +762,7 @@ export function PlayerProvider({ children }) {
         setDuration(a.duration);
 
         const remaining = a.duration - a.currentTime;
-        // Cuando queda menos de 0.3 segundos, avanzar
         if (remaining < 0.3 && remaining > 0 && !crossfadingRef.current) {
-          console.log('[Player] Canción terminando, avanzando...');
           advanceTrack();
         }
       }

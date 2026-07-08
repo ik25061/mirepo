@@ -154,6 +154,90 @@ export async function scanFullLibrary() {
   return cache;
 }
 
+// ====== ESCANEO INCREMENTAL ======
+
+export async function incrementalScanLibrary() {
+  ensureDirs();
+  console.log(`[scanner] 🔄 Escaneo incremental de ${MUSIC_DIR}...`);
+
+  try {
+    fs.statSync(MUSIC_DIR);
+  } catch (err) {
+    console.error(`[scanner] ❌ Error: ${MUSIC_DIR} no existe o no es accesible`);
+    return cache;
+  }
+
+  const audioFiles = walk(MUSIC_DIR);
+  const existingPaths = new Set(cache.songs.map(s => s.relPath));
+  const byPath = new Map(cache.songs.map(s => [s.relPath, s]));
+
+  let added = 0;
+  let updated = 0;
+  let removed = 0;
+  let processed = 0;
+  const total = audioFiles.length;
+
+  // Archivos actuales del filesystem
+  const currentPaths = new Set();
+
+  for (const file of audioFiles) {
+    processed++;
+    const relPath = path.relative(MUSIC_DIR, file);
+    currentPaths.add(relPath);
+
+    if (processed % 20 === 0 || processed === total) {
+      console.log(`[scanner] ⏳ Progreso incremental: ${processed}/${total}`);
+    }
+
+    // Ya existía: conservar su ID
+    if (existingPaths.has(relPath)) {
+      continue;
+    }
+
+    try {
+      const song = await readSong(file);
+      // Asignar ID basado en la ruta (se mantiene igual en el tiempo para el mismo archivo)
+      const id = idFor(relPath);
+      song.id = id;
+      cache.songs.push(song);
+      cache.byId.set(id, song);
+      added++;
+    } catch (err) {
+      console.warn('[scanner] Error procesando archivo incremental:', file, err.message);
+    }
+  }
+
+  // Eliminar canciones que ya no existen en disco
+  const toRemove = cache.songs.filter(s => !currentPaths.has(s.relPath));
+  for (const song of toRemove) {
+    cache.byId.delete(song.id);
+    removed++;
+  }
+  cache.songs = cache.songs.filter(s => currentPaths.has(s.relPath));
+
+  // Reordenar por título
+  cache.songs.sort((a, b) => a.title.localeCompare(b.title, 'es'));
+
+  // Actualizar metadatos si fue necesario
+  const withMetadataUpdate = 0;
+  if (added > 0 || removed > 0 || withMetadataUpdate > 0) {
+    cache.scannedAt = Date.now();
+    try {
+      fs.writeFileSync(CACHE_PATH, JSON.stringify({
+        songs: cache.songs,
+        scannedAt: cache.scannedAt,
+        musicPath: MUSIC_DIR
+      }, null, 2));
+      console.log(`[scanner] 💾 ${cache.songs.length} canciones guardadas en caché tras escaneo incremental.`);
+    } catch (err) {
+      console.warn('[scanner] Error guardando caché incremental:', err.message);
+    }
+  }
+
+  console.log(`[scanner] ✅ Incremental: +${added} añadidas, -${removed} eliminadas. Total: ${cache.songs.length}`);
+  return cache;
+}
+
 // ====== ESCANEO PRINCIPAL ======
 
 export async function scanLibrary() {
@@ -173,15 +257,27 @@ export async function scanLibrary() {
           musicPath: parsed.musicPath
         };
         console.log(`[scanner] 📚 ${cache.songs.length} canciones cargadas desde caché.`);
-        return cache;
+      } else {
+        console.log('[scanner] ⚠️ Caché vacía o inválida, se hará escaneo completo.');
+        return await scanFullLibrary();
       }
+    } else {
+      console.log('[scanner] ⚠️ No hay caché, se hará escaneo completo.');
+      return await scanFullLibrary();
     }
   } catch (err) {
     console.warn('[scanner] Error cargando caché:', err.message);
+    return await scanFullLibrary();
   }
-  
-  // Si no hay caché, escanear completo
-  return await scanFullLibrary();
+
+  // Escaneo incremental al iniciar: agrega nuevas canciones sin cambiar IDs existentes
+  try {
+    await incrementalScanLibrary();
+  } catch (err) {
+    console.warn('[scanner] Error en escaneo incremental:', err.message);
+  }
+
+  return cache;
 }
 
 export async function rescanLibrary() {

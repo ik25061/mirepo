@@ -13,11 +13,13 @@ export default function SongRow({
   onLike,
   onDislike,
   onDelete,
+  onFixMetadata,
   showDelete = false,
   showCover = true,
   context = null,
   likedIds, // Set de IDs de canciones favoritas
   onShowLyrics = null,
+  fixingMetadata = null,
 }) {
   const { current, isPlaying, play, togglePlay, addToQueue, removeFromQueue } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -48,7 +50,7 @@ export default function SongRow({
       const songId = song.id;
 
       // Eliminar de la cola de reproducción (esto maneja el paso a la siguiente)
-      removeFromQueue(songId);
+      removeFromQueue(song.id);
 
       // Ejecutar eliminación en el servidor
       await onDelete(song);
@@ -159,20 +161,34 @@ export default function SongRow({
           </button>
         )}
 
-        {/* Eliminar */}
-        {/* {showDelete && onDelete && (
-          <button
-            onClick={handleDelete}
-            className={iconBtn + ' ' + (
-              confirmDelete
-                ? 'bg-red-500/20 text-red-500 opacity-100'
-                : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-500'
-            )}
-            title={confirmDelete ? 'Pulsa de nuevo para confirmar' : 'Eliminar (mover a papelera)'}
-          >
-            {confirmDelete ? <Check size={12} className="sm:size-4" /> : <Trash2 size={12} className="sm:size-4" />}
-          </button>
-        )} */}
+         {/* Eliminar canción */}
+         {showDelete && onDelete && (
+           <button
+             onClick={handleDelete}
+             className={iconBtn + ' ' + (
+               confirmDelete
+                 ? 'bg-red-500/20 text-red-500 opacity-100'
+                 : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-500'
+             )}
+             title={confirmDelete ? 'Pulsa de nuevo para confirmar' : 'Eliminar (mover a papelera)'}
+           >
+             {confirmDelete ? <Check size={12} className="sm:size-4" /> : <Trash2 size={12} className="sm:size-4" />}
+           </button>
+         )}
+
+         {/* Corregir metadatos */}
+         {onFixMetadata && (
+           <button
+             onClick={(e) => {
+               e.stopPropagation();
+               onFixMetadata(song);
+             }}
+             className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary`}
+             title="Corregir metadatos"
+           >
+             <Wand2 size={12} className="sm:size-4" />
+           </button>
+         )}
         {onShowLyrics && (
           <button
             onClick={(e) => {

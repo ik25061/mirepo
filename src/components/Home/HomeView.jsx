@@ -7,6 +7,22 @@ import { usePlayer } from '../../context/PlayerContext.jsx';
 import { api } from '../../lib/api.js';
 import { useState, useEffect, useRef } from 'react';
 
+// ============================================================
+// HANDLE FIX METADATA
+// ============================================================
+const handleFixMetadata = async (song) => {
+  if (!confirm('¿Corregir metadatos de "' + song.title + '"?')) return;
+
+  try {
+    const fullPath = song.relPath.startsWith('music/') ? song.relPath : 'music/' + song.relPath;
+    const result = await api.fixMetadata(fullPath);
+    const newFileName = result.newPath.split('/').pop();
+    alert('✅ ' + result.message + '\n\nNuevo nombre: ' + newFileName);
+  } catch (err) {
+    alert('Error al corregir metadatos: ' + err.message);
+  }
+};
+
 export default function HomeView({ 
   songs, 
   onOpenCollection, 
@@ -150,7 +166,7 @@ export default function HomeView({
         {liked.length > 0 ? (
           <div className="flex flex-col gap-1.5 px-3 pb-4 sm:px-5 sm:pb-5">
             {liked.slice(0, 5).map((song, i) => (
-            <SongRow
+              <SongRow
                 key={song.id}
                 song={song}
                 index={i}
@@ -159,11 +175,11 @@ export default function HomeView({
                 onDislike={onDislike}
                 onDislikeArtist={onDislikeArtist}
                 onDelete={onDelete}
+                onFixMetadata={handleFixMetadata}
                 showDelete
                 context={null}
                 likedIds={likedIds}
               />
-
             ))}
           </div>
         ) : (

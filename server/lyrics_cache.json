@@ -501,6 +501,250 @@
     "title": "Acuerdate de Mi",
     "artist": "Binomio de Oro de América",
     "timestamp": 1783429254808
+  },
+  "f24f7539042bab11": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Дай мне на память",
+    "artist": "Лёха Панчинкэнгиро",
+    "timestamp": 1783496125062
+  },
+  "76c30a3037b7233b": {
+    "lyrics": "la historia de un hombre muy hombre\nQue se murió por hombre\nQuien le manda haber sido tan hombre\n\ny agustin bajaba bajaba a caballo\ny lo traicionaron por calles de bravo\nagustin bajaba bajaba a caballo\ny lo traicionaron por calles de bravo\n\nAgustín bajaba por donde el sabia\nY perdió la vida por maría Garcia\nAgustín bajaba por donde el sabia\nY perdió la vida por maría Garcia\n\nHaber apa hagame segunda\nNo yo no canto desde que me case\nAdemas yo no vivo de eso\nNo sea ranchero hombre\nBueno ay te sigo\nBonito caballo que jaime montaba\nComo era entendido\na señas le hablaba\nBonito caballo que jaime montaba\nComo era entendido\na señas le hablaba\nQue preciosidad de animal\nQue paso mas respeto pa tu padre\nNo apa el caballo\nLe decía vente pa aca y se venía pa aca\nLe decía vete pa alla y se iba pa alla\nLe hablaba por teléfono\nY no contestaba pos si nomas era caballo\nNo secretario\nSi uste tuviera un caballo como ese\nYo se lo compro\nPero yo no te lo vendo animal pos mira\n\nUn amigo del con mala intención\nLe dio una estocada en el corazón\nUn amigo del con mala intención\nLe dio una estocada en el corazón\n\nDonde lo mataron fue en una cantina\nDonde lo velaron fue en case joaquina\nDonde lo mataron fue en una cantina\nDonde lo velaron fue en case joaquina\n\nY que dijo joaquina apa\nPos Le echare una colcha arriba\nNo te vaya a dar un aire\nCriaturita del señor de gran poder\nEl último verso\nPero ora to me sigues\nUuu ya se pico\n\nPalomita blanca piquito dorado\nMurió Agustín jaime por enamorado\nPalomita blanca piquito dorado\nMurió Agustín jaime por enamorado\nSe murió se murió\nPos que lo entierren\nNo se vaya a levantar\nY es un corredero de gente\nAjua",
+    "syncedLines": [
+      {
+        "time": 0.09,
+        "text": "la historia de un hombre muy hombre"
+      },
+      {
+        "time": 4.06,
+        "text": "Que se murió por hombre"
+      },
+      {
+        "time": 5.18,
+        "text": "Quien le manda haber sido tan hombre"
+      },
+      {
+        "time": 6.49,
+        "text": "y agustin bajaba bajaba a caballo"
+      },
+      {
+        "time": 7.15,
+        "text": "y lo traicionaron por calles de bravo"
+      },
+      {
+        "time": 12.84,
+        "text": "agustin bajaba bajaba a caballo"
+      },
+      {
+        "time": 14.44,
+        "text": "y lo traicionaron por calles de bravo"
+      },
+      {
+        "time": 15.64,
+        "text": "Agustín bajaba por donde el sabia"
+      },
+      {
+        "time": 16.54,
+        "text": "Y perdió la vida por maría Garcia"
+      },
+      {
+        "time": 17.58,
+        "text": "Agustín bajaba por donde el sabia"
+      },
+      {
+        "time": 18.84,
+        "text": "Y perdió la vida por maría Garcia"
+      },
+      {
+        "time": 21.71,
+        "text": "Haber apa hagame segunda"
+      },
+      {
+        "time": 23.17,
+        "text": "No yo no canto desde que me case"
+      },
+      {
+        "time": 24.52,
+        "text": "Ademas yo no vivo de eso"
+      },
+      {
+        "time": 26.02,
+        "text": "No sea ranchero hombre"
+      },
+      {
+        "time": 27.44,
+        "text": "Bueno ay te sigo"
+      },
+      {
+        "time": 30.96,
+        "text": "Bonito caballo que jaime montaba"
+      },
+      {
+        "time": 34.77,
+        "text": "Como era entendido"
+      },
+      {
+        "time": 36.49,
+        "text": "a señas le hablaba"
+      },
+      {
+        "time": 38.59,
+        "text": "Bonito caballo que jaime montaba"
+      },
+      {
+        "time": 40.62,
+        "text": "Como era entendido"
+      },
+      {
+        "time": 41.52,
+        "text": "a señas le hablaba"
+      },
+      {
+        "time": 41.98,
+        "text": "Que preciosidad de animal"
+      },
+      {
+        "time": 46.98,
+        "text": "Que paso mas respeto pa tu padre"
+      },
+      {
+        "time": 50.2,
+        "text": "No apa el caballo"
+      },
+      {
+        "time": 52.6,
+        "text": "Le decía vente pa aca y se venía pa aca"
+      },
+      {
+        "time": 66.86,
+        "text": "Le decía vete pa alla y se iba pa alla"
+      },
+      {
+        "time": 70.03,
+        "text": "Le hablaba por teléfono"
+      },
+      {
+        "time": 71.96,
+        "text": "Y no contestaba pos si nomas era caballo"
+      },
+      {
+        "time": 75.23,
+        "text": "No secretario"
+      },
+      {
+        "time": 75.45,
+        "text": "Si uste tuviera un caballo como ese"
+      },
+      {
+        "time": 76.85,
+        "text": "Yo se lo compro"
+      },
+      {
+        "time": 78.88,
+        "text": "Pero yo no te lo vendo animal pos mira"
+      },
+      {
+        "time": 83.47,
+        "text": "Un amigo del con mala intención"
+      },
+      {
+        "time": 87.16,
+        "text": "Le dio una estocada en el corazón"
+      },
+      {
+        "time": 90.97,
+        "text": "Un amigo del con mala intención"
+      },
+      {
+        "time": 94.26,
+        "text": "Le dio una estocada en el corazón"
+      },
+      {
+        "time": 97.32,
+        "text": "Donde lo mataron fue en una cantina"
+      },
+      {
+        "time": 127.21,
+        "text": "Donde lo velaron fue en case joaquina"
+      },
+      {
+        "time": 131.66,
+        "text": "Donde lo mataron fue en una cantina"
+      },
+      {
+        "time": 134.54,
+        "text": "Donde lo velaron fue en case joaquina"
+      },
+      {
+        "time": 137.18,
+        "text": "Y que dijo joaquina apa"
+      },
+      {
+        "time": 140.95,
+        "text": "Pos Le echare una colcha arriba"
+      },
+      {
+        "time": 146.59,
+        "text": "No te vaya a dar un aire"
+      },
+      {
+        "time": 156.22,
+        "text": "Criaturita del señor de gran poder"
+      },
+      {
+        "time": 160.28,
+        "text": "El último verso"
+      },
+      {
+        "time": 160.94,
+        "text": "Pero ora to me sigues"
+      },
+      {
+        "time": 164.48,
+        "text": "Uuu ya se pico"
+      },
+      {
+        "time": 170.85,
+        "text": "Palomita blanca piquito dorado"
+      },
+      {
+        "time": 172.63,
+        "text": "Murió Agustín jaime por enamorado"
+      },
+      {
+        "time": 178.47,
+        "text": "Palomita blanca piquito dorado"
+      },
+      {
+        "time": 182.27,
+        "text": "Murió Agustín jaime por enamorado"
+      },
+      {
+        "time": 183.35,
+        "text": "Se murió se murió"
+      },
+      {
+        "time": 183.56,
+        "text": "Pos que lo entierren"
+      },
+      {
+        "time": 183.96,
+        "text": "No se vaya a levantar"
+      },
+      {
+        "time": 184.25,
+        "text": "Y es un corredero de gente"
+      },
+      {
+        "time": 185.46,
+        "text": "Ajua"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "Agustín Jaime",
+    "artist": "El Piporro",
+    "timestamp": 1783497038117
   }
-
 }

@@ -80,14 +80,6 @@ function Shell() {
     return () => window.removeEventListener('resize', handler);
   }, []);
 
-  // ============================================================
-  // SI LA CANCIÓN QUE SUENA SE ELIMINA, PASAR A LA SIGUIENTE
-  // ============================================================
-  useEffect(() => {
-    if (current && !allSongsLoading && !allSongs.some((s) => s.id === current.id)) {
-      next();
-    }
-  }, [allSongs, allSongsLoading, current, next]);
 
   // ============================================================
   // FUNCIÓN PARA CERRAR NOWPLAYING

@@ -12,7 +12,6 @@ import { Search, Play, Trash2, Wand2 } from 'lucide-react';
 import SongRow from '../SongRow.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import { api } from '../../lib/api.js';
-import path from 'node:path';
 
 // ============================================================
 // LOADING SKELETON
@@ -87,7 +86,8 @@ export default function LibraryView({
     try {
       const fullPath = song.relPath.startsWith('music/') ? song.relPath : 'music/' + song.relPath;
       const result = await api.fixMetadata(fullPath);
-      alert('✅ ' + result.message + '\n\nNuevo nombre: ' + path.basename(result.newPath));
+      const newFileName = result.newPath.split('/').pop();
+      alert('✅ ' + result.message + '\n\nNuevo nombre: ' + newFileName);
     } catch (err) {
       alert('Error al corregir metadatos: ' + err.message);
     } finally {
@@ -223,6 +223,8 @@ export default function LibraryView({
                     onLike={onLike}
                     onDislike={onDislike}
                     onDelete={onDelete}
+                    onFixMetadata={handleFixMetadata}
+                    fixingMetadata={fixingMetadata}
                     showDelete
                     context={null}
                     likedIds={likedIds}
