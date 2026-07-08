@@ -22,6 +22,11 @@ export function useAllSongs(userId) {
       return;
     }
     
+    if (!userId) {
+      console.log('[useAllSongs] ⏳ userId no disponible, esperando...');
+      return;
+    }
+    
     try {
       setLoading(true);
       console.log('[useAllSongs] 📥 Cargando todas las canciones...');

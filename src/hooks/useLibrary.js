@@ -29,14 +29,20 @@ export function useLibrary(userId, onToggleLiked, onRemoveSong) {
   // REFERENCIAS
   // ============================================================
   const initialLoadDoneRef = useRef(false);
+  const prevUserIdRef = useRef(userId);
   const PAGE_SIZE = 100;
 
   // ============================================================
   // CARGA INICIAL
   // ============================================================
-  const loadInitial = useCallback(async () => {
-    if (initialLoadDoneRef.current) {
+  const loadInitial = useCallback(async (force = false) => {
+    if (initialLoadDoneRef.current && !force) {
       console.log('[useLibrary] 📚 Carga inicial ya hecha');
+      return;
+    }
+    
+    if (!userId) {
+      console.log('[useLibrary] ⏳ userId no disponible, esperando...');
       return;
     }
     
@@ -183,12 +189,19 @@ export function useLibrary(userId, onToggleLiked, onRemoveSong) {
   }, [loadInitial]);
 
   // ============================================================
-  // CARGA INICIAL - SOLO UNA VEZ
+  // CARGA INICIAL - CUANDO CAMBIA userId
   // ============================================================
   useEffect(() => {
-    console.log('[useLibrary] 🔄 useEffect - cargando inicial...');
+    console.log('[useLibrary] 🔄 useEffect - userId:', userId);
+    // Si userId cambió, forzar recarga
+    if (prevUserIdRef.current !== userId) {
+      initialLoadDoneRef.current = false;
+      prevUserIdRef.current = userId;
+    }
     loadInitial();
-  }, []);
+  }, [loadInitial]);
+
+  // ============================================================
 
   // ============================================================
   // TOGGLE LIKE - INDEPENDIENTE DE SI LA CANCIÓN ESTÁ EN LA LISTA
