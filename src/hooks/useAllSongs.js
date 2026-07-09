@@ -8,11 +8,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api.js';
 
-export function useAllSongs() {
+export function useAllSongs({ enabled = true } = {}) {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const userId = user?.id;
   const [allSongs, setAllSongs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState(null);
   const mountedRef = useRef(true);
   const loadedRef = useRef(false);
@@ -20,6 +20,13 @@ export function useAllSongs() {
 
   // Siempre cargar sin caché para obtener datos actualizados
   const loadAllSongs = useCallback(async (force = false) => {
+    if (!enabled) {
+      if (mountedRef.current) {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (loadedRef.current && !force) {
       console.log('[useAllSongs] 📚 Ya cargadas, saltando');
       return;
@@ -58,6 +65,11 @@ export function useAllSongs() {
 
   useEffect(() => {
     mountedRef.current = true;
+    if (!enabled) {
+      setLoading(false);
+      return () => { mountedRef.current = false; };
+    }
+
     // Si el userId cambió, forzar recarga
     if (prevUserIdRef.current !== userId) {
       loadedRef.current = false;
@@ -65,7 +77,7 @@ export function useAllSongs() {
     }
     loadAllSongs();
     return () => { mountedRef.current = false; };
-  }, [loadAllSongs]);
+  }, [loadAllSongs, enabled]);
 
   // ============================================================
   // TOGGLE LIKE EN ALLSONGS - ACTUALIZA EL ESTADO LIKED

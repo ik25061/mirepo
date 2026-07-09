@@ -5,6 +5,7 @@
  */
 
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { OfflineProvider, useOffline } from './context/OfflineContext.jsx';
 import { PlayerProvider, usePlayer } from './context/PlayerContext';
 import { useLibrary } from './hooks/useLibrary';
 import { useAllSongs } from './hooks/useAllSongs';
@@ -30,6 +31,16 @@ function Shell() {
   // AUTENTICACIÓN
   // ============================================================
   const { isAuthenticated, loading: authLoading, user } = useAuth();
+  const {
+    localSongs,
+    localFolderName,
+    offlineMode,
+    localLoading,
+    localError,
+    supported: offlineSupported,
+    openLocalFolder,
+    toggleLocalLike,
+  } = useOffline();
 
   // ============================================================
   // REPRODUCTOR
@@ -39,15 +50,29 @@ function Shell() {
   // ============================================================
   // TODAS LAS CANCIONES
   // ============================================================
-  const { allSongs, loading: allSongsLoading, toggleLiked, removeSong: removeSongFromAllSongs } = useAllSongs();
-
+  const { allSongs: serverAllSongs, loading: allSongsLoading, toggleLiked, removeSong: removeSongFromAllSongs } = useAllSongs({ enabled: !offlineMode });
+  
   // ============================================================
   // BIBLIOTECA
   // ============================================================
-  const lib = useLibrary(toggleLiked, removeSongFromAllSongs);
-
-
-  // ============================================================
+  const lib = useLibrary(toggleLiked, removeSongFromAllSongs, { enabled: !offlineMode });
+  
+  const allSongs = offlineMode ? localSongs : serverAllSongs;
+  const library = offlineMode
+    ? {
+        ...lib,
+        songs: localSongs,
+        counts: { total: localSongs.length, trash: 0 },
+        loading: localLoading,
+        error: localError,
+        hasMore: false,
+        isLoadingMore: false,
+        toggleLike: toggleLocalLike,
+        dislikeSong: () => {},
+        dislikeArtist: () => {},
+        removeSong: () => {},
+      }
+    : lib;
   // NAVEGACIÓN
   // ============================================================
   const [view, setView] = useState({ type: 'home' });
@@ -145,7 +170,7 @@ function Shell() {
   // ============================================================
   // PANTALLA DE CARGA
   // ============================================================
-  if (authLoading || lib.loading || allSongsLoading) {
+  if (authLoading || library.loading || allSongsLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background" style={{ background: '#121212' }}>
         <Loader2 className="animate-spin text-primary" size={32} />
@@ -156,8 +181,8 @@ function Shell() {
   // ============================================================
   // PANTALLA DE LOGIN
   // ============================================================
-  if (!isAuthenticated) {
-    return <LoginScreen />;
+  if (!isAuthenticated && !offlineMode) {
+    return <LoginScreen onOpenLocal={openLocalFolder} offlineSupported={offlineSupported} />;
   }
 
   // ============================================================
@@ -430,9 +455,11 @@ function Shell() {
 export default function App() {
   return (
     <AuthProvider>
-      <PlayerProvider>
-        <Shell />
-      </PlayerProvider>
+      <OfflineProvider>
+        <PlayerProvider>
+          <Shell />
+        </PlayerProvider>
+      </OfflineProvider>
     </AuthProvider>
   );
 }

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Play, Pause, Heart, ThumbsDown, Trash2, Check, Wand2, ListMusic, PlayCircle, ListEnd } from 'lucide-react';
+import { Play, Pause, Heart, ThumbsDown, Trash2, Check, Wand2, ListMusic, PlayCircle, ListEnd, Download } from 'lucide-react';
 import Cover from './Cover.jsx';
 import NowPlayingBars from './Player/NowPlayingBars.jsx';
 import { formatTime } from '../lib/format.js';
 import { usePlayer } from '../context/PlayerContext.jsx';
+import { audioUrl } from '../lib/api.js';
 import { FileText } from 'lucide-react';
 
 export default function SongRow({
@@ -189,6 +190,45 @@ export default function SongRow({
              <Wand2 size={12} className="sm:size-4" />
            </button>
          )}
+
+         <button
+           onClick={async (e) => {
+             e.stopPropagation();
+             try {
+               let downloadUrl = null;
+               let filename = song.title.replace(/[^a-zA-Z0-9-_ ]/g, '') || 'mirepo-track';
+
+               if (song.local && song.fileHandle) {
+                 const file = await song.fileHandle.getFile();
+                 downloadUrl = URL.createObjectURL(file);
+                 filename = file.name;
+               } else {
+                 const response = await fetch(audioUrl(song.id));
+                 if (!response.ok) throw new Error('No se pudo descargar la canción');
+                 const blob = await response.blob();
+                 const extension = song.relPath?.split('.').pop() || response.headers.get('content-type')?.split('/')[1] || 'mp3';
+                 downloadUrl = URL.createObjectURL(blob);
+                 filename = `${filename}.${extension}`;
+               }
+
+               const link = document.createElement('a');
+               link.href = downloadUrl;
+               link.download = filename;
+               document.body.appendChild(link);
+               link.click();
+               link.remove();
+               URL.revokeObjectURL(downloadUrl);
+             } catch (err) {
+               console.error('Error descargando canción:', err);
+               alert('Error al descargar la canción.');
+             }
+           }}
+           className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary`}
+           title="Descargar canción"
+         >
+           <Download size={12} className="sm:size-4" />
+         </button>
+
         {onShowLyrics && (
           <button
             onClick={(e) => {

@@ -13,6 +13,7 @@
 
 import { createContext, useContext, useCallback, useEffect, useRef, useState } from 'react';
 import { audioUrl } from '../lib/api.js';
+import { useOffline } from './OfflineContext.jsx';
 
 // ============================================================
 // 1. CREACIÓN DEL CONTEXTO
@@ -67,6 +68,7 @@ export function PlayerProvider({ children }) {
   const [volume, setVolume] = useState(0.9); // Volumen (0-1)
   const [crossfadeSec, setCrossfadeSec] = useState(1.5); // Duración del fade (segundos)
   const [repeatMode, setRepeatMode] = useState(0); // 0=none, 1=all, 2=one
+  const { getLocalSongUrl } = useOffline();
 
   // ============================================================
   // 3.3 REFERENCIAS PARA VALORES DINÁMICOS (useRef)
@@ -183,7 +185,7 @@ export function PlayerProvider({ children }) {
   // 3.9 FUNCIÓN - playIndex (Reproducir una canción por índice)
   // ============================================================
 
-  const playIndex = useCallback((idx, { crossfade = true } = {}) => {
+  const playIndex = useCallback(async (idx, { crossfade = true } = {}) => {
     const q = queueRef.current;
     if (idx < 0 || idx >= q.length) return;
     const song = q[idx];
@@ -206,7 +208,19 @@ export function PlayerProvider({ children }) {
     }
     crossfadingRef.current = true;
 
-    incoming.src = audioUrl(song.id);
+    let sourceUrl = audioUrl(song.id);
+    if (song.local) {
+      try {
+        const localUrl = await getLocalSongUrl(song);
+        if (localUrl) {
+          sourceUrl = localUrl;
+        }
+      } catch (error) {
+        console.warn('[Player] No se pudo cargar canción local, usando servidor si está disponible:', error);
+      }
+    }
+
+    incoming.src = sourceUrl;
     incoming.currentTime = 0;
     incoming.volume = 0;
 

@@ -13,7 +13,7 @@ import { api } from '../lib/api.js';
 
 // HOOK PRINCIPAL
 // ============================================================
-export function useLibrary(onToggleLiked, onRemoveSong) {
+export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {}) {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const userId = user?.id;
 
@@ -39,6 +39,11 @@ export function useLibrary(onToggleLiked, onRemoveSong) {
   // CARGA INICIAL
   // ============================================================
   const loadInitial = useCallback(async (force = false) => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+
     if (initialLoadDoneRef.current && !force) {
       console.log('[useLibrary] 📚 Carga inicial ya hecha');
       return;
@@ -196,6 +201,11 @@ export function useLibrary(onToggleLiked, onRemoveSong) {
   // CARGA INICIAL - CUANDO CAMBIA userId
   // ============================================================
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+
     console.log('[useLibrary] 🔄 useEffect - userId:', userId);
     // Si userId cambió, forzar recarga
     if (prevUserIdRef.current !== userId) {
@@ -203,7 +213,7 @@ export function useLibrary(onToggleLiked, onRemoveSong) {
       prevUserIdRef.current = userId;
     }
     loadInitial();
-  }, [loadInitial]);
+  }, [loadInitial, enabled]);
 
   // ============================================================
 
