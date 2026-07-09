@@ -8,11 +8,14 @@
  */
 
 import { useCallback, useEffect, useState, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api.js';
 
 // HOOK PRINCIPAL
 // ============================================================
-export function useLibrary(userId, onToggleLiked, onRemoveSong) {
+export function useLibrary(onToggleLiked, onRemoveSong) {
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const userId = user?.id;
 
   // ============================================================
   // ESTADO
@@ -43,6 +46,7 @@ export function useLibrary(userId, onToggleLiked, onRemoveSong) {
     
     if (!userId) {
       console.log('[useLibrary] ⏳ userId no disponible, esperando...');
+      setLoading(false);
       return;
     }
     

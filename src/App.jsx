@@ -39,12 +39,12 @@ function Shell() {
   // ============================================================
   // TODAS LAS CANCIONES
   // ============================================================
-  const { allSongs, loading: allSongsLoading, toggleLiked, removeSong: removeSongFromAllSongs } = useAllSongs(user?.id);
+  const { allSongs, loading: allSongsLoading, toggleLiked, removeSong: removeSongFromAllSongs } = useAllSongs();
 
   // ============================================================
   // BIBLIOTECA
   // ============================================================
-  const lib = useLibrary(user?.id, toggleLiked, removeSongFromAllSongs);
+  const lib = useLibrary(toggleLiked, removeSongFromAllSongs);
 
 
   // ============================================================

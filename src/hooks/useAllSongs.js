@@ -5,9 +5,12 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api.js';
 
-export function useAllSongs(userId) {
+export function useAllSongs() {
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const userId = user?.id;
   const [allSongs, setAllSongs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,6 +27,9 @@ export function useAllSongs(userId) {
     
     if (!userId) {
       console.log('[useAllSongs] ⏳ userId no disponible, esperando...');
+      if (mountedRef.current) {
+        setLoading(false);
+      }
       return;
     }
     
