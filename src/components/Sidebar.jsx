@@ -1,10 +1,11 @@
-import { Home, Library, Disc3, Trash2, Search, Heart, ListMusic } from 'lucide-react';
+import { Home, Library, Disc3, Trash2, Search, Heart, ListMusic, Download } from 'lucide-react';
 
 export default function Sidebar({ view, onNavigate, trashCount = 0 }) {
   const items = [
     { id: 'home', label: 'Inicio', icon: Home },
     { id: 'search', label: 'Buscar', icon: Search },
     { id: 'library', label: 'Biblioteca', icon: Library },
+    { id: 'downloads', label: 'Descargas', icon: Download }, // <-- NUEVO
     { id: 'likedSongs', label: 'Me gusta', icon: Heart },
     { id: 'playlists', label: 'Listas', icon: ListMusic },
   ];
@@ -17,7 +18,6 @@ export default function Sidebar({ view, onNavigate, trashCount = 0 }) {
         </div>
         <span className="hidden font-display text-xl font-700 tracking-tight sm:block">Mirepo</span>
       </div>
-
       <nav className="flex flex-col gap-1.5">
         {items.map(({ id, label, icon: Icon }) => {
           const active = view?.type === id;

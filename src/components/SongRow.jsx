@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Play, Pause, Heart, ThumbsDown, Trash2, Check, Wand2, ListMusic, PlayCircle, ListEnd, Download } from 'lucide-react';
+import { 
+  Play, Pause, Heart, ThumbsDown, Trash2, Check, Wand2, 
+  ListMusic, PlayCircle, ListEnd, Download, FileText 
+} from 'lucide-react';
 import Cover from './Cover.jsx';
 import NowPlayingBars from './Player/NowPlayingBars.jsx';
 import { formatTime } from '../lib/format.js';
 import { usePlayer } from '../context/PlayerContext.jsx';
 import { audioUrl } from '../lib/api.js';
-import { FileText } from 'lucide-react';
+import { useDownload } from '../context/DownloadContext.jsx';
 
 export default function SongRow({
   song,
@@ -25,6 +28,10 @@ export default function SongRow({
   const { current, isPlaying, play, togglePlay, addToQueue, removeFromQueue } = usePlayer();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isCurrent = current?.id === song.id;
+
+  // ===== OBTENER ESTADO DE DESCARGA =====
+  const { isDownloaded, downloadSong } = useDownload();
+  const songDownloaded = isDownloaded(song.id);
 
   // Calcular si la canción está liked a partir del Set de likedIds
   const isLiked = likedIds?.has(song.id) ?? song.liked ?? false;
@@ -66,6 +73,26 @@ export default function SongRow({
     }
   };
 
+  // ===== FUNCIÓN PARA DESCARGAR CANCIÓN INDIVIDUAL =====
+  const handleDownload = async (e) => {
+    e.stopPropagation();
+    
+    // Si ya está descargada, no hacer nada
+    if (songDownloaded) return;
+    
+    try {
+      const success = await downloadSong(song);
+      if (success) {
+        console.log('[SongRow] Canción descargada:', song.title);
+      } else {
+        alert('Error al descargar la canción.');
+      }
+    } catch (err) {
+      console.error('Error descargando canción:', err);
+      alert('Error al descargar la canción.');
+    }
+  };
+
   const iconBtn = 'grid h-6 w-6 place-items-center rounded-full text-muted-foreground transition hover:text-foreground hover:bg-muted sm:h-8 sm:w-8';
 
   return (
@@ -94,10 +121,15 @@ export default function SongRow({
         </span>
       </button>
 
-      {/* ===== PORTADA ===== */}
+      {/* ===== PORTADA CON BADGE DE DESCARGA ===== */}
       {showCover && (
-        <div onClick={handlePlay} className="cursor-pointer shrink-0">
+        <div onClick={handlePlay} className="cursor-pointer shrink-0 relative">
           <Cover song={song} className="h-7 w-7 sm:h-10 sm:w-10" rounded="rounded-md" />
+          {songDownloaded && (
+            <div className="absolute -top-1 -right-1 rounded-full bg-primary p-0.5 shadow-lg">
+              <Download size={10} className="text-primary-foreground" fill="currentColor" />
+            </div>
+          )}
         </div>
       )}
 
@@ -162,73 +194,54 @@ export default function SongRow({
           </button>
         )}
 
-         {/* Eliminar canción */}
-         {showDelete && onDelete && (
-           <button
-             onClick={handleDelete}
-             className={iconBtn + ' ' + (
-               confirmDelete
-                 ? 'bg-red-500/20 text-red-500 opacity-100'
-                 : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-500'
-             )}
-             title={confirmDelete ? 'Pulsa de nuevo para confirmar' : 'Eliminar (mover a papelera)'}
-           >
-             {confirmDelete ? <Check size={12} className="sm:size-4" /> : <Trash2 size={12} className="sm:size-4" />}
-           </button>
-         )}
+        {/* Eliminar canción */}
+        {showDelete && onDelete && (
+          <button
+            onClick={handleDelete}
+            className={iconBtn + ' ' + (
+              confirmDelete
+                ? 'bg-red-500/20 text-red-500 opacity-100'
+                : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-500'
+            )}
+            title={confirmDelete ? 'Pulsa de nuevo para confirmar' : 'Eliminar (mover a papelera)'}
+          >
+            {confirmDelete ? <Check size={12} className="sm:size-4" /> : <Trash2 size={12} className="sm:size-4" />}
+          </button>
+        )}
 
-         {/* Corregir metadatos */}
-         {onFixMetadata && (
-           <button
-             onClick={(e) => {
-               e.stopPropagation();
-               onFixMetadata(song);
-             }}
-             className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary`}
-             title="Corregir metadatos"
-           >
-             <Wand2 size={12} className="sm:size-4" />
-           </button>
-         )}
+        {/* Corregir metadatos */}
+        {onFixMetadata && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onFixMetadata(song);
+            }}
+            className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary`}
+            title="Corregir metadatos"
+          >
+            <Wand2 size={12} className="sm:size-4" />
+          </button>
+        )}
 
-         <button
-           onClick={async (e) => {
-             e.stopPropagation();
-             try {
-               let downloadUrl = null;
-               let filename = song.title.replace(/[^a-zA-Z0-9-_ ]/g, '') || 'mirepo-track';
+        {/* ===== BOTÓN DE DESCARGA INDIVIDUAL ===== */}
+        <button
+          onClick={handleDownload}
+          disabled={songDownloaded}
+          className={`${iconBtn} ${
+            songDownloaded 
+              ? 'text-primary' 
+              : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary'
+          }`}
+          title={songDownloaded ? 'Ya descargada' : 'Descargar canción'}
+        >
+          <Download 
+            size={12} 
+            className="sm:size-4" 
+            fill={songDownloaded ? 'currentColor' : 'none'} 
+          />
+        </button>
 
-               if (song.local && song.fileHandle) {
-                 const file = await song.fileHandle.getFile();
-                 downloadUrl = URL.createObjectURL(file);
-                 filename = file.name;
-               } else {
-                 const response = await fetch(audioUrl(song.id));
-                 if (!response.ok) throw new Error('No se pudo descargar la canción');
-                 const blob = await response.blob();
-                 const extension = song.relPath?.split('.').pop() || response.headers.get('content-type')?.split('/')[1] || 'mp3';
-                 downloadUrl = URL.createObjectURL(blob);
-                 filename = `${filename}.${extension}`;
-               }
-
-               const link = document.createElement('a');
-               link.href = downloadUrl;
-               link.download = filename;
-               document.body.appendChild(link);
-               link.click();
-               link.remove();
-               URL.revokeObjectURL(downloadUrl);
-             } catch (err) {
-               console.error('Error descargando canción:', err);
-               alert('Error al descargar la canción.');
-             }
-           }}
-           className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary`}
-           title="Descargar canción"
-         >
-           <Download size={12} className="sm:size-4" />
-         </button>
-
+        {/* Ver letra */}
         {onShowLyrics && (
           <button
             onClick={(e) => {
@@ -241,6 +254,7 @@ export default function SongRow({
             <FileText size={12} className="sm:size-4" />
           </button>
         )}
+        
         {/* Duración */}
         <span className="ml-1 w-7 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground sm:w-9 sm:text-xs">
           {formatTime(song.duration)}

@@ -14,6 +14,7 @@
 import { createContext, useContext, useCallback, useEffect, useRef, useState } from 'react';
 import { audioUrl } from '../lib/api.js';
 import { useOffline } from './OfflineContext.jsx';
+import { getDownloadedSong } from '../hooks/useDownloads.js';
 
 // ============================================================
 // 1. CREACIÓN DEL CONTEXTO
@@ -69,6 +70,7 @@ export function PlayerProvider({ children }) {
   const [crossfadeSec, setCrossfadeSec] = useState(1.5); // Duración del fade (segundos)
   const [repeatMode, setRepeatMode] = useState(0); // 0=none, 1=all, 2=one
   const { getLocalSongUrl } = useOffline();
+  const downloadedObjectUrlRef = useRef(null);
 
   // ============================================================
   // 3.3 REFERENCIAS PARA VALORES DINÁMICOS (useRef)
@@ -209,6 +211,25 @@ export function PlayerProvider({ children }) {
     crossfadingRef.current = true;
 
     let sourceUrl = audioUrl(song.id);
+
+    const resolveDownloadedUrl = async () => {
+      try {
+        const downloaded = await getDownloadedSong(song.id);
+        if (downloaded?.audioBlob instanceof Blob) {
+          if (downloadedObjectUrlRef.current) {
+            URL.revokeObjectURL(downloadedObjectUrlRef.current);
+            downloadedObjectUrlRef.current = null;
+          }
+          const blobUrl = URL.createObjectURL(downloaded.audioBlob);
+          downloadedObjectUrlRef.current = blobUrl;
+          return blobUrl;
+        }
+      } catch (error) {
+        console.warn('[Player] Error accediendo a descarga local:', error);
+      }
+      return null;
+    };
+
     if (song.local) {
       try {
         const localUrl = await getLocalSongUrl(song);
@@ -217,6 +238,11 @@ export function PlayerProvider({ children }) {
         }
       } catch (error) {
         console.warn('[Player] No se pudo cargar canción local, usando servidor si está disponible:', error);
+      }
+    } else {
+      const downloadedUrl = await resolveDownloadedUrl();
+      if (downloadedUrl) {
+        sourceUrl = downloadedUrl;
       }
     }
 
@@ -256,9 +282,13 @@ export function PlayerProvider({ children }) {
       if (ratio >= 1) {
         clearFade();
         if (outgoing && outgoing !== incoming) {
+          const outgoingSrc = outgoing.src;
           outgoing.pause();
           outgoing.currentTime = 0;
           outgoing.removeAttribute('src');
+          if (outgoingSrc?.startsWith('blob:')) {
+            URL.revokeObjectURL(outgoingSrc);
+          }
         }
         activeRef.current = activeRef.current === 0 ? 1 : 0;
         crossfadingRef.current = false;
@@ -830,6 +860,15 @@ export function PlayerProvider({ children }) {
       if (intervalId) clearInterval(intervalId);
     };
   }, [next]);
+
+  useEffect(() => {
+    return () => {
+      if (downloadedObjectUrlRef.current) {
+        URL.revokeObjectURL(downloadedObjectUrlRef.current);
+        downloadedObjectUrlRef.current = null;
+      }
+    };
+  }, []);
 
   // ============================================================
   // 3.20 EFFECT - Actualizar duración cuando cambia la canción

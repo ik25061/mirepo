@@ -1,6 +1,16 @@
 {
   "0": {
-    "songs": {},
+    "songs": {
+      "6a41acd68487ba2c": {
+        "liked": true
+      },
+      "df5f66b75f9d808c": {
+        "liked": true
+      },
+      "fe972b8b013033ea": {
+        "liked": true
+      }
+    },
     "artists": {}
   },
   "1": {
@@ -516,6 +526,30 @@
       },
       "667255bd99a2500c": {
         "liked": true
+      },
+      "8d40d70109c41acc": {
+        "liked": true
+      },
+      "1de5710b52228f15": {
+        "liked": true
+      },
+      "2cb97ac1747ef8f2": {
+        "liked": true
+      },
+      "cd598790444f50a3": {
+        "liked": true
+      },
+      "0e467acb103fb609": {
+        "liked": true
+      },
+      "b0cc9ada97d359df": {
+        "hidden": true
+      },
+      "b1a991fd26928b37": {
+        "hidden": true
+      },
+      "016603dd73fb1505": {
+        "liked": false
       }
     },
     "artists": {

@@ -10,6 +10,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { ArrowLeft, Play, Shuffle, Heart, Loader2 } from 'lucide-react';
 import SongRow from './SongRow.jsx';
+import DownloadAllButton from './DownloadAllButton.jsx';
 import { usePlayer } from '../context/PlayerContext.jsx';
 import { formatTime } from '../lib/format.js';
 import { api } from '../lib/api.js';
@@ -96,20 +97,30 @@ export default function LikedSongsView({
 
           {/* ===== BOTONES DE REPRODUCCIÓN ===== */}
           {filteredSongs.length > 0 && (
-            <div className="mt-4 flex items-center justify-center gap-3 sm:justify-start">
-              <button
-                onClick={() => play(filteredSongs[0], likedSongs)}
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow transition hover:scale-105"
-              >
-                <Play size={18} fill="currentColor" /> Reproducir
-              </button>
-              <button
-                onClick={() => shufflePlay(likedSongs)}
-                className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-6 py-2.5 text-sm font-semibold text-foreground shadow transition hover:scale-105"
-                title="Reproducción aleatoria"
-              >
-                <Shuffle size={16} /> Aleatorio
-              </button>
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-start">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => play(filteredSongs[0], likedSongs)}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow transition hover:scale-105"
+                >
+                  <Play size={18} fill="currentColor" /> Reproducir
+                </button>
+                <button
+                  onClick={() => shufflePlay(likedSongs)}
+                  className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-6 py-2.5 text-sm font-semibold text-foreground shadow transition hover:scale-105"
+                  title="Reproducción aleatoria"
+                >
+                  <Shuffle size={16} /> Aleatorio
+                </button>
+              </div>
+              <DownloadAllButton
+                songs={filteredSongs}
+                onComplete={(result) => {
+                  if (result && result.successCount > 0) {
+                    console.log('[LikedSongsView] Descarga completada:', result);
+                  }
+                }}
+              />
             </div>
           )}
         </div>

@@ -1,11 +1,11 @@
-import { Home, Search, Library, Music2, Copy } from 'lucide-react';
+import { Home, Search, Library, Music2, Download } from 'lucide-react';
 
 export default function BottomNav({ activeView, onViewChange, hasCurrentTrack }) {
   const tabs = [
     { id: 'home', label: 'Inicio', icon: Home },
     { id: 'search', label: 'Buscar', icon: Search },
     { id: 'library', label: 'Biblioteca', icon: Library },
-    // { id: 'duplicates', label: 'Duplicados', icon: Copy },
+    { id: 'downloads', label: 'Descargas', icon: Download }, // <-- NUEVO
     { id: 'nowplaying', label: 'Reproduciendo', icon: Music2 },
   ];
 
