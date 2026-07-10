@@ -1,26 +1,62 @@
 // ====== CONFIGURACIÓN DE IP DINÁMICA ======
 let API_URL = '';
 let apiUrlPromise = null;
+const DEFAULT_PORT = '5001';
+const API_URL_STORAGE_KEY = 'mirepo_api_url';
 
-// En src/lib/api.js, cambia la función detectServerIP por esta:
-export async function detectServerIP() {
-  const host = window.location.hostname;
-  const port = '5001';
-  
-  // En Android/iOS (Capacitor), host suele ser 'localhost'
-  // Pero no queremos que intente fetch('/api/config/ip') porque dará el error del HTML
-  
-  const isMobile = window.location.protocol === 'capacitor:' || 
-                   window.location.protocol === 'http:' && (host === 'localhost' || host === '127.0.0.1');
+async function probeServer(baseUrl) {
+  if (!baseUrl || typeof window === 'undefined') return false;
 
-  if (isMobile) {
-    // Para el celular, forzamos el prompt directamente si no hay IP
-    const ip = prompt('Ingresa la IP de tu computadora (WiFi):', '172.16.12.4') || '172.16.12.4';
-    API_URL = `http://${ip}:${port}`;
-  } else {
-    API_URL = `http://${host}:${port}`;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1500);
+    const response = await fetch(`${baseUrl}/api/test`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    return response.ok;
+  } catch {
+    return false;
   }
-  
+}
+
+export async function detectServerIP() {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  const storedUrl = window.localStorage.getItem(API_URL_STORAGE_KEY);
+  if (storedUrl) {
+    API_URL = storedUrl.replace(/\/$/, '');
+    return API_URL;
+  }
+
+  const isCapacitor = window.location.protocol === 'capacitor:' || window.Capacitor?.isNativePlatform?.();
+  if (!isCapacitor) {
+    API_URL = '';
+    return API_URL;
+  }
+
+  const candidates = [
+    `http://localhost:${DEFAULT_PORT}`,
+    `http://127.0.0.1:${DEFAULT_PORT}`,
+    `http://10.0.2.2:${DEFAULT_PORT}`,
+    `http://${window.location.hostname}:${DEFAULT_PORT}`,
+  ];
+
+  for (const candidate of candidates) {
+    if (await probeServer(candidate)) {
+      API_URL = candidate;
+      window.localStorage.setItem(API_URL_STORAGE_KEY, API_URL);
+      return API_URL;
+    }
+  }
+
+  const enteredIp = window.prompt('Ingresa la IP de tu computadora (WiFi):', '172.16.12.4');
+  const normalizedIp = enteredIp ? enteredIp.replace(/^https?:\/\//, '').replace(/\/$/, '') : '172.16.12.4';
+  API_URL = `http://${normalizedIp}:${DEFAULT_PORT}`;
+  window.localStorage.setItem(API_URL_STORAGE_KEY, API_URL);
   return API_URL;
 }
 
@@ -47,7 +83,7 @@ ensureApiUrl();
 async function request(url, options = {}) {
   const baseUrl = await ensureApiUrl();
   const fullUrl = `${baseUrl}${url}`;
-  console.log('📡 Petición a:', fullUrl);
+  console.log('📡 Petición a:', fullUrl || url);
   
   try {
     const response = await fetch(fullUrl, {
@@ -187,7 +223,7 @@ export const api = {
   }),
 };
 
-export const audioUrl = (id) => `${API_URL}/audio/${id}`;
-export const coverUrl = (id) => `${API_URL}/cover/${id}`;
-export const artistCoverUrl = (artist) => `${API_URL}/artist-cover/${encodeURIComponent(artist)}`;
-export const serverUrl = API_URL;
+export const audioUrl = (id) => `${getApiUrl() || ''}/audio/${id}`;
+export const coverUrl = (id) => `${getApiUrl() || ''}/cover/${id}`;
+export const artistCoverUrl = (artist) => `${getApiUrl() || ''}/artist-cover/${encodeURIComponent(artist)}`;
+export const serverUrl = getApiUrl();
