@@ -1,11 +1,11 @@
 const CACHE_NAME = 'mirepo-pwa-cache-v1';
 const ASSETS = [
+  '/',
   '/index.html',
-  '/manifest.webmanifest',
-  '/pwa-icon.svg',
   '/src/main.jsx',
   '/src/App.jsx',
   '/src/index.css',
+  '/favicon.ico',
 ];
 
 self.addEventListener('install', (event) => {
@@ -44,7 +44,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => caches.match(request).then((cached) => cached || new Response(null, { status: 503 })) )
+        .catch(() => caches.match(request).then((cached) => cached || new Response(null, { status: 503 })))
     );
     return;
   }

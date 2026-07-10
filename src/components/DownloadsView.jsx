@@ -122,7 +122,7 @@ export default function DownloadsView({ onBack }) {
           </p>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto rounded-xl border border-border bg-surface/50 p-2">
+        <div className="flex-1 overflow-y-auto rounded-xl border border-border bg-surface/50 p-2" style={{ minHeight: 400 }}>
           <div className="flex flex-col gap-1">
             {downloadedSongs.map((song, i) => {
               const isCurrent = current?.id === song.id;

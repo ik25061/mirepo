@@ -195,7 +195,7 @@ export default function SongRow({
         )}
 
         {/* Eliminar canción */}
-        {showDelete && onDelete && (
+        {/* {showDelete && onDelete && (
           <button
             onClick={handleDelete}
             className={iconBtn + ' ' + (
@@ -207,10 +207,10 @@ export default function SongRow({
           >
             {confirmDelete ? <Check size={12} className="sm:size-4" /> : <Trash2 size={12} className="sm:size-4" />}
           </button>
-        )}
+        )} */}
 
         {/* Corregir metadatos */}
-        {onFixMetadata && (
+        {/* {onFixMetadata && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -221,10 +221,10 @@ export default function SongRow({
           >
             <Wand2 size={12} className="sm:size-4" />
           </button>
-        )}
+        )} */}
 
         {/* ===== BOTÓN DE DESCARGA INDIVIDUAL ===== */}
-        <button
+        {/* <button
           onClick={handleDownload}
           disabled={songDownloaded}
           className={`${iconBtn} ${
@@ -239,7 +239,7 @@ export default function SongRow({
             className="sm:size-4" 
             fill={songDownloaded ? 'currentColor' : 'none'} 
           />
-        </button>
+        </button> */}
 
         {/* Ver letra */}
         {onShowLyrics && (

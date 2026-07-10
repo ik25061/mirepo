@@ -5,7 +5,7 @@
       "username": "rafael",
       "salt": "15903d7ea33637995bdaaedc5fab4bfe",
       "password_hash": "c0011f2624cdf33bfe2496ecd1c6bcd9b90e5dbd965ab00e6c97ae9e8bbe92c2cddea241bc7d1434f5aecff47f1fee30cc29c7de09801893cc71485909b57bec",
-      "session_token": "cc7136dd5bdf6d213f69bb66e93ffe4a96b05bf7f082f76e2872dad79719455f",
+      "session_token": "df3fcd35348684803f0fc4ed2c9eb77fde6d9060010f0383458bb55afbe84eed",
       "created_at": "2026-07-01T10:37:03.537Z"
     },
     {
@@ -15,6 +15,14 @@
       "password_hash": "b436cf32e7f7b1ee61561d8252ecb3e1a59b146092d3fdf0d3e9f1715d47b79b8ff8f090c79d59e2153f789730dfe9b1b4c23bbbb234e6421370216fd38455b7",
       "session_token": "74a08bd2799a3d12c36632db754a80a42bff2b948ade7373521dd8210c5ffd08",
       "created_at": "2026-07-06T06:52:58.855Z"
+    },
+    {
+      "id": 3,
+      "username": "testuser2",
+      "salt": "455e6f66ec94865032143f5e7a580fe4",
+      "password_hash": "53022b3ea4b0e86d4f44287912a3e696676e6658325e99a0866fd881aa3d78447701d9dc14111f1d50abbbf3793cbdb04fa8aad4878b12024240c2ef1e604fe8",
+      "session_token": null,
+      "created_at": "2026-07-10T09:39:52.042Z"
     }
   ]
 }

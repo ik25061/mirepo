@@ -47,14 +47,36 @@ export function useAllSongs({ enabled = true } = {}) {
       const data = await api.getLibrary({ limit: 99999, offset: 0, userId });
       if (mountedRef.current) {
         setAllSongs(data.songs || []);
+        // Guardar caché local para fallback offline
+        try {
+          if (typeof window !== 'undefined' && data.songs) {
+            window.localStorage.setItem('mirepo_lastLibrary', JSON.stringify(data.songs));
+          }
+        } catch (err) {
+          console.warn('[useAllSongs] No se pudo guardar caché:', err);
+        }
         setError(null);
         loadedRef.current = true;
         console.log('[useAllSongs] ✅ Cargadas:', data.songs?.length || 0, 'canciones');
       }
     } catch (err) {
       console.error('[useAllSongs] ❌ Error:', err);
+      // Intentar cargar versión almacenada localmente
       if (mountedRef.current) {
-        setError(err.message);
+        try {
+          const cached = typeof window !== 'undefined' ? window.localStorage.getItem('mirepo_lastLibrary') : null;
+          if (cached) {
+            const songs = JSON.parse(cached || '[]');
+            setAllSongs(songs || []);
+            setError(null);
+            loadedRef.current = true;
+            console.log('[useAllSongs] ⚠️ Usando caché local, canciones:', songs.length);
+          } else {
+            setError(err.message);
+          }
+        } catch (e) {
+          setError(err.message);
+        }
       }
     } finally {
       if (mountedRef.current) {

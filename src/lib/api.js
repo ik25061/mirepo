@@ -1,121 +1,192 @@
 // ====== CONFIGURACIÓN DE IP DINÁMICA ======
 let API_URL = '';
+let apiUrlPromise = null;
 
+// En src/lib/api.js, cambia la función detectServerIP por esta:
 export async function detectServerIP() {
-  // Usar la IP desde donde se sirve la página
   const host = window.location.hostname;
   const port = '5001';
   
-  // Si es localhost, usar localhost
-  if (host === 'localhost' || host === '127.0.0.1') {
-    API_URL = `http://localhost:${port}`;
+  // En Android/iOS (Capacitor), host suele ser 'localhost'
+  // Pero no queremos que intente fetch('/api/config/ip') porque dará el error del HTML
+  
+  const isMobile = window.location.protocol === 'capacitor:' || 
+                   window.location.protocol === 'http:' && (host === 'localhost' || host === '127.0.0.1');
+
+  if (isMobile) {
+    // Para el celular, forzamos el prompt directamente si no hay IP
+    const ip = prompt('Ingresa la IP de tu computadora (WiFi):', '172.16.12.4') || '172.16.12.4';
+    API_URL = `http://${ip}:${port}`;
   } else {
-    // Usar la IP del host actual
     API_URL = `http://${host}:${port}`;
   }
   
-  console.log(`📡 Usando URL: ${API_URL}`);
   return API_URL;
 }
-
-// Detectar IP al cargar
-detectServerIP();
 
 export function getApiUrl() {
   return API_URL;
 }
 
+async function ensureApiUrl() {
+  if (API_URL) return API_URL;
+  if (!apiUrlPromise) {
+    apiUrlPromise = detectServerIP().catch((err) => {
+      console.warn('No se pudo inicializar la URL del servidor:', err);
+      return '';
+    });
+  }
+  return apiUrlPromise;
+}
+
+// Detectar IP al cargar
+ensureApiUrl();
+
 // ====== FUNCIONES DE API ======
 
-async function post(url, body) {
-  const res = await fetch(`${API_URL}${url}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Error ${res.status}: ${errorText}`);
+async function request(url, options = {}) {
+  const baseUrl = await ensureApiUrl();
+  const fullUrl = `${baseUrl}${url}`;
+  console.log('📡 Petición a:', fullUrl);
+  
+  try {
+    const response = await fetch(fullUrl, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+    
+    const responseText = await response.text();
+
+    if (!response.ok) {
+      console.error('❌ Error respuesta:', response.status, responseText);
+      throw new Error(`Error ${response.status}: ${responseText || 'Respuesta inválida del servidor'}`);
+    }
+
+    if (!responseText) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(responseText);
+    } catch (err) {
+      console.error('❌ Respuesta no válida como JSON:', responseText);
+      throw new Error('El servidor devolvió una respuesta inválida. Revisa la IP del servidor y que la API esté disponible.');
+    }
+  } catch (err) {
+    console.error('❌ Error en petición:', err);
+    throw err;
   }
-  return res.json();
-}
-
-async function put(url, body) {
-  const res = await fetch(`${API_URL}${url}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) throw new Error(`Error ${res.status}`);
-  return res.json();
-}
-
-async function del(url, body) {
-  const res = await fetch(`${API_URL}${url}`, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) throw new Error(`Error ${res.status}`);
-  return res.json();
 }
 
 export const api = {
+  // Autenticación
+  login: (username, password) => 
+    request('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    }),
+  
+  register: (username, password) => 
+    request('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    }),
+
+  verifyToken: (token) =>
+    request('/api/auth/verify', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    }),
+
+  logout: (token) =>
+    request('/api/auth/logout', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    }),
+
+  // Biblioteca
   getLibrary: (params = {}) => {
     const qs = new URLSearchParams();
-    if (params.limit !== undefined) qs.set('limit', String(params.limit));
-    if (params.offset !== undefined) qs.set('offset', String(params.offset));
-    if (params.userId) qs.set('userId', String(params.userId));
-    const url = `${API_URL}/api/library${qs.toString() ? `?${qs.toString()}` : ''}`;
-    console.log('[api] GET Library:', url);
-    return fetch(url).then((r) => {
-      if (!r.ok) throw new Error(`Error ${r.status}`);
-      return r.json();
-    });
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (params.userId) qs.set('userId', params.userId);
+    const url = `/api/library${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return request(url);
   },
-  rescan: () => post('/api/rescan'),
-  like: (id, liked, userId) => post(`/api/songs/${id}/like`, { liked, userId }),
-  hideSong: (id, userId) => post(`/api/songs/${id}/hide`, { userId }),
-  deleteSong: (id, userId) => del('/api/songs', { id, userId }),
-  hideArtist: (artist, userId) => post('/api/artists/hide', { artist, userId }),
-  getConfigIp: () => fetch('/api/config/ip').then(r => r.json()),
-  scanDuplicates: (folderPath) => post('/api/scan', { folderPath }),
-  deleteDuplicate: (filePath) => del('/api/delete-duplicate', { filePath }),
-  fixMetadata: (filePath) => post('/api/fix-metadata', { filePath }),
-  getArtists: (userId) => {
-    const qs = userId ? `?userId=${userId}` : '';
-    return fetch(`${API_URL}/api/artists${qs}`).then(r => r.json());
-  },
-  getAlbums: (userId) => {
-    const qs = userId ? `?userId=${userId}` : '';
-    return fetch(`${API_URL}/api/albums${qs}`).then(r => r.json());
-  },
-  getGenres: () => fetch(`${API_URL}/api/genres`).then(r => r.json()),
-  getLikedSongs: (userId) => {
-    const qs = userId ? `?userId=${userId}&liked=true` : '?liked=true';
-    return fetch(`${API_URL}/api/library${qs}`).then(r => r.json());
-  },
-  // ====== PLAY LISTS ======
-  getPlayLists: (userId) => {
-    const qs = userId ? `?userId=${userId}` : '';
-    return fetch(`${API_URL}/api/playlists${qs}`).then(r => r.json());
-  },
-  getPlayList: (id) => fetch(`${API_URL}/api/playlists/${id}`).then(r => r.json()),
-  createPlayList: (name, description, userId) => post('/api/playlists', { name, description, userId }),
-  addSongToPlayList: (playlistId, songId) => post(`/api/playlists/${playlistId}/songs`, { songId }),
-  removeSongFromPlayList: (playlistId, songId) => {
-    return fetch(`${API_URL}/api/playlists/${playlistId}/songs`, {
+
+  rescan: () => request('/api/rescan', { method: 'POST' }),
+
+  like: (id, liked, userId) => 
+    request(`/api/songs/${id}/like`, {
+      method: 'POST',
+      body: JSON.stringify({ liked, userId }),
+    }),
+
+  hideSong: (id, userId) => 
+    request(`/api/songs/${id}/hide`, {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    }),
+
+  deleteSong: (id, userId) => 
+    request('/api/songs', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ songId })
-    }).then(r => r.json());
-  },
-  deletePlayList: (id) => {
-    return fetch(`${API_URL}/api/playlists/${id}`, { method: 'DELETE' }).then(r => r.json());
-  },
+      body: JSON.stringify({ id, userId }),
+    }),
+
+  hideArtist: (artist, userId) => 
+    request('/api/artists/hide', {
+      method: 'POST',
+      body: JSON.stringify({ artist, userId }),
+    }),
+
+  unhideArtist: (artist, userId) => 
+    request('/api/artists/unhide', {
+      method: 'POST',
+      body: JSON.stringify({ artist, userId }),
+    }),
+
+  getArtists: (userId) => request(`/api/artists${userId ? `?userId=${userId}` : ''}`),
+  getAlbums: (userId) => request(`/api/albums${userId ? `?userId=${userId}` : ''}`),
+  getGenres: () => request('/api/genres'),
+  getLikedSongs: (userId) => request(`/api/library?userId=${userId}&liked=true`),
+
+  getPlayLists: (userId) => request(`/api/playlists${userId ? `?userId=${userId}` : ''}`),
+  getPlayList: (id) => request(`/api/playlists/${id}`),
+  createPlayList: (name, description, userId) => 
+    request('/api/playlists', {
+      method: 'POST',
+      body: JSON.stringify({ name, description, userId }),
+    }),
+  addSongToPlayList: (playlistId, songId) => 
+    request(`/api/playlists/${playlistId}/songs`, {
+      method: 'POST',
+      body: JSON.stringify({ songId }),
+    }),
+  removeSongFromPlayList: (playlistId, songId) => 
+    request(`/api/playlists/${playlistId}/songs`, {
+      method: 'DELETE',
+      body: JSON.stringify({ songId }),
+    }),
+  deletePlayList: (id) => request(`/api/playlists/${id}`, { method: 'DELETE' }),
+
+  scanDuplicates: (folderPath) => request('/api/scan', {
+    method: 'POST',
+    body: JSON.stringify({ folderPath }),
+  }),
+  deleteDuplicate: (filePath) => request('/api/delete-duplicate', {
+    method: 'DELETE',
+    body: JSON.stringify({ filePath }),
+  }),
+  fixMetadata: (filePath) => request('/api/fix-metadata', {
+    method: 'POST',
+    body: JSON.stringify({ filePath }),
+  }),
 };
 
-// ====== URLs DE AUDIO E IMÁGENES ======
 export const audioUrl = (id) => `${API_URL}/audio/${id}`;
 export const coverUrl = (id) => `${API_URL}/cover/${id}`;
 export const artistCoverUrl = (artist) => `${API_URL}/artist-cover/${encodeURIComponent(artist)}`;

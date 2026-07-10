@@ -117,31 +117,45 @@ function Shell() {
       }
     : lib;
 
-  const handleLike = useCallback((songOrId) => {
+  const handleLike = useCallback(async (songOrId) => {
     if (!songOrId) return;
     const songId = typeof songOrId === 'string' ? songOrId : songOrId.id;
     if (!songId) return;
 
     if (isDownloaded(songId)) {
-      updateLiked(songId, true);
+      // Actualizar like en la descarga local y propagar a la lista global
+      try {
+        await updateLiked(songId, true);
+      } catch (e) {
+        console.error('[App] Error updateLiked:', e);
+      }
+      // Asegurar que allSongs refleje el cambio
+      try { toggleLiked?.(songId, true); } catch (e) {}
     } else {
       library.toggleLike(songId);
     }
-  }, [isDownloaded, updateLiked, library]);
+  }, [isDownloaded, updateLiked, library, toggleLiked]);
 
-  const handleDislike = useCallback((song) => {
+  const handleDislike = useCallback(async (song) => {
     if (!song) return;
     const songId = typeof song === 'string' ? song : song.id;
     if (!songId) return;
 
     removeFromQueue(songId);
     if (isDownloaded(songId)) {
-      updateLiked(songId, false);
-      removeDownload(songId);
+      try {
+        await updateLiked(songId, false);
+      } catch (e) {
+        console.error('[App] Error updateLiked(false):', e);
+      }
+      // Eliminar descarga si procede
+      try { await removeDownload(songId); } catch (e) {}
+      // Propagar cambio a allSongs
+      try { toggleLiked?.(songId, false); } catch (e) {}
     } else if (typeof song !== 'string') {
       library.dislikeSong(song);
     }
-  }, [isDownloaded, updateLiked, removeDownload, removeFromQueue, library]);
+  }, [isDownloaded, updateLiked, removeDownload, removeFromQueue, library, toggleLiked]);
 
   // ============================================================
   // CONJUNTO DE CANCIONES (según modo offline o online)
@@ -500,6 +514,7 @@ function Shell() {
           onOpen={() => current && setShowNowPlaying(true)}
           onLike={handleLike}
           onDislike={handleDislike}
+          likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
           onViewChange={(v) => {
             if (v === 'nowplaying' && current) {
               setShowNowPlaying(true);

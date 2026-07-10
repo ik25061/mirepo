@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { api } from '../lib/api';
 
 const AuthContext = createContext(null);
 
@@ -22,23 +23,14 @@ export function AuthProvider({ children }) {
 
   const verifyToken = useCallback(async (tokenToVerify) => {
     try {
-      const response = await fetch('/api/auth/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: tokenToVerify })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        localStorage.setItem('mirepo_user', JSON.stringify(data.user));
-      } else {
-        localStorage.removeItem('mirepo_token');
-        localStorage.removeItem('mirepo_user');
-        setUser(null);
-        setToken(null);
-      }
+      const data = await api.verifyToken(tokenToVerify);
+      setUser(data.user);
+      localStorage.setItem('mirepo_user', JSON.stringify(data.user));
     } catch (err) {
+      localStorage.removeItem('mirepo_token');
+      localStorage.removeItem('mirepo_user');
+      setUser(null);
+      setToken(null);
       console.error('Error verificando token:', err);
     } finally {
       setLoading(false);
@@ -47,16 +39,10 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (username, password) => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
+      const data = await api.login(username, password);
       
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al iniciar sesión');
+      if (!data?.success) {
+        throw new Error(data?.error || 'Error al iniciar sesión');
       }
       
       setUser(data.user);
@@ -71,16 +57,10 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (username, password) => {
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
+      const data = await api.register(username, password);
       
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al registrar usuario');
+      if (!data?.success) {
+        throw new Error(data?.error || 'Error al registrar usuario');
       }
       
       return { success: true, user: data.user };
@@ -92,11 +72,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     try {
       if (token) {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token })
-        });
+        await api.logout(token);
       }
     } catch (err) {
       console.error('Error en logout:', err);
