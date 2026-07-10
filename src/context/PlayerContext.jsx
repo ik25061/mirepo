@@ -11,7 +11,7 @@
  * - Media Session API para controles en pantalla de bloqueo
  */
 
-import { createContext, useContext, useCallback, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { audioUrl } from '../lib/api.js';
 import { useOffline } from './OfflineContext.jsx';
 import { getDownloadedSong } from '../hooks/useDownloads.js';

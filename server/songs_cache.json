@@ -2557,6 +2557,18 @@
       "hasCover": true
     },
     {
+      "id": "bae2e135c5597ae8",
+      "relPath": "Juan Luis Guerra 4.40\\Bachata Rosa\\A Pedir Su Mano.mp3",
+      "title": "A Pedir Su Mano",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "Bachata Rosa",
+      "genre": "Música tropical",
+      "year": 1990,
+      "track": null,
+      "duration": 295,
+      "hasCover": true
+    },
+    {
       "id": "61c5c1e394cd1d83",
       "relPath": "Hansel Camacho\\A Mi Manera\\A Pesar de la Distancia.mp3",
       "title": "A Pesar de la Distancia",
@@ -4057,6 +4069,18 @@
       "hasCover": true
     },
     {
+      "id": "f85f7b24df32a98c",
+      "relPath": "Juan Gabriel\\Juan Gabriel Con Banda... El Recodo\\Adiós Al Amigo (feat. Banda el Recodo).mp3",
+      "title": "Adiós Al Amigo (feat. Banda el Recodo)",
+      "artist": "Juan Gabriel",
+      "album": "Juan Gabriel Con Banda... El Recodo",
+      "genre": "Pop in spanish",
+      "year": 1998,
+      "track": 8,
+      "duration": 170,
+      "hasCover": true
+    },
+    {
       "id": "93f57ca2d8fad51c",
       "relPath": "Antonio Aguilar\\15 Éxitos- Corridos de Caballos Famosos\\Adiós Al As De Oros.mp3",
       "title": "Adiós Al As De Oros",
@@ -4330,6 +4354,18 @@
       "year": 1996,
       "track": null,
       "duration": 292,
+      "hasCover": true
+    },
+    {
+      "id": "38d94673622bab94",
+      "relPath": "Juan Gabriel\\50 Años de Ser el Divo de Juárez\\Adorable Mentirosa.mp3",
+      "title": "Adorable Mentirosa",
+      "artist": "Juan Gabriel",
+      "album": "50 Años de Ser el Divo de Juárez",
+      "genre": "Música mexicana",
+      "year": 1998,
+      "track": 6,
+      "duration": 160,
       "hasCover": true
     },
     {
@@ -4870,6 +4906,30 @@
       "year": 1984,
       "track": 6,
       "duration": 230,
+      "hasCover": true
+    },
+    {
+      "id": "e9acde704f512963",
+      "relPath": "Ana Gabriel\\Mi México\\Ahora.mp3",
+      "title": "Ahora",
+      "artist": "Ana Gabriel",
+      "album": "Mi México",
+      "genre": "Música mexicana",
+      "year": 1991,
+      "track": 4,
+      "duration": 203,
+      "hasCover": true
+    },
+    {
+      "id": "45e77219399f0432",
+      "relPath": "Juan Gabriel\\Juan Gabriel Con Banda... El Recodo\\Ahora Con la Banda Popurrí...- Te Voy Olvídar - Ya Para Qué - La Farsante (feat. Banda el Recodo).mp3",
+      "title": "Ahora Con la Banda Popurrí...: Te Voy Olvídar / Ya Para Qué / La Farsante (feat. Banda el Recodo)",
+      "artist": "Juan Gabriel",
+      "album": "Juan Gabriel Con Banda... El Recodo",
+      "genre": "Pop in spanish",
+      "year": 1998,
+      "track": 5,
+      "duration": 303,
       "hasCover": true
     },
     {
@@ -7414,6 +7474,18 @@
       "year": 2011,
       "track": 1,
       "duration": 203,
+      "hasCover": true
+    },
+    {
+      "id": "8c18e8397c7edeb5",
+      "relPath": "JUAN CARLOS ALFONSO Y LA DAN DEN DE CUBA\\Ámame Con Tu Experiencia - Single\\Ámame Con Tu Experiencia.mp3",
+      "title": "Ámame Con Tu Experiencia",
+      "artist": "JUAN CARLOS ALFONSO Y LA DAN DEN DE CUBA",
+      "album": "Ámame Con Tu Experiencia - Single",
+      "genre": "Latino",
+      "year": 2019,
+      "track": null,
+      "duration": 248,
       "hasCover": true
     },
     {
@@ -11938,6 +12010,18 @@
       "year": 2002,
       "track": 11,
       "duration": 158,
+      "hasCover": true
+    },
+    {
+      "id": "268f124d1d012db9",
+      "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\Así Son los Hombres.mp3",
+      "title": "Así Son los Hombres",
+      "artist": "Rocío Dúrcal",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 5,
+      "duration": 194,
       "hasCover": true
     },
     {
@@ -38605,6 +38689,18 @@
       "hasCover": true
     },
     {
+      "id": "153223ccf4052ae3",
+      "relPath": "Juan Gabriel\\Juntos Otra Vez\\Donde Hay Celos.mp3",
+      "title": "Donde Hay Celos",
+      "artist": "Juan Gabriel",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 9,
+      "duration": 130,
+      "hasCover": true
+    },
+    {
       "id": "d49750324d2833bb",
       "relPath": "Sonora Kaliente De Jorge Amaral\\La Voz Tropical de México\\Donde Hubo Fuego.mp3",
       "title": "Donde Hubo Fuego",
@@ -38902,6 +38998,18 @@
       "year": 1996,
       "track": 2,
       "duration": 221,
+      "hasCover": true
+    },
+    {
+      "id": "25d7b363edd9ec46",
+      "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\Dos Favores.mp3",
+      "title": "Dos Favores",
+      "artist": "Rocío Dúrcal",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 8,
+      "duration": 180,
       "hasCover": true
     },
     {
@@ -42889,6 +42997,18 @@
       "hasCover": true
     },
     {
+      "id": "690d7cb176224b38",
+      "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\El Destino.mp3",
+      "title": "El Destino",
+      "artist": "Rocío Dúrcal",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1987,
+      "track": 2,
+      "duration": 284,
+      "hasCover": true
+    },
+    {
       "id": "f70ba4745764393d",
       "relPath": "Angélica María\\Colección De Oro- Ídolos Juveniles, Vol. 2 – Angélica María\\El Día.mp3",
       "title": "El Día",
@@ -44977,6 +45097,18 @@
       "hasCover": true
     },
     {
+      "id": "dc83bc819f49cef4",
+      "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\El México de Rocío.mp3",
+      "title": "El México de Rocío",
+      "artist": "Rocío Dúrcal",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 1,
+      "duration": 273,
+      "hasCover": true
+    },
+    {
       "id": "9ed70b6d831ba0a2",
       "relPath": "Pedro Infante\\Adios a Mis Chorreadas\\El Mil Amores.mp3",
       "title": "El Mil Amores",
@@ -46441,6 +46573,18 @@
       "hasCover": true
     },
     {
+      "id": "2ff14f3e51ae81ea",
+      "relPath": "Juan Gabriel\\Juntos Otra Vez\\El Principio.mp3",
+      "title": "El Principio",
+      "artist": "Juan Gabriel",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 1,
+      "duration": 367,
+      "hasCover": true
+    },
+    {
       "id": "4964387467dbead1",
       "relPath": "Los Tigres del Norte\\Jefe de Jefes\\El Prisionero.mp3",
       "title": "El Prisionero",
@@ -47351,6 +47495,18 @@
       "track": 1,
       "duration": 135,
       "hasCover": false
+    },
+    {
+      "id": "c5bbd13b9dc7f0f1",
+      "relPath": "Juan Gabriel\\Juan Gabriel Con Banda... El Recodo\\El Sinaloense (feat. Banda el Recodo).mp3",
+      "title": "El Sinaloense (feat. Banda el Recodo)",
+      "artist": "Juan Gabriel",
+      "album": "Juan Gabriel Con Banda... El Recodo",
+      "genre": "Pop in spanish",
+      "year": 1998,
+      "track": 1,
+      "duration": 190,
+      "hasCover": true
     },
     {
       "id": "dc58ff16fbc4b20c",
@@ -48442,6 +48598,18 @@
       "year": 2026,
       "track": null,
       "duration": 137,
+      "hasCover": true
+    },
+    {
+      "id": "d11ac763bbf5a1fa",
+      "relPath": "Juan Gabriel\\Juntos Otra Vez\\El Verdadero Amor.mp3",
+      "title": "El Verdadero Amor",
+      "artist": "Juan Gabriel",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 3,
+      "duration": 177,
       "hasCover": true
     },
     {
@@ -51982,6 +52150,18 @@
       "year": 2003,
       "track": 3,
       "duration": 242,
+      "hasCover": true
+    },
+    {
+      "id": "03e039bc0b5af9d2",
+      "relPath": "Jowell & Randy\\Casa de Leones\\Ese Amor.mp3",
+      "title": "Ese Amor",
+      "artist": "Jowell & Randy",
+      "album": "Casa de Leones",
+      "genre": "Urbano latino",
+      "year": 2007,
+      "track": 8,
+      "duration": 219,
       "hasCover": true
     },
     {
@@ -56818,6 +56998,30 @@
       "year": 1973,
       "track": 4,
       "duration": 184,
+      "hasCover": true
+    },
+    {
+      "id": "79a2c4f5c0fc8c5b",
+      "relPath": "Juan Luis Guerra 4.40\\Areíto\\Frío Frío.mp3",
+      "title": "Frío Frío",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "Areíto",
+      "genre": "Música tropical",
+      "year": 1992,
+      "track": null,
+      "duration": 245,
+      "hasCover": true
+    },
+    {
+      "id": "31afffdb26e2e8eb",
+      "relPath": "Juan Luis Guerra 4.40\\Asondeguerra Tour (Deluxe Edition)\\Frío, Frío (feat. Romeo Santos) [Live].mp3",
+      "title": "Frío, Frío (feat. Romeo Santos) [Live]",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "Asondeguerra Tour (Deluxe Edition)",
+      "genre": "Música tropical",
+      "year": 2013,
+      "track": null,
+      "duration": 235,
       "hasCover": true
     },
     {
@@ -65161,6 +65365,30 @@
       "hasCover": true
     },
     {
+      "id": "2c0fce84c59d42d1",
+      "relPath": "Ana Gabriel\\Huelo a Soledad\\Huelo a Soledad.mp3",
+      "title": "Huelo a Soledad",
+      "artist": "Ana Gabriel",
+      "album": "Huelo a Soledad",
+      "genre": "Pop in spanish",
+      "year": 2001,
+      "track": 15,
+      "duration": 261,
+      "hasCover": true
+    },
+    {
+      "id": "4321d0967ef160ba",
+      "relPath": "Juan Gabriel\\Juan Gabriel Con Banda... El Recodo\\Huérfano Soy (feat. Banda el Recodo).mp3",
+      "title": "Huérfano Soy (feat. Banda el Recodo)",
+      "artist": "Juan Gabriel",
+      "album": "Juan Gabriel Con Banda... El Recodo",
+      "genre": "Pop in spanish",
+      "year": 1998,
+      "track": 4,
+      "duration": 172,
+      "hasCover": true
+    },
+    {
       "id": "143c702db25939e0",
       "relPath": "Rod Stewart\\Human\\Human.mp3",
       "title": "Human",
@@ -68509,6 +68737,18 @@
       "hasCover": true
     },
     {
+      "id": "fe0e9c9cd77f1542",
+      "relPath": "Juan Gabriel\\Juan Gabriel Con Banda... El Recodo\\Infidelidad (feat. Banda el Recodo).mp3",
+      "title": "Infidelidad (feat. Banda el Recodo)",
+      "artist": "Juan Gabriel",
+      "album": "Juan Gabriel Con Banda... El Recodo",
+      "genre": "Pop in spanish",
+      "year": 1998,
+      "track": 7,
+      "duration": 187,
+      "hasCover": true
+    },
+    {
       "id": "fa74a02994b86e66",
       "relPath": "Rocío Dúrcal\\Caricias\\Infiel.mp3",
       "title": "Infiel",
@@ -70345,6 +70585,18 @@
       "hasCover": true
     },
     {
+      "id": "79919d2dc6f8f99f",
+      "relPath": "La Original Banda El Limón de Salvador Lizárraga\\Puro Mazatlan\\Juan Martha.mp3",
+      "title": "Juan Martha",
+      "artist": "La Original Banda El Limón de Salvador Lizárraga",
+      "album": "Puro Mazatlan",
+      "genre": "Música mexicana",
+      "year": 1990,
+      "track": 3,
+      "duration": 153,
+      "hasCover": true
+    },
+    {
       "id": "7f8c7e723f788075",
       "relPath": "La Tropa F\\Puro Tejaño Gold- La Tropa F\\Juan Sabor.mp3",
       "title": "Juan Sabor",
@@ -70727,6 +70979,18 @@
       "track": 27,
       "duration": 207,
       "hasCover": false
+    },
+    {
+      "id": "d4dd9bf3eeb60950",
+      "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\Juntos.mp3",
+      "title": "Juntos",
+      "artist": "Rocío Dúrcal",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 2,
+      "duration": 299,
+      "hasCover": true
     },
     {
       "id": "66c2d87e86b2111a",
@@ -72178,6 +72442,18 @@
       "year": 1991,
       "track": 1,
       "duration": 154,
+      "hasCover": true
+    },
+    {
+      "id": "af1432ce453d2bad",
+      "relPath": "Juan Luis Guerra 4.40\\Entre Mar y Palmeras\\La Bilirrubina (Live).mp3",
+      "title": "La Bilirrubina (Live)",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "Entre Mar y Palmeras",
+      "genre": "Latino",
+      "year": 2021,
+      "track": null,
+      "duration": 240,
       "hasCover": true
     },
     {
@@ -74857,6 +75133,18 @@
       "hasCover": true
     },
     {
+      "id": "96ff24ceb4f16d8f",
+      "relPath": "Juan Luis Guerra 4.40\\Ni Es Lo Mismo Ni Es Igual\\La Hormiguita.mp3",
+      "title": "La Hormiguita",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "Ni Es Lo Mismo Ni Es Igual",
+      "genre": "Música tropical",
+      "year": 1998,
+      "track": null,
+      "duration": 183,
+      "hasCover": true
+    },
+    {
       "id": "e0031c39a9dd6162",
       "relPath": "Los Ángeles Negros\\Quiero Mas de Ti\\La Huella de mi Amor.mp3",
       "title": "La Huella de mi Amor",
@@ -74914,6 +75202,18 @@
       "year": 1998,
       "track": 9,
       "duration": 265,
+      "hasCover": true
+    },
+    {
+      "id": "1d182770af32bd58",
+      "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\La Incertidumbre.mp3",
+      "title": "La Incertidumbre",
+      "artist": "Rocío Dúrcal",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 6,
+      "duration": 202,
       "hasCover": true
     },
     {
@@ -75190,6 +75490,18 @@
       "year": 2000,
       "track": 2,
       "duration": 293,
+      "hasCover": true
+    },
+    {
+      "id": "62b310ac6964dc1d",
+      "relPath": "Juan Luis Guerra 4.40\\La Llave de Mi Corazón\\La Llave de Mi Corazón.mp3",
+      "title": "La Llave de Mi Corazón",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "La Llave de Mi Corazón",
+      "genre": "Música tropical",
+      "year": 2007,
+      "track": null,
+      "duration": 193,
       "hasCover": true
     },
     {
@@ -77794,6 +78106,18 @@
       "year": 1985,
       "track": 5,
       "duration": 191,
+      "hasCover": true
+    },
+    {
+      "id": "4d36ebf6041a7236",
+      "relPath": "Juan Luis Guerra 4.40\\La Llave de Mi Corazón\\La travesía (feat. Daniela Mercury).mp3",
+      "title": "La travesía (feat. Daniela Mercury)",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "La Llave de Mi Corazón",
+      "genre": "Música tropical",
+      "year": 2007,
+      "track": null,
+      "duration": 207,
       "hasCover": true
     },
     {
@@ -89737,6 +90061,18 @@
       "hasCover": true
     },
     {
+      "id": "77a7de4d23e83258",
+      "relPath": "Juan Luis Guerra 4.40\\Mientras Más Lo Pienso...Tú\\Me Enamoro de Ella.mp3",
+      "title": "Me Enamoro de Ella",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "Mientras Más Lo Pienso...Tú",
+      "genre": "Música tropical",
+      "year": 1986,
+      "track": null,
+      "duration": 257,
+      "hasCover": true
+    },
+    {
       "id": "c53a64ac0bcedd31",
       "relPath": "Fey\\Fey\\Me Enamoro de Ti.mp3",
       "title": "Me Enamoro de Ti",
@@ -90958,6 +91294,18 @@
       "year": 2004,
       "track": 17,
       "duration": 196,
+      "hasCover": true
+    },
+    {
+      "id": "6c51b2c9ffa72970",
+      "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\Me Refugie en Tu Juventud.mp3",
+      "title": "Me Refugie en Tu Juventud",
+      "artist": "Rocío Dúrcal",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 3,
+      "duration": 352,
       "hasCover": true
     },
     {
@@ -101245,6 +101593,18 @@
       "hasCover": true
     },
     {
+      "id": "ddfc5cf2d8df09ec",
+      "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\No Me Digas.mp3",
+      "title": "No Me Digas",
+      "artist": "Rocío Dúrcal",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 7,
+      "duration": 216,
+      "hasCover": true
+    },
+    {
       "id": "9c7b7ee1bfb79c5f",
       "relPath": "Ram Herrera\\Insuperable\\No Me Digas No.mp3",
       "title": "No Me Digas No",
@@ -105553,6 +105913,18 @@
       "hasCover": true
     },
     {
+      "id": "0ad4520ea76d1751",
+      "relPath": "Juan Luis Guerra 4.40\\Asondeguerra Tour (Deluxe Edition)\\Ojalá Que Llueva Café (Live).mp3",
+      "title": "Ojalá Que Llueva Café (Live)",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "Asondeguerra Tour (Deluxe Edition)",
+      "genre": "Música tropical",
+      "year": 2013,
+      "track": null,
+      "duration": 324,
+      "hasCover": true
+    },
+    {
       "id": "64400b1a8423bc90",
       "relPath": "Pimpinela\\Desconocido\\Ojala Que No Pase Nada.mp3",
       "title": "Ojala Que No Pase Nada",
@@ -108214,6 +108586,18 @@
       "year": 1996,
       "track": 41,
       "duration": 186,
+      "hasCover": true
+    },
+    {
+      "id": "4d380bd4e465c7ca",
+      "relPath": "Juan Luis Guerra 4.40\\Ni Es Lo Mismo Ni Es Igual\\Palomita Blanca.mp3",
+      "title": "Palomita Blanca",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "Ni Es Lo Mismo Ni Es Igual",
+      "genre": "Música tropical",
+      "year": 1998,
+      "track": null,
+      "duration": 225,
       "hasCover": true
     },
     {
@@ -111838,6 +112222,18 @@
       "year": 1978,
       "track": 4,
       "duration": 219,
+      "hasCover": true
+    },
+    {
+      "id": "ce5a9a6913e2f25a",
+      "relPath": "Juan Gabriel\\Eterno\\Te Lo Pido Por Favor.mp3",
+      "title": "Pista 17",
+      "artist": "Juan Gabriel",
+      "album": "Álbum desconocido (27/07/2010 01:45:29 p.m. )",
+      "genre": "Música mexicana",
+      "year": 2025,
+      "track": 4,
+      "duration": 223,
       "hasCover": true
     },
     {
@@ -116437,6 +116833,18 @@
       "hasCover": true
     },
     {
+      "id": "003b586cf7bcd221",
+      "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\Que Bonito Es Sante Fe.mp3",
+      "title": "Que Bonito Es Sante Fe",
+      "artist": "Rocío Dúrcal",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 10,
+      "duration": 318,
+      "hasCover": true
+    },
+    {
       "id": "8fca4242a1aa2599",
       "relPath": "Fuego\\Que Buena Tu Ta\\Que Buena Tu Ta.mp3",
       "title": "Que Buena Tu Ta",
@@ -116986,6 +117394,18 @@
       "year": 1993,
       "track": 8,
       "duration": 168,
+      "hasCover": true
+    },
+    {
+      "id": "a2f1f5da915e32da",
+      "relPath": "Juan Gabriel\\Pensamientos\\Qué Lástima.mp3",
+      "title": "Qué Lástima",
+      "artist": "Juan Gabriel",
+      "album": "Pensamientos",
+      "genre": "Baladas y boleros",
+      "year": 1986,
+      "track": 8,
+      "duration": 240,
       "hasCover": true
     },
     {
@@ -124549,6 +124969,18 @@
       "hasCover": true
     },
     {
+      "id": "043cb56c5c6f1be3",
+      "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\Santo Ninito.mp3",
+      "title": "Santo Ninito",
+      "artist": "Rocío Dúrcal",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 6,
+      "duration": 254,
+      "hasCover": true
+    },
+    {
       "id": "6e8c2349f048fda1",
       "relPath": "Só Pra Contrariar\\Juegos de Amor\\Santo Santo.mp3",
       "title": "Santo Santo",
@@ -125278,6 +125710,18 @@
       "year": 1900,
       "track": 12,
       "duration": 159,
+      "hasCover": true
+    },
+    {
+      "id": "2e19be6dc4a861d6",
+      "relPath": "Juan Gabriel\\Juan Gabriel con el Mariachi Vargas de Tecalitlán\\Se Me Olvidó Otra Vez.mp3",
+      "title": "Se Me Olvidó Otra Vez",
+      "artist": "Juan Gabriel",
+      "album": "Juan Gabriel con el Mariachi Vargas de Tecalitlán",
+      "genre": "Música mexicana",
+      "year": 1986,
+      "track": 3,
+      "duration": 176,
       "hasCover": true
     },
     {
@@ -136657,6 +137101,18 @@
       "hasCover": true
     },
     {
+      "id": "60e9525be60c544e",
+      "relPath": "Juan Gabriel\\Juan Gabriel Con Banda... El Recodo\\Te Acuerdas- Popurrí- Te Dedico Esta Canción - Costumbres - La Mas Querida - No Me Vuelvo a Enamorar - Fue un Placer Conocerte - He Venido a Pedirte Perdón (feat. Banda el Recodo).mp3",
+      "title": "Te Acuerdas? Popurrí: Te Dedico Esta Canción / Costumbres / La Mas Querida / No Me Vuelvo a Enamorar / Fue un Placer Conocerte / He Venido a Pedirte Perdón (feat. Banda el Recodo)",
+      "artist": "Juan Gabriel",
+      "album": "Juan Gabriel Con Banda... El Recodo",
+      "genre": "Pop in spanish",
+      "year": 1998,
+      "track": 2,
+      "duration": 355,
+      "hasCover": true
+    },
+    {
       "id": "4120df3993568ade",
       "relPath": "Los Mier\\Contra Viento y Marea\\Te Amaré.mp3",
       "title": "Te Amaré",
@@ -137209,6 +137665,18 @@
       "hasCover": true
     },
     {
+      "id": "0ee88b8f2c9f9d6a",
+      "relPath": "Juan Gabriel\\Juan Gabriel Con Banda... El Recodo\\Te Doy las Gracias (feat. Banda el Recodo).mp3",
+      "title": "Te Doy las Gracias (feat. Banda el Recodo)",
+      "artist": "Juan Gabriel",
+      "album": "Juan Gabriel Con Banda... El Recodo",
+      "genre": "Pop in spanish",
+      "year": 1998,
+      "track": 10,
+      "duration": 140,
+      "hasCover": true
+    },
+    {
       "id": "606e8abc74c1d91d",
       "relPath": "Bacanos\\Baila Pa Mí\\Te Doy Mi Amor.mp3",
       "title": "Te Doy Mi Amor",
@@ -137422,6 +137890,18 @@
       "year": 1997,
       "track": 2,
       "duration": 261,
+      "hasCover": true
+    },
+    {
+      "id": "ffc81299d0c8a71e",
+      "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\Te He Escrito Otra Canción.mp3",
+      "title": "Te He Escrito Otra Canción",
+      "artist": "Rocío Dúrcal",
+      "album": "Juntos Otra Vez",
+      "genre": "Pop in spanish",
+      "year": 1993,
+      "track": 4,
+      "duration": 212,
       "hasCover": true
     },
     {
@@ -149545,6 +150025,18 @@
       "hasCover": true
     },
     {
+      "id": "7716e43bcf14db0c",
+      "relPath": "Juan Luis Guerra 4.40\\Entre Mar y Palmeras\\Vale la Pena (Live).mp3",
+      "title": "Vale la Pena (Live)",
+      "artist": "Juan Luis Guerra 4.40",
+      "album": "Entre Mar y Palmeras",
+      "genre": "Latino",
+      "year": 2021,
+      "track": null,
+      "duration": 246,
+      "hasCover": true
+    },
+    {
       "id": "5962383db37e80c8",
       "relPath": "Los Pasteles Verdes\\Los 20 Grandes Éxitos\\Vale La Pena Llorar.mp3",
       "title": "Vale La Pena Llorar",
@@ -154561,6 +155053,18 @@
       "hasCover": true
     },
     {
+      "id": "bb818e3dedb37e41",
+      "relPath": "Journey\\Trial By Fire\\When You Love a Woman.mp3",
+      "title": "When You Love a Woman",
+      "artist": "Journey",
+      "album": "Trial By Fire",
+      "genre": "Rock",
+      "year": 1996,
+      "track": 14,
+      "duration": 250,
+      "hasCover": true
+    },
+    {
       "id": "317de6be864cf3a5",
       "relPath": "Julio Iglesias\\Crazy\\When You Tell Me That You Love Me.mp3",
       "title": "When You Tell Me That You Love Me",
@@ -158269,6 +158773,6 @@
       "hasCover": true
     }
   ],
-  "scannedAt": 1783664407265,
+  "scannedAt": 1783665039922,
   "musicPath": "D:/musica"
 }
