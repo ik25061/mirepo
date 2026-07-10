@@ -44,8 +44,9 @@ console.log('🌐 IP principal:', LOCAL_IP);
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Range'],
-  exposedHeaders: ['Content-Range', 'Accept-Ranges']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Range', 'Origin', 'Accept'],
+  exposedHeaders: ['Content-Range', 'Accept-Ranges'],
+  credentials: true
 }));
 app.use(express.json());
 

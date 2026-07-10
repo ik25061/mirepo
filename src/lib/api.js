@@ -113,7 +113,22 @@ async function request(url, options = {}) {
     }
   } catch (err) {
     console.error('❌ Error en petición:', err);
-    throw err;
+
+    // Mejora del mensaje de error para diagnósticos en móvil
+    const originalMessage = err && err.message ? String(err.message) : String(err);
+    let enhancedMessage = originalMessage;
+
+    if (err && err.name === 'AbortError') {
+      enhancedMessage = `Tiempo de espera agotado al conectar con ${fullUrl}. Verifica que el servidor esté activo y la conexión de red.`;
+    } else if (originalMessage.toLowerCase().includes('failed to fetch') || originalMessage.toLowerCase().includes('networkrequestfailed') || originalMessage.toLowerCase().includes('networkerror')) {
+      enhancedMessage = `No se pudo conectar a ${fullUrl}. Comprueba que la IP/puerto sean correctos, que el servidor esté corriendo y que el dispositivo esté en la misma red. Mensaje original: ${originalMessage}`;
+    } else {
+      enhancedMessage = `Error en petición a ${fullUrl}: ${originalMessage}`;
+    }
+
+    const enhancedError = new Error(enhancedMessage);
+    enhancedError.cause = err;
+    throw enhancedError;
   }
 }
 
