@@ -581,11 +581,39 @@
       "cd960b23e9df94cd": {
         "liked": false,
         "hidden": true
+      },
+      "21cd52e01f8d2173": {
+        "liked": true
+      },
+      "b192d285edb4a6fe": {
+        "hidden": true
+      },
+      "d511f349a180fafa": {
+        "liked": true
+      },
+      "59e9b6396b1fc5e0": {
+        "hidden": true
+      },
+      "7e10c452ba4b864a": {
+        "liked": true
+      },
+      "7d12933357925f57": {
+        "liked": true
+      },
+      "26dad7c1a9ad410f": {
+        "liked": true
+      },
+      "18aefb0f80d260b8": {
+        "liked": true
       }
     },
     "artists": {
       "Carlos Lico": true
-    }
+    },
+    "favoriteArtists": [
+      "José Luis Perales",
+      "Los Bukis"
+    ]
   },
   "2": {
     "songs": {

@@ -267,14 +267,17 @@ function buildGenresFromCache(songs) {
   const pref = (str) => String(str || '').trim();
   
   for (const s of songs) {
-    const raw = pref(s.genre) || 'Sin género';
-    const key = raw.toLowerCase();
-    let entry = map.get(key);
-    if (!entry) {
-      entry = { name: raw, songs: [] };
-      map.set(key, entry);
+    const genres = Array.isArray(s.genre) ? s.genre : [pref(s.genre) || 'Sin género'];
+    for (const raw of genres) {
+      const trimmed = pref(raw) || 'Sin género';
+      const key = trimmed.toLowerCase();
+      let entry = map.get(key);
+      if (!entry) {
+        entry = { name: trimmed, songs: [] };
+        map.set(key, entry);
+      }
+      entry.songs.push(s);
     }
-    entry.songs.push(s);
   }
   
   return [...map.values()]
@@ -403,6 +406,33 @@ app.post('/api/auth/logout', async (req, res) => {
   } catch (err) {
     console.error('[logout]', err);
     res.status(500).json({ error: 'Error al cerrar sesión' });
+  }
+});
+
+//=========================================================
+// RUTAS - ARTISTAS FAVORITOS
+// ============================================================
+
+app.get('/api/favorite-artists', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const artists = await db.getFavoriteArtists(userId);
+    res.json({ artists });
+  } catch (err) {
+    console.error('[api/favorite-artists]', err);
+    res.status(500).json({ error: 'Error al obtener artistas favoritos' });
+  }
+});
+
+app.post('/api/favorite-artists/toggle', async (req, res) => {
+  try {
+    const { artist, userId } = req.body;
+    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
+    const artists = await db.toggleFavoriteArtist(artist, userId);
+    res.json({ artists });
+  } catch (err) {
+    console.error('[api/favorite-artists/toggle]', err);
+    res.status(500).json({ error: 'Error al cambiar artista favorito' });
   }
 });
 

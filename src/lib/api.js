@@ -236,6 +236,13 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ filePath }),
   }),
+
+  // Dentro de export const api = { ... }
+  getFavoriteArtists: (userId) => request(`/api/favorite-artists?userId=${userId}`),
+  toggleFavoriteArtist: (artist, userId) => request('/api/favorite-artists/toggle', {
+    method: 'POST',
+    body: JSON.stringify({ artist, userId }),
+  }),
 };
 
 export const audioUrl = (id) => `${getApiUrl() || ''}/audio/${id}`;

@@ -38,8 +38,10 @@ import NowPlayingScreen from './components/NowPlayingScreen.jsx';
 import MobileSearchView from './components/MobileSearchView.jsx';
 import LikedSongsView from './components/LikedSongsView.jsx';
 import PlayListsManager from './components/PlayListsManager.jsx';
-import DownloadsView from './components/DownloadsView.jsx'; // <-- NUEVA IMPORTACIÓN
+import DownloadsView from './components/DownloadsView.jsx';
 import DownloadAllButton from './components/DownloadAllButton.jsx';
+import OfflineMode from './components/OfflineMode.jsx';
+import AIRecommendations from './components/AIRecommendations.jsx';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 
@@ -295,6 +297,13 @@ function Shell() {
   }
 
   // ============================================================
+  // DETECTAR ESTADO OFFLINE (sin conexión)
+  // ============================================================
+  if (!isOnline) {
+    return <OfflineMode />;
+  }
+
+  // ============================================================
   // PANTALLA DE LOGIN (con opción offline)
   // ============================================================
   if (!isAuthenticated && !offlineMode) {
@@ -502,6 +511,13 @@ function Shell() {
               onDelete={library.removeSong}
               allSongs={allSongs}
             />
+          ) : view.type === 'ai' ? (
+            // ===== VISTA IA =====
+            <AIRecommendations
+              songs={allSongs}
+              likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
+              history={[]}
+            />
           ) : null}
         </div>
 
@@ -682,11 +698,18 @@ function Shell() {
             <PlayListsManager
               userId={user?.id}
               onBack={() => setView({ type: 'home' })}
-              onLike={handleLike}
-              onDislike={handleDislike}
+              onLike={library.toggleLike}
+              onDislike={library.dislikeSong}
               onDislikeArtist={library.dislikeArtist}
               onDelete={library.removeSong}
               allSongs={allSongs}
+            />
+          ) : view.type === 'ai' ? (
+            // ===== VISTA IA =====
+            <AIRecommendations
+              songs={allSongs}
+              likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
+              history={[]}
             />
           ) : null}
         </main>

@@ -69,14 +69,16 @@ export function buildArtists(songs) {
 export function buildGenres(songs) {
   const map = new Map();
   for (const s of songs) {
-    const raw = s.genre || 'Sin género';
-    const key = normalizeKey(raw);
-    let entry = map.get(key);
-    if (!entry) {
-      entry = { name: raw, songs: [] };
-      map.set(key, entry);
+    const genres = Array.isArray(s.genre) ? s.genre : [s.genre || 'Sin género'];
+    for (const raw of genres) {
+      const key = normalizeKey(raw);
+      let entry = map.get(key);
+      if (!entry) {
+        entry = { name: raw, songs: [] };
+        map.set(key, entry);
+      }
+      entry.songs.push(s);
     }
-    entry.songs.push(s);
   }
   return [...map.values()]
     .map((g) => ({

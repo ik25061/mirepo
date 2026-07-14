@@ -5,7 +5,8 @@ export default function Sidebar({ view, onNavigate, trashCount = 0 }) {
     { id: 'home', label: 'Inicio', icon: Home },
     { id: 'search', label: 'Buscar', icon: Search },
     { id: 'library', label: 'Biblioteca', icon: Library },
-    { id: 'downloads', label: 'Descargas', icon: Download }, // <-- NUEVO
+    { id: 'downloads', label: 'Descargas', icon: Download },
+    { id: 'ai', label: 'Asistente IA', icon: () => '🤖' },
     { id: 'likedSongs', label: 'Me gusta', icon: Heart },
     { id: 'playlists', label: 'Listas', icon: ListMusic },
   ];

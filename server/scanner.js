@@ -87,17 +87,33 @@ async function readSong(file) {
   }
 
   const picture = common.picture && common.picture[0];
+  
+  // Parsear géneros: si hay múltiples separados por ";", crear array
+  let genres = ['Sin género'];
+  if (common.genre && common.genre[0]) {
+    genres = common.genre[0]
+      .split(';')
+      .map(g => g.trim())
+      .filter(g => g.length > 0);
+    if (genres.length === 0) genres = ['Sin género'];
+  }
+  
+  // Detectar si existe archivo .lrc correspondiente
+  const basePath = file.slice(0, -path.extname(file).length);
+  const hasLyrics = fs.existsSync(`${basePath}.lrc`);
+  
   return {
     id,
     relPath,
     title: common.title || cleanName(file),
     artist: common.artist || common.albumartist || pathArtist || 'Artista desconocido',
     album: common.album || pathAlbum || 'Álbum desconocido',
-    genre: (common.genre && common.genre[0]) || 'Sin género',
+    genre: genres,
     year: common.year || null,
     track: (common.track && common.track.no) || null,
     duration: format.duration ? Math.round(format.duration) : null,
     hasCover: Boolean(picture),
+    hasLyrics,
   };
 }
 

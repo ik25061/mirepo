@@ -368,6 +368,28 @@ export async function deletePlayList(id) {
   return true;
 }
 
+//====================================
+// ARTISTAS FAVORITOS
+// ============================================================
+
+export async function getFavoriteArtists(userId) {
+  const userPrefs = getUserPrefs(userId);
+  return userPrefs.favoriteArtists || [];
+}
+
+export async function toggleFavoriteArtist(artist, userId) {
+  const userPrefs = getUserPrefs(userId);
+  if (!userPrefs.favoriteArtists) userPrefs.favoriteArtists = [];
+  const index = userPrefs.favoriteArtists.indexOf(artist);
+  if (index === -1) {
+    userPrefs.favoriteArtists.push(artist);
+  } else {
+    userPrefs.favoriteArtists.splice(index, 1);
+  }
+  savePrefs();
+  return userPrefs.favoriteArtists;
+}
+
 // ============================================================
 // 5. EXPORTACIONES
 // ============================================================

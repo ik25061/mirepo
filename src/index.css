@@ -89,3 +89,17 @@ button:focus-visible,
   outline: 2px solid #1db954;
   outline-offset: 2px;
 }
+
+/* En index.css o un archivo de estilos global */
+
+/* Tamaño de los círculos */
+.artist-circle {
+  width: 80px;
+  height: 80px;
+}
+
+/* Cambiar el color de selección (por defecto #1db954) */
+.artist-selected {
+  background-color: rgba(29, 185, 84, 0.2);
+  ring-color: #1db954;
+}

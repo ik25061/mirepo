@@ -380,7 +380,10 @@ export function PlayerProvider({ children }) {
     } else if (contextType === 'album') {
       contextSongs = allSongs.filter(s => s.album === contextValue);
     } else if (contextType === 'genre') {
-      contextSongs = allSongs.filter(s => s.genre === contextValue);
+      contextSongs = allSongs.filter(s => {
+        const genres = Array.isArray(s.genre) ? s.genre : [s.genre || ''];
+        return genres.includes(contextValue);
+      });
     } else if (contextType === 'year') {
       contextSongs = allSongs.filter(s => s.year === parseInt(contextValue));
     } else {
@@ -427,7 +430,7 @@ export function PlayerProvider({ children }) {
       } else if (contextType === 'album') {
         value = song.album || '';
       } else if (contextType === 'genre') {
-        value = song.genre || '';
+        value = Array.isArray(song.genre) ? song.genre[0] : (song.genre || '');
       } else if (contextType === 'year') {
         value = String(song.year || '');
       }
@@ -473,7 +476,10 @@ export function PlayerProvider({ children }) {
           const nextContextSongs = allSongs.filter(s => {
             if (contextType === 'artist') return s.artist === value;
             if (contextType === 'album') return s.album === value;
-            if (contextType === 'genre') return s.genre === value;
+            if (contextType === 'genre') {
+              const genres = Array.isArray(s.genre) ? s.genre : [s.genre || ''];
+              return genres.includes(value);
+            }
             if (contextType === 'year') return String(s.year) === value;
             return false;
           });
@@ -514,7 +520,10 @@ export function PlayerProvider({ children }) {
       const nextContextSongs = allSongs.filter(s => {
         if (contextType === 'artist') return s.artist === nextContextValue;
         if (contextType === 'album') return s.album === nextContextValue;
-        if (contextType === 'genre') return s.genre === nextContextValue;
+        if (contextType === 'genre') {
+          const genres = Array.isArray(s.genre) ? s.genre : [s.genre || ''];
+          return genres.includes(nextContextValue);
+        }
         if (contextType === 'year') return String(s.year) === nextContextValue;
         return false;
       });

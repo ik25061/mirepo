@@ -49,8 +49,10 @@ export default function LikedSongsView({
   const genres = useMemo(() => {
     const genreSet = new Set();
     likedSongs.forEach(s => {
-      const g = s.genre || 'Sin género';
-      if (g && g !== 'Sin género') genreSet.add(g);
+      const songGenres = Array.isArray(s.genre) ? s.genre : [s.genre || 'Sin género'];
+      songGenres.forEach(g => {
+        if (g && g !== 'Sin género') genreSet.add(g);
+      });
     });
     return ['all', ...Array.from(genreSet).sort()];
   }, [likedSongs]);
@@ -58,7 +60,10 @@ export default function LikedSongsView({
   // Filtrar canciones por género
   const filteredSongs = useMemo(() => {
     if (selectedGenre === 'all') return likedSongs;
-    return likedSongs.filter(s => (s.genre || 'Sin género') === selectedGenre);
+    return likedSongs.filter(s => {
+      const songGenres = Array.isArray(s.genre) ? s.genre : [s.genre || ''];
+      return songGenres.includes(selectedGenre);
+    });
   }, [likedSongs, selectedGenre]);
 
   const totalSec = filteredSongs.reduce((acc, s) => acc + (s.duration || 0), 0);
