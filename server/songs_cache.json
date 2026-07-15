@@ -412,6 +412,21 @@
       "hasCover": true
     },
     {
+      "id": "549324c16e8c0a2f",
+      "relPath": "Diablos Locos\\15 Grandes\\¿Dónde Estás-.mp3",
+      "title": "¿Dónde Estás?",
+      "artist": "Diablos Locos",
+      "album": "15 Grandes",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2010,
+      "track": 7,
+      "duration": 265,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "eccea3a4bbf74635",
       "relPath": "Intocable\\Historia y Tradición - Sueños\\¿En Qué Fallamos-.mp3",
       "title": "¿En Qué Fallamos?",
@@ -3572,6 +3587,21 @@
       "track": 11,
       "duration": 258,
       "hasCover": true
+    },
+    {
+      "id": "dca7142a657883fb",
+      "relPath": "Lalo Mora\\El Águila Real\\A Grito Abierto.mp3",
+      "title": "A Grito Abierto",
+      "artist": "Lalo Mora",
+      "album": "El Águila Real",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1998,
+      "track": 6,
+      "duration": 204,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "741f924e45144b3d",
@@ -8482,6 +8512,21 @@
       "hasCover": true
     },
     {
+      "id": "514793bc5c549031",
+      "relPath": "Los Campeones De Raul Ruiz\\Desconocido\\Ahora.mp3",
+      "title": "Ahora",
+      "artist": "Los Campeones De Raul Ruiz",
+      "album": "Desconocido",
+      "genre": [
+        "Desconocido"
+      ],
+      "year": 2002,
+      "track": 6,
+      "duration": 99,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "45e77219399f0432",
       "relPath": "Juan Gabriel\\Juan Gabriel Con Banda... El Recodo\\Ahora Con la Banda Popurrí...- Te Voy Olvídar - Ya Para Qué - La Farsante (feat. Banda el Recodo).mp3",
       "title": "Ahora Con la Banda Popurrí...: Te Voy Olvídar / Ya Para Qué / La Farsante (feat. Banda el Recodo)",
@@ -8588,6 +8633,21 @@
       "track": 10,
       "duration": 208,
       "hasCover": true
+    },
+    {
+      "id": "68dc79cc2381dd96",
+      "relPath": "Los Reyes del Camino\\Solo Para Enamorados\\Ahora Me Dices.mp3",
+      "title": "Ahora Me Dices",
+      "artist": "Los Reyes del Camino",
+      "album": "Solo Para Enamorados",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1996,
+      "track": 6,
+      "duration": 167,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "77adaabf781ff385",
@@ -8768,6 +8828,21 @@
       "track": 7,
       "duration": 241,
       "hasCover": true
+    },
+    {
+      "id": "82e685dd833acff6",
+      "relPath": "El Poder del Norte\\Mi Decisión\\Ahora Que Ya Estás Casada.mp3",
+      "title": "Ahora Que Ya Estás Casada",
+      "artist": "El Poder del Norte",
+      "album": "Mi Decisión",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1996,
+      "track": 7,
+      "duration": 211,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "e99079be3ccc0935",
@@ -22864,6 +22939,21 @@
       "hasCover": true
     },
     {
+      "id": "c4b5aac6ca5edde7",
+      "relPath": "Rigo Tovar\\El Músico Chiflado\\Ay! Que Pena.mp3",
+      "title": "Ay! Que Pena",
+      "artist": "Rigo Tovar",
+      "album": "El Músico Chiflado",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1985,
+      "track": 6,
+      "duration": 225,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "d7fd51c50f3242a2",
       "relPath": "Las Jilguerillas\\Ay! Qué Ventanas Tan Altas\\Ay! Qué Ventanas Tan Altas.mp3",
       "title": "Ay! Qué Ventanas Tan Altas",
@@ -31816,6 +31906,21 @@
       "hasCover": true
     },
     {
+      "id": "7f8131a50c6c9c94",
+      "relPath": "Pasión Tropical\\Desconocido\\Busca Por Dentro.mp3",
+      "title": "Busca Por Dentro",
+      "artist": "Pasión Tropical",
+      "album": "Desconocido",
+      "genre": [
+        "Música tropical"
+      ],
+      "year": 2004,
+      "track": 8,
+      "duration": 347,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "886eb91a5a5dc631",
       "relPath": "Los Diablitos\\Lenguaje Universal\\Busca un Confidente.mp3",
       "title": "Busca un Confidente",
@@ -33691,6 +33796,21 @@
       "hasCover": true
     },
     {
+      "id": "ada63fcb9764007b",
+      "relPath": "Los Temerarios\\Edición de Oro\\Caminito a Morelos.mp3",
+      "title": "Caminito a Morelos",
+      "artist": "Los Temerarios",
+      "album": "Edición de Oro",
+      "genre": [
+        "Pop in spanish"
+      ],
+      "year": 1986,
+      "track": 6,
+      "duration": 186,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "1b631544689c543c",
       "relPath": "Pedro Infante\\Pilares de la cancion ranchera\\Camino a Guanajuato.mp3",
       "title": "Camino a Guanajuato",
@@ -34891,6 +35011,21 @@
       "hasCover": true
     },
     {
+      "id": "7d8264bf8570069b",
+      "relPath": "Los Terribles del Norte\\El Último Paso (Versión Remasterizada)\\Candidata al Infierno.mp3",
+      "title": "Candidata al Infierno",
+      "artist": "Los Terribles del Norte",
+      "album": "El Último Paso (Versión Remasterizada)",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2000,
+      "track": 7,
+      "duration": 218,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "d2df900e8b2a3dd9",
       "relPath": "Julio Iglesias\\El Amor\\Candilejas.mp3",
       "title": "Candilejas",
@@ -35573,6 +35708,21 @@
       "track": 6,
       "duration": 169,
       "hasCover": false
+    },
+    {
+      "id": "91717be42246cb19",
+      "relPath": "Miguel Aceves Mejía\\The Originals- The Mariachi (Remastered)\\Carabina 30-30.mp3",
+      "title": "Carabina 30-30",
+      "artist": "Miguel Aceves Mejía",
+      "album": "The Originals: The Mariachi (Remastered)",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1995,
+      "track": 7,
+      "duration": 200,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "9caa873f34c2f7bc",
@@ -40603,6 +40753,21 @@
       "hasCover": true
     },
     {
+      "id": "7157eb60fbd8ed96",
+      "relPath": "Bassline Noir\\Spy Electronica (Surveillance Grid)\\Classified Relay.mp3",
+      "title": "Classified Relay",
+      "artist": "Bassline Noir",
+      "album": "Spy Electronica (Surveillance Grid)",
+      "genre": [
+        "Jazz"
+      ],
+      "year": 2026,
+      "track": 7,
+      "duration": 153,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "003b9e3a2bd82386",
       "relPath": "Maná\\Sueños Líquidos\\Clavado en un Bar.mp3",
       "title": "Clavado en un Bar",
@@ -44899,6 +45064,21 @@
       "hasCover": true
     },
     {
+      "id": "0dacb59548ef54c1",
+      "relPath": "Jeanette\\Coleccion Original- Jeanette\\Con Que Derecho.mp3",
+      "title": "Con Que Derecho",
+      "artist": "Jeanette",
+      "album": "Coleccion Original: Jeanette",
+      "genre": [
+        "Latino"
+      ],
+      "year": 1997,
+      "track": 6,
+      "duration": 182,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "6732f1048b0bf9bd",
       "relPath": "Hector Acosta\\Desconocido\\Con Que Ojos.mp3",
       "title": "Con Que Ojos",
@@ -45377,6 +45557,21 @@
       "track": 10,
       "duration": 173,
       "hasCover": true
+    },
+    {
+      "id": "0d33b5f8369521cd",
+      "relPath": "Pedro Infante\\Puras Pa Niños - EP\\Conejo Blas.mp3",
+      "title": "Conejo Blas",
+      "artist": "Pedro Infante",
+      "album": "Puras Pa Niños - EP",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1998,
+      "track": null,
+      "duration": 100,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "ae39d4afaee80f47",
@@ -47225,6 +47420,21 @@
       "track": 16,
       "duration": 131,
       "hasCover": true
+    },
+    {
+      "id": "6ce64eb820d094d2",
+      "relPath": "Los Fresno\\Corazón de Roca\\Corazón de Roca.mp3",
+      "title": "Corazón de Roca",
+      "artist": "Los Fresno",
+      "album": "Corazón de Roca",
+      "genre": [
+        "Latino"
+      ],
+      "year": 1996,
+      "track": null,
+      "duration": 197,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "171b622de32b8a5a",
@@ -49711,6 +49921,21 @@
       "hasCover": true
     },
     {
+      "id": "0d1efdef32e436ec",
+      "relPath": "Los Rancheritos del Topo Chico\\Super Éxitos\\Cuando Dos Almas.mp3",
+      "title": "Cuando Dos Almas",
+      "artist": "Los Rancheritos del Topo Chico",
+      "album": "Super Éxitos",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1993,
+      "track": 5,
+      "duration": 191,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "609e0f84a74206da",
       "relPath": "RBD\\Rebelde\\Cuando el amor se acaba.mp3",
       "title": "Cuando el amor se acaba",
@@ -51380,6 +51605,36 @@
       "track": 2,
       "duration": 162,
       "hasCover": true
+    },
+    {
+      "id": "90a9c454c9f8ca27",
+      "relPath": "Julio Chaidez\\El Regreso (En Vivo)\\Cuanto Me Gusta Este Rancho (En Vivo).mp3",
+      "title": "Cuanto Me Gusta Este Rancho (En Vivo)",
+      "artist": "Julio Chaidez",
+      "album": "El Regreso (En Vivo)",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2026,
+      "track": 6,
+      "duration": 263,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
+      "id": "d632c42448ab7845",
+      "relPath": "Los Tucanes de Tijuana\\Amante De Lo Bueno\\Cuanto Me Gustas.mp3",
+      "title": "Cuanto Me Gustas",
+      "artist": "Los Tucanes de Tijuana",
+      "album": "Amante De Lo Bueno",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2006,
+      "track": 8,
+      "duration": 188,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "b1325c544d7d3a06",
@@ -53279,6 +53534,21 @@
       "track": 6,
       "duration": 185,
       "hasCover": false
+    },
+    {
+      "id": "bf4b7a739df9928a",
+      "relPath": "Junior Klan\\Éxitos, Vol. 3\\Cumbia y Guarare.mp3",
+      "title": "Cumbia y Guarare",
+      "artist": "Junior Klan",
+      "album": "Éxitos, Vol. 3",
+      "genre": [
+        "Easy listening"
+      ],
+      "year": 1995,
+      "track": 7,
+      "duration": 176,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "2c723c611cdb5c11",
@@ -59020,6 +59290,21 @@
       "hasCover": true
     },
     {
+      "id": "4bc46cd30ccbbb7b",
+      "relPath": "Los Relampagos del Norte\\Llora, Llora\\Desconfianza.mp3",
+      "title": "Desconfianza",
+      "artist": "Los Relampagos del Norte",
+      "album": "Llora, Llora",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2023,
+      "track": 8,
+      "duration": 192,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "f0a304ba5015b68a",
       "relPath": "Marta Sánchez\\Desconocida\\Desconocida.mp3",
       "title": "Desconocida",
@@ -63451,6 +63736,21 @@
       "hasCover": true
     },
     {
+      "id": "e2931200340c1f69",
+      "relPath": "DJ SIDUK\\Desconocido\\DJ GAK PAKE LAMA X DUM DEE DUM X TERMINATOR.mp3",
+      "title": "DJ GAK PAKE LAMA X DUM DEE DUM X TERMINATOR",
+      "artist": "DJ SIDUK",
+      "album": "Desconocido",
+      "genre": [
+        "Breakbeat"
+      ],
+      "year": 2009,
+      "track": 6,
+      "duration": 173,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "f91b555f41001c80",
       "relPath": "Usher Featuring Pitbull\\DJ Got Us Fallin' In Love\\DJ Got Us Fallin' In Love (Original).mp3",
       "title": "DJ Got Us Fallin' In Love (Original)",
@@ -66029,6 +66329,21 @@
       "track": 5,
       "duration": 122,
       "hasCover": false
+    },
+    {
+      "id": "dbb2035792fd5fe3",
+      "relPath": "Julio Chaidez\\Desconocido\\Dos Pasajes.mp3",
+      "title": "Dos Pasajes",
+      "artist": "Julio Chaidez",
+      "album": "Desconocido",
+      "genre": [
+        "Latino"
+      ],
+      "year": 2006,
+      "track": 7,
+      "duration": 126,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "8c5b8ac9bde7b69e",
@@ -69653,6 +69968,21 @@
       "track": 24,
       "duration": 172,
       "hasCover": true
+    },
+    {
+      "id": "848d909138950c29",
+      "relPath": "Los Invasores de Nuevo León\\Déjate Llevar\\El As de los Amores.mp3",
+      "title": "El As de los Amores",
+      "artist": "Los Invasores de Nuevo León",
+      "album": "Déjate Llevar",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2010,
+      "track": 7,
+      "duration": 178,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "bda2e810fdb0e488",
@@ -75592,6 +75922,21 @@
       "hasCover": true
     },
     {
+      "id": "c86dadc96a754cc4",
+      "relPath": "Fito Olivares\\Momentos de Colécción- Fito Olivares\\El Mandilón.mp3",
+      "title": "El Mandilón",
+      "artist": "Fito Olivares",
+      "album": "Momentos de Colécción: Fito Olivares",
+      "genre": [
+        "Latino"
+      ],
+      "year": 1998,
+      "track": 8,
+      "duration": 176,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "f54bd52811e4841f",
       "relPath": "Los Garcia Bros\\30 Recuerdos de Oro\\El Manicero.mp3",
       "title": "El Manicero",
@@ -75770,6 +76115,21 @@
       "track": 4,
       "duration": 173,
       "hasCover": true
+    },
+    {
+      "id": "63be855c8e45aa8e",
+      "relPath": "Organización Génesis\\En Vivo 2012 (Vol. 1)\\El Marinero (En Vivo).mp3",
+      "title": "El Marinero (En Vivo)",
+      "artist": "Organización Génesis",
+      "album": "En Vivo 2012 (Vol. 1)",
+      "genre": [
+        "Música tropical"
+      ],
+      "year": 2012,
+      "track": 8,
+      "duration": 252,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "1bb6c01a270d9f48",
@@ -76370,6 +76730,21 @@
       "track": 5,
       "duration": 140,
       "hasCover": true
+    },
+    {
+      "id": "d2786e9a112b27e4",
+      "relPath": "Los Razos\\Puras Rancheras (Edicion Especial de Exitos)\\El Mujeriego.mp3",
+      "title": "El Mujeriego",
+      "artist": "Los Razos",
+      "album": "Puras Rancheras (Edicion Especial de Exitos)",
+      "genre": [
+        "Urbano latino"
+      ],
+      "year": 1995,
+      "track": 5,
+      "duration": 178,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "3b56f8acb9c64ef9",
@@ -77585,6 +77960,21 @@
       "track": 15,
       "duration": 153,
       "hasCover": true
+    },
+    {
+      "id": "da120d9dd1e19593",
+      "relPath": "Los Originales de San Juan\\Golpe Sobre Golpe\\El Pedorro.mp3",
+      "title": "El Pedorro",
+      "artist": "Los Originales de San Juan",
+      "album": "Golpe Sobre Golpe",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2005,
+      "track": 6,
+      "duration": 137,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "281e490262631a68",
@@ -80146,6 +80536,21 @@
       "hasCover": true
     },
     {
+      "id": "fb5d6f7fec8d0723",
+      "relPath": "Banda Machos\\El Sonidito (Ruidito) - Single\\El Sonidito (Ruidito).mp3",
+      "title": "El Sonidito (Ruidito)",
+      "artist": "Banda Machos",
+      "album": "El Sonidito (Ruidito) - Single",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2008,
+      "track": 7,
+      "duration": 239,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "e2ffd36adc48440f",
       "relPath": "Ritmosfera Club\\Boogie & Flow\\El Sonido del Barrio.mp3",
       "title": "El Sonido del Barrio",
@@ -82150,6 +82555,21 @@
       "hasCover": true
     },
     {
+      "id": "8517f06489248191",
+      "relPath": "Grupo Pegasso\\12 Remembranzas, Vol. 2\\Electricidad.mp3",
+      "title": "Electricidad",
+      "artist": "Grupo Pegasso",
+      "album": "12 Remembranzas, Vol. 2",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1999,
+      "track": 7,
+      "duration": 193,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "084bbca456f9e320",
       "relPath": "Calle 13\\Calle 13\\Electrico.mp3",
       "title": "Eléctrico",
@@ -82172,6 +82592,21 @@
       "track": 4,
       "duration": 197,
       "hasCover": true
+    },
+    {
+      "id": "10c34520019640fa",
+      "relPath": "mychael wong\\Electronic Dance Music 2024 Volume 2\\Electronic Dance Music Exercise.mp3",
+      "title": "Electronic Dance Music Exercise",
+      "artist": "mychael wong",
+      "album": "Electronic Dance Music 2024 Volume 2",
+      "genre": [
+        "Dance"
+      ],
+      "year": 2024,
+      "track": 7,
+      "duration": 238,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "928ef4feef5cd6de",
@@ -82592,6 +83027,21 @@
       "track": 8,
       "duration": 205,
       "hasCover": true
+    },
+    {
+      "id": "0403ed800069f61f",
+      "relPath": "Control\\Desconocido\\Ella Es una Diosa.mp3",
+      "title": "Ella Es una Diosa",
+      "artist": "Control",
+      "album": "Desconocido",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": null,
+      "track": 6,
+      "duration": 183,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "a6bfa9753db87104",
@@ -106894,6 +107344,21 @@
       "hasCover": true
     },
     {
+      "id": "77605b133daffe52",
+      "relPath": "Embrujo Vallenato\\Evolución\\Historia Gris.mp3",
+      "title": "Historia Gris",
+      "artist": "Embrujo Vallenato",
+      "album": "Evolución",
+      "genre": [
+        "Latino"
+      ],
+      "year": 2002,
+      "track": 8,
+      "duration": 302,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "522998ab64ec7dd8",
       "relPath": "Sentidos Opuestos\\Sentidos Opuestos\\Historias de Amor.mp3",
       "title": "Historias de Amor",
@@ -116869,6 +117334,21 @@
       "hasCover": true
     },
     {
+      "id": "eeee7e62815880e3",
+      "relPath": "ROBERT\\Desconocido\\IT'S NOW OF NEVER 把握良機.mp3",
+      "title": "IT'S NOW OF NEVER 把握良機",
+      "artist": "ROBERT",
+      "album": "Desconocido",
+      "genre": [
+        "Desconocido"
+      ],
+      "year": null,
+      "track": 6,
+      "duration": 184,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "7f50dee524602820",
       "relPath": "Elvis Presley\\Elvis Presley- The Searcher (The Original Soundtrack) [Deluxe]\\It's Now or Never.mp3",
       "title": "It's Now or Never",
@@ -118175,6 +118655,21 @@
       "track": 11,
       "duration": 154,
       "hasCover": false
+    },
+    {
+      "id": "4bf08b0cc008c632",
+      "relPath": "El Tigrillo Palma\\Los Jefes del Corrido\\Juan Beltran.mp3",
+      "title": "Juan Beltran",
+      "artist": "El Tigrillo Palma",
+      "album": "Los Jefes del Corrido",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2008,
+      "track": 7,
+      "duration": 301,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "aec8b64464e17aa7",
@@ -123685,6 +124180,21 @@
       "hasCover": false
     },
     {
+      "id": "b2ec3477b85fa203",
+      "relPath": "Javier Solís\\Tesoros de Colección- Javier Solís Interpreta a Agustín Lara\\La Cumbancha.mp3",
+      "title": "La Cumbancha",
+      "artist": "Javier Solís",
+      "album": "Tesoros de Colección: Javier Solís Interpreta a Agustín Lara",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2011,
+      "track": null,
+      "duration": 175,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "c3e474d5eee0c108",
       "relPath": "Jimmy Gonzalez y Grupo Mazz\\Siempre Humilde (Remastered)\\La Cumbia Barulera.mp3",
       "title": "La Cumbia Barulera",
@@ -125399,6 +125909,21 @@
       "track": 7,
       "duration": 217,
       "hasCover": true
+    },
+    {
+      "id": "15d42d81054ab0d6",
+      "relPath": "Los Terribles del Norte\\El Último Paso (Versión Remasterizada)\\La Gata Blanca.mp3",
+      "title": "La Gata Blanca",
+      "artist": "Los Terribles del Norte",
+      "album": "El Último Paso (Versión Remasterizada)",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2000,
+      "track": 6,
+      "duration": 196,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "f2ae4fe916ec3693",
@@ -127439,6 +127964,21 @@
       "track": 10,
       "duration": 160,
       "hasCover": true
+    },
+    {
+      "id": "7ccf7b9e08f6106a",
+      "relPath": "Leonardo Favio\\Aquí Está  Como Me Duele la Piel\\La Mas Bonita del Pueblo.mp3",
+      "title": "La Mas Bonita del Pueblo",
+      "artist": "Leonardo Favio",
+      "album": "Aquí Está  Como Me Duele la Piel",
+      "genre": [
+        "Baladas y boleros"
+      ],
+      "year": 1983,
+      "track": 8,
+      "duration": 283,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "33e14a07bc91e11b",
@@ -132475,6 +133015,21 @@
       "hasCover": true
     },
     {
+      "id": "a0bf12084f4dc103",
+      "relPath": "Los Tucanes de Tijuana\\El Virus Del Amor\\La Vida Es Bella.mp3",
+      "title": "La Vida Es Bella",
+      "artist": "Los Tucanes de Tijuana",
+      "album": "El Virus Del Amor",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2004,
+      "track": 8,
+      "duration": 218,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "d3c00e9c9c560427",
       "relPath": "Timbiriche\\Timbiriche 25 Todo el reencuentro\\La vida es mejor cantando.mp3",
       "title": "La vida es mejor cantando",
@@ -133757,6 +134312,21 @@
       "track": 3,
       "duration": 124,
       "hasCover": true
+    },
+    {
+      "id": "cc0e8b4373727648",
+      "relPath": "Lorenzo De Monteclaro\\Ese Señor de las Canas\\Las Ausencias.mp3",
+      "title": "Las Ausencias",
+      "artist": "Lorenzo De Monteclaro",
+      "album": "Ese Señor de las Canas",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2013,
+      "track": 8,
+      "duration": 195,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "e198f671d3a749e3",
@@ -135092,6 +135662,21 @@
       "track": 3,
       "duration": 137,
       "hasCover": true
+    },
+    {
+      "id": "f63592c2ec97f3d5",
+      "relPath": "Los Buitres de Culiacan Sinaloa\\Los Buitres Con Tololoche\\Las Plebes High Class.mp3",
+      "title": "Las Plebes High Class",
+      "artist": "Los Buitres de Culiacan Sinaloa",
+      "album": "Los Buitres Con Tololoche",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2010,
+      "track": 9,
+      "duration": 164,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "3f1de595c011765f",
@@ -153172,6 +153757,21 @@
       "hasCover": true
     },
     {
+      "id": "c5962b54b4fc09e7",
+      "relPath": "Lalo Mora y su Grupo Peregrino\\Mis Éxitos en Vivo\\Me Refiero a Ti (En Vivo).mp3",
+      "title": "Me Refiero a Ti (En Vivo)",
+      "artist": "Lalo Mora y su Grupo Peregrino",
+      "album": "Mis Éxitos en Vivo",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2009,
+      "track": 8,
+      "duration": 184,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "6c51b2c9ffa72970",
       "relPath": "Rocío Dúrcal\\Juntos Otra Vez\\Me Refugie en Tu Juventud.mp3",
       "title": "Me Refugie en Tu Juventud",
@@ -154994,6 +155594,21 @@
       "track": 2,
       "duration": 250,
       "hasCover": false
+    },
+    {
+      "id": "5744a72e6fda3113",
+      "relPath": "Noemy\\Eternamente\\Mentiras.mp3",
+      "title": "Mentiras",
+      "artist": "Noemy",
+      "album": "Eternamente",
+      "genre": [
+        "Latino"
+      ],
+      "year": 1996,
+      "track": 7,
+      "duration": 209,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "21148e01fc4772bc",
@@ -157745,6 +158360,21 @@
       "track": 11,
       "duration": 164,
       "hasCover": true
+    },
+    {
+      "id": "01b6d776b9231fa6",
+      "relPath": "Patrulla 81\\Divinas\\Mi Loca Pasión.mp3",
+      "title": "Mi Loca Pasión",
+      "artist": "Patrulla 81",
+      "album": "Divinas",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1995,
+      "track": null,
+      "duration": 137,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "e3efe5d2d4c57552",
@@ -162743,6 +163373,21 @@
       "track": 4,
       "duration": 169,
       "hasCover": true
+    },
+    {
+      "id": "b3bbffcb78d54fc4",
+      "relPath": "Los Acosta\\Tonto Corazón\\Morenita.mp3",
+      "title": "Morenita",
+      "artist": "Los Acosta",
+      "album": "Tonto Corazón",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1995,
+      "track": 7,
+      "duration": 159,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "dc6ae51af6ee0605",
@@ -168304,6 +168949,21 @@
       "hasCover": true
     },
     {
+      "id": "170b4aafce36fefc",
+      "relPath": "Los Herederos de Nuevo León\\No Decidas Por Mí\\Ni Como Amigo.mp3",
+      "title": "Ni Como Amigo",
+      "artist": "Los Herederos de Nuevo León",
+      "album": "No Decidas Por Mí",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2011,
+      "track": 7,
+      "duration": 181,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "3bb4953cbe0f6d2d",
       "relPath": "Los Mismos Grupo Modelo\\Mano a Mano\\Ni Como Amigos.mp3",
       "title": "Ni Como Amigos",
@@ -168866,6 +169526,21 @@
       "track": 14,
       "duration": 227,
       "hasCover": true
+    },
+    {
+      "id": "c5756104b2a209c5",
+      "relPath": "AVSR\\Nibiru Traveller\\Nibiru Traveller Re-Edit (Mms Project Cove Mix).mp3",
+      "title": "Nibiru Traveller Re-Edit (Mms Project Cove Mix)",
+      "artist": "AVSR",
+      "album": "Nibiru Traveller",
+      "genre": [
+        "Dance"
+      ],
+      "year": 2010,
+      "track": 7,
+      "duration": 194,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "80c2bc04e519604c",
@@ -178145,9 +178820,9 @@
     },
     {
       "id": "eefe1fcd06e31a35",
-      "relPath": "Various Artists\\La academia\\Nunca voy a olvidarte.mp3",
+      "relPath": "Various Artists\\La academia\\Artista desconocido - Nunca voy a olvidarte.mp3",
       "title": "Nunca voy a olvidarte",
-      "artist": "[desconocido]",
+      "artist": "Artista desconocido",
       "album": "La academia",
       "genre": "Sin género",
       "year": 2002,
@@ -188977,6 +189652,21 @@
       "hasCover": true
     },
     {
+      "id": "0c13a7e594ca39de",
+      "relPath": "Los Yonic's\\35 Aniversario\\Pero No Me Engañes.mp3",
+      "title": "Pero No Me Engañes",
+      "artist": "Los Yonic's",
+      "album": "35 Aniversario",
+      "genre": [
+        "Baladas y boleros"
+      ],
+      "year": 1984,
+      "track": 7,
+      "duration": 197,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "5a8f1c2c037df49d",
       "relPath": "Fidel Rueda\\Pero No Puedo\\Pero No Puedo.mp3",
       "title": "Pero No Puedo",
@@ -192421,6 +193111,21 @@
       "hasCover": true
     },
     {
+      "id": "8f2943949dcb8990",
+      "relPath": "Jorge Muñiz\\Emociones\\Popurrí los Ángeles Negros.mp3",
+      "title": "Popurrí los Ángeles Negros",
+      "artist": "Jorge Muñiz",
+      "album": "Emociones",
+      "genre": [
+        "Pop in spanish"
+      ],
+      "year": 2011,
+      "track": 8,
+      "duration": 484,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "064069db7ef423c2",
       "relPath": "Margarita y Su Sonora\\Discoteca Tropical\\Popurrí Margarita No. 1 (Que suba el telón - Cumbia del sida - A mover la colita - Llámame - No provoques mi pichichi - Oye).mp3",
       "title": "Popurrí Margarita No. 1 (Que suba el telón / Cumbia del sida / A mover la colita / Llámame / No provoques mi pichichi / Oye)",
@@ -192515,6 +193220,21 @@
       "track": 5,
       "duration": 448,
       "hasCover": true
+    },
+    {
+      "id": "0d383d27eb614768",
+      "relPath": "Victor Yturbe -El Piruli-\\Desconocido\\Popurrí Trios IV.mp3",
+      "title": "Popurrí Trios IV",
+      "artist": "Victor Yturbe \"El Piruli\"",
+      "album": "Desconocido",
+      "genre": [
+        "Pop"
+      ],
+      "year": 1992,
+      "track": 8,
+      "duration": 382,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "cd35bf308e2dd034",
@@ -194579,6 +195299,21 @@
       "track": 6,
       "duration": 161,
       "hasCover": true
+    },
+    {
+      "id": "a88ccc821051dd59",
+      "relPath": "Julio Preciado\\Llévame Contigo\\Por Una Mujer Bonita.mp3",
+      "title": "Por Una Mujer Bonita",
+      "artist": "Julio Preciado",
+      "album": "Llévame Contigo",
+      "genre": [
+        "Latino"
+      ],
+      "year": 2009,
+      "track": 6,
+      "duration": 167,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "273fc254afb9884e",
@@ -197404,6 +198139,21 @@
       "hasCover": true
     },
     {
+      "id": "8010ddc35b4378de",
+      "relPath": "Javier Solís\\Desconocido\\Punto Negro.mp3",
+      "title": "Punto Negro",
+      "artist": "Javier Solís",
+      "album": "Desconocido",
+      "genre": [
+        "Pop"
+      ],
+      "year": null,
+      "track": null,
+      "duration": 168,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "679ec5b2351bea10",
       "relPath": "Lupita D'Alessio\\30 Años de Éxitos\\Punto y Coma.mp3",
       "title": "Punto y Coma",
@@ -198475,6 +199225,21 @@
       "hasCover": true
     },
     {
+      "id": "c54253f14a5cdd12",
+      "relPath": "María Victoria\\Lo Mejor de lo Mejor de RCA Victor\\Que Divino.mp3",
+      "title": "Que Divino",
+      "artist": "María Victoria",
+      "album": "Lo Mejor de lo Mejor de RCA Victor",
+      "genre": [
+        "Baladas y boleros"
+      ],
+      "year": 1964,
+      "track": 6,
+      "duration": 177,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "c591bcbc2fbfd7f7",
       "relPath": "Juan Gabriel\\Tesoros de coleccion, vol 2\\Que divino amor.mp3",
       "title": "Qué divino amor",
@@ -199231,6 +199996,21 @@
       "hasCover": true
     },
     {
+      "id": "62feda3f1995d566",
+      "relPath": "Los Rancheritos del Topo Chico\\Las más Buscadas\\Qué Lugar Ocupo Yo (feat. Catarino Leos).mp3",
+      "title": "Qué Lugar Ocupo Yo (feat. Catarino Leos)",
+      "artist": "Los Rancheritos Del Topochico",
+      "album": "Las más Buscadas",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1993,
+      "track": 5,
+      "duration": 161,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "cb201fe09670eb4c",
       "relPath": "Gualberto Castro\\20 Grandes Exitos- Gualberto Castro\\Que Mal Amada Estas.mp3",
       "title": "Que Mal Amada Estas",
@@ -199493,6 +200273,21 @@
       "track": 15,
       "duration": 188,
       "hasCover": true
+    },
+    {
+      "id": "e023e17c7658f19a",
+      "relPath": "Lalo Mora\\Ayer, Hoy Y Siempre Con… Lalo Mora\\Qué Me Esta Pasando.mp3",
+      "title": "Qué Me Esta Pasando",
+      "artist": "Lalo Mora",
+      "album": "Ayer, Hoy Y Siempre Con… Lalo Mora",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2006,
+      "track": null,
+      "duration": 192,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "c8bf4f6e277434b3",
@@ -214534,6 +215329,21 @@
       "hasCover": true
     },
     {
+      "id": "b3bb75f18b510fda",
+      "relPath": "Vicente Fernández Jr\\Vicente Fernandez Hijo Con Mariachi\\Secreto de Amor.mp3",
+      "title": "Secreto de Amor",
+      "artist": "Vicente Fernández Jr.",
+      "album": "Vicente Fernandez Hijo Con Mariachi",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2002,
+      "track": 6,
+      "duration": 285,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "5bc7a342a2c5d71a",
       "relPath": "Joan Sebastian\\Antología- El Poeta Del Pueblo, Vol. 3 – Sus Grandes Baladas\\Secreto De Amor.mp3",
       "title": "Secreto De Amor",
@@ -218362,6 +219172,21 @@
       "hasCover": true
     },
     {
+      "id": "917381f574abfd94",
+      "relPath": "Los Pedernales\\Éxitos De\\Si Me Quisieras Un Poquito.mp3",
+      "title": "Si Me Quisieras Un Poquito",
+      "artist": "Los Pedernales",
+      "album": "Éxitos De",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1995,
+      "track": 7,
+      "duration": 165,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "e459a93ccca0d996",
       "relPath": "Alfredo Gutierrez\\Historia Musical Alfredo Gutierrez 30 Éxitos\\Si Me Quisiste Tanto.mp3",
       "title": "Si Me Quisiste Tanto",
@@ -220172,6 +220997,21 @@
       "track": 9,
       "duration": 264,
       "hasCover": true
+    },
+    {
+      "id": "a8d65f2c38f68f32",
+      "relPath": "Impacto De Montemorelos\\Colección De Oro, Vol. 2\\Si Tuviera Una Moneda.mp3",
+      "title": "Si Tuviera Una Moneda",
+      "artist": "Impacto De Montemorelos",
+      "album": "Colección De Oro, Vol. 2",
+      "genre": [
+        "Latino"
+      ],
+      "year": 2006,
+      "track": null,
+      "duration": 218,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "74c92b3e811ea59a",
@@ -226825,6 +227665,21 @@
       "hasCover": true
     },
     {
+      "id": "56abf64a8784dad7",
+      "relPath": "Leonardo Favio\\Más Que Un Loco\\Sos Tan Bonita Que No Sé.mp3",
+      "title": "Sos Tan Bonita Que No Sé",
+      "artist": "Leonardo Favio",
+      "album": "Más Que Un Loco",
+      "genre": [
+        "Baladas y boleros"
+      ],
+      "year": 1988,
+      "track": 6,
+      "duration": 196,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "8eed136aaebe49ca",
       "relPath": "Guardianes del Amor\\Un millon de lagrimas\\Sospechas de mi.mp3",
       "title": "Sospechas de mí",
@@ -232871,6 +233726,21 @@
       "track": 7,
       "duration": 192,
       "hasCover": true
+    },
+    {
+      "id": "b0193f00503fcb48",
+      "relPath": "Liberación\\Como en los Buenos Tiempos\\Tápame (feat. Fabián Treviño de Costa Chica).mp3",
+      "title": "Tápame (feat. Fabián Treviño de Costa Chica)",
+      "artist": "Liberación",
+      "album": "Como en los Buenos Tiempos",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2011,
+      "track": 7,
+      "duration": 151,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "32e09e271e549e98",
@@ -246614,9 +247484,9 @@
     },
     {
       "id": "2abafd93ee3738c4",
-      "relPath": "Various Artists\\Alien Nations In-Game Soundtrack\\Track 09.mp3",
+      "relPath": "Various Artists\\Alien Nations In-Game Soundtrack\\Artista desconocido - Track 09.mp3",
       "title": "Track 09",
-      "artist": "[unknown]",
+      "artist": "Artista desconocido",
       "album": "Alien Nations In-Game Soundtrack",
       "genre": "genre",
       "year": 1999,
@@ -247202,9 +248072,9 @@
     },
     {
       "id": "56ce8e23a5671409",
-      "relPath": "Various Artists\\MusiX 1, BY plus CD\\Track 46.mp3",
+      "relPath": "Various Artists\\MusiX 1, BY plus CD\\Artista desconocido - Track 46.mp3",
       "title": "Track 46",
-      "artist": "[unknown]",
+      "artist": "Artista desconocido",
       "album": "MusiX 1, BY plus CD",
       "genre": "Sin género",
       "year": null,
@@ -248821,6 +249691,21 @@
       "hasCover": true
     },
     {
+      "id": "986a99476dd4291b",
+      "relPath": "Jeremías & Jeremias\\Desconocido\\Tu.mp3",
+      "title": "Tu",
+      "artist": "Jeremías & Jeremias",
+      "album": "Desconocido",
+      "genre": [
+        "Pop in spanish"
+      ],
+      "year": 2007,
+      "track": 7,
+      "duration": 239,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "2ba669d6b26adb7f",
       "relPath": "Sergio Dalma\\Via Dalma (Edición Internacional)\\Tú.mp3",
       "title": "Tú",
@@ -248963,6 +249848,21 @@
       "track": 10,
       "duration": 223,
       "hasCover": false
+    },
+    {
+      "id": "2bd2a5daa66de2a2",
+      "relPath": "Julio Preciado & Banda Perla del Pacifico\\Mi Tributo a Juan Gabriel\\Tú a Mí No Me Hundes.mp3",
+      "title": "Tú a Mí No Me Hundes",
+      "artist": "Julio Preciado & Banda Perla del Pacifico",
+      "album": "Mi Tributo a Juan Gabriel",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2005,
+      "track": 5,
+      "duration": 184,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "fdf4ce9c1d6558c1",
@@ -255007,6 +255907,21 @@
       "hasCover": true
     },
     {
+      "id": "7c815e3b9f16a147",
+      "relPath": "Guardianes del Amor\\Lo Más Romántico de Ayer Con los Mas Románticos de Hoy\\Una Lágrima y un Recuerdo.mp3",
+      "title": "Una Lágrima y un Recuerdo",
+      "artist": "Guardianes del Amor",
+      "album": "Lo Más Romántico de Ayer Con los Mas Románticos de Hoy",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1994,
+      "track": 7,
+      "duration": 170,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "a46643e2a5420910",
       "relPath": "Los Cadetes De Linares\\Éxitos De Siempre\\Una Lágrima Y Un Recuerdo.mp3",
       "title": "Una Lágrima Y Un Recuerdo",
@@ -259471,6 +260386,21 @@
       "hasCover": true
     },
     {
+      "id": "d23f5e2abcfebdca",
+      "relPath": "Patrulla 81\\Divinas\\Vida.mp3",
+      "title": "Vida",
+      "artist": "Patrulla 81",
+      "album": "Divinas",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2005,
+      "track": null,
+      "duration": 147,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "01bc9d38f65fb075",
       "relPath": "Marc Anthony\\Iconos\\Vída.mp3",
       "title": "Vída",
@@ -262061,6 +262991,21 @@
       "track": 3,
       "duration": 192,
       "hasCover": true
+    },
+    {
+      "id": "b6936296aeba2149",
+      "relPath": "Control\\Desconocido\\Vuela Paloma.mp3",
+      "title": "Vuela Paloma",
+      "artist": "Control",
+      "album": "Desconocido",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": null,
+      "track": 7,
+      "duration": 191,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "bafc30854d2a9d97",
@@ -273754,6 +274699,6 @@
       "hasCover": true
     }
   ],
-  "scannedAt": 1784103300180,
+  "scannedAt": 1784116800747,
   "musicPath": "D:/musica"
 }

@@ -110,7 +110,7 @@ export default function ArtistSelector({ userId }) {
           {search ? 'No se encontraron artistas' : 'No hay artistas en tu biblioteca'}
         </div>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-80 overflow-y-auto pr-1">
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 max-h-80 overflow-y-auto pr-1">
           {filtered.map(artist => {
             const favorite = isFavorite(artist.name);
             const hasImageError = imageErrors[artist.name];
@@ -150,7 +150,7 @@ export default function ArtistSelector({ userId }) {
 
                 {/* Nombre */}
                 <span className={`
-                  text-xs font-medium text-center truncate w-full
+                  text-xs font-light text-center w-full
                   ${favorite ? 'text-primary' : 'text-white group-hover:text-white'}
                 `}>
                   {artist.name}
