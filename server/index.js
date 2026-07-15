@@ -10,7 +10,7 @@ import * as db from './db.js';
 import 'dotenv/config';
 
 const app = express();
-const PORT = process.env.PORT || 6000;
+const PORT = process.env.PORT || 5001;
 
 console.log('🚀 Iniciando servidor...');
 console.log(`📂 MUSIC_DIR: ${MUSIC_DIR}`);

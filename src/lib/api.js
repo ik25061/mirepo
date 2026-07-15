@@ -1,7 +1,7 @@
 // ====== CONFIGURACIÓN DE IP DINÁMICA ======
 let API_URL = '';
 let apiUrlPromise = null;
-const DEFAULT_PORT = '6000';
+const DEFAULT_PORT = '5001';
 const API_URL_STORAGE_KEY = 'mirepo_api_url';
 
 async function probeServer(baseUrl) {
@@ -28,8 +28,24 @@ export async function detectServerIP() {
 
   const storedUrl = window.localStorage.getItem(API_URL_STORAGE_KEY);
   if (storedUrl) {
-    API_URL = storedUrl.replace(/\/$/, '');
-    return API_URL;
+    // Invalidar la URL guardada si el puerto no coincide con el puerto actual.
+    // Esto evita que quede una URL obsoleta (ej. :6000) en localStorage del móvil
+    // cuando el servidor cambia de puerto (ej. a :5001).
+    try {
+      const storedPort = new URL(storedUrl).port;
+      if (storedPort && storedPort !== DEFAULT_PORT) {
+        console.warn(
+          `⚠️ Puerto guardado (${storedPort}) obsoleto. Se re-detectará el servidor en el puerto ${DEFAULT_PORT}.`
+        );
+        window.localStorage.removeItem(API_URL_STORAGE_KEY);
+      } else {
+        API_URL = storedUrl.replace(/\/$/, '');
+        return API_URL;
+      }
+    } catch {
+      // Si la URL no se puede parsear, la descartamos y re-detectamos.
+      window.localStorage.removeItem(API_URL_STORAGE_KEY);
+    }
   }
 
   const isCapacitor = window.location.protocol === 'capacitor:' || window.Capacitor?.isNativePlatform?.();

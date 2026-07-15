@@ -24,7 +24,7 @@ function getLocalLanIp() {
 }
 
 const localIP = getLocalLanIp();
-const BACKEND_PORT = 6000;
+const BACKEND_PORT = 5001;
 
 console.log('🌐 IP detectada para el proxy:', localIP);
 
