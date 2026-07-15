@@ -324,7 +324,6 @@ export function removeSongFromCache(songId) {
 // ====== EXPORTACIONES ======
 
 export function getCache() {
-  console.log('[scanner] getCache() - Canciones:', cache.songs?.length || 0);
   return cache;
 }
 

@@ -11,61 +11,67 @@ export class RecommendationEngine {
    */
   static recommend(songs, likedIds, favoriteArtists, history, limit = 20) {
     if (!songs || songs.length === 0) return [];
-    
+
+    const favSet = new Set(favoriteArtists || []);
+
     // Canciones que ya le gustan (para extraer patrones)
     const likedSongs = songs.filter(s => likedIds.has(s.id));
-    
+
     // Si no hay likes, recomendar aleatorias pero con artistas favoritos
     if (likedSongs.length === 0) {
-      const favSongs = songs.filter(s => favoriteArtists.includes(s.artist));
+      const favSongs = songs.filter(s => favSet.has(s.artist));
       if (favSongs.length > 0) {
         return favSongs.sort(() => Math.random() - 0.5).slice(0, limit);
       }
       return songs.sort(() => Math.random() - 0.5).slice(0, limit);
     }
-    
+
     // Extraer géneros y años favoritos
     const genreCount = {};
     const yearCount = {};
     likedSongs.forEach(s => {
-      const genre = s.genre || 'Sin género';
-      genreCount[genre] = (genreCount[genre] || 0) + 1;
+      const genres = Array.isArray(s.genre) ? s.genre : [s.genre || 'Sin género'];
+      genres.forEach(g => { genreCount[g] = (genreCount[g] || 0) + 1; });
       const year = s.year || '0';
       yearCount[year] = (yearCount[year] || 0) + 1;
     });
-    
+
     // Ordenar por frecuencia
     const topGenres = Object.keys(genreCount).sort((a,b) => genreCount[b] - genreCount[a]).slice(0, 5);
     const topYears = Object.keys(yearCount).sort((a,b) => yearCount[b] - yearCount[a]).slice(0, 3);
-    
+
     // Puntuar canciones no escuchadas (ni liked ni en historial)
     const historyIds = new Set((Array.isArray(history) ? history : []).map(h => h.songId));
     const candidates = songs.filter(s => !likedIds.has(s.id) && !historyIds.has(s.id));
-    
+
     const scored = candidates.map(song => {
       let score = 0;
-      
+
       // Artista favorito (+50)
-      if (favoriteArtists.includes(song.artist)) score += 50;
-      
-      // Género popular (+20)
-      if (topGenres.includes(song.genre)) score += 20;
-      
+      if (favSet.has(song.artist)) score += 50;
+
+      // Género popular (+20) — song.genre puede ser array
+      const songGenres = Array.isArray(song.genre) ? song.genre : [song.genre];
+      if (songGenres.some(g => topGenres.includes(g))) score += 20;
+
       // Año popular (+10)
       if (topYears.includes(String(song.year))) score += 10;
-      
+
       // Mismo artista que canciones liked (+5 por cada)
       const artistLikes = likedSongs.filter(s => s.artist === song.artist).length;
       score += artistLikes * 5;
-      
+
       // Si tiene portada (+5)
       if (song.hasCover) score += 5;
-      
+
       return { ...song, score };
     });
-    
-    // Ordenar y devolver
-    return scored.sort((a,b) => b.score - a.score).slice(0, limit);
+
+    // Ordenar por score con un "jitter" aleatorio para que "Actualizar"
+    // sugiera canciones distintas en cada llamada (desempata empatados).
+    return scored
+      .sort((a, b) => (b.score + Math.random()) - (a.score + Math.random()))
+      .slice(0, limit);
   }
 
   /**
@@ -79,13 +85,30 @@ export class RecommendationEngine {
       'relax': ['jazz', 'acústico', 'clásica', 'ambient'],
       'romántico': ['bachata', 'salsa', 'bolero', 'romántica']
     };
-    
+
     const genres = moodMap[mood] || [];
-    const candidates = songs.filter(s => 
-      !likedIds.has(s.id) && 
-      genres.some(g => (s.genre || '').toLowerCase().includes(g))
-    );
-    
+    const favSet = new Set(favoriteArtists || []);
+
+    // s.genre puede ser un array; comparar cada elemento de forma segura
+    const matchesMood = (song) => {
+      const songGenres = Array.isArray(song.genre) ? song.genre : [song.genre || ''];
+      return songGenres.some(g =>
+        genres.some(target => String(g || '').toLowerCase().includes(target))
+      );
+    };
+
+    let candidates = songs.filter(s => !likedIds.has(s.id) && matchesMood(s));
+
+    // Si no hay coincidencias por género, usar artistas favoritos elegidos
+    if (candidates.length === 0 && favSet.size > 0) {
+      candidates = songs.filter(s => !likedIds.has(s.id) && favSet.has(s.artist));
+    }
+
+    // Si tampoco, devolver cualquier canción no liked
+    if (candidates.length === 0) {
+      candidates = songs.filter(s => !likedIds.has(s.id));
+    }
+
     // Mezclar y devolver
     return candidates.sort(() => Math.random() - 0.5).slice(0, limit);
   }

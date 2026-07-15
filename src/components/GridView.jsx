@@ -221,7 +221,7 @@ const handlePlay = (item, e) => {
             <h1 className="font-display text-3xl font-700 tracking-tight text-white">{getTitle()}</h1>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Ordenar:</span>
+            <span className="text-xs text-muted-foreground">Ordenar</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -252,7 +252,7 @@ const handlePlay = (item, e) => {
         </p>
       </header>
 
-      {/* ===== GRID CON SCROLL ===== */}
+      {/* ===== GRID CON SCROLL de todos los artistas===== */}
       <div 
         ref={gridRef}
         className="flex-1 overflow-y-auto"
@@ -300,10 +300,10 @@ const handlePlay = (item, e) => {
 
                 {/* ===== INFORMACIÓN ===== */}
                 <div className="mt-2 px-1">
-                  <p className="truncate text-sm font-semibold text-white group-hover:text-primary transition-colors">
+                  <p className="line-clamp-2 text-[0.6rem] font-light text-white group-hover:text-primary transition-colors">
                     {item.name}
                   </p>
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="truncate text-[0.5rem] text-muted-foreground">
                     {getSubtitle(item)}
                   </p>
                 </div>

@@ -11,6 +11,24 @@ import { generateMonthlySummary, generatePlaylistName } from '../../services/AIW
 import ArtistSelector from '../ArtistSelector.jsx';
 
 // ============================================================
+// CACHÉ A NIVEL DE MÓDULO
+// ============================================================
+// Evita refetchear los datos completos (5 peticiones pesadas al
+// servidor) cada vez que se navega de vuelta a "Inicio". Se reutilizan
+// los datos ya cargados durante la sesión y se refrescan pasado el TTL.
+const HOME_CACHE_TTL = 60 * 1000; // 60s
+const homeDataCache = {
+  userId: null,
+  ts: 0,
+  allSongs: [],
+  artists: [],
+  albums: [],
+  genres: [],
+  liked: [],
+  favArtists: [],
+};
+
+// ============================================================
 // HANDLE FIX METADATA
 // ============================================================
 const handleFixMetadata = async (song) => {
@@ -50,6 +68,7 @@ export default function HomeView({
   const [likedSongs, setLikedSongs] = useState([]);
   const [loadingLists, setLoadingLists] = useState(true);
   const [allSongsFromServer, setAllSongsFromServer] = useState([]);
+  const [favArtists, setFavArtists] = useState([]);
   const mountedRef = useRef(true);
 
   // ============================================================
@@ -58,23 +77,53 @@ export default function HomeView({
   useEffect(() => {
     mountedRef.current = true;
 
+    // Si ya tenemos datos en caché (mismo usuario y dentro del TTL),
+    // reutilizarlos sin volver a consultar el servidor. Esto evita el
+    // "spam" de peticiones al volver a la vista de Inicio.
+      if (
+      homeDataCache.userId === userId &&
+      homeDataCache.allSongs.length > 0 &&
+      Date.now() - homeDataCache.ts < HOME_CACHE_TTL
+    ) {
+      setAllSongsFromServer(homeDataCache.allSongs);
+      setFullArtists(homeDataCache.artists);
+      setFullAlbums(homeDataCache.albums);
+      setFullGenres(homeDataCache.genres);
+      setLikedSongs(homeDataCache.liked);
+      setFavArtists(homeDataCache.favArtists);
+      setLoadingLists(false);
+      return () => { mountedRef.current = false; };
+    }
+
     const loadCompleteLists = async () => {
       try {
         setLoadingLists(true);
-        const [allSongsRes, artistsRes, albumsRes, genresRes, likedRes] = await Promise.all([
+        const [allSongsRes, artistsRes, albumsRes, genresRes, likedRes, favRes] = await Promise.all([
           api.getLibrary({ limit: 99999, offset: 0, userId }),
           api.getArtists(userId),
           api.getAlbums(userId),
           api.getGenres(),
-          api.getLikedSongs(userId)
+          api.getLikedSongs(userId),
+          api.getFavoriteArtists(userId)
         ]);
 
         if (mountedRef.current) {
-          setAllSongsFromServer(allSongsRes.songs || []);
-          setFullArtists(artistsRes.artists || []);
-          setFullAlbums(albumsRes.albums || []);
-          setFullGenres(genresRes.genres || []);
-          setLikedSongs(likedRes.songs || []);
+          // Guardar en caché a nivel de módulo
+          homeDataCache.userId = userId;
+          homeDataCache.ts = Date.now();
+          homeDataCache.allSongs = allSongsRes.songs || [];
+          homeDataCache.artists = artistsRes.artists || [];
+          homeDataCache.albums = albumsRes.albums || [];
+          homeDataCache.genres = genresRes.genres || [];
+          homeDataCache.liked = likedRes.songs || [];
+          homeDataCache.favArtists = favRes.artists || [];
+
+          setAllSongsFromServer(homeDataCache.allSongs);
+          setFullArtists(homeDataCache.artists);
+          setFullAlbums(homeDataCache.albums);
+          setFullGenres(homeDataCache.genres);
+          setLikedSongs(homeDataCache.liked);
+          setFavArtists(homeDataCache.favArtists);
           setLoadingLists(false);
         }
       } catch (err) {
@@ -115,7 +164,7 @@ export default function HomeView({
   // ============================================================
   // COMPONENTE - SECCIÓN DE RECOMENDACIONES
   // ============================================================
-  const RecommendationsSection = ({ songs, likedIds, onPlay }) => {
+  const RecommendationsSection = ({ songs, likedIds, onPlay, favoriteArtists = [] }) => {
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(false);
     const [generated, setGenerated] = useState(false);
@@ -124,7 +173,7 @@ export default function HomeView({
     const generateRecommendations = () => {
       setLoading(true);
       try {
-        const recs = RecommendationEngine.recommend(songs, likedIds, [], [], 10);
+        const recs = RecommendationEngine.recommend(songs, likedIds, favoriteArtists, [], 10);
         setRecommendations(Array.isArray(recs) ? recs : []);
         setGenerated(true);
       } catch (err) {
@@ -139,7 +188,7 @@ export default function HomeView({
       if (songs.length > 0 && !generated) {
         generateRecommendations();
       }
-    }, [songs.length, generated]);
+    }, [songs.length, generated, favoriteArtists]);
 
     const addAllToQueue = () => {
       recommendations.forEach(song => addToQueue(song, 'later'));
@@ -602,7 +651,7 @@ export default function HomeView({
       )}
 
       {/* ===== SECCIÓN: RECOMENDACIONES ===== */}
-      <RecommendationsSection songs={allSongsFromServer} likedIds={likedIds} onPlay={play} />
+      <RecommendationsSection songs={allSongsFromServer} likedIds={likedIds} onPlay={play} favoriteArtists={favArtists} />
 
       {/* ===== SECCIÓN: RESUMEN DEL MES ===== */}
       <MonthlySummarySection userId={userId} />

@@ -135,7 +135,7 @@ async function buildLibrary({ limit, offset, userId, likedOnly = false } = {}) {
     try {
       const p = prefs[s.id];
       if (p && (p.deleted || p.hidden)) continue;
-      if (hiddenArtists.has(s.artist)) continue;
+      if (hiddenArtists.has(extractMainArtist(s.artist))) continue;
       const liked = Boolean(p && p.liked);
       if (likedOnly && !liked) continue;
       visible.push({ ...s, liked });
@@ -212,13 +212,47 @@ loadLibrary();
 // ============================================================
 // FUNCIONES PARA AGRUPAR (Artistas, Álbumes, Géneros)
 // ============================================================
+// Extrae el artista principal de un string que puede incluir colaboradores
+// (feat, ft, &, con, vs, comas, paréntesis, etc.). Así "A.B feat X" y
+// "A.B & Y" se agrupan bajo el mismo artista "A.B".
+function extractMainArtist(artistName) {
+  if (!artistName) return 'Artista desconocido';
+  let name = String(artistName).trim();
+  if (!name) return 'Artista desconocido';
+
+  const patterns = [
+    /\s*\(feat\.?[^)]*\)/i,
+    /\s*\(ft\.?[^)]*\)/i,
+    /\s*\(featuring[^)]*\)/i,
+    /\s*feat\.?\s.*/i,
+    /\s*ft\.?\s.*/i,
+    /\s*featuring\s.*/i,
+    /\s*&\s.*/,
+    /\s*con\s.*/i,
+    /\s*vs\.?\s.*/i,
+    /\s*,\s.*/,
+    /\s*;\s.*/,
+  ];
+
+  for (const p of patterns) {
+    const match = name.match(p);
+    if (match) {
+      name = name.slice(0, match.index).trim();
+      break;
+    }
+  }
+  return name || 'Artista desconocido';
+}
+
 function buildArtistsFromCache(songs, hiddenArtists = new Set()) {
   const map = new Map();
   const pref = (str) => String(str || '').trim();
   
   for (const s of songs) {
-    if (hiddenArtists.has(s.artist)) continue;
-    const raw = pref(s.artist) || 'Artista desconocido';
+    // Ocultar por artista principal para que ocultar "A.B" oculte también sus colaboraciones
+    const mainArtist = extractMainArtist(s.artist);
+    if (hiddenArtists.has(mainArtist)) continue;
+    const raw = pref(mainArtist) || 'Artista desconocido';
     const key = raw.toLowerCase();
     let entry = map.get(key);
     if (!entry) {
@@ -485,7 +519,7 @@ app.get('/api/artists', async (req, res) => {
     } catch {}
 
     const visibleSongs = cache.songs.filter(s => {
-      if (hiddenArtists.has(s.artist)) return false;
+      if (hiddenArtists.has(extractMainArtist(s.artist))) return false;
       const p = prefs[s.id];
       if (p && (p.deleted || p.hidden)) return false;
       return true;
@@ -512,7 +546,7 @@ app.get('/api/albums', async (req, res) => {
     } catch {}
 
     const visibleSongs = cache.songs.filter(s => {
-      if (hiddenArtists.has(s.artist)) return false;
+      if (hiddenArtists.has(extractMainArtist(s.artist))) return false;
       const p = prefs[s.id];
       if (p && (p.deleted || p.hidden)) return false;
       return true;
@@ -539,7 +573,7 @@ app.get('/api/genres', async (req, res) => {
     } catch {}
 
     const visibleSongs = cache.songs.filter(s => {
-      if (hiddenArtists.has(s.artist)) return false;
+      if (hiddenArtists.has(extractMainArtist(s.artist))) return false;
       const p = prefs[s.id];
       if (p && (p.deleted || p.hidden)) return false;
       return true;
@@ -648,7 +682,7 @@ app.get('/artist-cover/:artistName', async (req, res) => {
     const cleanName = artistName.replace(/[\[\]\(\)]/g, '').trim();
     
     const cache = getCache();
-    
+
     // Buscar canción del artista (con o sin corchetes)
     let song = cache.songs.find(s => s.artist === artistName);
     if (!song && cleanName !== artistName) {
@@ -659,7 +693,12 @@ app.get('/artist-cover/:artistName', async (req, res) => {
       const withBrackets = `[${cleanName}]`;
       song = cache.songs.find(s => s.artist === withBrackets);
     }
-    
+    // Buscar por artista principal (ignora colaboradores: "A.B feat X")
+    if (!song) {
+      const requestedMain = extractMainArtist(cleanName);
+      song = cache.songs.find(s => extractMainArtist(s.artist) === requestedMain);
+    }
+
     if (!song) return res.status(404).send('Artista no encontrado');
 
     const albumDir = path.dirname(absolutePath(song.relPath));

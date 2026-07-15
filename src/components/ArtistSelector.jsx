@@ -150,7 +150,7 @@ export default function ArtistSelector({ userId }) {
 
                 {/* Nombre */}
                 <span className={`
-                  text-xs font-light text-center w-full
+                  text-[0.5rem] line-clamp-2 font-light text-center w-full
                   ${favorite ? 'text-primary' : 'text-white group-hover:text-white'}
                 `}>
                   {artist.name}
