@@ -1,4 +1,4 @@
-import { Heart, Play, Copy, Shuffle } from 'lucide-react';
+import { Heart, Play, Copy, Shuffle, Sparkles, BarChart3 } from 'lucide-react';
 import Carousel from './Carousel.jsx';
 import CollectionCard from './CollectionCard.jsx';
 import SongRow from '../SongRow.jsx';
@@ -6,6 +6,9 @@ import { buildYears } from '../../lib/format.js';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import { api } from '../../lib/api.js';
 import { useState, useEffect, useRef } from 'react';
+import { RecommendationEngine } from '../../services/RecommendationEngine.js';
+import { generateMonthlySummary, generatePlaylistName } from '../../services/AIWriter.js';
+import ArtistSelector from '../ArtistSelector.jsx';
 
 // ============================================================
 // HANDLE FIX METADATA
@@ -14,30 +17,30 @@ const handleFixMetadata = async (song) => {
   if (!confirm('¿Corregir metadatos de "' + song.title + '"?')) return;
 
   try {
-    const fullPath = song.relPath.startsWith('music/') ? song.relPath : 'music/' + song.relPath;
+    const fullPath = song.relPath || song.id;
     const result = await api.fixMetadata(fullPath);
-    const newFileName = result.newPath.split('/').pop();
-    alert('✅ ' + result.message + '\n\nNuevo nombre: ' + newFileName);
+    const newFileName = result.newPath ? result.newPath.split('/').pop() : '';
+    alert('✅ ' + result.message + (newFileName ? '\n\nNuevo nombre: ' + newFileName : ''));
   } catch (err) {
     alert('Error al corregir metadatos: ' + err.message);
   }
 };
 
-export default function HomeView({ 
-  songs, 
-  onOpenCollection, 
-  onOpenGridView, 
-  onLike, 
-  onDislike, 
-  onDislikeArtist, 
-  onDelete, 
+export default function HomeView({
+  songs,
+  onOpenCollection,
+  onOpenGridView,
+  onLike,
+  onDislike,
+  onDislikeArtist,
+  onDelete,
   onOpenDuplicates,
   onOpenLikedSongs,
   onOpenPlayLists,
   userId
 }) {
   const { play, shufflePlay } = usePlayer();
-  
+
   // ============================================================
   // ESTADO PARA DATOS COMPLETOS DEL SERVIDOR
   // ============================================================
@@ -54,7 +57,7 @@ export default function HomeView({
   // ============================================================
   useEffect(() => {
     mountedRef.current = true;
-    
+
     const loadCompleteLists = async () => {
       try {
         setLoadingLists(true);
@@ -65,7 +68,7 @@ export default function HomeView({
           api.getGenres(),
           api.getLikedSongs(userId)
         ]);
-        
+
         if (mountedRef.current) {
           setAllSongsFromServer(allSongsRes.songs || []);
           setFullArtists(artistsRes.artists || []);
@@ -82,7 +85,7 @@ export default function HomeView({
       }
     };
     loadCompleteLists();
-    
+
     return () => { mountedRef.current = false; };
   }, [userId]);
 
@@ -94,7 +97,7 @@ export default function HomeView({
   const artists = fullArtists;
   const genres = fullGenres;
   const years = buildYears(allSongsFromServer);
-  
+
   // ============================================================
   // LIKED IDS - Set de IDs de canciones favoritas
   // ============================================================
@@ -103,19 +106,283 @@ export default function HomeView({
   // ============================================================
   // CANCIONES SIN ARTISTA O SIN ÁLBUM
   // ============================================================
-
-  const unknownSongs = allSongsFromServer.filter(s => 
-    !s.artist || s.artist === 'Artista desconocido' || 
+  const unknownSongs = allSongsFromServer.filter(s =>
+    !s.artist || s.artist === 'Artista desconocido' ||
     !s.album || s.album === 'Álbum desconocido' ||
     s.artist === 'Desconocido' || s.album === 'Desconocido'
   );
+
+  // ============================================================
+  // COMPONENTE - SECCIÓN DE RECOMENDACIONES
+  // ============================================================
+  const RecommendationsSection = ({ songs, likedIds, onPlay }) => {
+    const [recommendations, setRecommendations] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [generated, setGenerated] = useState(false);
+    const { addToQueue } = usePlayer();
+
+    const generateRecommendations = () => {
+      setLoading(true);
+      try {
+        const recs = RecommendationEngine.recommend(songs, likedIds, [], [], 10);
+        setRecommendations(Array.isArray(recs) ? recs : []);
+        setGenerated(true);
+      } catch (err) {
+        console.error('Error generating recommendations:', err);
+        setRecommendations([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    useEffect(() => {
+      if (songs.length > 0 && !generated) {
+        generateRecommendations();
+      }
+    }, [songs.length, generated]);
+
+    const addAllToQueue = () => {
+      recommendations.forEach(song => addToQueue(song, 'later'));
+    };
+
+    if (recommendations.length === 0 && !loading) return null;
+
+    return (
+      <section className="animate-fade-in rounded-xl border border-border bg-surface/50 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Sparkles size={18} className="text-primary" />
+            <h2 className="text-base font-600 text-white sm:text-lg">Recomendaciones para ti</h2>
+          </div>
+          <button
+            onClick={generateRecommendations}
+            disabled={loading}
+            className="text-xs text-primary hover:underline disabled:opacity-50"
+          >
+            {loading ? 'Generando...' : 'Actualizar'}
+          </button>
+        </div>
+        {loading ? (
+          <div className="flex justify-center py-6">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            {recommendations.slice(0, 5).map((song, i) => (
+              <SongRow
+                key={song.id}
+                song={song}
+                index={i}
+                queue={recommendations}
+                onLike={onLike}
+                onDislike={onDislike}
+                onDislikeArtist={onDislikeArtist}
+                onDelete={onDelete}
+                onFixMetadata={handleFixMetadata}
+                showDelete={false}
+                context={null}
+                likedIds={likedIds}
+              />
+            ))}
+            {recommendations.length > 0 && (
+              <button
+                onClick={addAllToQueue}
+                className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs text-foreground hover:bg-surface-2/70 transition"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Agregar todas a la cola ({recommendations.length})
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+    );
+  };
+
+  // ============================================================
+  // COMPONENTE - MoodPlaylistCreator
+  // ============================================================
+  function MoodPlaylistCreator({ allSongs, likedIds, userId, onCreated }) {
+    const { play } = usePlayer();
+    const [mood, setMood] = useState('feliz');
+    const [playlist, setPlaylist] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [favArtists, setFavArtists] = useState([]);
+
+    useEffect(() => {
+      let mounted = true;
+      if (!userId) return;
+      api.getFavoriteArtists(userId).then(res => {
+        if (mounted) setFavArtists(res.artists || []);
+      }).catch(() => { });
+      return () => { mounted = false; };
+    }, [userId]);
+
+    const generate = async () => {
+      setLoading(true);
+      try {
+        const pl = RecommendationEngine.generateMoodPlaylist(allSongs, mood, likedIds, favArtists, 20);
+        setPlaylist(pl || []);
+      } catch (err) {
+        console.error('Error generando mood playlist:', err);
+        setPlaylist([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const playPlaylist = () => {
+      if (playlist.length > 0) play(playlist[0], playlist);
+    };
+
+    const createOnServer = async () => {
+      if (playlist.length === 0) return alert('Generá la playlist primero');
+      setLoading(true);
+      try {
+        const name = await generatePlaylistName(playlist) || `Playlist ${mood}`;
+        const res = await api.createPlayList(name, `Generada por estado de ánimo: ${mood}`, userId);
+        const playlistId = res && res.id;
+        if (playlistId) {
+          for (const s of playlist) {
+            try { await api.addSongToPlayList(playlistId, s.id); } catch { }
+          }
+          alert('Playlist creada: ' + name);
+          onCreated && onCreated();
+        } else {
+          alert('No se pudo crear la playlist en el servidor');
+        }
+      } catch (err) {
+        console.error('Error creando playlist:', err);
+        alert('Error creando playlist: ' + (err.message || err));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2 items-center">
+          {['feliz', 'triste', 'energía', 'relax', 'romántico'].map(m => (
+            <button
+              key={m}
+              onClick={() => setMood(m)}
+              className={`px-3 py-1 rounded-full text-sm ${mood === m ? 'bg-primary text-black' : 'bg-surface-2'}`}
+            >{m}</button>
+          ))}
+          <button onClick={generate} disabled={loading} className="ml-2 px-3 py-1 rounded-lg bg-primary text-black">Generar</button>
+          <button onClick={playPlaylist} disabled={playlist.length === 0} className="px-3 py-1 rounded-lg bg-surface-2">Reproducir</button>
+          <button onClick={createOnServer} disabled={loading || playlist.length === 0} className="px-3 py-1 rounded-lg bg-primary/20 text-primary">Crear playlist</button>
+        </div>
+        {loading && <p className="text-xs text-muted-foreground">Generando...</p>}
+        {playlist.length > 0 && (
+          <div className="mt-2 grid grid-cols-2 gap-1">
+            {playlist.slice(0, 6).map(s => (
+              <div key={s.id} className="text-sm text-white truncate">{s.title} <span className="text-xs text-muted-foreground">- {s.artist}</span></div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // COMPONENTE - RESUMEN DEL MES
+  // ============================================================
+  const MonthlySummarySection = ({ userId }) => {
+    const [summary, setSummary] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [firstLoadDone, setFirstLoadDone] = useState(false);
+
+    const loadSummary = async () => {
+      if (firstLoadDone) return;
+      setLoading(true);
+      try {
+        // Obtener historial de reproducciones
+        const historyKey = `mirepo_play_history_${userId || 'default'}`;
+        let history = [];
+        try {
+          const stored = window.localStorage.getItem(historyKey);
+          if (stored) history = JSON.parse(stored);
+        } catch { }
+        const result = RecommendationEngine.getMonthlySummary(history, allSongsFromServer);
+        if (result) {
+          setSummary(result);
+        }
+        setFirstLoadDone(true);
+      } catch (err) {
+        console.error('Error cargando resumen:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    useEffect(() => {
+      if (allSongsFromServer.length > 0 && !firstLoadDone) {
+        loadSummary();
+      }
+    }, [allSongsFromServer.length]);
+
+    if (!summary && !loading) return null;
+
+    return (
+      <section className="animate-fade-in rounded-xl border border-border bg-surface/50 p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <BarChart3 size={18} className="text-primary" />
+          <h2 className="text-base font-600 text-white sm:text-lg">Resumen del mes</h2>
+        </div>
+        {loading ? (
+          <div className="flex justify-center py-6">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
+          </div>
+        ) : summary ? (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">🎵</span>
+                <span className="text-white">{summary.totalSongs} canciones</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">⏱️</span>
+                <span className="text-white">{summary.totalMinutes} minutos</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">🎤</span>
+                <span className="text-white truncate">{summary.topArtist}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">🎧</span>
+                <span className="text-white truncate">{summary.topGenre}</span>
+              </div>
+            </div>
+            {summary.top5Songs && summary.top5Songs.length > 0 && (
+              <div className="pt-2 border-t border-border">
+                <p className="text-xs text-muted-foreground mb-2">Top 5 canciones del mes:</p>
+                <div className="space-y-1">
+                  {summary.top5Songs.slice(0, 5).map((song, i) => (
+                    <div key={song.id} className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground w-5">{i + 1}</span>
+                      <span className="truncate text-white flex-1">{song.title}</span>
+                      <span className="text-muted-foreground text-xs">- {song.artist}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </section>
+    );
+  };
 
   const hour = new Date().getHours();
   const greeting = hour < 6 ? 'Buenas noches' : hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
 
   return (
     <div className="flex flex-col gap-4 pb-24 w-full">
-      
+
       {/* ===== HEADER ===== */}
       <header className="animate-fade-in">
         <h1 className="text-xl font-700 tracking-tight text-white sm:text-3xl">{greeting}</h1>
@@ -190,8 +457,8 @@ export default function HomeView({
       </section>
 
       {/* ===== SECCIÓN: ÁLBUMES ===== */}
-      <Carousel 
-        title="Álbumes" 
+      <Carousel
+        title="Álbumes"
         action={
           albums.length > 10 && (
             <button
@@ -217,8 +484,8 @@ export default function HomeView({
       </Carousel>
 
       {/* ===== SECCIÓN: ARTISTAS ===== */}
-      <Carousel 
-        title="Artistas" 
+      <Carousel
+        title="Artistas"
         action={
           artists.length > 10 && (
             <button
@@ -246,8 +513,8 @@ export default function HomeView({
       </Carousel>
 
       {/* ===== SECCIÓN: GÉNEROS ===== */}
-      <Carousel 
-        title="Géneros" 
+      <Carousel
+        title="Géneros"
         action={
           genres.length > 10 && (
             <button
@@ -273,8 +540,8 @@ export default function HomeView({
       </Carousel>
 
       {/* ===== SECCIÓN: AÑOS ===== */}
-      <Carousel 
-        title="Años" 
+      <Carousel
+        title="Años"
         action={
           years.length > 10 && (
             <button
@@ -300,15 +567,15 @@ export default function HomeView({
 
       {/* ===== SECCIÓN: SIN ARTISTA O ÁLBUM ===== */}
       {unknownSongs.length > 0 && (
-        <Carousel 
-          title="🎵 Sin artista o álbum" 
+        <Carousel
+          title="🎵 Sin artista o álbum"
           action={
             unknownSongs.length > 10 && (
               <button
-                onClick={() => onOpenCollection({ 
-                  kind: 'Lista', 
-                  name: 'Sin artista o álbum', 
-                  songs: unknownSongs 
+                onClick={() => onOpenCollection({
+                  kind: 'Lista',
+                  name: 'Sin artista o álbum',
+                  songs: unknownSongs
                 })}
                 className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
               >
@@ -324,15 +591,37 @@ export default function HomeView({
               subtitle={song.artist || 'Artista desconocido'}
               coverSong={{ coverId: song.id, hasCover: song.hasCover }}
               songs={[song]}
-              onOpen={() => onOpenCollection({ 
-                kind: 'Lista', 
-                name: 'Sin artista o álbum', 
-                songs: unknownSongs 
+              onOpen={() => onOpenCollection({
+                kind: 'Lista',
+                name: 'Sin artista o álbum',
+                songs: unknownSongs
               })}
             />
           ))}
         </Carousel>
       )}
+
+      {/* ===== SECCIÓN: RECOMENDACIONES ===== */}
+      <RecommendationsSection songs={allSongsFromServer} likedIds={likedIds} onPlay={play} />
+
+      {/* ===== SECCIÓN: RESUMEN DEL MES ===== */}
+      <MonthlySummarySection userId={userId} />
+
+      {/* ===== SECCIÓN: ASISTENTE (ARTISTAS FAVORITOS + PLAYLIST POR ESTADO DE ÁNIMO) ===== */}
+      <section className="animate-fade-in rounded-xl border border-border bg-surface/50 p-4">
+
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-medium text-white mb-2">Crear playlist según estado de ánimo</p>
+            <MoodPlaylistCreator
+              allSongs={allSongsFromServer}
+              likedIds={likedIds}
+              userId={userId}
+              onCreated={() => onOpenPlayLists && onOpenPlayLists()}
+            />
+          </div>
+        </div>
+      </section>
 
       <div className="h-4" />
     </div>

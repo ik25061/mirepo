@@ -277,6 +277,21 @@
       "hasCover": true
     },
     {
+      "id": "d4c176d621d49eac",
+      "relPath": "Los Tucanes de Tijuana\\El Virus Del Amor\\¿Cómo La Ves-.mp3",
+      "title": "¿Cómo La Ves?",
+      "artist": "Los Tucanes de Tijuana",
+      "album": "El Virus Del Amor",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2004,
+      "track": 5,
+      "duration": 229,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "e34cb7efdf2e3656",
       "relPath": "Paquita la del Barrio\\Azul Celeste\\_Como me voy a ir.mp3",
       "title": "¿Cómo me voy a ir?",
@@ -721,6 +736,21 @@
       "hasCover": false
     },
     {
+      "id": "d44d9e1559dbdb55",
+      "relPath": "Jorge Negrete\\RCA 100 anos de musica Jorge Negrete\\_Que te cuesta.mp3",
+      "title": "¿Qué te cuesta?",
+      "artist": "Jorge Negrete",
+      "album": "RCA: 100 años de música: Jorge Negrete",
+      "genre": [
+        "Latin"
+      ],
+      "year": 2008,
+      "track": 11,
+      "duration": 145,
+      "hasCover": false,
+      "hasLyrics": false
+    },
+    {
       "id": "2098a8b85d78d993",
       "relPath": "Daddy Yankee\\Talento de Barrio\\¿Qué Tengo Que Hacer-.mp3",
       "title": "¿Qué Tengo Que Hacer?",
@@ -1151,6 +1181,21 @@
       "track": 7,
       "duration": 321,
       "hasCover": true
+    },
+    {
+      "id": "297527c13e3a371b",
+      "relPath": "Hilary Duff\\Unlimited\\(I'll Give) Anything but Up.mp3",
+      "title": "(I’ll Give) Anything but Up",
+      "artist": "Hilary Duff",
+      "album": "Unlimited",
+      "genre": [
+        "Dance Music"
+      ],
+      "year": 2007,
+      "track": 4,
+      "duration": 204,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "9549c5cf053cacd8",
@@ -11869,6 +11914,21 @@
       "hasCover": true
     },
     {
+      "id": "df21a0f5f9bec0b7",
+      "relPath": "Libertad Lamarque\\Libertad Lamarque - 20 Canciones Originales\\Alma Mía.mp3",
+      "title": "Alma Mía",
+      "artist": "Libertad Lamarque",
+      "album": "Libertad Lamarque - 20 Canciones Originales",
+      "genre": [
+        "Baladas y boleros"
+      ],
+      "year": 1978,
+      "track": 3,
+      "duration": 210,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "ef79ba042d7e1474",
       "relPath": "Grupo Límite\\En Concierto\\Alma Rebelde.mp3",
       "title": "Alma Rebelde",
@@ -20471,6 +20531,21 @@
       "track": 2,
       "duration": 228,
       "hasCover": true
+    },
+    {
+      "id": "e2947172bfe9416c",
+      "relPath": "Los Invasores De Nuevo Leon\\Tiempo Al Tiempo\\Así De Fácil.mp3",
+      "title": "Así De Fácil",
+      "artist": "Los Invasores De Nuevo Leon",
+      "album": "Tiempo Al Tiempo",
+      "genre": [
+        "Latino"
+      ],
+      "year": 2000,
+      "track": 3,
+      "duration": 168,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "d6ee617b7ea65576",
@@ -32195,6 +32270,21 @@
       "track": 3,
       "duration": 167,
       "hasCover": true
+    },
+    {
+      "id": "0eb210e2eaebd3ae",
+      "relPath": "Los Plebeyos\\16 Éxitos Tropicales\\Caballo Loco.mp3",
+      "title": "Caballo Loco",
+      "artist": "Los Plebeyos",
+      "album": "16 Éxitos Tropicales",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1994,
+      "track": 4,
+      "duration": 165,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "3530476bf8288206",
@@ -52420,6 +52510,21 @@
       "hasCover": false
     },
     {
+      "id": "5b1daf246e60da6f",
+      "relPath": "El Kombo Kolombia\\Desconocido\\Cumbia Chida.mp3",
+      "title": "Cumbia Chida",
+      "artist": "El Kombo Kolombia",
+      "album": "Desconocido",
+      "genre": [
+        "Latino"
+      ],
+      "year": null,
+      "track": 2,
+      "duration": 193,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "40bdf277a880a861",
       "relPath": "Aniceto Molina\\Sabrosón (En Vivo)\\Cumbia Cienaguera.mp3",
       "title": "Cumbia Cienaguera",
@@ -53198,6 +53303,21 @@
       "track": null,
       "duration": 207,
       "hasCover": true
+    },
+    {
+      "id": "6dde978ec0b5b143",
+      "relPath": "eric dj pekkitas\\Desconocido\\CUMBIS.mp3",
+      "title": "CUMBIS",
+      "artist": "eric dj pekkitas",
+      "album": "Desconocido",
+      "genre": [
+        "Latino"
+      ],
+      "year": null,
+      "track": 3,
+      "duration": 179,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "309657778d7c795e",
@@ -71023,6 +71143,21 @@
       "hasCover": true
     },
     {
+      "id": "00e6a6577f84ed9d",
+      "relPath": "Los Terribles del Norte\\El Último Paso (Versión Remasterizada)\\El Carro Ladeado.mp3",
+      "title": "El Carro Ladeado",
+      "artist": "Los Terribles del Norte",
+      "album": "El Último Paso (Versión Remasterizada)",
+      "genre": [
+        "Latino"
+      ],
+      "year": 2000,
+      "track": 4,
+      "duration": 291,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "d0770b973eb13a48",
       "relPath": "Los Tucanes de Tijuana\\Corridos Felones- Serie 35\\El Cartel De A Kilo.mp3",
       "title": "El Cartel De A Kilo",
@@ -73291,6 +73426,21 @@
       "hasCover": true
     },
     {
+      "id": "410d4d36b2098832",
+      "relPath": "Los Relampagos del Norte\\Ramón Ayala Y Cornelio Reyna Son Los Relampagos Del Norte, Vol.1\\El Embrujado.mp3",
+      "title": "El Embrujado",
+      "artist": "Los Relampagos del Norte",
+      "album": "Ramón Ayala Y Cornelio Reyna Son Los Relampagos Del Norte, Vol.1",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2024,
+      "track": 4,
+      "duration": 168,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "16ce23ad4e332ec4",
       "relPath": "Aarón y Su Grupo Ilusión\\Lo Más Escuchado De\\El Embrujo.mp3",
       "title": "El Embrujo",
@@ -74045,6 +74195,21 @@
       "track": 14,
       "duration": 184,
       "hasCover": true
+    },
+    {
+      "id": "dc74321cdb49f21d",
+      "relPath": "Homero Guerrero Jr. y Los KDT's de Linares\\Desconocido\\El Golpe Traidor.mp3",
+      "title": "El Golpe Traidor",
+      "artist": "Homero Guerrero Jr. y Los KDT's de Linares",
+      "album": "Desconocido",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2007,
+      "track": 4,
+      "duration": 161,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "0f7d467682b636ad",
@@ -77011,6 +77176,21 @@
       "hasCover": true
     },
     {
+      "id": "cbfd744e44edcf8d",
+      "relPath": "Los Razos\\Entre Pericos y Gallos\\El Paniquiado.mp3",
+      "title": "El Paniquiado",
+      "artist": "Los Razos",
+      "album": "Entre Pericos y Gallos",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2000,
+      "track": 3,
+      "duration": 176,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "61ab6967bc545aaa",
       "relPath": "Los Tucanes de Tijuana\\Corridos A Quema Ropa\\El Papá De Los Pollitos.mp3",
       "title": "El Papá De Los Pollitos",
@@ -79301,6 +79481,21 @@
       "track": 99106,
       "duration": 185,
       "hasCover": true
+    },
+    {
+      "id": "a30b1e18744fd980",
+      "relPath": "Javier Solís\\Romance\\El Rostro Mio.mp3",
+      "title": "El Rostro Mio",
+      "artist": "Javier Solís",
+      "album": "Romance",
+      "genre": [
+        "Baladas y boleros"
+      ],
+      "year": 1990,
+      "track": null,
+      "duration": 157,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "68afde7a5229003a",
@@ -86297,6 +86492,21 @@
       "track": 2,
       "duration": 239,
       "hasCover": false
+    },
+    {
+      "id": "4aa80d9a8defaa71",
+      "relPath": "Los Solitarios\\Imágenes- Los Solitaríos\\Eres Mi Ángel.mp3",
+      "title": "Eres Mi Ángel",
+      "artist": "Los Solitarios",
+      "album": "Imágenes: Los Solitaríos",
+      "genre": [
+        "Pop in spanish"
+      ],
+      "year": 2002,
+      "track": 3,
+      "duration": 38,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "b8e350b8cc1916e3",
@@ -100123,6 +100333,21 @@
       "hasCover": true
     },
     {
+      "id": "5704fff6e6864ca2",
+      "relPath": "Los Originales de San Juan\\Golpe Sobre Golpe\\Golpe Sobre Golpe.mp3",
+      "title": "Golpe Sobre Golpe",
+      "artist": "Los Originales de San Juan",
+      "album": "Golpe Sobre Golpe",
+      "genre": [
+        "Latino"
+      ],
+      "year": 2005,
+      "track": 5,
+      "duration": 169,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "90680155fda8b131",
       "relPath": "Los Saylors\\A el Amor\\Golpe Traidor.mp3",
       "title": "Golpe Traidor",
@@ -100313,6 +100538,21 @@
       "track": null,
       "duration": 196,
       "hasCover": false
+    },
+    {
+      "id": "0847358b88c3ae36",
+      "relPath": "Stephen Stanley\\trustfall\\gonna have to trust you.mp3",
+      "title": "gonna have to trust you",
+      "artist": "Stephen Stanley",
+      "album": "trustfall",
+      "genre": [
+        "Christian & gospel"
+      ],
+      "year": 2024,
+      "track": 4,
+      "duration": 191,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "3b7fb7e98ea674fb",
@@ -102317,6 +102557,21 @@
       "track": 2,
       "duration": 200,
       "hasCover": false
+    },
+    {
+      "id": "52d50cf3ab6a0296",
+      "relPath": "El Golpe\\Pegando Duro\\Háblame Más De Ti.mp3",
+      "title": "Háblame Más De Ti",
+      "artist": "El Golpe",
+      "album": "Pegando Duro",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1992,
+      "track": 4,
+      "duration": 191,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "04208df188e79f5c",
@@ -114905,6 +115160,21 @@
       "track": 12,
       "duration": 193,
       "hasCover": true
+    },
+    {
+      "id": "a9edc0e0bf15c771",
+      "relPath": "Cardenales de Nuevo León\\Ranchero\\Ingrato Amor.mp3",
+      "title": "Ingrato Amor",
+      "artist": "Cardenales de Nuevo León",
+      "album": "Ranchero",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2005,
+      "track": 5,
+      "duration": 192,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "8ff5a8c8afb26a80",
@@ -134413,6 +134683,21 @@
       "hasCover": false
     },
     {
+      "id": "010061506b90971d",
+      "relPath": "Carlos Cuevas\\Un Canto a Mi Madre\\Las Mañanitas.mp3",
+      "title": "Las Mañanitas",
+      "artist": "Carlos Cuevas",
+      "album": "Un Canto a Mi Madre",
+      "genre": [
+        "Latino"
+      ],
+      "year": 1995,
+      "track": 5,
+      "duration": 182,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "90160ce1981b461a",
       "relPath": "Cuco Sanchez\\Mananitas\\Las mananitas  Mananitas tapatias.mp3",
       "title": "Las mañanitas / Mañanitas tapatías",
@@ -142501,6 +142786,21 @@
       "hasCover": true
     },
     {
+      "id": "851fb5ce2bc481ee",
+      "relPath": "Costa Brava\\Dando de Qué Hablar\\Los Hombres Lloran por Dentro.mp3",
+      "title": "Los Hombres Lloran por Dentro",
+      "artist": "Costa Brava",
+      "album": "Dando de Qué Hablar",
+      "genre": [
+        "Música tropical"
+      ],
+      "year": 1984,
+      "track": 3,
+      "duration": 188,
+      "hasCover": false,
+      "hasLyrics": false
+    },
+    {
       "id": "a0790e2989d5fb35",
       "relPath": "Pedro Fernández\\Pedro Fernández (De Colección)\\Los Hombres No Deben Llorar.mp3",
       "title": "Los Hombres No Deben Llorar",
@@ -149833,6 +150133,21 @@
       "hasCover": false
     },
     {
+      "id": "cbe07bca4d48b08b",
+      "relPath": "Intenso\\Lo Mejor De\\Mátame Con Tu Veneno.mp3",
+      "title": "Mátame Con Tu Veneno",
+      "artist": "Intenso",
+      "album": "Lo Mejor De",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2019,
+      "track": 5,
+      "duration": 223,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "100a5756e9e1d5a5",
       "relPath": "Siggno\\Que harias\\Matame y vete.mp3",
       "title": "Mátame y vete",
@@ -155473,6 +155788,21 @@
       "hasCover": true
     },
     {
+      "id": "e216f3f50f41ac75",
+      "relPath": "Larry Hernández\\Déjate Querer Tantito\\Mi Amiga Mi Amor.mp3",
+      "title": "Mi Amiga Mi Amor",
+      "artist": "Larry Hernández",
+      "album": "Déjate Querer Tantito",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2017,
+      "track": 5,
+      "duration": 172,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "8d64e7bfaca28ded",
       "relPath": "Los Amigos Invisibles\\Desconocido\\Mi Amiga, Mi Esposa y Mi Amante.mp3",
       "title": "Mi Amiga, Mi Esposa y Mi Amante",
@@ -157561,16 +157891,19 @@
       "hasCover": false
     },
     {
-      "id": "90f98a81432842cd",
-      "relPath": "Ensemble Gilles Binchois, Dominique Vellard\\Sola m'ire Cancionero de Palacio\\Mi muerte contra la vida.mp3",
+      "id": "03f64ee1a199b419",
+      "relPath": "Ensemble Gilles Binchois, Dominique Vellard\\Sola m'ire Cancionero de Palacio\\Artista desconocido - Mi muerte contra la vida.mp3",
       "title": "Mi muerte contra la vida",
-      "artist": "[anónimo]",
+      "artist": "Genius Traducciones al Español",
       "album": "Sola m'iré: Cancionero de Palacio",
-      "genre": "Early Music",
+      "genre": [
+        "Early Music"
+      ],
       "year": 1999,
       "track": 18,
       "duration": 127,
-      "hasCover": false
+      "hasCover": false,
+      "hasLyrics": false
     },
     {
       "id": "90500089e1e72a8b",
@@ -159131,6 +159464,21 @@
       "track": 4,
       "duration": 238,
       "hasCover": true
+    },
+    {
+      "id": "e02bdabdfbd4769b",
+      "relPath": "Super Lamas\\Hasta la Luna\\Mi Vida Sin Ti.mp3",
+      "title": "Mi Vida Sin Ti",
+      "artist": "Super Lamas",
+      "album": "Hasta la Luna",
+      "genre": [
+        "Latino"
+      ],
+      "year": 2014,
+      "track": 5,
+      "duration": 244,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "865e1034ad162ab7",
@@ -163499,6 +163847,21 @@
       "track": 9,
       "duration": 214,
       "hasCover": true
+    },
+    {
+      "id": "9be1ba6a85c00771",
+      "relPath": "María Victoria\\Lo Mejor de lo Mejor de RCA Victor\\Mucho, Mucho, Mucho (Would I Love You).mp3",
+      "title": "Mucho, Mucho, Mucho (Would I Love You)",
+      "artist": "María Victoria",
+      "album": "Lo Mejor de lo Mejor de RCA Victor",
+      "genre": [
+        "Baladas y boleros"
+      ],
+      "year": 1966,
+      "track": 4,
+      "duration": 196,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "e504800e5af21d48",
@@ -179389,6 +179752,21 @@
       "hasCover": false
     },
     {
+      "id": "59eb9858855f711c",
+      "relPath": "Jeanette\\Corazón de Poeta\\Ojos En El Sol.mp3",
+      "title": "Ojos En El Sol",
+      "artist": "Jeanette",
+      "album": "Corazón de Poeta",
+      "genre": [
+        "Pop"
+      ],
+      "year": 1981,
+      "track": 4,
+      "duration": 185,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "833b11c38005944e",
       "relPath": "Victor Yturbe -El Piruli-\\Singles\\Ojos Espanoles.mp3",
       "title": "Ojos Espanoles",
@@ -181489,6 +181867,21 @@
       "hasCover": true
     },
     {
+      "id": "74307d21d669ae1e",
+      "relPath": "Mariano Barba\\Un Cantautor con Alma de Triunfador\\Otra Vez Dos Corazones.mp3",
+      "title": "Otra Vez Dos Corazones",
+      "artist": "Mariano Barba",
+      "album": "Un Cantautor con Alma de Triunfador",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2006,
+      "track": 4,
+      "duration": 240,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "0d503dc2fc33f863",
       "relPath": "Bronco\\Bronco Amigo\\Otra Vez el Amor.mp3",
       "title": "Otra Vez el Amor",
@@ -181679,6 +182072,21 @@
       "track": 8,
       "duration": 120,
       "hasCover": true
+    },
+    {
+      "id": "ee20784ea2c6be69",
+      "relPath": "Eagles\\Desperado\\Out of Control.mp3",
+      "title": "Out of Control",
+      "artist": "Eagles",
+      "album": "Desperado",
+      "genre": [
+        "Rock"
+      ],
+      "year": 1973,
+      "track": 2,
+      "duration": 315,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "bdfc9861da3b8533",
@@ -194245,6 +194653,21 @@
       "hasCover": true
     },
     {
+      "id": "a82acf6ff978e25f",
+      "relPath": "Los Rehenes\\Déjame Soñar Contigo\\Por Unos Ojos Bonitos.mp3",
+      "title": "Por Unos Ojos Bonitos",
+      "artist": "Los Rehenes",
+      "album": "Déjame Soñar Contigo",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1997,
+      "track": 4,
+      "duration": 200,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "e8375fa6c50473ac",
       "relPath": "Javier Solis\\Recupera tus clasicos, volumen 1\\Por voluntad de dios.mp3",
       "title": "Por voluntad de dios",
@@ -197399,6 +197822,21 @@
       "track": 1,
       "duration": 292,
       "hasCover": true
+    },
+    {
+      "id": "fde3f324f9b12e31",
+      "relPath": "Mr. Saik\\Mr. Saik Compilado Vol. 2\\Q Te Lleve El Diablo.mp3",
+      "title": "Q Te Lleve El Diablo",
+      "artist": "Mr. Saik",
+      "album": "Mr. Saik Compilado Vol. 2",
+      "genre": [
+        "Latino"
+      ],
+      "year": 2021,
+      "track": 3,
+      "duration": 185,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "91e05cfca39906bf",
@@ -203425,18 +203863,6 @@
       "hasCover": true
     },
     {
-      "id": "cf663d4353195278",
-      "relPath": "Michael Jackson\\Thriller\\Quincy Jones Interview, Part VI.mp3",
-      "title": "Quincy Jones Interview, Part VI",
-      "artist": "[dialogue]",
-      "album": "Thriller",
-      "genre": "Contemporary R&B",
-      "year": 2001,
-      "track": 21,
-      "duration": 78,
-      "hasCover": true
-    },
-    {
       "id": "9dfd2b873f6919e7",
       "relPath": "Los Temerarios\\En la Madrugada Se Fue\\Quise olvidarme de ti.mp3",
       "title": "Quise olvidarme de ti",
@@ -208991,6 +209417,21 @@
       "track": 5,
       "duration": 164,
       "hasCover": false
+    },
+    {
+      "id": "8623bb2f002808fa",
+      "relPath": "Trigo Limpio\\Trigo Limpio\\Rómpeme, Mátame.mp3",
+      "title": "Rómpeme, Mátame",
+      "artist": "Trigo Limpio",
+      "album": "Trigo Limpio",
+      "genre": [
+        "Pop"
+      ],
+      "year": 1977,
+      "track": 4,
+      "duration": 168,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "9f8a8cf08941a0fe",
@@ -226247,6 +226688,21 @@
       "track": 1,
       "duration": 196,
       "hasCover": true
+    },
+    {
+      "id": "5356ff1fcd58bbfa",
+      "relPath": "Banda Blanca\\Desconocido\\Sopita De Pescado.mp3",
+      "title": "Sopita De Pescado",
+      "artist": "Banda Blanca",
+      "album": "Desconocido",
+      "genre": [
+        "Latino"
+      ],
+      "year": null,
+      "track": 4,
+      "duration": 236,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "29076b255c91a4c5",
@@ -249817,6 +250273,21 @@
       "hasCover": true
     },
     {
+      "id": "76bae442a43ce881",
+      "relPath": "Montez De Durango\\La Ausencia\\Tu me Has Cambiado.mp3",
+      "title": "Tu me Has Cambiado",
+      "artist": "Montez De Durango",
+      "album": "La Ausencia",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 1991,
+      "track": 3,
+      "duration": 216,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "802efdab527c46b2",
       "relPath": "Leo Dan\\Siempre Estoy Pensando en Ella\\Tú Me Pides Que Te Olvide (Balada).mp3",
       "title": "Tú Me Pides Que Te Olvide (Balada)",
@@ -250271,6 +250742,21 @@
       "track": 9,
       "duration": 203,
       "hasCover": true
+    },
+    {
+      "id": "881f95e603ccbc35",
+      "relPath": "Los Yonic's\\Pétalo Y Espinas (De Colección)\\Tu Príncipe Azul.mp3",
+      "title": "Tu Príncipe Azul",
+      "artist": "Los Yonic's",
+      "album": "Pétalo Y Espinas (De Colección)",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2010,
+      "track": 3,
+      "duration": 196,
+      "hasCover": true,
+      "hasLyrics": false
     },
     {
       "id": "e948bdb490ebdaac",
@@ -268357,6 +268843,21 @@
       "hasCover": true
     },
     {
+      "id": "f98d906759ec013d",
+      "relPath": "Los Invasores de Nuevo León\\Amor Aventurero\\Ya Lo Ves.mp3",
+      "title": "Ya Lo Ves",
+      "artist": "Los Invasores de Nuevo León",
+      "album": "Amor Aventurero",
+      "genre": [
+        "Música mexicana"
+      ],
+      "year": 2008,
+      "track": 4,
+      "duration": 163,
+      "hasCover": true,
+      "hasLyrics": false
+    },
+    {
       "id": "800449474d636908",
       "relPath": "Joel Nava\\Joel Nava\\Ya me ando preparando.mp3",
       "title": "Ya me ando preparando",
@@ -273253,6 +273754,6 @@
       "hasCover": true
     }
   ],
-  "scannedAt": 1784031723768,
+  "scannedAt": 1784103300180,
   "musicPath": "D:/musica"
 }

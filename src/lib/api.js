@@ -1,7 +1,7 @@
 // ====== CONFIGURACIÓN DE IP DINÁMICA ======
 let API_URL = '';
 let apiUrlPromise = null;
-const DEFAULT_PORT = '5001';
+const DEFAULT_PORT = '6000';
 const API_URL_STORAGE_KEY = 'mirepo_api_url';
 
 async function probeServer(baseUrl) {

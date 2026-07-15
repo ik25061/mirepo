@@ -354,17 +354,21 @@ function Shell() {
           allTracks={allSongs}
           onDelete={library.removeSong}
           onFixMetadata={(song) => {
-            const fullPath = song.relPath?.startsWith('music/') ? song.relPath : 'music/' + (song.relPath || song.id);
+            const fullPath = song.relPath || song.id;
             if (confirm('¿Corregir metadatos de "' + song.title + '"?')) {
-              import('./lib/api.js')
-                .then(({ api }) =>
-                  api
-                    .fixMetadata(fullPath)
-                    .then((result) => {
-                      alert('✅ ' + result.message + (result.newPath ? '\n\nNuevo nombre: ' + result.newPath.split('/').pop() : ''));
-                    })
-                    .catch((err) => alert('Error al corregir metadatos: ' + err.message))
-                );
+              fetch('/api/fix-metadata', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filePath: fullPath }),
+              })
+                .then((res) => {
+                  if (!res.ok) throw new Error('Error ' + res.status);
+                  return res.json();
+                })
+                .then((result) => {
+                  alert('✅ ' + result.message + (result.newPath ? '\n\nNuevo nombre: ' + result.newPath.split('/').pop() : ''));
+                })
+                .catch((err) => alert('Error al corregir metadatos: ' + err.message));
             }
           }}
           onOpenArtist={openArtistFromNowPlaying}

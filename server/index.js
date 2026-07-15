@@ -5,12 +5,12 @@ import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { scanLibrary, rescanLibrary, getCache, getSongById, absolutePath, MUSIC_DIR, TRASH_DIR, removeSongFromCache } from './scanner.js';
+import { scanLibrary, rescanLibrary, getCache, getSongById, absolutePath, MUSIC_DIR, TRASH_DIR, removeSongFromCache, saveCache } from './scanner.js';
 import * as db from './db.js';
 import 'dotenv/config';
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 6000;
 
 console.log('🚀 Iniciando servidor...');
 console.log(`📂 MUSIC_DIR: ${MUSIC_DIR}`);
@@ -573,6 +573,117 @@ app.post('/api/artists/unhide', async (req, res) => {
 app.post('/api/rescan', async (_req, res) => {
   await rescanLibrary();
   res.json(await buildLibrary());
+});
+
+// ============================================================
+// RUTA - CORREGIR METADATOS
+// ============================================================
+app.post('/api/fix-metadata', async (req, res) => {
+  try {
+    const { filePath } = req.body;
+    if (!filePath) return res.status(400).json({ error: 'Se requiere filePath' });
+
+    const absPath = absolutePath(filePath);
+    if (!fs.existsSync(absPath)) return res.status(404).json({ error: 'Archivo no encontrado' });
+
+    const fileName = path.basename(absPath, path.extname(absPath));
+    let newArtist = 'Artista desconocido';
+    let newTitle = fileName;
+
+    const match = fileName.match(/^(.+?)[\-_](.+)$/);
+    if (match) {
+      newArtist = match[1].trim();
+      newTitle = match[2].trim();
+    }
+
+    if (!newArtist || newArtist.toLowerCase().includes('anónimo')) newArtist = 'Artista desconocido';
+    if (!newTitle || newTitle.toLowerCase().includes('[track') || newTitle.toLowerCase().includes('[untitled]')) newTitle = fileName;
+
+    const cache = getCache();
+    const songIndex = cache.songs.findIndex(s => s.relPath === filePath || s.id === path.basename(absPath, path.extname(absPath)));
+    
+    let newPath = null;
+    if (songIndex !== -1) {
+      const oldRelPath = cache.songs[songIndex].relPath;
+      const oldDir = path.dirname(oldRelPath);
+      const ext = path.extname(absPath);
+      const safeArtist = newArtist.replace(/[<>:"/\\|?*]/g, ' ').trim();
+      const safeTitle = newTitle.replace(/[<>:"/\\|?*]/g, ' ').trim();
+      const newFileName = `${safeArtist} - ${safeTitle}${ext}`;
+
+      if (path.basename(oldRelPath) !== newFileName) {
+        newPath = path.join(oldDir, newFileName);
+        const newFullPath = absolutePath(newPath);
+        try {
+          if (fs.existsSync(absPath)) {
+            fs.renameSync(absPath, newFullPath);
+            cache.songs[songIndex].relPath = newPath;
+          }
+        } catch (err) {
+          console.error('[fix-metadata] Error renombrando:', err);
+        }
+      }
+      
+      cache.songs[songIndex].artist = newArtist;
+      cache.songs[songIndex].title = newTitle;
+      saveCache(cache);
+    }
+
+    res.json({ success: true, message: `Metadatos corregidos: ${newArtist} - ${newTitle}`, newPath, artist: newArtist, title: newTitle });
+  } catch (error) {
+    console.error('[fix-metadata] Error:', error);
+    res.status(500).json({ error: 'Error al corregir metadatos: ' + error.message });
+  }
+});
+
+// ============================================================
+// RUTA - PORTADA DE ARTISTA
+// ============================================================
+app.get('/artist-cover/:artistName', async (req, res) => {
+  try {
+    const encodedName = req.params.artistName;
+    let artistName = decodeURIComponent(encodedName);
+    
+    // Limpiar corchetes y otros caracteres especiales del nombre
+    const cleanName = artistName.replace(/[\[\]\(\)]/g, '').trim();
+    
+    const cache = getCache();
+    
+    // Buscar canción del artista (con o sin corchetes)
+    let song = cache.songs.find(s => s.artist === artistName);
+    if (!song && cleanName !== artistName) {
+      song = cache.songs.find(s => s.artist === cleanName);
+    }
+    // También buscar si el artista en la BD tiene corchetes
+    if (!song) {
+      const withBrackets = `[${cleanName}]`;
+      song = cache.songs.find(s => s.artist === withBrackets);
+    }
+    
+    if (!song) return res.status(404).send('Artista no encontrado');
+
+    const albumDir = path.dirname(absolutePath(song.relPath));
+    const coverPath = path.join(albumDir, 'cover.jpg');
+    if (fs.existsSync(coverPath)) {
+      res.set('Content-Type', 'image/jpeg');
+      res.set('Cache-Control', 'public, max-age=86400');
+      res.sendFile(coverPath);
+      return;
+    }
+
+    const coverPngPath = path.join(albumDir, 'cover.png');
+    if (fs.existsSync(coverPngPath)) {
+      res.set('Content-Type', 'image/png');
+      res.set('Cache-Control', 'public, max-age=86400');
+      res.sendFile(coverPngPath);
+      return;
+    }
+
+    res.status(404).send('No cover');
+  } catch (error) {
+    console.error('[artist-cover] Error:', error);
+    res.status(500).send('Error');
+  }
 });
 
 // ============================================================

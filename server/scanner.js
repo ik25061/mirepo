@@ -328,6 +328,20 @@ export function getCache() {
   return cache;
 }
 
+export function saveCache(newCache) {
+  cache = newCache;
+  try {
+    fs.writeFileSync(CACHE_PATH, JSON.stringify({
+      songs: cache.songs,
+      scannedAt: cache.scannedAt,
+      musicPath: MUSIC_DIR
+    }, null, 2));
+    console.log(`[scanner] 💾 Caché guardada: ${cache.songs.length} canciones`);
+  } catch (err) {
+    console.warn('[scanner] Error guardando caché:', err.message);
+  }
+}
+
 export function getSongById(id) {
   return cache.byId.get(id);
 }

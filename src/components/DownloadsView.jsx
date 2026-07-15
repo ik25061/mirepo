@@ -17,6 +17,7 @@ import { useDownload } from '../context/DownloadContext';
 import { usePlayer } from '../context/PlayerContext';
 import Cover from './Cover.jsx';
 import { formatTime } from '../lib/format.js';
+import { useAutoDeleteDownload } from '../hooks/useAutoDeleteDownload.js';
 
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 B';
@@ -31,12 +32,12 @@ export default function DownloadsView({ onBack }) {
   const { play, current, isPlaying, togglePlay } = usePlayer();
   const [totalSize, setTotalSize] = useState(0);
   const [deletingId, setDeletingId] = useState(null);
+  const { enabled: autoDeleteEnabled, toggle: toggleAutoDelete } = useAutoDeleteDownload();
 
   // Calcular espacio total utilizado
   useEffect(() => {
     let size = 0;
     // Estimar tamaño: cada canción ~5MB en promedio
-    // En realidad, podríamos calcular el tamaño real desde IndexedDB
     size = downloadedSongs.length * 5 * 1024 * 1024;
     setTotalSize(size);
   }, [downloadedSongs]);
@@ -91,18 +92,46 @@ export default function DownloadsView({ onBack }) {
         </div>
       </div>
 
-      {/* ===== ESTADÍSTICAS ===== */}
+      {/* ===== TOGGLE AUTO-ELIMINAR ===== */}
+      <div className="flex items-center justify-between rounded-xl border border-border bg-surface/50 p-3">
+        <div className="flex items-center gap-3">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+            <path d="M3 6h18" />
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            <path d="M19 6v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+          </svg>
+          <div>
+            <p className="text-sm font-medium text-white">Auto-eliminar descargas</p>
+            <p className="text-xs text-muted-foreground">Elimina automáticamente la descarga después de escuchar la canción</p>
+          </div>
+        </div>
+        <button
+          onClick={toggleAutoDelete}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+            autoDeleteEnabled ? 'bg-primary' : 'bg-gray-600'
+          }`}
+          title={autoDeleteEnabled ? 'Desactivar' : 'Activar'}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              autoDeleteEnabled ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* ===== ESTADÍSTICAS / ACCIONES ===== */}
       {downloadedSongs.length > 0 && (
-        <div className="flex items-center gap-4 p-3 rounded-xl bg-surface border border-border">
+        <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border">
           <div className="flex items-center gap-2">
             <HardDrive size={18} className="text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              {formatFileSize(totalSize)} utilizados
+              {formatFileSize(totalSize)} · {downloadedSongs.length} {downloadedSongs.length === 1 ? 'canción' : 'canciones'}
             </span>
           </div>
           <button
             onClick={handleDeleteAll}
-            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-danger/20 text-danger text-xs font-medium hover:bg-danger/30 transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-danger/20 text-danger text-xs font-medium hover:bg-danger/30 transition"
           >
             <Trash2 size={14} />
             Eliminar todas
@@ -142,7 +171,6 @@ export default function DownloadsView({ onBack }) {
                       if (isCurrent) {
                         togglePlay();
                       } else {
-                        // Reproducir la canción descargada
                         play(song, downloadedSongs);
                       }
                     }}

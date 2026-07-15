@@ -20,6 +20,7 @@ import { formatTime } from '../lib/format.js';
 import { usePlayer } from '../context/PlayerContext.jsx';
 import { artistCoverUrl, coverUrl } from '../lib/api.js';
 import { FileText, Loader2 } from 'lucide-react';
+import { useAutoDeleteDownload } from '../hooks/useAutoDeleteDownload.js';
 
 
 export default function NowPlayingScreen({
@@ -47,6 +48,7 @@ export default function NowPlayingScreen({
   const lyricsContainerRef = useRef(null);
   const [currentLineIndex, setCurrentLineIndex] = useState(-1);
   const [wordProgress, setWordProgress] = useState(0); // 0..1 dentro de la línea actual
+  const { enabled: autoDeleteEnabled, toggle: toggleAutoDelete } = useAutoDeleteDownload();
 
   // Generar URL de la portada del álbum
   const coverId = track?.coverId || track?.id;
@@ -363,6 +365,19 @@ export default function NowPlayingScreen({
             </p>
           </div>
           <div className="flex items-center" style={{ gap: 12 }}>
+            {/* Botón eliminar descarga automáticamente después de escuchar */}
+            <button
+              onClick={toggleAutoDelete}
+              className={`p-2 rounded-full transition-colors ${autoDeleteEnabled ? 'bg-primary/20 text-primary' : 'hover:bg-white/10'}`}
+              style={{ color: autoDeleteEnabled ? '#1db954' : '#a7a7a7', minWidth: 40, minHeight: 40 }}
+              title={autoDeleteEnabled ? 'Desactivar borrado automático de descargas' : 'Activar borrado automático de descargas después de escuchar'}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" />
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <path d="M19 6v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+              </svg>
+            </button>
             {/* Botón de letras - integrado como Spotify */}
             <button
               onClick={toggleLyrics}

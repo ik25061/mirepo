@@ -39,7 +39,7 @@ export class RecommendationEngine {
     const topYears = Object.keys(yearCount).sort((a,b) => yearCount[b] - yearCount[a]).slice(0, 3);
     
     // Puntuar canciones no escuchadas (ni liked ni en historial)
-    const historyIds = new Set(history.map(h => h.songId));
+    const historyIds = new Set((Array.isArray(history) ? history : []).map(h => h.songId));
     const candidates = songs.filter(s => !likedIds.has(s.id) && !historyIds.has(s.id));
     
     const scored = candidates.map(song => {

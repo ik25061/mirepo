@@ -200,6 +200,15 @@ export function useDownloads() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const handler = () => {
+      loadDownloads();
+    };
+    window.addEventListener('mirepo-reload-downloads', handler);
+    return () => window.removeEventListener('mirepo-reload-downloads', handler);
+  }, [loadDownloads]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       const stored = JSON.parse(window.localStorage.getItem(PENDING_LIKE_CHANGES_KEY) || '[]');
       if (Array.isArray(stored)) {
