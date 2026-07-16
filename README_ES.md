@@ -41,7 +41,7 @@ const MUSIC_DIR = path.join('C:', 'Users', 'TU_USUARIO', 'Music');
 node serve.js
 ```
 
-Verá: `🎵 Servidor de música corriendo en puerto 5001`
+Verá: `🎵 Servidor de música corriendo en puerto 5002`
 
 ### 2. Frontend
 
@@ -58,10 +58,10 @@ Abre `http://localhost:5172` en tu navegador
 1. En `frontend/src/App.jsx` línea 5, cambia:
 ```javascript
 // De:
-const API_URL = 'http://localhost:5001';
+const API_URL = 'http://localhost:5002';
 
 // A:
-const API_URL = 'http://192.168.1.100:5001'; // Tu IP local
+const API_URL = 'http://192.168.1.100:5002'; // Tu IP local
 ```
 
 2. Accede desde otro dispositivo: `http://192.168.1.100:5172`
@@ -151,7 +151,7 @@ C:\Users\TU_USUARIO\Music\
 
 En `backend/serve.js` línea 190:
 ```javascript
-const PORT = 5001 // Cambiar aquí
+const PORT = 5002 // Cambiar aquí
 ```
 
 ### Cambiar Límite de Canciones por Página

@@ -1,7 +1,7 @@
 // ====== CONFIGURACIÓN DE IP DINÁMICA ======
 let API_URL = '';
 let apiUrlPromise = null;
-const DEFAULT_PORT = '5001';
+const DEFAULT_PORT = '5002';
 const API_URL_STORAGE_KEY = 'mirepo_api_url';
 
 async function probeServer(baseUrl) {
@@ -30,7 +30,7 @@ export async function detectServerIP() {
   if (storedUrl) {
     // Invalidar la URL guardada si el puerto no coincide con el puerto actual.
     // Esto evita que quede una URL obsoleta (ej. :6000) en localStorage del móvil
-    // cuando el servidor cambia de puerto (ej. a :5001).
+    // cuando el servidor cambia de puerto (ej. a :5002).
     try {
       const storedPort = new URL(storedUrl).port;
       if (storedPort && storedPort !== DEFAULT_PORT) {
