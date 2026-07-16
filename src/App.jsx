@@ -15,6 +15,12 @@
  * - Scroll infinito en biblioteca y grid
  * - Soporte móvil y escritorio
  * - Pestaña "Descargas" para ver canciones offline
+ * 
+ * CORRECCIÓN DE HOOKS (2026-07-16):
+ * - Eliminado useSync para evitar orden inconsistente de hooks.
+ * - Sincronización de likes integrada mediante syncLikes de useDownload.
+ * - El useEffect de sincronización se coloca al final de todos los hooks,
+ *   antes de cualquier return condicional.
  */
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -23,7 +29,6 @@ import { DownloadProvider, useDownload } from './context/DownloadContext.jsx';
 import { PlayerProvider, usePlayer } from './context/PlayerContext.jsx';
 import { useLibrary } from './hooks/useLibrary';
 import { useAllSongs } from './hooks/useAllSongs';
-import { useSync } from './hooks/useSync';
 import LoginScreen from './components/LoginScreen.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import BottomNav from './components/BottomNav.jsx';
@@ -51,13 +56,9 @@ import { Loader2, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 
 function Shell() {
   // ============================================================
-  // AUTENTICACIÓN
+  // 1. HOOKS DE CONTEXTO (siempre en el mismo orden)
   // ============================================================
   const { isAuthenticated, loading: authLoading, user } = useAuth();
-
-  // ============================================================
-  // MODO OFFLINE (carpeta local)
-  // ============================================================
   const {
     localSongs,
     localFolderName,
@@ -69,9 +70,6 @@ function Shell() {
     toggleLocalLike,
   } = useOffline();
 
-  // ============================================================
-  // DESCARGAS (IndexedDB)
-  // ============================================================
   const {
     downloadedIds,
     isDownloading,
@@ -79,133 +77,58 @@ function Shell() {
     downloadSongs,
     updateLiked,
     removeDownload,
-    syncLikes,
+    syncLikes,          // <-- Ahora usamos syncLikes directamente
     isDownloaded,
   } = useDownload();
 
-  // ============================================================
-  // REPRODUCTOR
-  // ============================================================
   const { current, isPlaying, togglePlay, next, prev, stop, removeFromQueue } = usePlayer();
 
-  // ============================================================
-  // TODAS LAS CANCIONES (servidor)
-  // ============================================================
   const { allSongs: serverAllSongs, loading: allSongsLoading, toggleLiked, removeSong: removeSongFromAllSongs } = useAllSongs({ enabled: !offlineMode });
 
-  // ============================================================
-  // BIBLIOTECA (100 canciones + scroll infinito)
-  // ============================================================
   const lib = useLibrary(toggleLiked, removeSongFromAllSongs, { enabled: !offlineMode });
 
-
-
-      // ============================================================
-  // BIBLIOTECA (según modo offline o online)
   // ============================================================
-  const library = offlineMode
-    ? {
-        ...lib,
-        songs: localSongs,
-        counts: { total: localSongs.length, trash: 0 },
-        loading: localLoading,
-        error: localError,
-        hasMore: false,
-        isLoadingMore: false,
-        toggleLike: toggleLocalLike,
-        dislikeSong: () => {},
-        dislikeArtist: () => {},
-        removeSong: () => {},
-      }
-    : lib;
-
-  const handleLike = useCallback(async (songOrId) => {
-    if (!songOrId) return;
-    const songId = typeof songOrId === 'string' ? songOrId : songOrId.id;
-    if (!songId) return;
-
-    if (isDownloaded(songId)) {
-      // Actualizar like en la descarga local y propagar a la lista global
-      try {
-        await updateLiked(songId, true);
-      } catch (e) {
-        console.error('[App] Error updateLiked:', e);
-      }
-      // Asegurar que allSongs refleje el cambio
-      try { toggleLiked?.(songId, true); } catch (e) {}
-    } else {
-      library.toggleLike(songId);
-    }
-  }, [isDownloaded, updateLiked, library, toggleLiked]);
-
-  const handleDislike = useCallback(async (song) => {
-    if (!song) return;
-    const songId = typeof song === 'string' ? song : song.id;
-    if (!songId) return;
-
-    removeFromQueue(songId);
-    if (isDownloaded(songId)) {
-      try {
-        await updateLiked(songId, false);
-      } catch (e) {
-        console.error('[App] Error updateLiked(false):', e);
-      }
-      // Eliminar descarga si procede
-      try { await removeDownload(songId); } catch (e) {}
-      // Propagar cambio a allSongs
-      try { toggleLiked?.(songId, false); } catch (e) {}
-    } else if (typeof song !== 'string') {
-      library.dislikeSong(song);
-    }
-  }, [isDownloaded, updateLiked, removeDownload, removeFromQueue, library, toggleLiked]);
-
-  // ============================================================
-  // CONJUNTO DE CANCIONES (según modo offline o online)
-  // ============================================================
-  const allSongs = offlineMode ? localSongs : serverAllSongs;
-
-
-
-  // ============================================================
-  // SINCRONIZACIÓN (likes/dislikes con el servidor)
-  // ============================================================
-  const { isOnline, isSyncing, lastSync, sync } = useSync(user?.id);
-
-  // ============================================================
-  // NAVEGACIÓN
+  // 2. ESTADO (useState)
   // ============================================================
   const [view, setView] = useState({ type: 'home' });
   const [showNowPlaying, setShowNowPlaying] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  // ============================================================
-  // CONTROL DE SCROLL (biblioteca)
-  // ============================================================
   const [shouldScrollToCurrent, setShouldScrollToCurrent] = useState(false);
 
-  // ============================================================
-  // SCROLL INFINITO PARA GRID
-  // ============================================================
+  // Estado para scroll infinito en grid
   const [gridOffset, setGridOffset] = useState(0);
   const [gridHasMore, setGridHasMore] = useState(false);
   const [gridLoading, setGridLoading] = useState(false);
-  const gridLoaderRef = useRef(null);
-  const GRID_PAGE_SIZE = 30;
   const [gridItems, setGridItems] = useState([]);
   const [gridType, setGridType] = useState('artists');
 
   // ============================================================
-  // DETECTAR CAMBIO DE TAMAÑO (móvil/escritorio)
+  // 3. REFERENCIAS (useRef)
   // ============================================================
+  const gridLoaderRef = useRef(null);
+
+  // ============================================================
+  // 4. EFECTOS (useEffect) - Siempre en el mismo orden
+  // ============================================================
+
+  // 4.1 Detectar cambio de tamaño (móvil/escritorio)
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handler);
     return () => window.removeEventListener('resize', handler);
   }, []);
 
+  // 4.2 Sincronizar likes pendientes al autenticar (NUEVO)
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      syncLikes(user.id);
+    }
+  }, [isAuthenticated, user, syncLikes]);
+
   // ============================================================
-  // FUNCIÓN PARA CERRAR NOWPLAYING (con scroll a canción actual)
+  // 5. FUNCIONES (useCallback) - Siempre en el mismo orden
   // ============================================================
+
   const handleCloseNowPlaying = useCallback(() => {
     setShowNowPlaying(false);
     setShouldScrollToCurrent(true);
@@ -214,14 +137,8 @@ function Shell() {
     }, 2500);
   }, []);
 
-  // ============================================================
-  // FUNCIONES DE NAVEGACIÓN
-  // ============================================================
-
-  // Abrir una colección (artista, álbum, género, año)
   const openCollection = (collection) => setView({ type: 'collection', collection });
 
-  // Abrir grid view (ver todos)
   const openGridView = useCallback((type, items) => {
     setGridType(type);
     setGridItems(items);
@@ -230,7 +147,6 @@ function Shell() {
     setView({ type: 'grid', gridData: { type, items: items.slice(0, GRID_PAGE_SIZE) } });
   }, []);
 
-  // Cargar más elementos en el grid (scroll infinito)
   const loadMoreGridItems = useCallback(() => {
     if (gridLoading || !gridHasMore) return;
 
@@ -264,28 +180,79 @@ function Shell() {
     }, 300);
   }, [gridLoading, gridHasMore, gridOffset, gridItems]);
 
-  // Abrir artista desde NowPlayingScreen
   const openArtistFromNowPlaying = (collection) => {
     setView({ type: 'collection', collection });
   };
 
-  // ============================================================
-  // FUNCIÓN PARA DESCARGAR CANCIONES DE LA BIBLIOTECA
-  // ============================================================
-  const handleDownloadLibrarySongs = () => {
-    if (library.songs.length === 0) return;
-    // Descargar las primeras 100 canciones visibles
-    downloadSongs(library.songs.slice(0, 100));
-  };
-
-  // ============================================================
-  // FUNCIÓN PARA ABRIR COLECCIONES (handler)
-  // ============================================================
   const openCollectionHandler = (collection) => setView({ type: 'collection', collection });
 
   // ============================================================
-  // PANTALLA DE CARGA (autenticación o biblioteca)
+  // 6. HANDLERS DE LIKES/DISLIKES (useCallback)
   // ============================================================
+
+  const handleLike = useCallback(async (songOrId) => {
+    if (!songOrId) return;
+    const songId = typeof songOrId === 'string' ? songOrId : songOrId.id;
+    if (!songId) return;
+
+    if (isDownloaded(songId)) {
+      try {
+        await updateLiked(songId, true);
+      } catch (e) {
+        console.error('[App] Error updateLiked:', e);
+      }
+      try { toggleLiked?.(songId, true); } catch (e) {}
+    } else {
+      lib.toggleLike(songId);
+    }
+  }, [isDownloaded, updateLiked, lib, toggleLiked]);
+
+  const handleDislike = useCallback(async (song) => {
+    if (!song) return;
+    const songId = typeof song === 'string' ? song : song.id;
+    if (!songId) return;
+
+    removeFromQueue(songId);
+    if (isDownloaded(songId)) {
+      try {
+        await updateLiked(songId, false);
+      } catch (e) {
+        console.error('[App] Error updateLiked(false):', e);
+      }
+      try { await removeDownload(songId); } catch (e) {}
+      try { toggleLiked?.(songId, false); } catch (e) {}
+    } else if (typeof song !== 'string') {
+      lib.dislikeSong(song);
+    }
+  }, [isDownloaded, updateLiked, removeDownload, removeFromQueue, lib, toggleLiked]);
+
+  // ============================================================
+  // 7. CONSTANTES LOCALES
+  // ============================================================
+  const GRID_PAGE_SIZE = 30;
+  const library = offlineMode
+    ? {
+        ...lib,
+        songs: localSongs,
+        counts: { total: localSongs.length, trash: 0 },
+        loading: localLoading,
+        error: localError,
+        hasMore: false,
+        isLoadingMore: false,
+        toggleLike: toggleLocalLike,
+        dislikeSong: () => {},
+        dislikeArtist: () => {},
+        removeSong: () => {},
+      }
+    : lib;
+
+  const allSongs = offlineMode ? localSongs : serverAllSongs;
+
+  // ============================================================
+  // 8. RENDERIZADO CONDICIONAL (después de todos los hooks)
+  // ============================================================
+
+  // 8.1 Pantalla de carga
   const shouldShowFullScreenLoader = (!current && (authLoading || library.loading || allSongsLoading));
 
   if (shouldShowFullScreenLoader) {
@@ -296,23 +263,17 @@ function Shell() {
     );
   }
 
-  // ============================================================
-  // DETECTAR ESTADO OFFLINE (sin conexión)
-  // ============================================================
-  if (!isOnline) {
+  // 8.2 Modo offline (sin conexión)
+  if (!navigator.onLine) {
     return <OfflineMode />;
   }
 
-  // ============================================================
-  // PANTALLA DE LOGIN (con opción offline)
-  // ============================================================
+  // 8.3 Pantalla de login (con opción offline)
   if (!isAuthenticated && !offlineMode) {
     return <LoginScreen onOpenLocal={openLocalFolder} offlineSupported={offlineSupported} />;
   }
 
-  // ============================================================
-  // PANTALLA DE ERROR
-  // ============================================================
+  // 8.4 Pantalla de error
   if (library.error) {
     return (
       <div className="flex h-screen flex-col bg-background" style={{ background: '#121212' }}>
@@ -333,9 +294,7 @@ function Shell() {
   }
 
   // ============================================================
-  // ============================================================
-  // PANTALLA DE REPRODUCCIÓN (NowPlaying)
-  // ============================================================
+  // 9. PANTALLA DE REPRODUCCIÓN (NowPlaying)
   // ============================================================
   if (showNowPlaying) {
     return (
@@ -378,18 +337,15 @@ function Shell() {
   }
 
   // ============================================================
-  // ============================================================
-  // VISTA MÓVIL (con barra inferior)
-  // ============================================================
+  // 10. VISTA MÓVIL
   // ============================================================
   if (isMobile) {
     return (
       <div className="flex flex-col h-full bg-background text-foreground overflow-hidden" style={{ background: '#121212' }}>
-        
-        {/* ===== INDICADOR DE CONEXIÓN Y SINCRONIZACIÓN ===== */}
+        {/* ===== INDICADOR DE CONEXIÓN ===== */}
         <div className="flex items-center justify-between px-3 py-1 flex-shrink-0 bg-surface/50 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            {isOnline ? (
+            {navigator.onLine ? (
               <Wifi size={12} className="text-primary" />
             ) : (
               <WifiOff size={12} className="text-danger" />
@@ -399,13 +355,7 @@ function Shell() {
 
         {/* ===== CONTENIDO PRINCIPAL ===== */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 pt-3 pb-0">
-          
-          {/* ============================================================
-          ===== SECCIÓN DE VISTAS - MÓVIL =====
-          ============================================================ */}
-          
           {view.type === 'home' ? (
-            // ===== VISTA INICIO =====
             <HomeView
               songs={library.songs}
               onOpenCollection={openCollectionHandler}
@@ -420,9 +370,7 @@ function Shell() {
               userId={user?.id}
             />
           ) : view.type === 'library' ? (
-            // ===== VISTA BIBLIOTECA =====
             <>
-              {/* Barra de herramientas de biblioteca */}
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0">
                 <div>
                   <h1 className="text-xl font-700 tracking-tight text-white">Biblioteca</h1>
@@ -432,7 +380,6 @@ function Shell() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Botón de descarga masiva */}
                   {!offlineMode && library.songs.length > 0 && (
                     <DownloadAllButton
                       songs={library.songs}
@@ -462,13 +409,10 @@ function Shell() {
               />
             </>
           ) : view.type === 'search' ? (
-            // ===== VISTA BÚSQUEDA =====
             <MobileSearchView tracks={library.songs} currentTrack={current} />
           ) : view.type === 'downloads' ? (
-            // ===== VISTA DESCARGAS (NUEVO) =====
             <DownloadsView onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'grid' ? (
-            // ===== VISTA GRID (Ver todos) =====
             <GridView
               items={view.gridData.items}
               type={view.gridData.type}
@@ -481,42 +425,37 @@ function Shell() {
               loadMoreRef={gridLoaderRef}
             />
           ) : view.type === 'duplicates' ? (
-            // ===== VISTA DUPLICADOS =====
             <DuplicateFinder onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'collection' ? (
-            // ===== VISTA COLECCIÓN (Artista/Álbum/Género/Año) =====
             <CollectionView
               collection={view.collection}
               onBack={() => setView({ type: 'home' })}
-              onLike={library.toggleLike}
-              onDislike={library.dislikeSong}
+              onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
               onDislikeArtist={library.dislikeArtist}
               onDelete={library.removeSong}
               allSongs={allSongs}
             />
           ) : view.type === 'likedSongs' ? (
-            // ===== VISTA CANCIONES QUE ME GUSTAN =====
             <LikedSongsView
               userId={user?.id}
               onBack={() => setView({ type: 'home' })}
-              onLike={library.toggleLike}
-              onDislike={library.dislikeSong}
+              onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
               onDislikeArtist={library.dislikeArtist}
               onDelete={library.removeSong}
             />
           ) : view.type === 'playlists' ? (
-            // ===== VISTA LISTAS DE REPRODUCCIÓN =====
             <PlayListsManager
               userId={user?.id}
               onBack={() => setView({ type: 'home' })}
-              onLike={library.toggleLike}
-              onDislike={library.dislikeSong}
+              onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
               onDislikeArtist={library.dislikeArtist}
               onDelete={library.removeSong}
               allSongs={allSongs}
             />
           ) : view.type === 'ai' ? (
-            // ===== VISTA IA =====
             <AIRecommendations
               songs={allSongs}
               likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
@@ -525,7 +464,7 @@ function Shell() {
           ) : null}
         </div>
 
-        {/* ===== MINI PLAYER (barra inferior) ===== */}
+        {/* ===== MINI PLAYER ===== */}
         <MiniPlayer
           track={current}
           isPlaying={isPlaying}
@@ -545,7 +484,7 @@ function Shell() {
           hasCurrentTrack={!!current}
         />
 
-        {/* ===== BOTTOM NAV (móvil) ===== */}
+        {/* ===== BOTTOM NAV ===== */}
         <BottomNav
           activeView={view.type}
           onViewChange={(v) => setView({ type: v })}
@@ -556,39 +495,23 @@ function Shell() {
   }
 
   // ============================================================
-  // ============================================================
-  // VISTA ESCRITORIO (con sidebar izquierda)
-  // ============================================================
+  // 11. VISTA ESCRITORIO
   // ============================================================
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground" style={{ background: '#121212', color: '#fff' }}>
-      
-      {/* ===== SIDEBAR ===== */}
       <Sidebar view={view} onNavigate={setView} trashCount={library.counts.trash} />
-
-      {/* ===== CONTENIDO PRINCIPAL ===== */}
       <div className="flex min-w-0 flex-1 flex-col">
-        
-        {/* ===== INDICADOR DE CONEXIÓN Y SINCRONIZACIÓN ===== */}
         <div className="flex items-center justify-between px-6 py-1 flex-shrink-0 bg-surface/30 border-b border-border/30 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            {isOnline ? (
+            {navigator.onLine ? (
               <Wifi size={14} className="text-primary" />
             ) : (
               <WifiOff size={14} className="text-danger" />
             )}
           </div>
         </div>
-
-        {/* ===== CONTENIDO PRINCIPAL ===== */}
         <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8">
-          
-          {/* ============================================================
-          ===== SECCIÓN DE VISTAS - ESCRITORIO =====
-          ============================================================ */}
-          
           {view.type === 'home' ? (
-            // ===== VISTA INICIO =====
             <HomeView
               songs={library.songs}
               onOpenCollection={openCollectionHandler}
@@ -603,9 +526,7 @@ function Shell() {
               userId={user?.id}
             />
           ) : view.type === 'library' ? (
-            // ===== VISTA BIBLIOTECA =====
             <>
-              {/* Barra de herramientas de biblioteca */}
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4 flex-shrink-0">
                 <div>
                   <h1 className="text-2xl font-700 tracking-tight text-white">Biblioteca</h1>
@@ -615,7 +536,6 @@ function Shell() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* Botón de descarga masiva */}
                   {!offlineMode && library.songs.length > 0 && (
                     <DownloadAllButton
                       songs={library.songs}
@@ -626,14 +546,12 @@ function Shell() {
                       }}
                     />
                   )}
-                  {/* Botón de rescan */}
                   {!offlineMode && (
                     <button
                       onClick={library.rescan}
                       className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2 text-foreground text-sm hover:bg-surface-2/70 transition"
                     >
-                      <RefreshCw size={16} />
-                      Rescanear
+                      <RefreshCw size={16} /> Rescanear
                     </button>
                   )}
                 </div>
@@ -655,13 +573,10 @@ function Shell() {
               />
             </>
           ) : view.type === 'search' ? (
-            // ===== VISTA BÚSQUEDA =====
             <MobileSearchView tracks={library.songs} currentTrack={current} />
           ) : view.type === 'downloads' ? (
-            // ===== VISTA DESCARGAS (NUEVO) =====
             <DownloadsView onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'grid' ? (
-            // ===== VISTA GRID (Ver todos) =====
             <GridView
               items={view.gridData.items}
               type={view.gridData.type}
@@ -674,42 +589,37 @@ function Shell() {
               loadMoreRef={gridLoaderRef}
             />
           ) : view.type === 'duplicates' ? (
-            // ===== VISTA DUPLICADOS =====
             <DuplicateFinder onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'collection' ? (
-            // ===== VISTA COLECCIÓN (Artista/Álbum/Género/Año) =====
             <CollectionView
               collection={view.collection}
               onBack={() => setView({ type: 'home' })}
-              onLike={handleLike}
-              onDislike={handleDislike}
+              onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
               onDislikeArtist={library.dislikeArtist}
               onDelete={library.removeSong}
               allSongs={allSongs}
             />
           ) : view.type === 'likedSongs' ? (
-            // ===== VISTA CANCIONES QUE ME GUSTAN =====
             <LikedSongsView
               userId={user?.id}
               onBack={() => setView({ type: 'home' })}
-              onLike={handleLike}
-              onDislike={handleDislike}
+              onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
               onDislikeArtist={library.dislikeArtist}
               onDelete={library.removeSong}
             />
           ) : view.type === 'playlists' ? (
-            // ===== VISTA LISTAS DE REPRODUCCIÓN =====
             <PlayListsManager
               userId={user?.id}
               onBack={() => setView({ type: 'home' })}
-              onLike={library.toggleLike}
-              onDislike={library.dislikeSong}
+              onLike={lib.toggleLike}
+              onDislike={lib.dislikeSong}
               onDislikeArtist={library.dislikeArtist}
               onDelete={library.removeSong}
               allSongs={allSongs}
             />
           ) : view.type === 'ai' ? (
-            // ===== VISTA IA =====
             <AIRecommendations
               songs={allSongs}
               likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
@@ -717,8 +627,6 @@ function Shell() {
             />
           ) : null}
         </main>
-
-        {/* ===== PLAYER BAR (escritorio) ===== */}
         <PlayerBar
           onLike={handleLike}
           onDislike={handleDislike}

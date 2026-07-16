@@ -1,4 +1,4 @@
-import { Heart, Play, Copy, Shuffle, Sparkles, BarChart3 } from 'lucide-react';
+import { Heart, Play, Copy, Shuffle, Sparkles, BarChart3, RefreshCw } from 'lucide-react';
 import Carousel from './Carousel.jsx';
 import CollectionCard from './CollectionCard.jsx';
 import SongRow from '../SongRow.jsx';
@@ -164,178 +164,178 @@ export default function HomeView({
   // ============================================================
   // COMPONENTE - SECCIÓN DE RECOMENDACIONES
   // ============================================================
-  const RecommendationsSection = ({ songs, likedIds, onPlay, favoriteArtists = [] }) => {
-    const [recommendations, setRecommendations] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [generated, setGenerated] = useState(false);
-    const { addToQueue } = usePlayer();
+const RecommendationsSection = ({ songs, likedIds, onPlay, favoriteArtists = [] }) => {
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const prevDepsRef = useRef(null);
 
-    const generateRecommendations = () => {
-      setLoading(true);
-      try {
-        const recs = RecommendationEngine.recommend(songs, likedIds, favoriteArtists, [], 10);
-        setRecommendations(Array.isArray(recs) ? recs : []);
-        setGenerated(true);
-      } catch (err) {
-        console.error('Error generating recommendations:', err);
-        setRecommendations([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    useEffect(() => {
-      if (songs.length > 0 && !generated) {
-        generateRecommendations();
-      }
-    }, [songs.length, generated, favoriteArtists]);
-
-    const addAllToQueue = () => {
-      recommendations.forEach(song => addToQueue(song, 'later'));
-    };
-
-    if (recommendations.length === 0 && !loading) return null;
-
-    return (
-      <section className="animate-fade-in rounded-xl border border-border bg-surface/50 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Sparkles size={18} className="text-primary" />
-            <h2 className="text-base font-600 text-white sm:text-lg">Recomendaciones para ti</h2>
-          </div>
-          <button
-            onClick={generateRecommendations}
-            disabled={loading}
-            className="text-xs text-primary hover:underline disabled:opacity-50"
-          >
-            {loading ? 'Generando...' : 'Actualizar'}
-          </button>
-        </div>
-        {loading ? (
-          <div className="flex justify-center py-6">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
-          </div>
-        ) : (
-          <div className="flex flex-col gap-1.5">
-            {recommendations.slice(0, 5).map((song, i) => (
-              <SongRow
-                key={song.id}
-                song={song}
-                index={i}
-                queue={recommendations}
-                onLike={onLike}
-                onDislike={onDislike}
-                onDislikeArtist={onDislikeArtist}
-                onDelete={onDelete}
-                onFixMetadata={handleFixMetadata}
-                showDelete={false}
-                context={null}
-                likedIds={likedIds}
-              />
-            ))}
-            {recommendations.length > 0 && (
-              <button
-                onClick={addAllToQueue}
-                className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs text-foreground hover:bg-surface-2/70 transition"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Agregar todas a la cola ({recommendations.length})
-              </button>
-            )}
-          </div>
-        )}
-      </section>
-    );
+  const generateRecommendations = () => {
+    setLoading(true);
+    try {
+      const recs = RecommendationEngine.recommend(songs, likedIds, favoriteArtists, [], 10);
+      setRecommendations(Array.isArray(recs) ? recs : []);
+    } catch (err) {
+      console.error('Error generating recommendations:', err);
+      setRecommendations([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (songs.length === 0) {
+      setRecommendations([]);
+      return;
+    }
+    const deps = {
+      songsLength: songs.length,
+      songsIds: songs.map(s => s.id).join(','),
+      likedIds: Array.from(likedIds).join(','),
+      favoriteArtists: favoriteArtists.join(',')
+    };
+    const depsStr = JSON.stringify(deps);
+    if (prevDepsRef.current === depsStr) return;
+    prevDepsRef.current = depsStr;
+    generateRecommendations();
+  }, [songs, likedIds, favoriteArtists]);
+
+  const { addToQueue } = usePlayer();
+
+  const addAllToQueue = () => {
+    recommendations.forEach(song => addToQueue(song, 'later'));
+  };
+
+  if (recommendations.length === 0 && !loading) return null;
+
+  return (
+    <section className="animate-fade-in rounded-xl border border-border bg-surface/50 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Sparkles size={18} className="text-primary" />
+          <h2 className="text-base font-600 text-white sm:text-lg">Recomendaciones para ti</h2>
+        </div>
+        <button
+          onClick={generateRecommendations}
+          disabled={loading}
+          className="text-xs text-primary hover:underline disabled:opacity-50"
+        >
+          {loading ? 'Generando...' : 'Actualizar'}
+        </button>
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-6">
+          <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          {recommendations.slice(0, 5).map((song, i) => (
+            <SongRow
+              key={song.id}
+              song={song}
+              index={i}
+              queue={recommendations}
+              onLike={onLike}
+              onDislike={onDislike}
+              onDislikeArtist={onDislikeArtist}
+              onDelete={onDelete}
+              onFixMetadata={handleFixMetadata}
+              showDelete={false}
+              context={null}
+              likedIds={likedIds}
+            />
+          ))}
+          {recommendations.length > 0 && (
+            <button
+              onClick={addAllToQueue}
+              className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs text-foreground hover:bg-surface-2/70 transition"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Agregar todas a la cola ({recommendations.length})
+            </button>
+          )}
+        </div>
+      )}
+    </section>
+  );
+};
 
   // ============================================================
   // COMPONENTE - MoodPlaylistCreator
   // ============================================================
-  function MoodPlaylistCreator({ allSongs, likedIds, userId, onCreated }) {
-    const { play } = usePlayer();
-    const [mood, setMood] = useState('feliz');
-    const [playlist, setPlaylist] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [favArtists, setFavArtists] = useState([]);
+ function MoodPlaylistCreator({ allSongs, likedIds, userId, onCreated }) {
+  const { play } = usePlayer();
+  const [mood, setMood] = useState('feliz');
+  const [playlist, setPlaylist] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [favArtists, setFavArtists] = useState([]);
 
-    useEffect(() => {
-      let mounted = true;
-      if (!userId) return;
-      api.getFavoriteArtists(userId).then(res => {
-        if (mounted) setFavArtists(res.artists || []);
-      }).catch(() => { });
-      return () => { mounted = false; };
-    }, [userId]);
+  useEffect(() => {
+    let mounted = true;
+    if (!userId) return;
+    api.getFavoriteArtists(userId).then(res => {
+      if (mounted) setFavArtists(res.artists || []);
+    }).catch(() => { });
+    return () => { mounted = false; };
+  }, [userId]);
 
-    const generate = async () => {
-      setLoading(true);
-      try {
-        const pl = RecommendationEngine.generateMoodPlaylist(allSongs, mood, likedIds, favArtists, 20);
-        setPlaylist(pl || []);
-      } catch (err) {
-        console.error('Error generando mood playlist:', err);
-        setPlaylist([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const generate = async () => {
+    setLoading(true);
+    try {
+      const pl = RecommendationEngine.generateMoodPlaylist(allSongs, mood, likedIds, favArtists, 20);
+      setPlaylist(pl || []);
+    } catch (err) {
+      console.error('Error generando mood playlist:', err);
+      setPlaylist([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const playPlaylist = () => {
-      if (playlist.length > 0) play(playlist[0], playlist);
-    };
+  const playPlaylist = () => {
+    if (playlist.length > 0) play(playlist[0], playlist);
+  };
 
-    const createOnServer = async () => {
-      if (playlist.length === 0) return alert('Generá la playlist primero');
-      setLoading(true);
-      try {
-        const name = await generatePlaylistName(playlist) || `Playlist ${mood}`;
-        const res = await api.createPlayList(name, `Generada por estado de ánimo: ${mood}`, userId);
-        const playlistId = res && res.id;
-        if (playlistId) {
-          for (const s of playlist) {
-            try { await api.addSongToPlayList(playlistId, s.id); } catch { }
-          }
-          alert('Playlist creada: ' + name);
-          onCreated && onCreated();
-        } else {
-          alert('No se pudo crear la playlist en el servidor');
-        }
-      } catch (err) {
-        console.error('Error creando playlist:', err);
-        alert('Error creando playlist: ' + (err.message || err));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    return (
-      <div className="space-y-2">
-        <div className="flex flex-wrap gap-2 items-center">
-          {['feliz', 'triste', 'energía', 'relax', 'romántico'].map(m => (
-            <button
-              key={m}
-              onClick={() => setMood(m)}
-              className={`px-3 py-1 rounded-full text-sm ${mood === m ? 'bg-primary text-black' : 'bg-surface-2'}`}
-            >{m}</button>
-          ))}
-          <button onClick={generate} disabled={loading} className="ml-2 px-3 py-1 rounded-lg bg-primary text-black">Generar</button>
-          <button onClick={playPlaylist} disabled={playlist.length === 0} className="px-3 py-1 rounded-lg bg-surface-2">Reproducir</button>
-          <button onClick={createOnServer} disabled={loading || playlist.length === 0} className="px-3 py-1 rounded-lg bg-primary/20 text-primary">Crear playlist</button>
-        </div>
-        {loading && <p className="text-xs text-muted-foreground">Generando...</p>}
-        {playlist.length > 0 && (
-          <div className="mt-2 grid grid-cols-2 gap-1">
-            {playlist.slice(0, 6).map(s => (
-              <div key={s.id} className="text-sm text-white truncate">{s.title} <span className="text-xs text-muted-foreground">- {s.artist}</span></div>
-            ))}
-          </div>
-        )}
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2 items-center">
+        {['feliz', 'triste', 'energía', 'relax', 'romántico'].map(m => (
+          <button
+            key={m}
+            onClick={() => setMood(m)}
+            className={`px-3 py-1 rounded-full text-sm ${mood === m ? 'bg-primary text-black' : 'bg-surface-2'}`}
+          >{m}</button>
+        ))}
+        <button
+          onClick={generate}
+          disabled={loading}
+          className="ml-2 p-2 rounded-lg bg-primary text-black hover:brightness-110 transition disabled:opacity-50"
+          title="Generar playlist según estado de ánimo"
+        >
+          <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+        </button>
+        <button
+          onClick={playPlaylist}
+          disabled={playlist.length === 0}
+          className="p-2 rounded-lg bg-surface-2 text-foreground hover:bg-surface-3 transition disabled:opacity-50"
+          title="Reproducir playlist generada"
+        >
+          <Play size={18} fill="currentColor" className="ml-0.5" />
+        </button>
       </div>
-    );
-  }
+      {loading && <p className="text-xs text-muted-foreground">Generando...</p>}
+      {playlist.length > 0 && (
+        <div className="mt-2 grid grid-cols-2 gap-1">
+          {playlist.slice(0, 6).map(s => (
+            <div key={s.id} className="text-sm text-white truncate">{s.title} <span className="text-xs text-muted-foreground">- {s.artist}</span></div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
   // ============================================================
   // COMPONENTE - RESUMEN DEL MES

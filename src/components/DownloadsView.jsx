@@ -3,16 +3,16 @@
  * DOWNLOADS VIEW - VISTA DE CANCIONES DESCARGADAS
  * ============================================================
  * 
- * Muestra todas las canciones almacenadas en IndexedDB para
- * reproducción offline. Permite:
- * - Ver lista de canciones descargadas
- * - Reproducir canciones sin conexión
- * - Eliminar canciones descargadas
- * - Ver espacio utilizado
+ * MODIFICACIONES (2026-07-16):
+ * 1. Toggle de auto-eliminación: ahora usa icono de papelera + tooltip (icono de interrogación).
+ * 2. Información de tamaño y cantidad de canciones: debajo del icono de la izquierda, con letra pequeña.
+ * 3. Botón "Eliminar todas": solo icono, sin texto.
+ * 4. Los tres elementos (toggle, info, eliminar todas) en una misma línea.
+ * 5. Ajuste de tamaño del toggle para que el círculo no se desborde.
  */
 
 import { useState, useEffect } from 'react';
-import { Download, Trash2, Music2, HardDrive, Play, Pause, Loader2 } from 'lucide-react';
+import { Download, Trash2, Music2, HardDrive, Play, Pause, Loader2, Info } from 'lucide-react';
 import { useDownload } from '../context/DownloadContext';
 import { usePlayer } from '../context/PlayerContext';
 import Cover from './Cover.jsx';
@@ -37,7 +37,6 @@ export default function DownloadsView({ onBack }) {
   // Calcular espacio total utilizado
   useEffect(() => {
     let size = 0;
-    // Estimar tamaño: cada canción ~5MB en promedio
     size = downloadedSongs.length * 5 * 1024 * 1024;
     setTotalSize(size);
   }, [downloadedSongs]);
@@ -87,57 +86,60 @@ export default function DownloadsView({ onBack }) {
           </h1>
           <p className="text-xs text-muted-foreground">
             {downloadedSongs.length} {downloadedSongs.length === 1 ? 'canción' : 'canciones'} descargadas
-            {totalSize > 0 && ` · ${formatFileSize(totalSize)}`}
           </p>
         </div>
       </div>
 
-      {/* ===== TOGGLE AUTO-ELIMINAR ===== */}
+      {/* ===== TOGGLE + INFO + ELIMINAR TODAS (en una misma línea) ===== */}
       <div className="flex items-center justify-between rounded-xl border border-border bg-surface/50 p-3">
-        <div className="flex items-center gap-3">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-            <path d="M3 6h18" />
-            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            <path d="M19 6v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-          </svg>
-          <div>
-            <p className="text-sm font-medium text-white">Auto-eliminar descargas</p>
-            <p className="text-xs text-muted-foreground">Elimina automáticamente la descarga después de escuchar la canción</p>
-          </div>
-        </div>
-        <button
-          onClick={toggleAutoDelete}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-            autoDeleteEnabled ? 'bg-primary' : 'bg-gray-600'
-          }`}
-          title={autoDeleteEnabled ? 'Desactivar' : 'Activar'}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              autoDeleteEnabled ? 'translate-x-6' : 'translate-x-1'
-            }`}
-          />
-        </button>
-      </div>
-
-      {/* ===== ESTADÍSTICAS / ACCIONES ===== */}
-      {downloadedSongs.length > 0 && (
-        <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border">
-          <div className="flex items-center gap-2">
-            <HardDrive size={18} className="text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {formatFileSize(totalSize)} · {downloadedSongs.length} {downloadedSongs.length === 1 ? 'canción' : 'canciones'}
+        {/* Lado izquierdo: icono de papelera + toggle + tooltip */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex items-center">
+            <Trash2 size={18} className="text-muted-foreground" />
+            <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-surface-2 px-2 py-1 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              Elimina automáticamente la descarga después de escuchar
             </span>
           </div>
+          {/* Toggle */}
           <button
-            onClick={handleDeleteAll}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-danger/20 text-danger text-xs font-medium hover:bg-danger/30 transition"
+            onClick={toggleAutoDelete}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+              autoDeleteEnabled ? 'bg-primary' : 'bg-gray-600'
+            }`}
+            title={autoDeleteEnabled ? 'Desactivar auto-eliminación' : 'Activar auto-eliminación'}
           >
-            <Trash2 size={14} />
-            Eliminar todas
+            <span
+              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                autoDeleteEnabled ? 'translate-x-4' : 'translate-x-0.5'
+              }`}
+            />
           </button>
+          {/* Icono de interrogación que muestra el texto largo en hover */}
+          <div className="relative flex items-center">
+            <Info size={16} className="text-muted-foreground cursor-help" />
+            <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-surface-2 px-2 py-1 text-[10px] text-white opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
+              Elimina automáticamente la descarga después de escuchar la canción
+            </span>
+          </div>
         </div>
-      )}
+
+        {/* Información de tamaño y cantidad (debajo del icono de la izquierda, pero aquí en una línea) */}
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <HardDrive size={14} className="text-muted-foreground" />
+          <span className="tabular-nums">
+            {formatFileSize(totalSize)} · {downloadedSongs.length} {downloadedSongs.length === 1 ? 'canción' : 'canciones'}
+          </span>
+        </div>
+
+        {/* Botón "Eliminar todas" (solo icono) */}
+        <button
+          onClick={handleDeleteAll}
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-danger/20 text-danger hover:bg-danger/30 transition"
+          title="Eliminar todas las descargas"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
 
       {/* ===== LISTA DE CANCIONES DESCARGADAS ===== */}
       {downloadedSongs.length === 0 ? (
