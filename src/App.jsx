@@ -44,7 +44,6 @@ import MobileSearchView from './components/MobileSearchView.jsx';
 import LikedSongsView from './components/LikedSongsView.jsx';
 import PlayListsManager from './components/PlayListsManager.jsx';
 import DownloadsView from './components/DownloadsView.jsx';
-import DownloadAllButton from './components/DownloadAllButton.jsx';
 import OfflineMode from './components/OfflineMode.jsx';
 import AIRecommendations from './components/AIRecommendations.jsx';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -370,44 +369,22 @@ function Shell() {
               userId={user?.id}
             />
           ) : view.type === 'library' ? (
-            <>
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0">
-                <div>
-                  <h1 className="text-xl font-700 tracking-tight text-white">Biblioteca</h1>
-                  <p className="text-xs text-muted-foreground">
-                    {library.counts.total} canciones
-                    {library.hasMore && ' · Desplázate para más'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {!offlineMode && library.songs.length > 0 && (
-                    <DownloadAllButton
-                      songs={library.songs}
-                      onComplete={(result) => {
-                        if (result && result.successCount > 0) {
-                          console.log('[App] Descarga completada:', result);
-                        }
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
-              <LibraryView
-                songs={library.songs}
-                counts={library.counts}
-                onLike={handleLike}
-                onDislike={handleDislike}
-                onDislikeArtist={library.dislikeArtist}
-                onDelete={library.removeSong}
-                loading={library.loading}
-                hasMore={library.hasMore}
-                isLoadingMore={library.isLoadingMore}
-                onLoadMore={library.loadMore}
-                shouldScrollToCurrent={shouldScrollToCurrent}
-                allSongs={allSongs}
-                downloadedIds={downloadedIds}
-              />
-            </>
+            <LibraryView
+              songs={library.songs}
+              counts={library.counts}
+              onLike={handleLike}
+              onDislike={handleDislike}
+              onDislikeArtist={library.dislikeArtist}
+              onDelete={library.removeSong}
+              loading={library.loading}
+              hasMore={library.hasMore}
+              isLoadingMore={library.isLoadingMore}
+              onLoadMore={library.loadMore}
+              shouldScrollToCurrent={shouldScrollToCurrent}
+              allSongs={allSongs}
+              offlineMode={offlineMode}
+              onRescan={library.rescan}
+            />
           ) : view.type === 'search' ? (
             <MobileSearchView tracks={library.songs} currentTrack={current} />
           ) : view.type === 'downloads' ? (
@@ -526,52 +503,22 @@ function Shell() {
               userId={user?.id}
             />
           ) : view.type === 'library' ? (
-            <>
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-4 flex-shrink-0">
-                <div>
-                  <h1 className="text-2xl font-700 tracking-tight text-white">Biblioteca</h1>
-                  <p className="text-sm text-muted-foreground">
-                    {library.counts.total} canciones
-                    {library.hasMore && ' · Desplázate para cargar más'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  {!offlineMode && library.songs.length > 0 && (
-                    <DownloadAllButton
-                      songs={library.songs}
-                      onComplete={(result) => {
-                        if (result && result.successCount > 0) {
-                          console.log('[App] Descarga completada:', result);
-                        }
-                      }}
-                    />
-                  )}
-                  {!offlineMode && (
-                    <button
-                      onClick={library.rescan}
-                      className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2 text-foreground text-sm hover:bg-surface-2/70 transition"
-                    >
-                      <RefreshCw size={16} /> Rescanear
-                    </button>
-                  )}
-                </div>
-              </div>
-              <LibraryView
-                songs={library.songs}
-                counts={library.counts}
-                onLike={handleLike}
-                onDislike={handleDislike}
-                onDislikeArtist={library.dislikeArtist}
-                onDelete={library.removeSong}
-                loading={library.loading}
-                hasMore={library.hasMore}
-                isLoadingMore={library.isLoadingMore}
-                onLoadMore={library.loadMore}
-                shouldScrollToCurrent={shouldScrollToCurrent}
-                allSongs={allSongs}
-                downloadedIds={downloadedIds}
-              />
-            </>
+            <LibraryView
+              songs={library.songs}
+              counts={library.counts}
+              onLike={handleLike}
+              onDislike={handleDislike}
+              onDislikeArtist={library.dislikeArtist}
+              onDelete={library.removeSong}
+              loading={library.loading}
+              hasMore={library.hasMore}
+              isLoadingMore={library.isLoadingMore}
+              onLoadMore={library.loadMore}
+              shouldScrollToCurrent={shouldScrollToCurrent}
+              allSongs={allSongs}
+              offlineMode={offlineMode}
+              onRescan={library.rescan}
+            />
           ) : view.type === 'search' ? (
             <MobileSearchView tracks={library.songs} currentTrack={current} />
           ) : view.type === 'downloads' ? (

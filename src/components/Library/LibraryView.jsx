@@ -8,8 +8,9 @@
  */
 
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Play, Trash2, Wand2 } from 'lucide-react';
+import { Search, Play, Trash2, Wand2, RefreshCw } from 'lucide-react';
 import SongRow from '../SongRow.jsx';
+import DownloadAllButton from '../DownloadAllButton.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import { api } from '../../lib/api.js';
 
@@ -42,7 +43,9 @@ export default function LibraryView({
   hasMore,
   isLoadingMore,
   onLoadMore,
-  allSongs
+  allSongs,
+  offlineMode,
+  onRescan
 }) {
   const { play, current } = usePlayer();
   const [query, setQuery] = useState('');
@@ -147,40 +150,46 @@ export default function LibraryView({
     <div className="flex flex-col gap-4 h-full w-full">
 
       {/* ===== HEADER ===== */}
-      <header className="animate-fade-in flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
+      <header className="animate-fade-in flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0">
         <div>
-          <h1 className="font-display text-3xl font-700 tracking-tight">Biblioteca</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {counts.total} {counts.total === 1 ? 'canción' : 'canciones'}
-            <span className="mx-2">·</span>
-            <span className="inline-flex items-center gap-1">
-              <Trash2 size={13} /> {counts.trash} en papelera
-            </span>
+          <h1 className="text-xl font-700 tracking-tight text-white">Biblioteca</h1>
+          <p className="text-xs text-muted-foreground">
+            {counts.total} canciones
+            {hasMore && ' · Desplázate para más'}
           </p>
         </div>
-
-        {/* ===== BUSCADOR ===== */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:flex-initial">
-            <Search size={16} className="absolute left-3 text-muted-foreground" style={{ top: '50%', transform: 'translateY(-50%)', zIndex: 1 }} />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar en tu biblioteca"
-              className="w-full sm:w-48 rounded-full border border-border bg-surface py-2 pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary sm:w-64"
+        <div className="flex items-center gap-2">
+          {!offlineMode && songs.length > 0 && (
+            <DownloadAllButton
+              songs={songs}
+              onComplete={(result) => {
+                if (result && result.successCount > 0) {
+                  console.log('[LibraryView] Descarga completada:', result);
+                }
+              }}
             />
-          </div>
-          {filtered.length > 0 && (
+          )}
+          {!offlineMode && onRescan && (
             <button
-              onClick={() => play(filtered[0], filtered)}
-              className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow transition hover:scale-105 flex-shrink-0"
-              aria-label="Reproducir todo"
+              onClick={onRescan}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2 text-foreground text-sm hover:bg-surface-2/70 transition"
             >
-              <Play size={18} fill="currentColor" className="ml-0.5" />
+              <RefreshCw size={16} /> Rescanear
             </button>
           )}
         </div>
       </header>
+
+      {/* ===== BUSCADOR ===== */}
+      <div className="relative mb-4">
+        <Search size={16} className="absolute left-3 text-muted-foreground" style={{ top: '50%', transform: 'translateY(-50%)', zIndex: 1 }} />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar en tu biblioteca"
+          className="w-full sm:w-64 rounded-full border border-border bg-surface py-2 pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+        />
+      </div>
 
       {/* ===== CONTADOR DE RESULTADOS ===== */}
       {filtered.length > 0 && (
