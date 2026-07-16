@@ -386,7 +386,7 @@ function Shell() {
               onRescan={library.rescan}
             />
           ) : view.type === 'search' ? (
-            <MobileSearchView tracks={library.songs} currentTrack={current} />
+            <MobileSearchView tracks={allSongs} currentTrack={current} />
           ) : view.type === 'downloads' ? (
             <DownloadsView onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'grid' ? (
@@ -520,7 +520,7 @@ function Shell() {
               onRescan={library.rescan}
             />
           ) : view.type === 'search' ? (
-            <MobileSearchView tracks={library.songs} currentTrack={current} />
+            <MobileSearchView tracks={allSongs} currentTrack={current} />
           ) : view.type === 'downloads' ? (
             <DownloadsView onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'grid' ? (

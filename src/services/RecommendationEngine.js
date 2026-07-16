@@ -44,22 +44,20 @@ export class RecommendationEngine {
     const historyIds = new Set((Array.isArray(history) ? history : []).map(h => h.songId));
     const candidates = songs.filter(s => !likedIds.has(s.id) && !historyIds.has(s.id));
 
-    const scored = candidates.map(song => {
-      let score = 0;
+    // Dividir candidatos por artista favorito y no favorito para diversidad
+    const favArtistCandidates = candidates.filter(s => favSet.has(s.artist));
+    const otherCandidates = candidates.filter(s => !favSet.has(s.artist));
 
-      // Artista favorito (+50)
-      if (favSet.has(song.artist)) score += 50;
+    // Puntuar candidatos de artistas favoritos
+    const scoredFav = favArtistCandidates.map(song => {
+      let score = 50; // Bonus base por ser artista favorito
 
-      // Género popular (+20) — song.genre puede ser array
+      // Género popular (+20)
       const songGenres = Array.isArray(song.genre) ? song.genre : [song.genre];
       if (songGenres.some(g => topGenres.includes(g))) score += 20;
 
       // Año popular (+10)
       if (topYears.includes(String(song.year))) score += 10;
-
-      // Mismo artista que canciones liked (+5 por cada)
-      const artistLikes = likedSongs.filter(s => s.artist === song.artist).length;
-      score += artistLikes * 5;
 
       // Si tiene portada (+5)
       if (song.hasCover) score += 5;
@@ -67,11 +65,35 @@ export class RecommendationEngine {
       return { ...song, score };
     });
 
-    // Ordenar por score con un "jitter" aleatorio para que "Actualizar"
-    // sugiera canciones distintas en cada llamada (desempata empatados).
-    return scored
-      .sort((a, b) => (b.score + Math.random()) - (a.score + Math.random()))
-      .slice(0, limit);
+    // Puntuar candidatos de otros artistas
+    const scoredOther = otherCandidates.map(song => {
+      let score = 0;
+
+      // Género popular (+30) - bonus mayor para descubrir nuevos artistas con géneros que le gustan
+      const songGenres = Array.isArray(song.genre) ? song.genre : [song.genre];
+      if (songGenres.some(g => topGenres.includes(g))) score += 30;
+
+      // Año popular (+15)
+      if (topYears.includes(String(song.year))) score += 15;
+
+      // Si tiene portada (+5)
+      if (song.hasCover) score += 5;
+
+      return { ...song, score };
+    });
+
+    // Combinar y ordenar: primero los favoritos, luego otros, con jitter
+    const scored = [...scoredFav, ...scoredOther]
+      .sort((a, b) => (b.score + Math.random() * 10) - (a.score + Math.random() * 10));
+
+    // Garantizar diversidad: seleccionar máximo 2 canciones por artista
+    const artistCounts = {};
+    const diversified = scored.filter(song => {
+      artistCounts[song.artist] = (artistCounts[song.artist] || 0) + 1;
+      return artistCounts[song.artist] <= 2;
+    });
+
+    return diversified.slice(0, limit);
   }
 
   /**
@@ -109,8 +131,15 @@ export class RecommendationEngine {
       candidates = songs.filter(s => !likedIds.has(s.id));
     }
 
+    // Garantizar diversidad de artistas: máximo 2 por artista
+    const artistCounts = {};
+    const diversified = candidates.filter(song => {
+      artistCounts[song.artist] = (artistCounts[song.artist] || 0) + 1;
+      return artistCounts[song.artist] <= 2;
+    });
+
     // Mezclar y devolver
-    return candidates.sort(() => Math.random() - 0.5).slice(0, limit);
+    return diversified.sort(() => Math.random() - 0.5).slice(0, limit);
   }
 
   /**

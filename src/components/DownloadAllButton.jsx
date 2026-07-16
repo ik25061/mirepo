@@ -63,7 +63,7 @@ export default function DownloadAllButton({ songs, onComplete }) {
         ) : (
           <>
             <Download size={16} />
-            Descargar {downloadableCount} canciones
+             {downloadableCount}
           </>
         )}
       </button>

@@ -153,10 +153,10 @@ export default function LibraryView({
       <header className="animate-fade-in flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0">
         <div>
           <h1 className="text-xl font-700 tracking-tight text-white">Biblioteca</h1>
-          <p className="text-xs text-muted-foreground">
+          {/* <p className="text-xs text-muted-foreground">
             {counts.total} canciones
             {hasMore && ' · Desplázate para más'}
-          </p>
+          </p> */}
         </div>
         <div className="flex items-center gap-2">
           {!offlineMode && songs.length > 0 && (
