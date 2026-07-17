@@ -29,9 +29,10 @@ export default function SongRow({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isCurrent = current?.id === song.id;
 
-  // ===== OBTENER ESTADO DE DESCARGA =====
-  const { isDownloaded, downloadSong } = useDownload();
+  // ===== OBTENER ESTADO DE DESCARGA Y SINCRONIZACIÓN =====
+  const { isDownloaded, downloadSong, currentlySyncingSong } = useDownload();
   const songDownloaded = isDownloaded(song.id);
+  const isSyncing = currentlySyncingSong === song.id;
 
   // Calcular si la canción está liked a partir del Set de likedIds
   const isLiked = likedIds?.has(song.id) ?? song.liked ?? false;
@@ -136,6 +137,33 @@ export default function SongRow({
       {/* ===== TÍTULO Y ARTISTA ===== */}
       <div className="min-w-0 flex-1 cursor-pointer" onClick={handlePlay}>
         <p className={'truncate text-xs font-medium sm:text-sm ' + (isCurrent ? 'text-primary' : 'text-foreground')}>
+          {isSyncing && (
+            <span className="inline-flex items-center gap-1">
+              <span className="relative inline-flex h-3 w-3 items-center justify-center">
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-primary"
+                  style={{ animation: 'syncUpload 1s ease-in-out infinite' }}
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span
+                  className="absolute inset-0 rounded-full border border-primary"
+                  style={{ animation: 'syncPing 1.5s ease-in-out infinite' }}
+                />
+              </span>
+              <span className="text-primary text-[10px]">Subiendo...</span>
+            </span>
+          )}
           {song.title}
         </p>
         <p className="truncate text-[10px] text-muted-foreground sm:text-xs">{song.artist}</p>

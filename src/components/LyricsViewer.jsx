@@ -10,6 +10,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Languages, RefreshCw, Loader2, Music2 } from 'lucide-react';
 import { api } from '../lib/api.js';
+import { saveLyricsForSong, getCachedLyrics, isSongDownloaded } from '../hooks/useDownloads.js';
 
 export default function LyricsViewer({ song, onClose }) {
   const [lyrics, setLyrics] = useState(null);
@@ -31,22 +32,50 @@ export default function LyricsViewer({ song, onClose }) {
         setTitle(song.title || '');
         setArtist(song.artist || '');
         
+        // 1. Intentar cargar desde el servidor
         const response = await fetch(`/api/lyrics/${song.id}`);
         const data = await response.json();
         
         if (data.success && data.hasLyrics) {
           setLyrics(data.lyrics);
           setTranslatedLyrics(data.translatedLyrics || null);
-          // Si hay traducción, mostrarla por defecto si la letra no está en español
           if (data.translatedLyrics) {
             setShowTranslation(true);
+          }
+          
+          // Guardar en caché local para offline
+          try {
+            const downloaded = await isSongDownloaded(song.id);
+            if (downloaded) {
+              await saveLyricsForSong(song.id, {
+                lyrics: data.lyrics,
+                syncedLines: data.syncedLines || null,
+                translatedLyrics: data.translatedLyrics || null,
+              });
+            }
+          } catch (e) {
+            console.warn('[LyricsViewer] No se pudo cachear letras:', e);
           }
         } else {
           setError(data.message || 'No se encontraron letras');
         }
       } catch (err) {
-        console.error('[LyricsViewer] Error:', err);
-        setError('Error al cargar la letra');
+        console.warn('[LyricsViewer] Error del servidor, probando caché local:', err);
+        
+        // 2. Si falla (offline), intentar desde caché local
+        try {
+          const cached = await getCachedLyrics(song.id);
+          if (cached && cached.hasLyrics) {
+            setLyrics(cached.lyrics);
+            setTranslatedLyrics(cached.translatedLyrics || null);
+            if (cached.translatedLyrics) setShowTranslation(true);
+          } else {
+            setError('Sin conexión y sin letras guardadas localmente');
+          }
+        } catch (cacheErr) {
+          console.error('[LyricsViewer] Error leyendo caché:', cacheErr);
+          setError('Error al cargar la letra');
+        }
       } finally {
         setLoading(false);
       }

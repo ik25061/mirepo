@@ -102,6 +102,10 @@ export async function saveDownloadedSong(song, audioBlob, coverBlob = null) {
       liked: song.liked || false,
       downloaded: true,
       downloadedAt: Date.now(),
+      lyrics: null,
+      syncedLines: null,
+      translatedLyrics: null,
+      hasLyrics: false,
     };
 
     return new Promise((resolve, reject) => {
@@ -164,6 +168,49 @@ export async function getDownloadedSong(songId) {
   }
 }
 
+export async function saveLyricsForSong(songId, lyricsData) {
+  try {
+    const store = await getStore('readwrite');
+    return new Promise((resolve, reject) => {
+      const request = store.get(songId);
+      request.onsuccess = () => {
+        const entry = request.result;
+        if (entry) {
+          entry.lyrics = lyricsData.lyrics || null;
+          entry.syncedLines = lyricsData.syncedLines || null;
+          entry.translatedLyrics = lyricsData.translatedLyrics || null;
+          entry.hasLyrics = !!(lyricsData.lyrics || lyricsData.syncedLines);
+          const updateRequest = store.put(entry);
+          updateRequest.onsuccess = () => resolve(true);
+          updateRequest.onerror = () => reject(updateRequest.error);
+        } else {
+          resolve(false);
+        }
+      };
+      request.onerror = () => reject(request.error);
+    });
+  } catch {
+    return false;
+  }
+}
+
+export async function getCachedLyrics(songId) {
+  try {
+    const song = await getDownloadedSong(songId);
+    if (song && (song.lyrics || song.syncedLines)) {
+      return {
+        lyrics: song.lyrics || null,
+        syncedLines: song.syncedLines || null,
+        translatedLyrics: song.translatedLyrics || null,
+        hasLyrics: !!(song.lyrics || song.syncedLines),
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // ============================================================
 // HOOK PRINCIPAL
 // ============================================================
@@ -174,8 +221,11 @@ export function useDownloads() {
   const [loading, setLoading] = useState(true);
   const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0 });
   const [pendingLikeChanges, setPendingLikeChanges] = useState([]);
+  const [currentlySyncingSong, setCurrentlySyncingSong] = useState(null);
+  const [syncingSongs, setSyncingSongs] = useState([]);
   const isDownloadingRef = useRef(false);
   const pendingLikeChangesRef = useRef([]);
+  const downloadedSongsRef = useRef([]);
 
   // ============================================================
   // CARGAR ESTADO INICIAL
@@ -252,12 +302,40 @@ export function useDownloads() {
       setDownloadedIds(prev => new Set([...prev, song.id]));
       setDownloadedSongs(prev => [...prev, { ...savedEntry, liked: song.liked || false }]);
 
+      // Descargar letras en segundo plano (no crítico)
+      downloadLyricsForSong(song.id).catch(() => {});
+
       return true;
     } catch (error) {
       console.error('[useDownloads] Error descargando canción:', error);
       return false;
     }
   }, [downloadedIds]);
+
+  // ============================================================
+  // DESCARGAR LETRA DE UNA CANCIÓN (para caché offline)
+  // ============================================================
+
+  const downloadLyricsForSong = async (songId) => {
+    try {
+      const response = await fetch(`/api/lyrics/${songId}`);
+      const data = await response.json();
+      
+      if (data.success && data.hasLyrics) {
+        await saveLyricsForSong(songId, {
+          lyrics: data.lyrics,
+          syncedLines: data.syncedLines || null,
+          translatedLyrics: data.translatedLyrics || null,
+        });
+        // Actualizar en el estado local
+        setDownloadedSongs(prev => prev.map(s => 
+          s.id === songId ? { ...s, hasLyrics: true, lyrics: data.lyrics, syncedLines: data.syncedLines || null, translatedLyrics: data.translatedLyrics || null } : s
+        ));
+      }
+    } catch (e) {
+      // Silencioso - las letras no son críticas
+    }
+  };
 
   // ============================================================
   // DESCARGAR MÚLTIPLES CANCIONES (MÁXIMO 100)
@@ -361,19 +439,40 @@ export function useDownloads() {
     if (!userId || pending.length === 0) return;
 
     try {
-      const promises = pending.map(({ songId, liked }) =>
-        fetch('/api/songs/' + songId + '/like', {
+      // Preparar la lista de canciones a sincronizar con nombres
+      const songsWithNames = pending.map(({ songId }) => {
+        const downloaded = downloadedSongsRef.current.find(s => s.id === songId);
+        return {
+          songId,
+          songName: downloaded ? downloaded.title : songId,
+        };
+      });
+      
+      setSyncingSongs(songsWithNames);
+      setCurrentlySyncingSong(null);
+      
+      // Sincronizar una por una para mostrar progreso
+      for (let i = 0; i < pending.length; i++) {
+        const { songId, liked } = pending[i];
+        
+        // Actualizar la canción actual que se está sincronizando
+        setCurrentlySyncingSong(songId);
+        
+        await fetch('/api/songs/' + songId + '/like', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ liked, userId })
-        })
-      );
+        });
+      }
 
-      await Promise.all(promises);
       savePendingLikeChanges([]);
+      setSyncingSongs([]);
+      setCurrentlySyncingSong(null);
       console.log('[useDownloads] Likes/deletes sincronizados:', pending.length);
     } catch (error) {
       console.error('[useDownloads] Error sincronizando likes:', error);
+      setSyncingSongs([]);
+      setCurrentlySyncingSong(null);
     }
   }, [savePendingLikeChanges]);
 
@@ -385,12 +484,19 @@ export function useDownloads() {
     return downloadedIds.has(songId);
   }, [downloadedIds]);
 
+  // Mantener ref sincronizada con downloadedSongs para usarla en syncLikes
+  useEffect(() => {
+    downloadedSongsRef.current = downloadedSongs;
+  }, [downloadedSongs]);
+
   return {
     downloadedIds,
     downloadedSongs,
     loading,
     downloadProgress,
     pendingLikeChanges,
+    currentlySyncingSong,
+    syncingSongs,
     isDownloading: isDownloadingRef.current,
     downloadSong,
     downloadSongs,

@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Download, Trash2, Music2, HardDrive, Play, Pause, Loader2, Info } from 'lucide-react';
+import { Download, Trash2, Music2, HardDrive, Play, Pause, Loader2, Info, FileText } from 'lucide-react';
 import { useDownload } from '../context/DownloadContext';
 import { usePlayer } from '../context/PlayerContext';
 import Cover from './Cover.jsx';
@@ -212,6 +212,17 @@ export default function DownloadsView({ onBack }) {
 
                   {/* ===== ACCIONES ===== */}
                   <div className="flex items-center gap-0.5 sm:gap-0.5">
+                    {/* Indicador de letra disponible */}
+                    <span
+                      className={`grid h-6 w-6 place-items-center rounded-full transition ${
+                        song.hasLyrics
+                          ? 'text-primary/70'
+                          : 'text-muted-foreground/30'
+                      }`}
+                      title={song.hasLyrics ? 'Esta canción tiene letra' : 'Sin letra disponible'}
+                    >
+                      <FileText size={12} className="sm:size-4" />
+                    </span>
                     <button
                       onClick={() => handleDelete(song.id)}
                       disabled={isDeleting}

@@ -93888,7 +93888,7 @@
       "track": 7,
       "duration": 247,
       "hasCover": true,
-      "hasLyrics": false
+      "hasLyrics": true
     },
     {
       "id": "14246ba95a367aa5",
@@ -173657,7 +173657,7 @@
       "track": 5,
       "duration": 136,
       "hasCover": true,
-      "hasLyrics": false
+      "hasLyrics": true
     },
     {
       "id": "d7cec5ed0c7176cb",
@@ -193817,7 +193817,7 @@
       "track": 5,
       "duration": 277,
       "hasCover": true,
-      "hasLyrics": false
+      "hasLyrics": true
     },
     {
       "id": "403fbed160cf73a3",
@@ -215240,21 +215240,6 @@
       "hasLyrics": true
     },
     {
-      "id": "105063ea1d5f1572",
-      "relPath": "Germán Montero\\Desconocido\\Negocios Pesados.mp3",
-      "title": "Negocios Pesados",
-      "artist": "Germán Montero",
-      "album": "Desconocido",
-      "genre": [
-        "Música mexicana"
-      ],
-      "year": 2010,
-      "track": 9,
-      "duration": 131,
-      "hasCover": true,
-      "hasLyrics": false
-    },
-    {
       "id": "7ba9e0158b2cbbcb",
       "relPath": "Joaquin Sabina\\Todos hablan de ti\\Negra noche.mp3",
       "title": "Negra noche",
@@ -216977,7 +216962,7 @@
       "track": 4,
       "duration": 139,
       "hasCover": true,
-      "hasLyrics": false
+      "hasLyrics": true
     },
     {
       "id": "978bdedab1d5023d",
@@ -238160,21 +238145,6 @@
       "hasLyrics": true
     },
     {
-      "id": "62fa96c78d244214",
-      "relPath": "Vengaboys\\Parada de Tettas - EP\\Parada de Tettas.mp3",
-      "title": "Parada de Tettas",
-      "artist": "Vengaboys",
-      "album": "Parada de Tettas - EP",
-      "genre": [
-        "Dance"
-      ],
-      "year": 1997,
-      "track": 6,
-      "duration": 244,
-      "hasCover": true,
-      "hasLyrics": true
-    },
-    {
       "id": "44fe15a1e4b0b0df",
       "relPath": "Coldplay\\Mylo Xyloto\\Paradise.mp3",
       "title": "Paradise",
@@ -243581,13 +243551,13 @@
       "artist": "Shakira",
       "album": "Knock on My Door / Pídeme el sol",
       "genre": [
-        "Contemporary R&B"
+        "Contemporary R&BDance MusicFolk MusicLatin PopLatin RockPop MusicPop RockRock MusicWorld Music"
       ],
       "year": 2002,
       "track": 2,
       "duration": 218,
       "hasCover": true,
-      "hasLyrics": false
+      "hasLyrics": true
     },
     {
       "id": "9207e3dda2f42489",
@@ -247952,7 +247922,7 @@
       "track": 3,
       "duration": 236,
       "hasCover": true,
-      "hasLyrics": false
+      "hasLyrics": true
     },
     {
       "id": "7085deec94e17187",
@@ -322519,13 +322489,13 @@
       "artist": "José Feliciano",
       "album": "A México con amor",
       "genre": [
-        "Bolero"
+        "BoleroLatin PopSoft Rock"
       ],
       "year": 2004,
       "track": 7,
       "duration": 210,
       "hasCover": false,
-      "hasLyrics": false
+      "hasLyrics": true
     },
     {
       "id": "5edb98a15c2cb70b",
@@ -325286,7 +325256,7 @@
       "track": null,
       "duration": 180,
       "hasCover": true,
-      "hasLyrics": false
+      "hasLyrics": true
     },
     {
       "id": "c1c468047fe19628",
@@ -328871,7 +328841,7 @@
       "track": 9,
       "duration": 151,
       "hasCover": true,
-      "hasLyrics": false
+      "hasLyrics": true
     },
     {
       "id": "cec3dda8361a53e1",
@@ -337977,21 +337947,6 @@
       "duration": 240,
       "hasCover": true,
       "hasLyrics": true
-    },
-    {
-      "id": "1d0e516b148256d4",
-      "relPath": "Los Mariachis\\Exitos De Queen Instrumentales\\We Are the Champions.mp3",
-      "title": "We Are the Champions",
-      "artist": "Los Mariachis",
-      "album": "Exitos De Queen Instrumentales",
-      "genre": [
-        "Instrumental"
-      ],
-      "year": 2014,
-      "track": null,
-      "duration": 191,
-      "hasCover": true,
-      "hasLyrics": false
     },
     {
       "id": "07f387445d677d68",
@@ -347771,7 +347726,7 @@
       "track": 5,
       "duration": 250,
       "hasCover": true,
-      "hasLyrics": false
+      "hasLyrics": true
     },
     {
       "id": "2c174bbb1638d904",
@@ -351224,6 +351179,6 @@
       "hasLyrics": true
     }
   ],
-  "scannedAt": 1784270519757,
-  "musicPath": "D:\\musica"
+  "scannedAt": 1784275693115,
+  "musicPath": "D:/musica"
 }

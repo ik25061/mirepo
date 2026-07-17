@@ -21,6 +21,7 @@ import { usePlayer } from '../context/PlayerContext.jsx';
 import { artistCoverUrl, coverUrl } from '../lib/api.js';
 import { FileText, Loader2 } from 'lucide-react';
 import { useAutoDeleteDownload } from '../hooks/useAutoDeleteDownload.js';
+import { saveLyricsForSong, getCachedLyrics, isSongDownloaded } from '../hooks/useDownloads.js';
 
 
 export default function NowPlayingScreen({
@@ -190,27 +191,60 @@ export default function NowPlayingScreen({
   };
 
   // ============================================================
-  // CARGAR LETRAS
+  // CARGAR LETRAS (con soporte offline)
   // ============================================================
   const loadLyrics = async () => {
     if (!track) return;
     setLyricsLoading(true);
     setLyricsError(null);
+    
     try {
+      // 1. Intentar cargar desde el servidor
       const response = await fetch(`/api/lyrics/${track.id}`);
       const data = await response.json();
+      
       if (data.success && data.hasLyrics) {
         setLyrics(data.lyrics);
         setSyncedLines(data.syncedLines || null);
         setTranslatedLyrics(data.translatedLyrics || null);
         setShowTranslation(!!data.translatedLyrics);
+        
+        // Guardar en caché local para futuros usos offline
+        try {
+          const downloaded = await isSongDownloaded(track.id);
+          if (downloaded) {
+            await saveLyricsForSong(track.id, {
+              lyrics: data.lyrics,
+              syncedLines: data.syncedLines || null,
+              translatedLyrics: data.translatedLyrics || null,
+            });
+          }
+        } catch (e) {
+          console.warn('[NowPlaying] No se pudo cachear letras:', e);
+        }
       } else {
         setLyricsError(data.message || 'No se encontraron letras');
         setLyrics(null);
       }
     } catch (err) {
-      console.error('[NowPlaying] Error cargando letras:', err);
-      setLyricsError('Error al cargar la letra');
+      console.warn('[NowPlaying] Error cargando letras del servidor, probando caché local:', err);
+      
+      // 2. Si falla (offline), intentar desde caché local
+      try {
+        const cached = await getCachedLyrics(track.id);
+        if (cached && cached.hasLyrics) {
+          setLyrics(cached.lyrics);
+          setSyncedLines(cached.syncedLines || null);
+          setTranslatedLyrics(cached.translatedLyrics || null);
+          setShowTranslation(!!cached.translatedLyrics);
+        } else {
+          setLyricsError('Sin conexión y sin letras guardadas localmente');
+          setLyrics(null);
+        }
+      } catch (cacheErr) {
+        console.error('[NowPlaying] Error leyendo caché de letras:', cacheErr);
+        setLyricsError('Error al cargar la letra');
+      }
     } finally {
       setLyricsLoading(false);
     }

@@ -46,6 +46,7 @@ import PlayListsManager from './components/PlayListsManager.jsx';
 import DownloadsView from './components/DownloadsView.jsx';
 import OfflineMode from './components/OfflineMode.jsx';
 import AIRecommendations from './components/AIRecommendations.jsx';
+import SyncNotification from './components/SyncNotification.jsx';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 
@@ -78,6 +79,9 @@ function Shell() {
     removeDownload,
     syncLikes,          // <-- Ahora usamos syncLikes directamente
     isDownloaded,
+    syncingSongs,
+    currentlySyncingSong,
+    pendingLikeChanges,
   } = useDownload();
 
   const { current, isPlaying, togglePlay, next, prev, stop, removeFromQueue } = usePlayer();
@@ -341,6 +345,15 @@ function Shell() {
   if (isMobile) {
     return (
       <div className="flex flex-col h-full bg-background text-foreground overflow-hidden" style={{ background: '#121212' }}>
+        {/* ===== NOTIFICACIÓN DE SINCRONIZACIÓN ===== */}
+        <SyncNotification
+          isOnline={navigator.onLine}
+          isSyncing={syncingSongs.length > 0}
+          syncingSongs={syncingSongs}
+          lastSync={null}
+          pendingCount={pendingLikeChanges.length}
+        />
+
         {/* ===== INDICADOR DE CONEXIÓN ===== */}
         <div className="flex items-center justify-between px-3 py-1 flex-shrink-0 bg-surface/50 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
@@ -475,7 +488,15 @@ function Shell() {
   // 11. VISTA ESCRITORIO
   // ============================================================
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground" style={{ background: '#121212', color: '#fff' }}>
+    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground relative" style={{ background: '#121212', color: '#fff' }}>
+      {/* ===== NOTIFICACIÓN DE SINCRONIZACIÓN ===== */}
+      <SyncNotification
+        isOnline={navigator.onLine}
+        isSyncing={syncingSongs.length > 0}
+        syncingSongs={syncingSongs}
+        lastSync={null}
+        pendingCount={pendingLikeChanges.length}
+      />
       <Sidebar view={view} onNavigate={setView} trashCount={library.counts.trash} />
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center justify-between px-6 py-1 flex-shrink-0 bg-surface/30 border-b border-border/30 text-xs text-muted-foreground">
