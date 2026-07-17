@@ -1,7 +1,8 @@
 // ====== CONFIGURACIÓN DE IP DINÁMICA ======
 let API_URL = '';
 let apiUrlPromise = null;
-const DEFAULT_PORT = '5002';
+const DEFAULT_PORT = import.meta.env.VITE_SERVER_PORT || '5002';
+const DEFAULT_HOST = import.meta.env.VITE_SERVER_HOST || '';
 const API_URL_STORAGE_KEY = 'mirepo_api_url';
 
 async function probeServer(baseUrl) {
@@ -69,8 +70,10 @@ export async function detectServerIP() {
     }
   }
 
-  const enteredIp = window.prompt('Ingresa la IP de tu computadora (WiFi):', '172.16.12.4');
-  const normalizedIp = enteredIp ? enteredIp.replace(/^https?:\/\//, '').replace(/\/$/, '') : '172.16.12.4';
+  // Usar IP por defecto del .env como fallback en el prompt
+  const defaultHost = import.meta.env.VITE_SERVER_HOST || DEFAULT_HOST || 'localhost';
+  const enteredIp = window.prompt('Ingresa la IP de tu computadora (WiFi):', defaultHost);
+  const normalizedIp = enteredIp ? enteredIp.replace(/^https?:\/\//, '').replace(/\/$/, '') : defaultHost;
   API_URL = `http://${normalizedIp}:${DEFAULT_PORT}`;
   window.localStorage.setItem(API_URL_STORAGE_KEY, API_URL);
   return API_URL;

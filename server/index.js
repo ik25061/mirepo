@@ -10,11 +10,12 @@ import * as db from './db.js';
 import 'dotenv/config';
 
 const app = express();
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.VITE_SERVER_PORT || process.env.PORT || 5002;
 
 console.log('🚀 Iniciando servidor...');
-console.log(`📂 MUSIC_DIR: ${MUSIC_DIR}`);
-console.log(`🗑️ TRASH_DIR: ${TRASH_DIR}`);
+console.log(`🔧 Puerto configurado: ${PORT}`);
+console.log(`� MUSIC_DIR: ${MUSIC_DIR}`);
+console.log(`�🗑️ TRASH_DIR: ${TRASH_DIR}`);
 
 // ============================================================
 // DETECTAR IP LOCAL
