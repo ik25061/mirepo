@@ -135,7 +135,7 @@ const API_URL = 'http://192.168.1.100:5002';
 ## 🔍 Estructura de Archivos Generada
 
 ```
-C:\Users\rafael\Music\
+E:\musica\
 ├── cancion.mp3
 ├── cancion.jpg              ← Portada del álbum
 ├── cancion_artist.jpg       ← Foto del artista

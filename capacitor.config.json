@@ -4,6 +4,6 @@
   "webDir": "dist",
   "server": {
     "cleartext": true,
-    "allowNavigation": ["172.16.12.4"]
+    "allowNavigation": ["192.168.1.152"]
   }
 }
