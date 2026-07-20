@@ -3,7 +3,7 @@ import Carousel from './Carousel.jsx';
 import CollectionCard from './CollectionCard.jsx';
 import SongRow from '../SongRow.jsx';
 import RecommendationsSection from './RecommendationsSection.jsx';
-import { buildYears } from '../../lib/format.js';
+import { buildArtists, buildAlbums, buildGenres, buildYears } from '../../lib/format.js';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import { api } from '../../lib/api.js';
 import { useState, useEffect, useRef } from 'react';
@@ -11,14 +11,21 @@ import { RecommendationEngine } from '../../services/RecommendationEngine.js';
 import { generateMonthlySummary, generatePlaylistName } from '../../services/AIWriter.js';
 import ArtistSelector from '../ArtistSelector.jsx';
 
+// Función para mezclar array aleatoriamente (Fisher-Yates)
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 const HOME_CACHE_TTL = 60 * 1000;
 const homeDataCache = {
   userId: null,
   ts: 0,
   allSongs: [],
-  artists: [],
-  albums: [],
-  genres: [],
   liked: [],
   favArtists: [],
 };
@@ -50,14 +57,14 @@ export default function HomeView({
 }) {
   const { play, shufflePlay } = usePlayer();
 
-  const [fullArtists, setFullArtists] = useState([]);
-  const [fullAlbums, setFullAlbums] = useState([]);
-  const [fullGenres, setFullGenres] = useState([]);
-  const [likedSongs, setLikedSongs] = useState([]);
-  const [loadingLists, setLoadingLists] = useState(true);
   const [allSongsFromServer, setAllSongsFromServer] = useState([]);
+  const [likedSongs, setLikedSongs] = useState([]);
   const [favArtists, setFavArtists] = useState([]);
+  const [loadingLists, setLoadingLists] = useState(true);
   const mountedRef = useRef(true);
+
+  // Semilla aleatoria que cambia cada vez que se monta el componente
+  const [randomSeed] = useState(() => Math.random());
 
   useEffect(() => {
     mountedRef.current = true;
@@ -68,9 +75,6 @@ export default function HomeView({
       Date.now() - homeDataCache.ts < HOME_CACHE_TTL
     ) {
       setAllSongsFromServer(homeDataCache.allSongs);
-      setFullArtists(homeDataCache.artists);
-      setFullAlbums(homeDataCache.albums);
-      setFullGenres(homeDataCache.genres);
       setLikedSongs(homeDataCache.liked);
       setFavArtists(homeDataCache.favArtists);
       setLoadingLists(false);
@@ -80,30 +84,25 @@ export default function HomeView({
     const loadCompleteLists = async () => {
       try {
         setLoadingLists(true);
-        const [allSongsRes, artistsRes, albumsRes, genresRes, likedRes, favRes] = await Promise.all([
+        const [allSongsRes, likedRes, favRes] = await Promise.all([
           api.getLibrary({ limit: 99999, offset: 0, userId }),
-          api.getArtists(userId),
-          api.getAlbums(userId),
-          api.getGenres(),
-          api.getLikedSongs(userId),
+          api.getLibrary({ limit: 99999, offset: 0, userId }),
           api.getFavoriteArtists(userId)
         ]);
 
         if (mountedRef.current) {
+          const allSongs = allSongsRes.songs || [];
+          // Filtrar solo las canciones con liked=true
+          const liked = (likedRes.songs || []).filter(s => s.liked);
+
           homeDataCache.userId = userId;
           homeDataCache.ts = Date.now();
-          homeDataCache.allSongs = allSongsRes.songs || [];
-          homeDataCache.artists = artistsRes.artists || [];
-          homeDataCache.albums = albumsRes.albums || [];
-          homeDataCache.genres = genresRes.genres || [];
-          homeDataCache.liked = likedRes.songs || [];
+          homeDataCache.allSongs = allSongs;
+          homeDataCache.liked = liked;
           homeDataCache.favArtists = favRes.artists || [];
 
-          setAllSongsFromServer(homeDataCache.allSongs);
-          setFullArtists(homeDataCache.artists);
-          setFullAlbums(homeDataCache.albums);
-          setFullGenres(homeDataCache.genres);
-          setLikedSongs(homeDataCache.liked);
+          setAllSongsFromServer(allSongs);
+          setLikedSongs(liked);
           setFavArtists(homeDataCache.favArtists);
           setLoadingLists(false);
         }
@@ -117,12 +116,21 @@ export default function HomeView({
     return () => { mountedRef.current = false; };
   }, [userId]);
 
-  const liked = likedSongs;
-  const albums = fullAlbums;
-  const artists = fullArtists;
-  const genres = fullGenres;
+  // Construir colecciones desde las canciones (usando format.js)
+  // Esto asegura que tengan songs[], coverId, etc.
+  const allArtists = buildArtists(allSongsFromServer);
+  const allAlbums = buildAlbums(allSongsFromServer);
+  const allGenres = buildGenres(allSongsFromServer);
   const years = buildYears(allSongsFromServer);
-  const likedIds = new Set(allSongsFromServer.filter(s => s.liked).map(s => s.id));
+
+  // Mezclar aleatoriamente y tomar 10 (cambia cada vez que se monta)
+  const displayArtists = shuffleArray(allArtists).slice(0, 10);
+  const displayAlbums = shuffleArray(allAlbums).slice(0, 10);
+  const displayGenres = shuffleArray(allGenres).slice(0, 10);
+  const displayYears = shuffleArray(years).slice(0, 10);
+
+  const liked = likedSongs;
+  const likedIds = new Set(allSongsFromServer.filter(s => s.liked).map(s => s.id || s.song_id));
 
   const unknownSongs = allSongsFromServer.filter(s =>
     !s.artist || s.artist === 'Artista desconocido' ||
@@ -258,6 +266,7 @@ export default function HomeView({
         <p className="text-xs text-muted-foreground sm:text-sm">Tu música, sin distracciones.</p>
       </header>
 
+      {/* ===== CANCIONES QUE ME GUSTAN ===== */}
       <section className="animate-fade-in overflow-hidden rounded-xl border border-border bg-gradient-to-b from-primary/10 to-surface sm:rounded-2xl">
         <div className="flex items-center gap-4 p-4 sm:p-6 sm:pb-4">
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-lg sm:h-20 sm:w-20 sm:rounded-xl">
@@ -279,7 +288,7 @@ export default function HomeView({
               <button onClick={() => play(liked[0], liked)} className="hidden h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 sm:grid sm:h-12 sm:w-12">
                 <Play size={18} fill="currentColor" className="ml-0.5 sm:size-6" />
               </button>
-              {liked.length > 5 && (
+              {liked.length > 10 && (
                 <button onClick={() => onOpenLikedSongs?.()} className="text-xs text-primary hover:underline">
                   Ver todas
                 </button>
@@ -290,9 +299,9 @@ export default function HomeView({
 
         {liked.length > 0 ? (
           <div className="flex flex-col gap-1.5 px-3 pb-4 sm:px-5 sm:pb-5">
-            {liked.slice(0, 5).map((song, i) => (
+            {liked.slice(0, 10).map((song, i) => (
               <SongRow
-                key={song.id}
+                key={song.id || song.song_id}
                 song={song}
                 index={i}
                 queue={liked}
@@ -314,17 +323,18 @@ export default function HomeView({
         )}
       </section>
 
+      {/* ===== ÁLBUMES (aleatorio cada visita) ===== */}
       <Carousel
         title="Álbumes"
         action={
-          albums.length > 10 && (
-            <button onClick={() => onOpenGridView('albums', albums)} disabled={loadingLists} className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50">
+          allAlbums.length > 10 && (
+            <button onClick={() => onOpenGridView('albums', allAlbums)} disabled={loadingLists} className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50">
               Ver todo
             </button>
           )
         }
       >
-        {albums.slice(0, 10).map((al) => (
+        {displayAlbums.map((al) => (
           <CollectionCard
             key={al.name}
             title={al.name}
@@ -336,17 +346,18 @@ export default function HomeView({
         ))}
       </Carousel>
 
+      {/* ===== ARTISTAS (aleatorio cada visita) ===== */}
       <Carousel
         title="Artistas"
         action={
-          artists.length > 10 && (
-            <button onClick={() => onOpenGridView('artists', artists)} disabled={loadingLists} className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50">
+          allArtists.length > 10 && (
+            <button onClick={() => onOpenGridView('artists', allArtists)} disabled={loadingLists} className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50">
               Ver todo
             </button>
           )
         }
       >
-        {artists.slice(0, 10).map((ar) => (
+        {displayArtists.map((ar) => (
           <CollectionCard
             key={ar.name}
             round
@@ -360,17 +371,18 @@ export default function HomeView({
         ))}
       </Carousel>
 
+      {/* ===== GÉNEROS (aleatorio cada visita) ===== */}
       <Carousel
         title="Géneros"
         action={
-          genres.length > 10 && (
-            <button onClick={() => onOpenGridView('genres', genres)} disabled={loadingLists} className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50">
+          allGenres.length > 10 && (
+            <button onClick={() => onOpenGridView('genres', allGenres)} disabled={loadingLists} className="text-xs font-medium text-muted-foreground hover:text-white transition-colors disabled:opacity-50">
               Ver todo
             </button>
           )
         }
       >
-        {genres.slice(0, 10).map((ge) => (
+        {displayGenres.map((ge) => (
           <CollectionCard
             key={ge.name}
             title={ge.name}
@@ -382,6 +394,7 @@ export default function HomeView({
         ))}
       </Carousel>
 
+      {/* ===== AÑOS (aleatorio cada visita) ===== */}
       <Carousel
         title="Años"
         action={
@@ -392,7 +405,7 @@ export default function HomeView({
           )
         }
       >
-        {years.slice(0, 10).map((yr) => (
+        {displayYears.map((yr) => (
           <CollectionCard
             key={yr.name}
             title={yr.name}
@@ -417,10 +430,10 @@ export default function HomeView({
         >
           {unknownSongs.slice(0, 10).map((song) => (
             <CollectionCard
-              key={song.id}
+              key={song.id || song.song_id}
               title={song.title}
               subtitle={song.artist || 'Artista desconocido'}
-              coverSong={{ coverId: song.id, hasCover: song.hasCover }}
+              coverSong={{ coverId: song.id || song.song_id, hasCover: song.hasCover }}
               songs={[song]}
               onOpen={() => onOpenCollection({ kind: 'Lista', name: 'Sin artista o álbum', songs: unknownSongs })}
             />

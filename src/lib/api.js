@@ -27,41 +27,52 @@ export async function detectServerIP() {
     return '';
   }
 
+  // ═══ IMPORTANTE ═══
+  // En navegador web (no Capacitor), NO usar IP directa nunca.
+  // El proxy de Vite (localhost:5172) se encarga de redirigir al backend.
+  // Usar IP directa solo desde la app móvil (Capacitor).
+  // ═══════════════════
+  const isCapacitor = window.location.protocol === 'capacitor:' || window.Capacitor?.isNativePlatform?.();
+
+  if (!isCapacitor) {
+    // En navegador web: usar URL relativa (vacía) → Vite proxy maneja todo
+    window.localStorage.removeItem(API_URL_STORAGE_KEY);
+    window.localStorage.removeItem(API_URL_STORAGE_KEY + '_last_ip');
+    API_URL = '';
+    return API_URL;
+  }
+
+  // ═══ A partir de aquí solo se ejecuta en Capacitor (móvil) ═══
+
   const storedUrl = window.localStorage.getItem(API_URL_STORAGE_KEY);
   if (storedUrl) {
-    // Invalidar la URL guardada si el puerto no coincide con el puerto actual.
-    // Esto evita que quede una URL obsoleta (ej. :6000) en localStorage del móvil
-    // cuando el servidor cambia de puerto (ej. a :5002).
     try {
       const storedPort = new URL(storedUrl).port;
       if (storedPort && storedPort !== DEFAULT_PORT) {
-        console.warn(
-          `⚠️ Puerto guardado (${storedPort}) obsoleto. Se re-detectará el servidor en el puerto ${DEFAULT_PORT}.`
-        );
+        console.warn(`⚠️ Puerto guardado (${storedPort}) obsoleto. Se re-detectará...`);
         window.localStorage.removeItem(API_URL_STORAGE_KEY);
       } else {
         API_URL = storedUrl.replace(/\/$/, '');
         return API_URL;
       }
     } catch {
-      // Si la URL no se puede parsear, la descartamos y re-detectamos.
       window.localStorage.removeItem(API_URL_STORAGE_KEY);
     }
   }
 
-  const isCapacitor = window.location.protocol === 'capacitor:' || window.Capacitor?.isNativePlatform?.();
-  if (!isCapacitor) {
-    API_URL = '';
-    return API_URL;
-  }
+  // Construir lista de candidatos
+  const candidates = new Set();
 
-  const candidates = [
-    `http://localhost:${DEFAULT_PORT}`,
-    `http://127.0.0.1:${DEFAULT_PORT}`,
-    `http://10.0.2.2:${DEFAULT_PORT}`,
-    `http://${window.location.hostname}:${DEFAULT_PORT}`,
-  ];
+  const envApiUrl = import.meta.env.VITE_API_URL;
+  if (envApiUrl) candidates.add(envApiUrl.replace(/\/$/, ''));
 
+  const envHost = import.meta.env.VITE_SERVER_HOST;
+  if (envHost) candidates.add(`http://${envHost}:${DEFAULT_PORT}`);
+
+  candidates.add(`http://localhost:${DEFAULT_PORT}`);
+  candidates.add(`http://127.0.0.1:${DEFAULT_PORT}`);
+
+  // Probar candidatos
   for (const candidate of candidates) {
     if (await probeServer(candidate)) {
       API_URL = candidate;
@@ -70,12 +81,22 @@ export async function detectServerIP() {
     }
   }
 
-  // Usar IP por defecto del .env como fallback en el prompt
-  const defaultHost = import.meta.env.VITE_SERVER_HOST || DEFAULT_HOST || 'localhost';
-  const enteredIp = window.prompt('Ingresa la IP de tu computadora (WiFi):', defaultHost);
-  const normalizedIp = enteredIp ? enteredIp.replace(/^https?:\/\//, '').replace(/\/$/, '') : defaultHost;
+  // Si nada funciona, mostrar prompt
+  const lastKnownHost = envHost || DEFAULT_HOST || window.localStorage.getItem(API_URL_STORAGE_KEY + '_last_ip') || 'localhost';
+  const enteredIp = window.prompt(
+    '⚠️  No se pudo detectar el servidor.\n\nIngresa la IP de la computadora (WiFi):',
+    lastKnownHost
+  );
+
+  if (!enteredIp) {
+    API_URL = '';
+    return API_URL;
+  }
+
+  const normalizedIp = enteredIp.replace(/^https?:\/\//, '').replace(/\/$/, '').trim();
   API_URL = `http://${normalizedIp}:${DEFAULT_PORT}`;
   window.localStorage.setItem(API_URL_STORAGE_KEY, API_URL);
+  window.localStorage.setItem(API_URL_STORAGE_KEY + '_last_ip', normalizedIp);
   return API_URL;
 }
 
