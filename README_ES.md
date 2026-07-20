@@ -33,7 +33,7 @@ npm install
 
 **Configurar carpeta de música** en `serve.js` línea 15:
 ```javascript
-const MUSIC_DIR = path.join('C:', 'Users', 'TU_USUARIO', 'Music');
+const MUSIC_DIR = path.join('E:',musica');
 ```
 
 **Iniciar servidor:**
@@ -61,10 +61,10 @@ Abre `http://localhost:5172` en tu navegador
 const API_URL = 'http://localhost:5002';
 
 // A:
-const API_URL = 'http://192.168.1.100:5002'; // Tu IP local
+const API_URL = 'http://192.168.1.152:5002'; // Tu IP local
 ```
 
-2. Accede desde otro dispositivo: `http://192.168.1.100:5172`
+2. Accede desde otro dispositivo: `http://192.168.1.152:5172`
 
 ## 🎮 Cómo Usar
 

@@ -8,7 +8,7 @@ function getLocalLanIp() {
   // Prioridad: IP en la red 172.16.x.x (la que usas)
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal && iface.address.startsWith('172.16.')) {
+      if (iface.family === 'IPv4' && !iface.internal && iface.address.startsWith('192.168.')) {
         return iface.address;
       }
     }

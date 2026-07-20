@@ -978,6 +978,9 @@
       },
       "cde22b02498a772b": {
         "liked": true
+      },
+      "04cd732862f6f13c": {
+        "liked": false
       }
     },
     "artists": {
@@ -1003,6 +1006,20 @@
   "2": {
     "songs": {
       "f26ce8fe3a666ae4": {
+        "liked": true
+      }
+    },
+    "artists": {}
+  },
+  "4": {
+    "songs": {
+      "036dafabb39133c3": {
+        "liked": true
+      },
+      "e9acde704f512963": {
+        "liked": true
+      },
+      "857c11ca5cd646ed": {
         "liked": true
       }
     },
