@@ -10,22 +10,6 @@
     },
     {
       "id": 2,
-      "username": "angela",
-      "salt": "2b6b20fd066eb220e9932e0b43d549b5",
-      "password_hash": "b436cf32e7f7b1ee61561d8252ecb3e1a59b146092d3fdf0d3e9f1715d47b79b8ff8f090c79d59e2153f789730dfe9b1b4c23bbbb234e6421370216fd38455b7",
-      "session_token": "74a08bd2799a3d12c36632db754a80a42bff2b948ade7373521dd8210c5ffd08",
-      "created_at": "2026-07-06T06:52:58.855Z"
-    },
-    {
-      "id": 3,
-      "username": "testuser2",
-      "salt": "455e6f66ec94865032143f5e7a580fe4",
-      "password_hash": "53022b3ea4b0e86d4f44287912a3e696676e6658325e99a0866fd881aa3d78447701d9dc14111f1d50abbbf3793cbdb04fa8aad4878b12024240c2ef1e604fe8",
-      "session_token": null,
-      "created_at": "2026-07-10T09:39:52.042Z"
-    },
-    {
-      "id": 4,
       "username": "Tita",
       "salt": "324482073677279cce9de3b610179566",
       "password_hash": "1b25e5ea156ff0ee6d04335f7dcba928e3514a685c1a30c6c5f9bb3adce41c19d32a444eb088e71995df15a75ad559e2f43ecd227d0c9b2a1717450af3a6bb4f",

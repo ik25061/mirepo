@@ -81,7 +81,7 @@ export default function HomeView({
       try {
         setLoadingLists(true);
         const [allSongsRes, artistsRes, albumsRes, genresRes, likedRes, favRes] = await Promise.all([
-          api.getLibrary({ limit: 99999, offset: 0, userId }),
+          api.getLibrary({ limit: 100, offset: 0, userId }),
           api.getArtists(userId),
           api.getAlbums(userId),
           api.getGenres(),
@@ -121,6 +121,7 @@ export default function HomeView({
   const albums = fullAlbums;
   const artists = fullArtists;
   const genres = fullGenres;
+  // years ya está declarado aquí, sin duplicar
   const years = buildYears(allSongsFromServer);
   const likedIds = new Set(allSongsFromServer.filter(s => s.liked).map(s => s.id));
 

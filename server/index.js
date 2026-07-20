@@ -1,3 +1,7 @@
+// ============================================================
+// server/index.js - SERVIDOR PRINCIPAL
+// ============================================================
+
 import express from 'express';
 import cors from 'cors';
 import fs from 'node:fs';
@@ -5,39 +9,20 @@ import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { scanLibrary, rescanLibrary, getCache, getSongById, absolutePath, MUSIC_DIR, TRASH_DIR, removeSongFromCache, saveCache } from './scanner.js';
-import * as db from './db.js';
 import 'dotenv/config';
+
+// IMPORTAR NUEVO DB Y SCANNER MODIFICADO
+import * as db from './db.js';
+import { MUSIC_DIR, TRASH_DIR, absolutePath, scanLibrary } from './scanner.js';
+import { getLyrics as getLyricsFromService } from './lyrics.js';
 
 const app = express();
 const PORT = process.env.VITE_SERVER_PORT || process.env.PORT || 5002;
 
 console.log('🚀 Iniciando servidor...');
 console.log(`🔧 Puerto configurado: ${PORT}`);
-console.log(`� MUSIC_DIR: ${MUSIC_DIR}`);
-console.log(`�🗑️ TRASH_DIR: ${TRASH_DIR}`);
-
-// ============================================================
-// DETECTAR IP LOCAL
-// ============================================================
-function getLocalLanIps() {
-  const interfaces = os.networkInterfaces();
-  const ips = [];
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal && !iface.address.startsWith('127.')) {
-        ips.push(iface.address);
-      }
-    }
-  }
-  return ips;
-}
-
-const LOCAL_IPS = getLocalLanIps();
-const LOCAL_IP = LOCAL_IPS[0] || 'localhost';
-
-console.log('🌐 Todas las IPs del servidor:', LOCAL_IPS);
-console.log('🌐 IP principal:', LOCAL_IP);
+console.log(`📂 MUSIC_DIR: ${MUSIC_DIR}`);
+console.log(`📂 TRASH_DIR: ${TRASH_DIR}`);
 
 // ============================================================
 // MIDDLEWARE
@@ -55,26 +40,31 @@ app.use(express.json());
 app.use('/songs', express.static(MUSIC_DIR));
 
 // ============================================================
-// INICIALIZAR DB
+// VARIABLES GLOBALES
 // ============================================================
-let dbReady = false;
+let libraryReady = false;
+let songCache = [];
+let songMap = new Map();
 
-async function ensureDb() {
-  if (!dbReady) {
-    try {
-      console.log('🔧 Inicializando base de datos...');
-      await db.initDatabase();
-      dbReady = true;
-      console.log('✅ Base de datos lista');
-    } catch (err) {
-      console.error('❌ Error inicializando DB:', err);
-      dbReady = true;
+// ============================================================
+// FUNCIONES AUXILIARES
+// ============================================================
+
+function getLocalLanIps() {
+  const interfaces = os.networkInterfaces();
+  const ips = [];
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal && !iface.address.startsWith('127.')) {
+        ips.push(iface.address);
+      }
     }
   }
+  return ips;
 }
 
-// Inicializar DB al arrancar
-ensureDb();
+const LOCAL_IPS = getLocalLanIps();
+const LOCAL_IP = LOCAL_IPS[0] || 'localhost';
 
 // ============================================================
 // SHUFFLE CON SEMILLA
@@ -98,243 +88,99 @@ function shuffleArray(array, seed) {
 }
 
 // ============================================================
-// CONSTRUIR BIBLIOTECA
+// CARGAR BIBLIOTECA EN MEMORIA
+// ============================================================
+async function loadLibrary() {
+  try {
+    console.log('🔍 Cargando biblioteca desde SQLite...');
+    
+    const songs = await db.getSongsWithDetails({ limit: 999999, offset: 0 });
+    
+    songCache = songs;
+    songMap = new Map(songs.map(s => [s.id, s]));
+    
+    console.log(`✅ ${songCache.length} canciones cargadas en memoria`);
+    libraryReady = true;
+  } catch (err) {
+    console.error('❌ Error cargando biblioteca:', err);
+    libraryReady = true;
+  }
+}
+
+// Cargar al iniciar
+loadLibrary();
+
+// ============================================================
+// CONSTRUIR BIBLIOTECA PARA EL FRONTEND
 // ============================================================
 async function buildLibrary({ limit, offset, userId, likedOnly = false } = {}) {
   console.log('[buildLibrary] 🏗️ Construyendo...', { likedOnly, limit, offset, userId });
   
-  let songs = [];
-  let prefs = {};
-  let hiddenArtists = new Set();
+  const effectiveUserId = userId || null;
   
   try {
-    const cache = getCache();
-    songs = cache.songs || [];
-    console.log(`[buildLibrary] 📚 ${songs.length} canciones en caché`);
-  } catch (err) {
-    console.error('[buildLibrary] Error obteniendo caché:', err);
-    songs = [];
-  }
-  
-  try {
-    prefs = await db.getSongPrefs(userId);
-  } catch (err) {
-    console.warn('[buildLibrary] ⚠️ Error obteniendo prefs:', err.message);
-    prefs = {};
-  }
-  
-  try {
-    hiddenArtists = await db.getHiddenArtists(userId);
-  } catch (err) {
-    console.warn('[buildLibrary] ⚠️ Error obteniendo artistas ocultos:', err.message);
-    hiddenArtists = new Set();
-  }
-
-  // Filtrar canciones visibles
-  const visible = [];
-  for (const s of songs) {
-    try {
-      const p = prefs[s.id];
-      if (p && (p.deleted || p.hidden)) continue;
-      if (hiddenArtists.has(extractMainArtist(s.artist))) continue;
-      const liked = Boolean(p && p.liked);
-      if (likedOnly && !liked) continue;
-      visible.push({ ...s, liked });
-    } catch (err) {
-      console.warn('[buildLibrary] Error procesando canción:', s?.id);
+    let songs = await db.getSongsWithDetails({
+      limit: limit || 100,
+      offset: offset || 0,
+      userId: effectiveUserId
+    });
+    
+    if (likedOnly) {
+      songs = songs.filter(s => s.liked);
     }
-  }
-
-  console.log(`[buildLibrary] 📊 ${visible.length} canciones visibles`);
-
-  if (likedOnly) {
-    return {
-      songs: visible,
-      hiddenArtists: [...hiddenArtists],
-      counts: { total: visible.length, trash: 0 },
-      pagination: { offset: 0, limit: visible.length, total: visible.length },
-    };
-  }
-
-  // Generar semilla para shuffle
-  const today = new Date().toISOString().slice(0, 10);
-  const seedBase = `${userId || 'anon'}-${today}`;
-  let seed = 0;
-  for (let i = 0; i < seedBase.length; i++) {
-    seed = ((seed << 5) - seed) + seedBase.charCodeAt(i);
-    seed = seed & seed;
-  }
-  seed = Math.abs(seed) || 1;
-  
-  const shuffled = shuffleArray(visible, seed);
-  console.log(`[buildLibrary] 🔀 ${shuffled.length} canciones mezcladas`);
-
-  let trashCount = 0;
-  try {
-    if (fs.existsSync(TRASH_DIR)) {
-      trashCount = fs.readdirSync(TRASH_DIR).filter((f) => !f.startsWith('.')).length;
+    
+    const total = await db.getTotalSongsCount(effectiveUserId);
+    const trash = await db.getTrashCount(effectiveUserId);
+    
+    let hiddenArtists = [];
+    if (effectiveUserId) {
+      const hiddenSet = await db.getHiddenArtists(effectiveUserId);
+      hiddenArtists = [...hiddenSet];
     }
-  } catch {}
-
-  const total = shuffled.length;
-  const start = typeof offset === 'number' ? offset : 0;
-  const end = typeof limit === 'number' ? Math.min(start + limit, total) : total;
-  const paged = shuffled.slice(start, end);
-
-  console.log(`[buildLibrary] ✅ ${paged.length} canciones devueltas (offset: ${start}, limit: ${limit})`);
-  
-  return {
-    songs: paged,
-    hiddenArtists: [...hiddenArtists],
-    counts: { total, trash: trashCount },
-    pagination: { offset: start, limit: typeof limit === 'number' ? limit : total, total },
-  };
-}
-
-// ============================================================
-// ESCANEAR BIBLIOTECA
-// ============================================================
-let libraryReady = false;
-
-async function loadLibrary() {
-  try {
-    console.log('🔍 Escaneando biblioteca...');
-    await scanLibrary();
-    libraryReady = true;
-    console.log('✅ Biblioteca lista');
-  } catch (err) {
-    console.error('❌ Error escaneando:', err);
-    libraryReady = true;
-  }
-}
-
-loadLibrary();
-
-// ============================================================
-// FUNCIONES PARA AGRUPAR (Artistas, Álbumes, Géneros)
-// ============================================================
-// Extrae el artista principal de un string que puede incluir colaboradores
-// (feat, ft, &, con, vs, comas, paréntesis, etc.). Así "A.B feat X" y
-// "A.B & Y" se agrupan bajo el mismo artista "A.B".
-function extractMainArtist(artistName) {
-  if (!artistName) return 'Artista desconocido';
-  let name = String(artistName).trim();
-  if (!name) return 'Artista desconocido';
-
-  const patterns = [
-    /\s*\(feat\.?[^)]*\)/i,
-    /\s*\(ft\.?[^)]*\)/i,
-    /\s*\(featuring[^)]*\)/i,
-    /\s*feat\.?\s.*/i,
-    /\s*ft\.?\s.*/i,
-    /\s*featuring\s.*/i,
-    /\s*&\s.*/,
-    /\s*con\s.*/i,
-    /\s*vs\.?\s.*/i,
-    /\s*,\s.*/,
-    /\s*;\s.*/,
-  ];
-
-  for (const p of patterns) {
-    const match = name.match(p);
-    if (match) {
-      name = name.slice(0, match.index).trim();
-      break;
-    }
-  }
-  return name || 'Artista desconocido';
-}
-
-function buildArtistsFromCache(songs, hiddenArtists = new Set()) {
-  const map = new Map();
-  const pref = (str) => String(str || '').trim();
-  
-  for (const s of songs) {
-    // Ocultar por artista principal para que ocultar "A.B" oculte también sus colaboraciones
-    const mainArtist = extractMainArtist(s.artist);
-    if (hiddenArtists.has(mainArtist)) continue;
-    const raw = pref(mainArtist) || 'Artista desconocido';
-    const key = raw.toLowerCase();
-    let entry = map.get(key);
-    if (!entry) {
-      entry = { name: raw, songs: [] };
-      map.set(key, entry);
-    }
-    entry.songs.push(s);
-  }
-  
-  return [...map.values()]
-    .map((g) => ({
-      name: g.name,
-      songs: g.songs,
-      coverId: g.songs.find((s) => s.hasCover)?.id || g.songs[0]?.id,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'es'));
-}
-
-function buildAlbumsFromCache(songs) {
-  const map = new Map();
-  const pref = (str) => String(str || '').trim();
-  
-  for (const s of songs) {
-    const raw = pref(s.album) || 'Sin álbum';
-    const key = `${raw.toLowerCase()}-${s.artist || 'desconocido'}`;
-    let entry = map.get(key);
-    if (!entry) {
-      entry = { name: raw, artist: s.artist || 'Desconocido', songs: [] };
-      map.set(key, entry);
-    }
-    entry.songs.push(s);
-  }
-  
-  return [...map.values()]
-    .map((g) => ({
-      name: g.name,
-      artist: g.artist,
-      songs: g.songs,
-      coverId: g.songs.find((s) => s.hasCover)?.id || g.songs[0]?.id,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'es'));
-}
-
-function buildGenresFromCache(songs) {
-  const map = new Map();
-  const pref = (str) => String(str || '').trim();
-  
-  for (const s of songs) {
-    const genres = Array.isArray(s.genre) ? s.genre : [pref(s.genre) || 'Sin género'];
-    for (const raw of genres) {
-      const trimmed = pref(raw) || 'Sin género';
-      const key = trimmed.toLowerCase();
-      let entry = map.get(key);
-      if (!entry) {
-        entry = { name: trimmed, songs: [] };
-        map.set(key, entry);
+    
+    let shuffledSongs = songs;
+    if (!likedOnly) {
+      const today = new Date().toISOString().slice(0, 10);
+      const seedBase = `${userId || 'anon'}-${today}`;
+      let seed = 0;
+      for (let i = 0; i < seedBase.length; i++) {
+        seed = ((seed << 5) - seed) + seedBase.charCodeAt(i);
+        seed = seed & seed;
       }
-      entry.songs.push(s);
+      seed = Math.abs(seed) || 1;
+      shuffledSongs = shuffleArray(songs, seed);
     }
+    
+    const result = {
+      songs: shuffledSongs,
+      hiddenArtists: hiddenArtists,
+      counts: { total, trash },
+      pagination: {
+        offset: offset || 0,
+        limit: limit || 100,
+        total
+      }
+    };
+    
+    console.log(`[buildLibrary] ✅ ${shuffledSongs.length} canciones devueltas`);
+    return result;
+    
+  } catch (err) {
+    console.error('[buildLibrary] ❌ Error:', err);
+    throw err;
   }
-  
-  return [...map.values()]
-    .map((g) => ({
-      name: g.name,
-      songs: g.songs,
-      coverId: g.songs.find((s) => s.hasCover)?.id || g.songs[0]?.id,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'es'));
 }
 
 // ============================================================
 // RUTAS - TEST Y CONFIG
 // ============================================================
 app.get('/api/test', (req, res) => {
-  const cache = getCache();
   res.json({ 
     success: true, 
     libraryReady,
-    songCount: cache?.songs?.length || 0,
+    songCount: songCache.length,
     musicDir: MUSIC_DIR,
-    dbReady
+    dbReady: true
   });
 });
 
@@ -363,7 +209,6 @@ app.post('/api/auth/register', async (req, res) => {
   }
 
   try {
-    await ensureDb();
     const user = await db.createUser(username, password);
     res.json({ 
       success: true, 
@@ -388,7 +233,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 
   try {
-    await ensureDb();
     const user = await db.findUser(username, password);
     if (!user) {
       return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
@@ -415,7 +259,6 @@ app.post('/api/auth/verify', async (req, res) => {
   }
 
   try {
-    await ensureDb();
     const user = await db.getUserByToken(token);
     if (!user) {
       return res.status(401).json({ error: 'Token inválido' });
@@ -433,7 +276,6 @@ app.post('/api/auth/verify', async (req, res) => {
 app.post('/api/auth/logout', async (req, res) => {
   const { token } = req.body;
   try {
-    await ensureDb();
     if (token) {
       await db.clearUserSession(token);
     }
@@ -444,10 +286,9 @@ app.post('/api/auth/logout', async (req, res) => {
   }
 });
 
-//=========================================================
+// ============================================================
 // RUTAS - ARTISTAS FAVORITOS
 // ============================================================
-
 app.get('/api/favorite-artists', async (req, res) => {
   try {
     const userId = req.query.userId || null;
@@ -463,8 +304,28 @@ app.post('/api/favorite-artists/toggle', async (req, res) => {
   try {
     const { artist, userId } = req.body;
     if (!artist) return res.status(400).json({ error: 'Falta el artista' });
-    const artists = await db.toggleFavoriteArtist(artist, userId);
-    res.json({ artists });
+    
+    const { open } = await import('sqlite');
+    const sqlite3 = await import('sqlite3');
+    const dbInstance = await open({
+      filename: path.join(__dirname, 'localfy.db'),
+      driver: sqlite3.Database
+    });
+    
+    const artistRow = await dbInstance.get(
+      'SELECT id FROM artists WHERE name = ?',
+      [artist]
+    );
+    
+    await dbInstance.close();
+    
+    if (!artistRow) {
+      return res.status(404).json({ error: 'Artista no encontrado' });
+    }
+    
+    const isFavorite = await db.toggleFavoriteArtist(artistRow.id, userId);
+    const artists = await db.getFavoriteArtists(userId);
+    res.json({ artists, isFavorite });
   } catch (err) {
     console.error('[api/favorite-artists/toggle]', err);
     res.status(500).json({ error: 'Error al cambiar artista favorito' });
@@ -505,28 +366,12 @@ app.get('/api/library', async (req, res) => {
 });
 
 // ============================================================
-// RUTAS - ARTISTAS, ÁLBUMES, GÉNEROS
+// RUTAS - ARTISTAS, ÁLBUMES, GÉNEROS, AÑOS
 // ============================================================
 app.get('/api/artists', async (req, res) => {
   try {
-    const cache = getCache();
     const userId = req.query.userId || null;
-    let hiddenArtists = new Set();
-    let prefs = {};
-    
-    try {
-      hiddenArtists = await db.getHiddenArtists(userId);
-      prefs = await db.getSongPrefs(userId);
-    } catch {}
-
-    const visibleSongs = cache.songs.filter(s => {
-      if (hiddenArtists.has(extractMainArtist(s.artist))) return false;
-      const p = prefs[s.id];
-      if (p && (p.deleted || p.hidden)) return false;
-      return true;
-    });
-
-    const artists = buildArtistsFromCache(visibleSongs);
+    const artists = await db.getArtistsWithSongs(userId);
     res.json({ artists, count: artists.length });
   } catch (err) {
     console.error('[api/artists] Error:', err);
@@ -536,24 +381,8 @@ app.get('/api/artists', async (req, res) => {
 
 app.get('/api/albums', async (req, res) => {
   try {
-    const cache = getCache();
     const userId = req.query.userId || null;
-    let hiddenArtists = new Set();
-    let prefs = {};
-    
-    try {
-      hiddenArtists = await db.getHiddenArtists(userId);
-      prefs = await db.getSongPrefs(userId);
-    } catch {}
-
-    const visibleSongs = cache.songs.filter(s => {
-      if (hiddenArtists.has(extractMainArtist(s.artist))) return false;
-      const p = prefs[s.id];
-      if (p && (p.deleted || p.hidden)) return false;
-      return true;
-    });
-
-    const albums = buildAlbumsFromCache(visibleSongs);
+    const albums = await db.getAlbumsWithSongs(userId);
     res.json({ albums, count: albums.length });
   } catch (err) {
     console.error('[api/albums] Error:', err);
@@ -563,24 +392,8 @@ app.get('/api/albums', async (req, res) => {
 
 app.get('/api/genres', async (req, res) => {
   try {
-    const cache = getCache();
     const userId = req.query.userId || null;
-    let hiddenArtists = new Set();
-    let prefs = {};
-    
-    try {
-      hiddenArtists = await db.getHiddenArtists(userId);
-      prefs = await db.getSongPrefs(userId);
-    } catch {}
-
-    const visibleSongs = cache.songs.filter(s => {
-      if (hiddenArtists.has(extractMainArtist(s.artist))) return false;
-      const p = prefs[s.id];
-      if (p && (p.deleted || p.hidden)) return false;
-      return true;
-    });
-
-    const genres = buildGenresFromCache(visibleSongs);
+    const genres = await db.getGenresWithSongs(userId);
     res.json({ genres, count: genres.length });
   } catch (err) {
     console.error('[api/genres] Error:', err);
@@ -588,26 +401,92 @@ app.get('/api/genres', async (req, res) => {
   }
 });
 
+app.get('/api/years', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const years = await db.getYearsWithSongs(userId);
+    res.json({ years, count: years.length });
+  } catch (err) {
+    console.error('[api/years] Error:', err);
+    res.status(500).json({ error: 'Error al obtener años' });
+  }
+});
+
 app.post('/api/artists/hide', async (req, res) => {
-  const { artist, userId } = req.body;
-  if (!artist) return res.status(400).json({ error: 'Falta el artista' });
-  await db.setArtistHidden(artist, true, userId);
-  res.json({ ok: true });
+  try {
+    const { artist, userId } = req.body;
+    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
+    
+    const { open } = await import('sqlite');
+    const sqlite3 = await import('sqlite3');
+    const dbInstance = await open({
+      filename: path.join(__dirname, 'localfy.db'),
+      driver: sqlite3.Database
+    });
+    
+    const artistRow = await dbInstance.get(
+      'SELECT id FROM artists WHERE name = ?',
+      [artist]
+    );
+    
+    await dbInstance.close();
+    
+    if (!artistRow) {
+      return res.status(404).json({ error: 'Artista no encontrado' });
+    }
+    
+    await db.setArtistHidden(artistRow.id, true, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/artists/hide] Error:', err);
+    res.status(500).json({ error: 'Error al ocultar artista' });
+  }
 });
 
 app.post('/api/artists/unhide', async (req, res) => {
-  const { artist, userId } = req.body;
-  if (!artist) return res.status(400).json({ error: 'Falta el artista' });
-  await db.setArtistHidden(artist, false, userId);
-  res.json({ ok: true });
+  try {
+    const { artist, userId } = req.body;
+    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
+    
+    const { open } = await import('sqlite');
+    const sqlite3 = await import('sqlite3');
+    const dbInstance = await open({
+      filename: path.join(__dirname, 'localfy.db'),
+      driver: sqlite3.Database
+    });
+    
+    const artistRow = await dbInstance.get(
+      'SELECT id FROM artists WHERE name = ?',
+      [artist]
+    );
+    
+    await dbInstance.close();
+    
+    if (!artistRow) {
+      return res.status(404).json({ error: 'Artista no encontrado' });
+    }
+    
+    await db.setArtistHidden(artistRow.id, false, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/artists/unhide] Error:', err);
+    res.status(500).json({ error: 'Error al mostrar artista' });
+  }
 });
 
 // ============================================================
 // RUTAS - RESCAN
 // ============================================================
 app.post('/api/rescan', async (_req, res) => {
-  await rescanLibrary();
-  res.json(await buildLibrary());
+  try {
+    await scanLibrary();
+    await loadLibrary();
+    const result = await buildLibrary({ limit: 100, offset: 0 });
+    res.json(result);
+  } catch (err) {
+    console.error('[api/rescan] Error:', err);
+    res.status(500).json({ error: 'Error al rescanejar' });
+  }
 });
 
 // ============================================================
@@ -634,12 +513,11 @@ app.post('/api/fix-metadata', async (req, res) => {
     if (!newArtist || newArtist.toLowerCase().includes('anónimo')) newArtist = 'Artista desconocido';
     if (!newTitle || newTitle.toLowerCase().includes('[track') || newTitle.toLowerCase().includes('[untitled]')) newTitle = fileName;
 
-    const cache = getCache();
-    const songIndex = cache.songs.findIndex(s => s.relPath === filePath || s.id === path.basename(absPath, path.extname(absPath)));
+    const song = songCache.find(s => s.relPath === filePath);
     
     let newPath = null;
-    if (songIndex !== -1) {
-      const oldRelPath = cache.songs[songIndex].relPath;
+    if (song) {
+      const oldRelPath = song.relPath;
       const oldDir = path.dirname(oldRelPath);
       const ext = path.extname(absPath);
       const safeArtist = newArtist.replace(/[<>:"/\\|?*]/g, ' ').trim();
@@ -652,19 +530,34 @@ app.post('/api/fix-metadata', async (req, res) => {
         try {
           if (fs.existsSync(absPath)) {
             fs.renameSync(absPath, newFullPath);
-            cache.songs[songIndex].relPath = newPath;
+            const { open } = await import('sqlite');
+            const sqlite3 = await import('sqlite3');
+            const dbInstance = await open({
+              filename: path.join(__dirname, 'localfy.db'),
+              driver: sqlite3.Database
+            });
+            await dbInstance.run(
+              'UPDATE songs SET relPath = ?, title = ? WHERE id = ?',
+              [newPath, newTitle, song.id]
+            );
+            await dbInstance.close();
           }
         } catch (err) {
           console.error('[fix-metadata] Error renombrando:', err);
         }
       }
       
-      cache.songs[songIndex].artist = newArtist;
-      cache.songs[songIndex].title = newTitle;
-      saveCache(cache);
+      song.title = newTitle;
+      song.artist = newArtist;
     }
 
-    res.json({ success: true, message: `Metadatos corregidos: ${newArtist} - ${newTitle}`, newPath, artist: newArtist, title: newTitle });
+    res.json({ 
+      success: true, 
+      message: `Metadatos corregidos: ${newArtist} - ${newTitle}`, 
+      newPath, 
+      artist: newArtist, 
+      title: newTitle 
+    });
   } catch (error) {
     console.error('[fix-metadata] Error:', error);
     res.status(500).json({ error: 'Error al corregir metadatos: ' + error.message });
@@ -679,25 +572,15 @@ app.get('/artist-cover/:artistName', async (req, res) => {
     const encodedName = req.params.artistName;
     let artistName = decodeURIComponent(encodedName);
     
-    // Limpiar corchetes y otros caracteres especiales del nombre
     const cleanName = artistName.replace(/[\[\]\(\)]/g, '').trim();
     
-    const cache = getCache();
-
-    // Buscar canción del artista (con o sin corchetes)
-    let song = cache.songs.find(s => s.artist === artistName);
+    let song = songCache.find(s => s.artist === artistName);
     if (!song && cleanName !== artistName) {
-      song = cache.songs.find(s => s.artist === cleanName);
+      song = songCache.find(s => s.artist === cleanName);
     }
-    // También buscar si el artista en la BD tiene corchetes
     if (!song) {
       const withBrackets = `[${cleanName}]`;
-      song = cache.songs.find(s => s.artist === withBrackets);
-    }
-    // Buscar por artista principal (ignora colaboradores: "A.B feat X")
-    if (!song) {
-      const requestedMain = extractMainArtist(cleanName);
-      song = cache.songs.find(s => extractMainArtist(s.artist) === requestedMain);
+      song = songCache.find(s => s.artist === withBrackets);
     }
 
     if (!song) return res.status(404).send('Artista no encontrado');
@@ -730,7 +613,7 @@ app.get('/artist-cover/:artistName', async (req, res) => {
 // RUTAS - PORTADAS Y AUDIO
 // ============================================================
 app.get('/cover/:id', async (req, res) => {
-  const song = getSongById(req.params.id);
+  const song = songMap.get(req.params.id);
   if (!song) return res.status(404).end();
 
   const albumDir = path.dirname(absolutePath(song.relPath));
@@ -770,7 +653,7 @@ app.get('/cover/:id', async (req, res) => {
 });
 
 app.get('/audio/:id', (req, res) => {
-  const song = getSongById(req.params.id);
+  const song = songMap.get(req.params.id);
   if (!song) return res.status(404).end();
 
   const filePath = absolutePath(song.relPath);
@@ -806,29 +689,42 @@ app.get('/audio/:id', (req, res) => {
 // RUTAS - LIKES, HIDES Y ELIMINAR
 // ============================================================
 app.post('/api/songs/:id/like', async (req, res) => {
-  const song = getSongById(req.params.id);
+  const song = songMap.get(req.params.id);
   if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
   const userId = req.body.userId || null;
-  await db.setSongFlag(song, 'liked', Boolean(req.body.liked), userId);
-  res.json({ ok: true });
+  const liked = Boolean(req.body.liked);
+  
+  try {
+    await db.setSongLiked(song.id, liked, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/songs/:id/like] Error:', err);
+    res.status(500).json({ error: 'Error al actualizar like' });
+  }
 });
 
 app.post('/api/songs/:id/hide', async (req, res) => {
-  const song = getSongById(req.params.id);
+  const song = songMap.get(req.params.id);
   if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
   const userId = req.body.userId || null;
-  await db.setSongFlag(song, 'hidden', true, userId);
-  res.json({ ok: true });
+  
+  try {
+    await db.setSongHidden(song.id, true, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/songs/:id/hide] Error:', err);
+    res.status(500).json({ error: 'Error al ocultar canción' });
+  }
 });
 
 app.delete('/api/songs', async (req, res) => {
   try {
-    const { id, filename, userId } = req.body;
-    if (!id && !filename) {
-      return res.status(400).json({ error: 'Se requiere id o filename' });
+    const { id, userId } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: 'Se requiere id' });
     }
 
-    const song = id ? getSongById(id) : getSongById(filename);
+    const song = songMap.get(id);
     if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
 
     const fullPath = absolutePath(song.relPath);
@@ -855,9 +751,9 @@ app.delete('/api/songs', async (req, res) => {
       } catch {}
     }
 
-    await db.setSongFlag(song, 'deleted', true, userId);
-    removeSongFromCache(song.id);
-    await db.deleteSongFromPrefs(song.id, userId);
+    if (userId) {
+      await db.setSongHidden(song.id, true, userId);
+    }
 
     res.json({ message: 'Canción eliminada correctamente' });
   } catch (error) {
@@ -942,21 +838,31 @@ app.delete('/api/playlists/:id', async (req, res) => {
 // ============================================================
 // RUTAS - LETRAS DE CANCIONES
 // ============================================================
-
-import { getLyrics } from './lyrics.js';
-
-// GET - Obtener letra de una canción
 app.get('/api/lyrics/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const song = getSongById(id);
+    const song = songMap.get(id);
     
     if (!song) {
       return res.status(404).json({ error: 'Canción no encontrada' });
     }
     
+    const dbLyrics = await db.getLyrics(id);
+    
+    if (dbLyrics) {
+      return res.json({
+        success: true,
+        hasLyrics: true,
+        lyrics: dbLyrics.text,
+        syncedLines: dbLyrics.synced_text ? parseSyncedLines(dbLyrics.synced_text) : null,
+        translatedLyrics: dbLyrics.translated_text || null,
+        title: song.title,
+        artist: song.artist
+      });
+    }
+    
     const songPath = absolutePath(song.relPath);
-    const result = await getLyrics(id, song.title, song.artist, songPath);
+    const result = await getLyricsFromService(id, song.title, song.artist, songPath);
     
     if (!result.lyrics) {
       return res.json({ 
@@ -966,12 +872,18 @@ app.get('/api/lyrics/:id', async (req, res) => {
       });
     }
     
+    await db.saveLyrics(id, {
+      text: result.lyrics,
+      syncedText: result.syncedLines ? result.syncedLines.map(l => `[${l.time}] ${l.text}`).join('\n') : null,
+      translatedText: result.translatedLyrics || null
+    });
+    
     res.json({
       success: true,
       hasLyrics: true,
       lyrics: result.lyrics,
       syncedLines: result.syncedLines || null,
-      translatedLyrics: result.translatedLyrics,
+      translatedLyrics: result.translatedLyrics || null,
       title: song.title,
       artist: song.artist
     });
@@ -981,27 +893,61 @@ app.get('/api/lyrics/:id', async (req, res) => {
   }
 });
 
-// POST - Forzar búsqueda de letra (refrescar caché)
+function parseSyncedLines(syncedText) {
+  if (!syncedText) return null;
+  const lines = syncedText.split('\n').filter(line => line.trim() !== '');
+  const result = [];
+  const lrcRegex = /^\[(\d{1,3}):(\d{2})\.(\d{2,3})\](.*)/;
+  
+  for (const line of lines) {
+    const match = line.match(lrcRegex);
+    if (match) {
+      const minutes = parseInt(match[1], 10);
+      const seconds = parseInt(match[2], 10);
+      const fraction = parseInt(match[3], 10);
+      const text = match[4].trim();
+      let timeInSeconds;
+      if (match[3].length === 3) {
+        timeInSeconds = minutes * 60 + seconds + fraction / 1000;
+      } else {
+        timeInSeconds = minutes * 60 + seconds + fraction / 100;
+      }
+      if (text) {
+        result.push({ time: timeInSeconds, text });
+      }
+    }
+  }
+  return result.length > 0 ? result : null;
+}
+
 app.post('/api/lyrics/:id/refresh', async (req, res) => {
   try {
     const { id } = req.params;
-    const song = getSongById(id);
+    const song = songMap.get(id);
     
     if (!song) {
       return res.status(404).json({ error: 'Canción no encontrada' });
     }
     
-    // Eliminar del caché
-    const { loadCache, saveCache } = await import('./lyrics.js');
-    const cache = loadCache();
-    if (cache[id]) {
-      delete cache[id];
-      saveCache(cache);
-    }
+    const { open } = await import('sqlite');
+    const sqlite3 = await import('sqlite3');
+    const dbInstance = await open({
+      filename: path.join(__dirname, 'localfy.db'),
+      driver: sqlite3.Database
+    });
+    await dbInstance.run('DELETE FROM lyrics WHERE song_id = ?', [id]);
+    await dbInstance.close();
     
-    // Buscar de nuevo
     const songPath = absolutePath(song.relPath);
-    const result = await getLyrics(id, song.title, song.artist, songPath);
+    const result = await getLyricsFromService(id, song.title, song.artist, songPath);
+    
+    if (result.lyrics) {
+      await db.saveLyrics(id, {
+        text: result.lyrics,
+        syncedText: result.syncedLines ? result.syncedLines.map(l => `[${l.time}] ${l.text}`).join('\n') : null,
+        translatedText: result.translatedLyrics || null
+      });
+    }
     
     res.json({
       success: true,
@@ -1014,6 +960,38 @@ app.post('/api/lyrics/:id/refresh', async (req, res) => {
     console.error('[api/lyrics/refresh] Error:', err);
     res.status(500).json({ error: 'Error al refrescar la letra' });
   }
+});
+
+// ============================================================
+// RUTA - CANCIONES QUE ME GUSTAN
+// ============================================================
+app.get('/api/liked-songs', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    if (!userId) {
+      return res.status(400).json({ error: 'Se requiere userId' });
+    }
+    const songs = await db.getLikedSongs(userId);
+    res.json({ songs, count: songs.length });
+  } catch (err) {
+    console.error('[api/liked-songs] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones que me gustan' });
+  }
+});
+
+// ============================================================
+// CIERRE GRACEFUL
+// ============================================================
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Cerrando servidor...');
+  await db.closeDb();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 Cerrando servidor...');
+  await db.closeDb();
+  process.exit(0);
 });
 
 // ============================================================
