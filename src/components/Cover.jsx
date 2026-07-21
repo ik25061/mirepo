@@ -23,8 +23,9 @@ export default function Cover({ song, size = 'md', rounded = 'rounded-lg', class
           className="h-full w-full object-cover"
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-surface-2 to-muted text-muted-foreground">
-          <Music2 size={iconSize} />
+        <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-lg ${rounded} ${className}`}>
+          <Music2 size={iconSize} className="sm:hidden" />
+          <Music2 size={iconSize * 1.5} className="hidden sm:block" />
         </div>
       )}
     </div>
