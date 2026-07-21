@@ -27,29 +27,12 @@ export async function detectServerIP() {
     return '';
   }
 
-  // ═══ IMPORTANTE ═══
-  // En navegador web (no Capacitor), NO usar IP directa nunca.
-  // El proxy de Vite (localhost:5172) se encarga de redirigir al backend.
-  // Usar IP directa solo desde la app móvil (Capacitor).
-  // ═══════════════════
-  const isCapacitor = window.location.protocol === 'capacitor:' || window.Capacitor?.isNativePlatform?.();
-
-  if (!isCapacitor) {
-    // En navegador web: usar URL relativa (vacía) → Vite proxy maneja todo
-    window.localStorage.removeItem(API_URL_STORAGE_KEY);
-    window.localStorage.removeItem(API_URL_STORAGE_KEY + '_last_ip');
-    API_URL = '';
-    return API_URL;
-  }
-
-  // ═══ A partir de aquí solo se ejecuta en Capacitor (móvil) ═══
-
   const storedUrl = window.localStorage.getItem(API_URL_STORAGE_KEY);
   if (storedUrl) {
     try {
       const storedPort = new URL(storedUrl).port;
       if (storedPort && storedPort !== DEFAULT_PORT) {
-        console.warn(`⚠️ Puerto guardado (${storedPort}) obsoleto. Se re-detectará...`);
+        console.warn(`⚠️ Puerto guardado (${storedPort}) obsoleto. Se re-detectará el servidor en el puerto ${DEFAULT_PORT}.`);
         window.localStorage.removeItem(API_URL_STORAGE_KEY);
       } else {
         API_URL = storedUrl.replace(/\/$/, '');
@@ -60,19 +43,19 @@ export async function detectServerIP() {
     }
   }
 
-  // Construir lista de candidatos
-  const candidates = new Set();
+  const isCapacitor = window.location.protocol === 'capacitor:' || window.Capacitor?.isNativePlatform?.();
+  if (!isCapacitor) {
+    API_URL = '';
+    return API_URL;
+  }
 
-  const envApiUrl = import.meta.env.VITE_API_URL;
-  if (envApiUrl) candidates.add(envApiUrl.replace(/\/$/, ''));
+  const candidates = [
+    `http://localhost:${DEFAULT_PORT}`,
+    `http://127.0.0.1:${DEFAULT_PORT}`,
+    `http://10.0.2.2:${DEFAULT_PORT}`,
+    `http://${window.location.hostname}:${DEFAULT_PORT}`,
+  ];
 
-  const envHost = import.meta.env.VITE_SERVER_HOST;
-  if (envHost) candidates.add(`http://${envHost}:${DEFAULT_PORT}`);
-
-  candidates.add(`http://localhost:${DEFAULT_PORT}`);
-  candidates.add(`http://127.0.0.1:${DEFAULT_PORT}`);
-
-  // Probar candidatos
   for (const candidate of candidates) {
     if (await probeServer(candidate)) {
       API_URL = candidate;
@@ -81,22 +64,11 @@ export async function detectServerIP() {
     }
   }
 
-  // Si nada funciona, mostrar prompt
-  const lastKnownHost = envHost || DEFAULT_HOST || window.localStorage.getItem(API_URL_STORAGE_KEY + '_last_ip') || 'localhost';
-  const enteredIp = window.prompt(
-    '⚠️  No se pudo detectar el servidor.\n\nIngresa la IP de la computadora (WiFi):',
-    lastKnownHost
-  );
-
-  if (!enteredIp) {
-    API_URL = '';
-    return API_URL;
-  }
-
-  const normalizedIp = enteredIp.replace(/^https?:\/\//, '').replace(/\/$/, '').trim();
+  const defaultHost = import.meta.env.VITE_SERVER_HOST || DEFAULT_HOST || 'localhost';
+  const enteredIp = window.prompt('Ingresa la IP de tu computadora (WiFi):', defaultHost);
+  const normalizedIp = enteredIp ? enteredIp.replace(/^https?:\/\//, '').replace(/\/$/, '') : defaultHost;
   API_URL = `http://${normalizedIp}:${DEFAULT_PORT}`;
   window.localStorage.setItem(API_URL_STORAGE_KEY, API_URL);
-  window.localStorage.setItem(API_URL_STORAGE_KEY + '_last_ip', normalizedIp);
   return API_URL;
 }
 
@@ -114,9 +86,6 @@ async function ensureApiUrl() {
   }
   return apiUrlPromise;
 }
-
-// Detectar IP al cargar
-ensureApiUrl();
 
 // ====== FUNCIONES DE API ======
 
@@ -154,7 +123,6 @@ async function request(url, options = {}) {
   } catch (err) {
     console.error('❌ Error en petición:', err);
 
-    // Mejora del mensaje de error para diagnósticos en móvil
     const originalMessage = err && err.message ? String(err.message) : String(err);
     let enhancedMessage = originalMessage;
 
@@ -204,6 +172,8 @@ export const api = {
     if (params.limit) qs.set('limit', params.limit);
     if (params.offset) qs.set('offset', params.offset);
     if (params.userId) qs.set('userId', params.userId);
+    if (params.liked) qs.set('liked', params.liked);
+    if (params.shuffleSeed) qs.set('shuffleSeed', params.shuffleSeed);
     const url = `/api/library${qs.toString() ? `?${qs.toString()}` : ''}`;
     return request(url);
   },
@@ -240,10 +210,100 @@ export const api = {
       body: JSON.stringify({ artist, userId }),
     }),
 
-  getArtists: (userId) => request(`/api/artists${userId ? `?userId=${userId}` : ''}`),
-  getAlbums: (userId) => request(`/api/albums${userId ? `?userId=${userId}` : ''}`),
-  getGenres: () => request('/api/genres'),
-  getLikedSongs: (userId) => request(`/api/library?userId=${userId}&liked=true`),
+  // Artistas con paginación
+  getArtists: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (params.userId) qs.set('userId', params.userId);
+    if (params.search) qs.set('search', params.search);
+    const url = `/api/artists${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return request(url);
+  },
+
+  getArtistSongs: (artistId, params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (params.userId) qs.set('userId', params.userId);
+    const url = `/api/artists/${artistId}/songs${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return request(url);
+  },
+
+  // Álbumes con paginación
+  getAlbums: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (params.userId) qs.set('userId', params.userId);
+    if (params.search) qs.set('search', params.search);
+    const url = `/api/albums${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return request(url);
+  },
+
+  getAlbumSongs: (albumId, params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (params.userId) qs.set('userId', params.userId);
+    const url = `/api/albums/${albumId}/songs${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return request(url);
+  },
+
+  // Géneros con paginación
+  getGenres: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (params.userId) qs.set('userId', params.userId);
+    if (params.search) qs.set('search', params.search);
+    const url = `/api/genres${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return request(url);
+  },
+
+  getGenreSongs: (genreId, params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (params.userId) qs.set('userId', params.userId);
+    const url = `/api/genres/${genreId}/songs${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return request(url);
+  },
+
+  // Años con paginación
+  getYears: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (params.userId) qs.set('userId', params.userId);
+    if (params.search) qs.set('search', params.search);
+    const url = `/api/years${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return request(url);
+  },
+
+  getYearSongs: (year, params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (params.userId) qs.set('userId', params.userId);
+    const url = `/api/years/${year}/songs${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return request(url);
+  },
+
+  getLikedSongs: (userId, params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (userId) qs.set('userId', userId);
+    const url = `/api/liked-songs${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return request(url);
+  },
+  getFavoriteArtists: (userId) => request(`/api/favorite-artists?userId=${userId}`),
+  
+  toggleFavoriteArtist: (artist, userId) => request('/api/favorite-artists/toggle', {
+    method: 'POST',
+    body: JSON.stringify({ artist, userId }),
+  }),
 
   getPlayLists: (userId) => request(`/api/playlists${userId ? `?userId=${userId}` : ''}`),
   getPlayList: (id) => request(`/api/playlists/${id}`),
@@ -275,13 +335,6 @@ export const api = {
   fixMetadata: (filePath) => request('/api/fix-metadata', {
     method: 'POST',
     body: JSON.stringify({ filePath }),
-  }),
-
-  // Dentro de export const api = { ... }
-  getFavoriteArtists: (userId) => request(`/api/favorite-artists?userId=${userId}`),
-  toggleFavoriteArtist: (artist, userId) => request('/api/favorite-artists/toggle', {
-    method: 'POST',
-    body: JSON.stringify({ artist, userId }),
   }),
 };
 
