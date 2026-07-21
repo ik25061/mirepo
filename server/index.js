@@ -378,6 +378,27 @@ app.get('/api/artists', async (req, res) => {
   }
 });
 
+app.get('/api/artists/:id/songs', async (req, res) => {
+  try {
+    const artistId = parseInt(req.params.id, 10);
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    const result = await db.getSongsByArtist({
+      artistId,
+      userId,
+      limit,
+      offset
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/artists/:id/songs] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones del artista' });
+  }
+});
+
 app.get('/api/albums', async (req, res) => {
   try {
     const userId = req.query.userId || null;
