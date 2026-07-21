@@ -1,840 +1,52 @@
+// ============================================================
+// server/index.js - SERVIDOR PRINCIPAL (VERSIÓN COMPLETA)
+// ============================================================
+
 import express from 'express';
 import cors from 'cors';
-import os from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { initDatabase, db, setSongInteraction, getUserInteractions, getUserByToken, getUserById, getAllUsers } from './db.js';
-import { scanLibrary, rescanLibrary, MUSIC_DIR } from './scanner.js';
-import * as dbMethods from './db.js';
+import 'dotenv/config';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import * as db from './db.js';
+import { MUSIC_DIR, TRASH_DIR, absolutePath, scanLibrary } from './scanner.js';
+import { getLyrics as getLyricsFromService } from './lyrics.js';
 
 const app = express();
-app.use(cors({ origin: '*' }));
-app.use(express.json({ limit: '50mb' }));
+const PORT = process.env.VITE_SERVER_PORT || process.env.PORT || 5002;
 
-// Servir archivos de música estáticos
+console.log('🚀 Iniciando servidor...');
+console.log(`🔧 Puerto configurado: ${PORT}`);
+console.log(`📂 MUSIC_DIR: ${MUSIC_DIR}`);
+
+// ============================================================
+// MIDDLEWARE
+// ============================================================
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Range', 'Origin', 'Accept'],
+  exposedHeaders: ['Content-Range', 'Accept-Ranges'],
+  credentials: true
+}));
+app.use(express.json());
 app.use('/songs', express.static(MUSIC_DIR));
 
 // ============================================================
-// AUTENTICACIÓN (login/register/logout via SQLite)
+// VARIABLES GLOBALES
 // ============================================================
-
-app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
-    }
-
-    const user = await dbMethods.findUser(username, password);
-    if (!user) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
-    }
-
-    // Generar nuevo token de sesión
-    const token = crypto.randomBytes(32).toString('hex');
-    await dbMethods.updateUserSession(user.id, token);
-
-    res.json({
-      success: true,
-      token,
-      user: { id: user.id, username: user.username }
-    });
-  } catch (err) {
-    console.error('[auth/login]', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/auth/register', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
-    }
-    if (username.length < 3) {
-      return res.status(400).json({ error: 'El usuario debe tener al menos 3 caracteres' });
-    }
-    if (password.length < 4) {
-      return res.status(400).json({ error: 'La contraseña debe tener al menos 4 caracteres' });
-    }
-
-    const newUser = await dbMethods.createUser(username, password);
-    const token = crypto.randomBytes(32).toString('hex');
-    await dbMethods.updateUserSession(newUser.id, token);
-
-    res.json({
-      success: true,
-      token,
-      user: { id: newUser.id, username: newUser.username }
-    });
-  } catch (err) {
-    if (err.message?.includes('UNIQUE constraint failed') || err.message === 'El usuario ya existe') {
-      return res.status(409).json({ error: 'El usuario ya existe' });
-    }
-    console.error('[auth/register]', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/auth/verify', async (req, res) => {
-  try {
-    const { token } = req.body;
-    if (!token) {
-      return res.status(400).json({ error: 'Token requerido' });
-    }
-
-    const user = await dbMethods.getUserByToken(token);
-    if (!user) {
-      return res.status(401).json({ error: 'Token inválido o expirado' });
-    }
-
-    res.json({
-      success: true,
-      user: { id: user.id, username: user.username }
-    });
-  } catch (err) {
-    console.error('[auth/verify]', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/auth/logout', async (req, res) => {
-  try {
-    const { token } = req.body;
-    if (token) {
-      await dbMethods.clearUserSession(token);
-    }
-    res.json({ success: true });
-  } catch (err) {
-    console.error('[auth/logout]', err);
-    res.status(500).json({ error: err.message });
-  }
-});
+let libraryReady = false;
+let songCache = [];
+let songMap = new Map();
 
 // ============================================================
-// ALGORITMO CORE: BIBLIOTECA ALEATORIA INFINITA
-// ============================================================
-// 
-// Características:
-// - Devuelve bloques de 100 canciones para infinite scroll
-// - Excluye canciones con HIDE (dislike)
-// - Excluye canciones de artistas ocultos
-// - Orden pseudoaleatorio CONSISTENTE por sesión (seed)
-// - No repite canciones hasta agotar el catálogo visible
-//
-// El frontend debe pasar la misma 'seed' en cada petición de la sesión.
-// seed = Math.random().toString(36).substring(7) (se genera al montar el componente)
-// offset = se incrementa en 100 cada vez que se cargan más
-//
-app.get('/api/library', async (req, res) => {
-  try {
-    const userId = parseInt(req.query.userId, 10) || 0;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
-    const offset = parseInt(req.query.offset, 10) || 0;
-    const likedOnly = req.query.liked === 'true';
-    const sessionSeed = req.query.seed || `localfy_${userId || 'anon'}_${new Date().toISOString().slice(0, 10)}`;
-
-    // 1. Obtener interacciones del usuario
-    const { likes, hides } = await getUserInteractions(userId);
-
-    // 2. Obtener artistas ocultos
-    const hiddenArtists = await dbMethods.getHiddenArtists(userId);
-
-    // 3. Construir consulta base excluyendo hides y artistas ocultos
-    let whereConditions = [];
-    let queryParams = [];
-
-    // Excluir canciones con HIDE
-    if (hides.size > 0) {
-      const hidePlaceholders = Array.from(hides, () => '?').join(',');
-      whereConditions.push(`v.song_id NOT IN (${hidePlaceholders})`);
-      queryParams.push(...hides);
-    }
-
-    // Excluir artistas ocultos
-    if (hiddenArtists.size > 0) {
-      const artistPlaceholders = Array.from(hiddenArtists, () => '?').join(',');
-      whereConditions.push(`v.main_artist_name NOT IN (${artistPlaceholders})`);
-      queryParams.push(...hiddenArtists);
-    }
-
-    // Filtrar solo canciones con like si se solicita
-    if (likedOnly) {
-      if (likes.size === 0) {
-        return res.json({
-          songs: [],
-          pagination: { offset: 0, limit, total: 0, hasMore: false },
-          likedSongIds: [...likes]
-        });
-      }
-      const likePlaceholders = Array.from(likes, () => '?').join(',');
-      whereConditions.push(`v.song_id IN (${likePlaceholders})`);
-      queryParams.push(...likes);
-    }
-
-    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
-
-    // 4. Generar seed numérica consistente para el orden aleatorio
-    const seedHash = crypto.createHash('md5').update(sessionSeed).digest('hex');
-    const numericModifier = parseInt(seedHash.slice(0, 8), 16) || 1;
-
-    // 5. Contar total visible
-    const countRow = await db.get(
-      `SELECT COUNT(*) as total FROM v_complete_songs v ${whereClause}`,
-      queryParams
-    );
-    const total = countRow.total;
-
-    // 6. Obtener página con orden pseudoaleatorio determinista
-    // Usamos SUBSTR del song_id para generar un orden reproducible
-    const sql = `
-      SELECT v.* FROM v_complete_songs v
-      ${whereClause}
-      ORDER BY (SUBSTR(v.song_id, 1, 4) * ${numericModifier} + CAST(SUBSTR(v.song_id, 5, 2) AS INTEGER) * 7) % 100000
-      LIMIT ? OFFSET ?
-    `;
-    queryParams.push(limit, offset);
-
-    const songs = await db.all(sql, queryParams);
-
-    // Marcar cuáles tienen "Me gusta"
-    const processedSongs = songs.map(s => ({
-      song_id: s.song_id,
-      song_title: s.song_title,
-      relative_path: s.relative_path,
-      duration: s.duration,
-      track: s.track,
-      hasLyrics: s.hasLyrics,
-      album_id: s.album_id,
-      album_name: s.album_name,
-      album_year: s.album_year,
-      artists_names: s.artists_names,
-      main_artist_id: s.main_artist_id,
-      main_artist_name: s.main_artist_name,
-      genre_names: s.genre_names,
-      liked: likes.has(s.song_id)
-    }));
-
-    res.json({
-      songs: processedSongs,
-      likedSongIds: [...likes],
-      pagination: {
-        offset,
-        limit,
-        total,
-        hasMore: offset + limit < total
-      }
-    });
-  } catch (err) {
-    console.error('[api/library] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================================================
-// ENDPOINTS DESACOPLADOS CON PAGINACIÓN
+// FUNCIONES AUXILIARES
 // ============================================================
 
-// 1. ARTISTAS
-app.get('/api/artists', async (req, res) => {
-  try {
-    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
-    const offset = parseInt(req.query.offset, 10) || 0;
-    
-    const rows = await db.all(`
-      SELECT a.id, a.name, COUNT(DISTINCT sa.song_id) as total_songs,
-        (SELECT s2.id FROM songs s2 JOIN song_artists sa3 ON sa3.song_id = s2.id WHERE sa3.artist_id = a.id LIMIT 1) AS sample_song_id
-      FROM artists a
-      LEFT JOIN song_artists sa ON a.id = sa.artist_id
-      GROUP BY a.id
-      ORDER BY a.name ASC
-      LIMIT ? OFFSET ?
-    `, [limit, offset]);
-
-    const countRow = await db.get('SELECT COUNT(*) as total FROM artists');
-    
-    res.json({
-      artists: rows,
-      pagination: { offset, limit, total: countRow.total, hasMore: offset + limit < countRow.total }
-    });
-  } catch (err) { 
-    console.error('[api/artists] Error:', err);
-    res.status(500).json({ error: err.message }); 
-  }
-});
-
-// Canciones de un artista específico
-app.get('/api/artists/:id/songs', async (req, res) => {
-  try {
-    const songs = await db.all(`
-      SELECT v.* FROM v_complete_songs v
-      JOIN song_artists sa ON v.song_id = sa.song_id
-      WHERE sa.artist_id = ?
-      GROUP BY v.song_id
-      ORDER BY v.album_name ASC, v.track ASC
-    `, [req.params.id]);
-    
-    // Obtener interacciones del usuario para marcar likes
-    const userId = parseInt(req.query.userId, 10) || 0;
-    const { likes } = await getUserInteractions(userId);
-    
-    const processed = songs.map(s => ({ ...s, liked: likes.has(s.song_id) }));
-    
-    res.json({ songs: processed });
-  } catch (err) { 
-    console.error('[api/artists/:id/songs] Error:', err);
-    res.status(500).json({ error: err.message }); 
-  }
-});
-
-// 2. ÁLBUMES
-app.get('/api/albums', async (req, res) => {
-  try {
-    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
-    const offset = parseInt(req.query.offset, 10) || 0;
-    
-    const rows = await db.all(`
-      SELECT al.id, al.name, al.year, art.name as artist_name, COUNT(s.id) as total_songs,
-        MIN(s.id) AS sample_song_id
-      FROM albums al
-      LEFT JOIN artists art ON al.main_artist_id = art.id
-      LEFT JOIN songs s ON al.id = s.album_id
-      GROUP BY al.id
-      ORDER BY al.name ASC
-      LIMIT ? OFFSET ?
-    `, [limit, offset]);
-
-    const countRow = await db.get('SELECT COUNT(*) as total FROM albums');
-    
-    res.json({
-      albums: rows,
-      pagination: { offset, limit, total: countRow.total, hasMore: offset + limit < countRow.total }
-    });
-  } catch (err) { 
-    console.error('[api/albums] Error:', err);
-    res.status(500).json({ error: err.message }); 
-  }
-});
-
-app.get('/api/albums/:id/songs', async (req, res) => {
-  try {
-    const songs = await db.all(
-      'SELECT * FROM v_complete_songs WHERE album_id = ? ORDER BY track ASC',
-      [req.params.id]
-    );
-    
-    const userId = parseInt(req.query.userId, 10) || 0;
-    const { likes } = await getUserInteractions(userId);
-    const processed = songs.map(s => ({ ...s, liked: likes.has(s.song_id) }));
-    
-    res.json({ songs: processed });
-  } catch (err) { 
-    console.error('[api/albums/:id/songs] Error:', err);
-    res.status(500).json({ error: err.message }); 
-  }
-});
-
-// 3. GÉNEROS
-app.get('/api/genres', async (req, res) => {
-  try {
-    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
-    const offset = parseInt(req.query.offset, 10) || 0;
-    
-    const rows = await db.all(`
-      SELECT g.id, g.name, COUNT(sg.song_id) as total_songs
-      FROM genres g
-      LEFT JOIN song_genres sg ON g.id = sg.genre_id
-      GROUP BY g.id
-      ORDER BY g.name ASC
-      LIMIT ? OFFSET ?
-    `, [limit, offset]);
-
-    const countRow = await db.get('SELECT COUNT(*) as total FROM genres');
-    
-    res.json({
-      genres: rows,
-      pagination: { offset, limit, total: countRow.total, hasMore: offset + limit < countRow.total }
-    });
-  } catch (err) { 
-    console.error('[api/genres] Error:', err);
-    res.status(500).json({ error: err.message }); 
-  }
-});
-
-app.get('/api/genres/:id/songs', async (req, res) => {
-  try {
-    const songs = await db.all(`
-      SELECT v.* FROM v_complete_songs v
-      JOIN song_genres sg ON v.song_id = sg.song_id
-      WHERE sg.genre_id = ?
-      GROUP BY v.song_id
-      ORDER BY v.album_name ASC, v.track ASC
-    `, [req.params.id]);
-    
-    const userId = parseInt(req.query.userId, 10) || 0;
-    const { likes } = await getUserInteractions(userId);
-    const processed = songs.map(s => ({ ...s, liked: likes.has(s.song_id) }));
-    
-    res.json({ songs: processed });
-  } catch (err) { 
-    console.error('[api/genres/:id/songs] Error:', err);
-    res.status(500).json({ error: err.message }); 
-  }
-});
-
-// 4. AÑOS
-app.get('/api/years', async (req, res) => {
-  try {
-    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 500);
-    const offset = parseInt(req.query.offset, 10) || 0;
-    
-    const rows = await db.all(`
-      SELECT al.year, COUNT(DISTINCT s.id) as total_songs
-      FROM albums al
-      JOIN songs s ON al.id = s.album_id
-      WHERE al.year IS NOT NULL
-      GROUP BY al.year
-      ORDER BY al.year DESC
-      LIMIT ? OFFSET ?
-    `, [limit, offset]);
-
-    const countRow = await db.get('SELECT COUNT(DISTINCT year) as total FROM albums WHERE year IS NOT NULL');
-    
-    res.json({
-      years: rows,
-      pagination: { offset, limit, total: countRow.total, hasMore: offset + limit < countRow.total }
-    });
-  } catch (err) { 
-    console.error('[api/years] Error:', err);
-    res.status(500).json({ error: err.message }); 
-  }
-});
-
-app.get('/api/years/:year/songs', async (req, res) => {
-  try {
-    const songs = await db.all(
-      'SELECT * FROM v_complete_songs WHERE album_year = ? ORDER BY album_name ASC, track ASC',
-      [req.params.year]
-    );
-    
-    const userId = parseInt(req.query.userId, 10) || 0;
-    const { likes } = await getUserInteractions(userId);
-    const processed = songs.map(s => ({ ...s, liked: likes.has(s.song_id) }));
-    
-    res.json({ songs: processed });
-  } catch (err) { 
-    console.error('[api/years/:year/songs] Error:', err);
-    res.status(500).json({ error: err.message }); 
-  }
-});
-
-// ============================================================
-// BÚSQUEDA
-// ============================================================
-app.get('/api/search', async (req, res) => {
-  try {
-    const query = (req.query.q || '').trim();
-    if (!query || query.length < 2) {
-      return res.json({ songs: [], total: 0 });
-    }
-
-    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
-    const offset = parseInt(req.query.offset, 10) || 0;
-    const userId = parseInt(req.query.userId, 10) || 0;
-
-    const result = await dbMethods.searchSongs(query, limit, offset);
-    const { likes } = await getUserInteractions(userId);
-
-    const processed = result.songs.map(s => ({ ...s, liked: likes.has(s.song_id) }));
-
-    res.json({
-      songs: processed,
-      total: result.total,
-      pagination: { offset, limit, total: result.total, hasMore: offset + limit < result.total }
-    });
-  } catch (err) {
-    console.error('[api/search] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================================================
-// INTERACCIONES (Likes / Hides)
-// ============================================================
-app.post('/api/interactions', async (req, res) => {
-  const { userId, songId, type } = req.body;
-  // type: 'LIKE', 'HIDE', o 'NONE' (para eliminar la interacción)
-  if (!userId || !songId || !type) {
-    return res.status(400).json({ error: 'Faltan parámetros: userId, songId, type' });
-  }
-  try {
-    await setSongInteraction(userId, songId, type);
-    const { likes } = await getUserInteractions(userId);
-    res.json({ success: true, likedSongIds: [...likes] });
-  } catch (err) {
-    console.error('[api/interactions] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Obtener todas las canciones con like del usuario
-app.get('/api/liked-songs', async (req, res) => {
-  try {
-    const userId = parseInt(req.query.userId, 10) || 0;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
-    const offset = parseInt(req.query.offset, 10) || 0;
-
-    const { likes } = await getUserInteractions(userId);
-    if (likes.size === 0) {
-      return res.json({ songs: [], pagination: { offset, limit, total: 0, hasMore: false } });
-    }
-
-    const likePlaceholders = Array.from(likes, () => '?').join(',');
-    const queryParams = [...likes, limit, offset];
-
-    // Ordenar por más reciente (usando la fecha de creación de la interacción)
-    const songs = await db.all(`
-      SELECT v.*, usi.created_at as liked_at
-      FROM v_complete_songs v
-      JOIN user_song_interactions usi ON v.song_id = usi.song_id AND usi.interaction_type = 'LIKE'
-      WHERE usi.user_id = ? AND v.song_id IN (${likePlaceholders})
-      ORDER BY usi.created_at DESC
-      LIMIT ? OFFSET ?
-    `, [userId, ...likes, limit, offset]);
-
-    const countRow = await db.get(
-      'SELECT COUNT(*) as total FROM user_song_interactions WHERE user_id = ? AND interaction_type = ?',
-      [userId, 'LIKE']
-    );
-
-    const processed = songs.map(s => ({ ...s, liked: true }));
-
-    res.json({
-      songs: processed,
-      likedSongIds: [...likes],
-      pagination: { offset, limit, total: countRow.total, hasMore: offset + limit < countRow.total }
-    });
-  } catch (err) {
-    console.error('[api/liked-songs] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================================================
-// ARTISTAS FAVORITOS Y OCULTOS (gestionados en SQLite)
-// ============================================================
-
-app.get('/api/favorite-artists', async (req, res) => {
-  try {
-    const userId = parseInt(req.query.userId, 10) || 0;
-    const artists = await dbMethods.getFavoriteArtists(userId);
-    res.json({ artists });
-  } catch (err) {
-    console.error('[api/favorite-artists] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/favorite-artists/toggle', async (req, res) => {
-  try {
-    const { artist, userId } = req.body;
-    if (!artist) return res.status(400).json({ error: 'Artista requerido' });
-    const artists = await dbMethods.toggleFavoriteArtist(artist, userId || 0);
-    res.json({ success: true, artists });
-  } catch (err) {
-    console.error('[api/favorite-artists/toggle] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/artists/hide', async (req, res) => {
-  const { artist, userId } = req.body;
-  if (!artist) return res.status(400).json({ error: 'Falta el artista' });
-  try {
-    await dbMethods.setArtistHidden(artist, true, userId || 0);
-    res.json({ ok: true });
-  } catch (err) {
-    console.error('[api/artists/hide] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/artists/unhide', async (req, res) => {
-  const { artist, userId } = req.body;
-  if (!artist) return res.status(400).json({ error: 'Falta el artista' });
-  try {
-    await dbMethods.setArtistHidden(artist, false, userId || 0);
-    res.json({ ok: true });
-  } catch (err) {
-    console.error('[api/artists/unhide] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================================================
-// PLAYLISTS
-// ============================================================
-
-app.get('/api/playlists', async (req, res) => {
-  try {
-    const userId = parseInt(req.query.userId, 10) || 0;
-    const playlists = await dbMethods.getPlaylists(userId || null);
-    res.json({ playlists });
-  } catch (err) {
-    console.error('[api/playlists] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/api/playlists/:id', async (req, res) => {
-  try {
-    const playlist = await dbMethods.getPlaylist(req.params.id);
-    if (!playlist) return res.status(404).json({ error: 'Playlist no encontrada' });
-    
-    const songs = await dbMethods.getPlaylistSongs(req.params.id);
-    
-    const userId = parseInt(req.query.userId, 10) || 0;
-    const { likes } = await getUserInteractions(userId);
-    const processed = songs.map(s => ({ ...s, liked: likes.has(s.song_id) }));
-    
-    res.json({ playlist, songs: processed });
-  } catch (err) {
-    console.error('[api/playlists/:id] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/playlists', async (req, res) => {
-  try {
-    const { name, description, userId } = req.body;
-    if (!name) return res.status(400).json({ error: 'Nombre de playlist requerido' });
-    const playlist = await dbMethods.createPlaylist(name, description, userId || null);
-    res.json({ playlist });
-  } catch (err) {
-    console.error('[api/playlists] POST Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/playlists/:id/songs', async (req, res) => {
-  try {
-    const { songId } = req.body;
-    if (!songId) return res.status(400).json({ error: 'songId requerido' });
-    const songs = await dbMethods.addSongToPlaylist(req.params.id, songId);
-    res.json({ songs });
-  } catch (err) {
-    console.error('[api/playlists/:id/songs] POST Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.delete('/api/playlists/:id/songs/:songId', async (req, res) => {
-  try {
-    const songs = await dbMethods.removeSongFromPlaylist(req.params.id, req.params.songId);
-    res.json({ songs });
-  } catch (err) {
-    console.error('[api/playlists/:id/songs] DELETE Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.delete('/api/playlists/:id', async (req, res) => {
-  try {
-    await dbMethods.deletePlaylist(req.params.id);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('[api/playlists/:id] DELETE Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================================================
-// LETRAS (Lyrics)
-// ============================================================
-app.get('/api/lyrics/:songId', async (req, res) => {
-  try {
-    const song = await db.get('SELECT relPath FROM songs WHERE id = ?', [req.params.songId]);
-    if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
-
-    // Buscar archivo .lrc correspondiente
-    const mp3Path = path.join(MUSIC_DIR, song.relPath);
-    const lrcPath = mp3Path.slice(0, -path.extname(mp3Path).length) + '.lrc';
-
-    if (fs.existsSync(lrcPath)) {
-      const lrcContent = fs.readFileSync(lrcPath, 'utf-8');
-      return res.json({ synced: true, lyrics: lrcContent });
-    }
-
-    // Si no hay .lrc, buscar en lyrics_cache.json
-    const lyricsCachePath = path.join(__dirname, 'lyrics_cache.json');
-    if (fs.existsSync(lyricsCachePath)) {
-      try {
-        const cache = JSON.parse(fs.readFileSync(lyricsCachePath, 'utf-8'));
-        if (cache[req.params.songId]) {
-          return res.json({ synced: false, lyrics: cache[req.params.songId] });
-        }
-      } catch {}
-    }
-
-    res.json({ synced: false, lyrics: null, message: 'No hay letras disponibles' });
-  } catch (err) {
-    console.error('[api/lyrics] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================================================
-// SISTEMA DE SINCRONIZACIÓN (para App Android offline)
-// ============================================================
-app.post('/api/sync', async (req, res) => {
-  const { userId, queue } = req.body;
-  if (!userId || !Array.isArray(queue)) {
-    return res.status(400).json({ error: 'Faltan parámetros: userId, queue' });
-  }
-
-  let processed = 0;
-  let errors = 0;
-
-  try {
-    for (const action of queue) {
-      try {
-        if (action.songId && action.type) {
-          await setSongInteraction(userId, action.songId, action.type);
-          processed++;
-        }
-      } catch (err) {
-        console.warn('[api/sync] Error procesando acción:', action, err.message);
-        errors++;
-      }
-    }
-
-    res.json({
-      success: true,
-      message: `Sincronización completada: ${processed} procesadas, ${errors} errores`,
-      processed,
-      errors
-    });
-  } catch (err) {
-    console.error('[api/sync] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================================================
-// IMPORTACIÓN DE DATOS EXISTENTES
-// ============================================================
-app.post('/api/import', async (req, res) => {
-  try {
-    console.log('[api/import] 🚀 Iniciando importación de datos existentes...');
-    
-    const results = {
-      users: await dbMethods.importUsersFromJSON(),
-      songs: await dbMethods.importSongsFromCache(),
-      prefs: await dbMethods.importPrefsFromJSON()
-    };
-
-    // Si no se importaron canciones del cache, ejecutar scan
-    if (results.songs.imported === 0) {
-      console.log('[api/import] 🔍 No se importaron canciones del cache, escaneando directorio...');
-      await scanLibrary();
-    }
-
-    console.log('[api/import] ✅ Importación completada:', JSON.stringify(results));
-    res.json({ success: true, results });
-  } catch (err) {
-    console.error('[api/import] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================================================
-// ESTADÍSTICAS DE LA BIBLIOTECA
-// ============================================================
-app.get('/api/stats', async (req, res) => {
-  try {
-    const stats = await dbMethods.getLibraryStats();
-    res.json(stats);
-  } catch (err) {
-    console.error('[api/stats] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================================================
-// RESCAN
-// ============================================================
-app.post('/api/rescan', async (_req, res) => {
-  try {
-    await rescanLibrary();
-    const stats = await dbMethods.getLibraryStats();
-    res.json({ success: true, stats });
-  } catch (err) {
-    console.error('[api/rescan] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ============================================================
-// TEST y CONFIG
-// ============================================================
-app.get('/api/test', async (req, res) => {
-  try {
-    const stats = await dbMethods.getLibraryStats();
-    res.json({
-      status: 'ok',
-      server: 'localfy',
-      libraryReady: true,
-      stats
-    });
-  } catch (err) {
-    res.json({ status: 'ok', server: 'localfy' });
-  }
-});
-
-app.get('/api/config/ip', (req, res) => {
-  const lanIp = getLocalLanIp();
-  res.json({
-    ip: lanIp,
-    port: PORT,
-    serverUrl: `http://${lanIp}:${PORT}`,
-    allIps: getAllLocalIps()
-  });
-});
-
-// ============================================================
-// UTILIDADES DE RED
-// ============================================================
-function getLocalLanIp() {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal && iface.address.startsWith('172.')) {
-        return iface.address;
-      }
-    }
-  }
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal && iface.address.startsWith('192.168.')) {
-        return iface.address;
-      }
-    }
-  }
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal && !iface.address.startsWith('127.')) {
-        return iface.address;
-      }
-    }
-  }
-  return 'localhost';
-}
-
-function getAllLocalIps() {
+function getLocalLanIps() {
   const interfaces = os.networkInterfaces();
   const ips = [];
   for (const name of Object.keys(interfaces)) {
@@ -847,73 +59,1171 @@ function getAllLocalIps() {
   return ips;
 }
 
-// ============================================================
-// INICIALIZACIÓN
-// ============================================================
-const PORT = process.env.PORT || 5002;
+const LOCAL_IPS = getLocalLanIps();
+const LOCAL_IP = LOCAL_IPS[0] || 'localhost';
 
-async function start() {
+// ============================================================
+// SHUFFLE CON SEMILLA Y CURSOR
+// ============================================================
+
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function shuffleArray(array, seed) {
+  const rng = seededRandom(seed);
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+/**
+ * Genera un cursor basado en userId y fecha para evitar repeticiones
+ * hasta que se agote el catálogo
+ */
+function getCursor(userId) {
+  const today = new Date().toISOString().slice(0, 10);
+  let seed = 0;
+  const base = `${userId || 'anon'}-${today}`;
+  for (let i = 0; i < base.length; i++) {
+    seed = ((seed << 5) - seed) + base.charCodeAt(i);
+    seed = seed & seed;
+  }
+  return Math.abs(seed) || 1;
+}
+
+// ============================================================
+// CARGAR BIBLIOTECA EN MEMORIA
+// ============================================================
+
+async function loadLibrary() {
   try {
-    console.log('🚀 Iniciando servidor Localfy...');
+    console.log('🔍 Cargando biblioteca desde SQLite...');
     
-    // 1. Inicializar base de datos SQLite (rápido, crea tablas si no existen)
-    await initDatabase();
+    const songs = await db.getSongsWithDetails({ limit: 999999, offset: 0 });
     
-    // 2. Iniciar servidor HTTP INMEDIATAMENTE (no esperar escaneo)
-    const lanIP = getLocalLanIp();
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log('');
-      console.log('═'.repeat(50));
-      console.log('  🎵 Localfy Engine corriendo');
-      console.log('═'.repeat(50));
-      console.log(`   🌐 Red:    http://${lanIP}:${PORT}`);
-      console.log(`   ⚡ Local:  http://localhost:${PORT}`);
-      console.log(`   📡 Puerto: ${PORT}`);
-      console.log('');
-    });
+    songCache = songs;
+    songMap = new Map(songs.map(s => [s.id, s]));
     
-    // 3. Importar datos existentes en segundo plano (sin bloquear el servidor)
-    console.log('[server] 📦 Importando datos existentes en segundo plano...');
-    
-    // Importar usuarios desde users.json
-    try { await dbMethods.importUsersFromJSON(); } catch (err) {
-      console.warn('[server] ⚠️ Error importando usuarios:', err.message);
-    }
-    
-    // Importar canciones desde songs_cache.json
-    try { await dbMethods.importSongsFromCache(); } catch (err) {
-      console.warn('[server] ⚠️ Error importando cache:', err.message);
-    }
-    
-    // Escanear directorio de música (para añadir canciones faltantes)
-    try { await scanLibrary(); } catch (err) {
-      console.error('[server] ⚠️ Error en escaneo:', err.message);
-    }
-    
-    // Importar preferencias desde prefs.json
-    try { await dbMethods.importPrefsFromJSON(); } catch (err) {
-      console.warn('[server] ⚠️ Error importando preferencias:', err.message);
-    }
-    
-    // Mostrar estadísticas finales
-    try {
-      const stats = await dbMethods.getLibraryStats();
-      console.log('');
-      console.log('📊 Estadísticas de la biblioteca:');
-      console.log(`   🎵 Canciones: ${stats.songs}`);
-      console.log(`   🎤 Artistas:  ${stats.artists}`);
-      console.log(`   💿 Álbumes:   ${stats.albums}`);
-      console.log(`   🏷️ Géneros:   ${stats.genres}`);
-      console.log(`   👥 Usuarios:  ${stats.users}`);
-      console.log('');
-    } catch {}
-    
-    console.log('[server] ✅ Inicialización completa');
-    
+    console.log(`✅ ${songCache.length} canciones cargadas en memoria`);
+    libraryReady = true;
   } catch (err) {
-    console.error('❌ Error fatal al iniciar el servidor:', err);
-    process.exit(1);
+    console.error('❌ Error cargando biblioteca:', err);
+    libraryReady = true;
   }
 }
 
-start();
+loadLibrary();
+
+// ============================================================
+// CONSTRUIR BIBLIOTECA CON SHUFFLE Y CURSOR
+// ============================================================
+
+async function buildLibrary({ limit = 100, offset = 0, userId = null, likedOnly = false, shuffleSeed = null } = {}) {
+  console.log('[buildLibrary] 🏗️ Construyendo...', { limit, offset, userId, likedOnly });
+  
+  const effectiveUserId = userId || null;
+  
+  try {
+    // Obtener canciones con filtros básicos
+    let songs = await db.getSongsWithDetails({
+      limit: 999999, // Obtenemos todas para hacer shuffle
+      offset: 0,
+      userId: effectiveUserId
+    });
+    
+    // Filtrar canciones ocultas (dislike)
+    if (effectiveUserId) {
+      const hiddenSongs = await db.getHiddenSongIds(effectiveUserId);
+      songs = songs.filter(s => !hiddenSongs.has(s.id));
+    }
+    
+    // Si es likedOnly, filtrar
+    if (likedOnly) {
+      songs = songs.filter(s => s.liked);
+    }
+    
+    // Generar semilla para shuffle (basada en userId y fecha)
+    const seed = shuffleSeed || getCursor(effectiveUserId);
+    const shuffled = shuffleArray(songs, seed);
+    
+    // Paginación
+    const total = shuffled.length;
+    const start = offset;
+    const end = Math.min(start + limit, total);
+    const paged = shuffled.slice(start, end);
+    
+    // Obtener conteos
+    const trash = await db.getTrashCount(effectiveUserId);
+    
+    // Obtener artistas ocultos para el usuario
+    let hiddenArtists = [];
+    if (effectiveUserId) {
+      const hiddenSet = await db.getHiddenArtists(effectiveUserId);
+      hiddenArtists = [...hiddenSet];
+    }
+    
+    const result = {
+      songs: paged,
+      hiddenArtists: hiddenArtists,
+      counts: { total, trash },
+      pagination: {
+        offset: start,
+        limit: limit,
+        total: total,
+        hasMore: end < total
+      }
+    };
+    
+    console.log(`[buildLibrary] ✅ ${paged.length} canciones devueltas (total: ${total})`);
+    return result;
+    
+  } catch (err) {
+    console.error('[buildLibrary] ❌ Error:', err);
+    throw err;
+  }
+}
+
+// ============================================================
+// RUTAS - TEST Y CONFIG
+// ============================================================
+
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    success: true, 
+    libraryReady,
+    songCount: songCache.length,
+    musicDir: MUSIC_DIR,
+    dbReady: true
+  });
+});
+
+app.get('/api/config/ip', (req, res) => {
+  res.json({ 
+    ip: LOCAL_IP, 
+    port: PORT, 
+    serverUrl: `http://${LOCAL_IP}:${PORT}`,
+    allIps: LOCAL_IPS
+  });
+});
+
+// ============================================================
+// RUTAS - AUTENTICACIÓN
+// ============================================================
+
+app.post('/api/auth/register', async (req, res) => {
+  console.log('[auth/register]', req.body.username);
+  const { username, password } = req.body;
+  
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
+  }
+  
+  if (username.length < 3 || password.length < 3) {
+    return res.status(400).json({ error: 'Usuario y contraseña deben tener al menos 3 caracteres' });
+  }
+
+  try {
+    const user = await db.createUser(username, password);
+    res.json({ 
+      success: true, 
+      user: { id: user.id, username: user.username },
+      message: 'Usuario creado correctamente'
+    });
+  } catch (err) {
+    if (err.message === 'El usuario ya existe') {
+      return res.status(409).json({ error: 'El usuario ya existe' });
+    }
+    console.error('[register]', err);
+    res.status(500).json({ error: 'Error al crear usuario' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  console.log('[auth/login]', req.body.username);
+  const { username, password } = req.body;
+  
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
+  }
+
+  try {
+    const user = await db.findUser(username, password);
+    if (!user) {
+      return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+    }
+    
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    await db.updateUserSession(user.id, sessionToken);
+    
+    res.json({ 
+      success: true, 
+      user: { id: user.id, username: user.username },
+      token: sessionToken
+    });
+  } catch (err) {
+    console.error('[login]', err);
+    res.status(500).json({ error: 'Error al iniciar sesión' });
+  }
+});
+
+app.post('/api/auth/verify', async (req, res) => {
+  const { token } = req.body;
+  if (!token) {
+    return res.status(401).json({ error: 'No hay token' });
+  }
+
+  try {
+    const user = await db.getUserByToken(token);
+    if (!user) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+    res.json({ 
+      success: true, 
+      user: { id: user.id, username: user.username }
+    });
+  } catch (err) {
+    console.error('[verify]', err);
+    res.status(500).json({ error: 'Error al verificar sesión' });
+  }
+});
+
+app.post('/api/auth/logout', async (req, res) => {
+  const { token } = req.body;
+  try {
+    if (token) {
+      await db.clearUserSession(token);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[logout]', err);
+    res.status(500).json({ error: 'Error al cerrar sesión' });
+  }
+});
+
+// ============================================================
+// RUTAS - BIBLIOTECA PRINCIPAL (CON SHUFFLE Y CURSOR)
+// ============================================================
+
+app.get('/api/library', async (req, res) => {
+  console.log('[api/library] 📥 Solicitud recibida');
+  
+  try {
+    if (!libraryReady) {
+      return res.status(503).json({ 
+        error: 'Biblioteca aún cargando, espera unos segundos' 
+      });
+    }
+    
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const likedOnly = req.query.liked === 'true';
+    const shuffleSeed = req.query.shuffleSeed ? parseInt(req.query.shuffleSeed, 10) : null;
+    
+    console.log('[api/library] 🔍 Parámetros:', { userId, limit, offset, likedOnly, shuffleSeed });
+    
+    const result = await buildLibrary({ limit, offset, userId, likedOnly, shuffleSeed });
+    console.log('[api/library] ✅ Éxito');
+    res.json(result);
+  } catch (err) {
+    console.error('[api/library] ❌ Error:', err);
+    res.status(500).json({ 
+      error: 'No se pudo cargar la biblioteca',
+      message: err.message
+    });
+  }
+});
+
+// ============================================================
+// RUTAS - ARTISTAS CON PAGINACIÓN INFINITA
+// ============================================================
+
+// ============================================================
+// RUTAS - ARTISTAS CON PAGINACIÓN INFINITA
+// ============================================================
+
+app.get('/api/artists', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    console.log(`[api/artists] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}"`);
+    
+    const result = await db.getArtistsWithPagination({ 
+      userId, 
+      limit, 
+      offset, 
+      search 
+    });
+    
+    console.log(`[api/artists] ✅ ${result.items?.length || 0} artistas devueltos, total ${result.pagination?.total || 0}`);
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/artists] ❌ Error:', err);
+    res.status(500).json({ 
+      error: 'Error al obtener artistas',
+      details: err.message 
+    });
+  }
+});
+
+app.get('/api/albums', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    console.log(`[api/albums] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}"`);
+    
+    const result = await db.getAlbumsWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    console.log(`[api/albums] ✅ ${result.items?.length || 0} álbumes devueltos, total ${result.pagination?.total || 0}`);
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/albums] ❌ Error:', err);
+    res.status(500).json({ 
+      error: 'Error al obtener álbumes',
+      details: err.message 
+    });
+  }
+});
+
+app.get('/api/genres', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    console.log(`[api/genres] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}"`);
+    
+    const result = await db.getGenresWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    console.log(`[api/genres] ✅ ${result.items?.length || 0} géneros devueltos, total ${result.pagination?.total || 0}`);
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/genres] ❌ Error:', err);
+    res.status(500).json({ 
+      error: 'Error al obtener géneros',
+      details: err.message 
+    });
+  }
+});
+
+app.get('/api/years', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    console.log(`[api/years] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}"`);
+    
+    const result = await db.getYearsWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    console.log(`[api/years] ✅ ${result.items?.length || 0} años devueltos, total ${result.pagination?.total || 0}`);
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/years] ❌ Error:', err);
+    res.status(500).json({ 
+      error: 'Error al obtener años',
+      details: err.message 
+    });
+  }
+});
+
+// ============================================================
+// RUTAS - ÁLBUMES CON PAGINACIÓN INFINITA
+// ============================================================
+
+app.get('/api/albums', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    const result = await db.getAlbumsWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/albums] Error:', err);
+    res.status(500).json({ error: 'Error al obtener álbumes' });
+  }
+});
+
+app.get('/api/albums/:id/songs', async (req, res) => {
+  try {
+    const albumId = parseInt(req.params.id, 10);
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    const result = await db.getSongsByAlbum({
+      albumId,
+      userId,
+      limit,
+      offset
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/albums/:id/songs] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones del álbum' });
+  }
+});
+
+// ============================================================
+// RUTAS - GÉNEROS CON PAGINACIÓN INFINITA
+// ============================================================
+
+app.get('/api/genres', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    const result = await db.getGenresWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/genres] Error:', err);
+    res.status(500).json({ error: 'Error al obtener géneros' });
+  }
+});
+
+app.get('/api/genres/:id/songs', async (req, res) => {
+  try {
+    const genreId = parseInt(req.params.id, 10);
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    const result = await db.getSongsByGenre({
+      genreId,
+      userId,
+      limit,
+      offset
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/genres/:id/songs] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones del género' });
+  }
+});
+
+// ============================================================
+// RUTAS - AÑOS CON PAGINACIÓN INFINITA
+// ============================================================
+
+app.get('/api/years', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    const result = await db.getYearsWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/years] Error:', err);
+    res.status(500).json({ error: 'Error al obtener años' });
+  }
+});
+
+app.get('/api/years/:year/songs', async (req, res) => {
+  try {
+    const year = parseInt(req.params.year, 10);
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    const result = await db.getSongsByYear({
+      year,
+      userId,
+      limit,
+      offset
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/years/:year/songs] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones del año' });
+  }
+});
+
+// ============================================================
+// RUTA - CANCIONES QUE ME GUSTAN (CORREGIDO)
+// ============================================================
+app.get('/api/liked-songs', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'Se requiere userId' });
+    }
+    
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    console.log(`[api/liked-songs] 📥 userId=${userId}, limit=${limit}, offset=${offset}`);
+    
+    const songs = await db.getLikedSongs(parseInt(userId), limit, offset);
+    const total = await db.getLikedSongsCount(parseInt(userId));
+    
+    console.log(`[api/liked-songs] ✅ Encontradas ${songs.length} canciones, total ${total}`);
+    
+    res.json({
+      songs: songs || [],
+      pagination: {
+        offset,
+        limit,
+        total: total || 0,
+        hasMore: (offset + limit) < (total || 0)
+      }
+    });
+  } catch (err) {
+    console.error('[api/liked-songs] ❌ Error:', err);
+    res.status(500).json({ 
+      error: 'Error al obtener canciones que me gustan',
+      details: err.message 
+    });
+  }
+});
+// ============================================================
+// RUTAS - ARTISTAS FAVORITOS
+// ============================================================
+
+app.get('/api/favorite-artists', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const artists = await db.getFavoriteArtists(userId);
+    res.json({ artists });
+  } catch (err) {
+    console.error('[api/favorite-artists]', err);
+    res.status(500).json({ error: 'Error al obtener artistas favoritos' });
+  }
+});
+
+app.post('/api/favorite-artists/toggle', async (req, res) => {
+  try {
+    const { artist, userId } = req.body;
+    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
+    
+    const artistId = await db.getArtistIdByName(artist);
+    if (!artistId) {
+      return res.status(404).json({ error: 'Artista no encontrado' });
+    }
+    
+    const isFavorite = await db.toggleFavoriteArtist(artistId, userId);
+    const artists = await db.getFavoriteArtists(userId);
+    res.json({ artists, isFavorite });
+  } catch (err) {
+    console.error('[api/favorite-artists/toggle]', err);
+    res.status(500).json({ error: 'Error al cambiar artista favorito' });
+  }
+});
+
+// ============================================================
+// RUTAS - OCULTAR ARTISTAS
+// ============================================================
+
+app.post('/api/artists/hide', async (req, res) => {
+  try {
+    const { artist, userId } = req.body;
+    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
+    
+    const artistId = await db.getArtistIdByName(artist);
+    if (!artistId) {
+      return res.status(404).json({ error: 'Artista no encontrado' });
+    }
+    
+    await db.setArtistHidden(artistId, true, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/artists/hide] Error:', err);
+    res.status(500).json({ error: 'Error al ocultar artista' });
+  }
+});
+
+app.post('/api/artists/unhide', async (req, res) => {
+  try {
+    const { artist, userId } = req.body;
+    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
+    
+    const artistId = await db.getArtistIdByName(artist);
+    if (!artistId) {
+      return res.status(404).json({ error: 'Artista no encontrado' });
+    }
+    
+    await db.setArtistHidden(artistId, false, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/artists/unhide] Error:', err);
+    res.status(500).json({ error: 'Error al mostrar artista' });
+  }
+});
+
+// ============================================================
+// RUTAS - LIKES Y HIDES DE CANCIONES
+// ============================================================
+
+app.post('/api/songs/:id/like', async (req, res) => {
+  const song = songMap.get(req.params.id);
+  if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
+  const userId = req.body.userId || null;
+  const liked = Boolean(req.body.liked);
+  
+  try {
+    await db.setSongLiked(song.id, liked, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/songs/:id/like] Error:', err);
+    res.status(500).json({ error: 'Error al actualizar like' });
+  }
+});
+
+app.post('/api/songs/:id/hide', async (req, res) => {
+  const song = songMap.get(req.params.id);
+  if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
+  const userId = req.body.userId || null;
+  
+  try {
+    await db.setSongHidden(song.id, true, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/songs/:id/hide] Error:', err);
+    res.status(500).json({ error: 'Error al ocultar canción' });
+  }
+});
+
+// ============================================================
+// RUTAS - ELIMINAR CANCIÓN
+// ============================================================
+
+app.delete('/api/songs', async (req, res) => {
+  try {
+    const { id, userId } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: 'Se requiere id' });
+    }
+
+    const song = songMap.get(id);
+    if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
+
+    const fullPath = absolutePath(song.relPath);
+    
+    if (fs.existsSync(fullPath)) {
+      try {
+        if (!fs.existsSync(TRASH_DIR)) fs.mkdirSync(TRASH_DIR, { recursive: true });
+        
+        const now = new Date();
+        const trashSubDir = path.join(TRASH_DIR, 
+          `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+        );
+        if (!fs.existsSync(trashSubDir)) fs.mkdirSync(trashSubDir, { recursive: true });
+        
+        const trashName = `${Date.now()}_${path.basename(fullPath)}`;
+        const trashPath = path.join(trashSubDir, trashName);
+        
+        try {
+          fs.copyFileSync(fullPath, trashPath);
+          fs.unlinkSync(fullPath);
+        } catch {
+          try { fs.renameSync(fullPath, trashPath); } catch { fs.unlinkSync(fullPath); }
+        }
+      } catch {}
+    }
+
+    if (userId) {
+      await db.setSongHidden(song.id, true, userId);
+    }
+
+    res.json({ message: 'Canción eliminada correctamente' });
+  } catch (error) {
+    console.error('Error deleting song:', error);
+    res.status(500).json({ error: 'Error al eliminar la canción' });
+  }
+});
+
+// ============================================================
+// RUTAS - RESCAN
+// ============================================================
+
+app.post('/api/rescan', async (_req, res) => {
+  try {
+    await scanLibrary();
+    await loadLibrary();
+    const result = await buildLibrary({ limit: 100, offset: 0 });
+    res.json(result);
+  } catch (err) {
+    console.error('[api/rescan] Error:', err);
+    res.status(500).json({ error: 'Error al rescanejar' });
+  }
+});
+
+// ============================================================
+// RUTA - CORREGIR METADATOS
+// ============================================================
+
+app.post('/api/fix-metadata', async (req, res) => {
+  try {
+    const { filePath } = req.body;
+    if (!filePath) return res.status(400).json({ error: 'Se requiere filePath' });
+
+    const absPath = absolutePath(filePath);
+    if (!fs.existsSync(absPath)) return res.status(404).json({ error: 'Archivo no encontrado' });
+
+    const fileName = path.basename(absPath, path.extname(absPath));
+    let newArtist = 'Artista desconocido';
+    let newTitle = fileName;
+
+    const match = fileName.match(/^(.+?)[\-_](.+)$/);
+    if (match) {
+      newArtist = match[1].trim();
+      newTitle = match[2].trim();
+    }
+
+    if (!newArtist || newArtist.toLowerCase().includes('anónimo')) newArtist = 'Artista desconocido';
+    if (!newTitle || newTitle.toLowerCase().includes('[track') || newTitle.toLowerCase().includes('[untitled]')) newTitle = fileName;
+
+    const song = songCache.find(s => s.relPath === filePath);
+    
+    let newPath = null;
+    if (song) {
+      const oldRelPath = song.relPath;
+      const oldDir = path.dirname(oldRelPath);
+      const ext = path.extname(absPath);
+      const safeArtist = newArtist.replace(/[<>:"/\\|?*]/g, ' ').trim();
+      const safeTitle = newTitle.replace(/[<>:"/\\|?*]/g, ' ').trim();
+      const newFileName = `${safeArtist} - ${safeTitle}${ext}`;
+
+      if (path.basename(oldRelPath) !== newFileName) {
+        newPath = path.join(oldDir, newFileName);
+        const newFullPath = absolutePath(newPath);
+        try {
+          if (fs.existsSync(absPath)) {
+            fs.renameSync(absPath, newFullPath);
+            await db.updateSongPath(song.id, newPath, newTitle);
+          }
+        } catch (err) {
+          console.error('[fix-metadata] Error renombrando:', err);
+        }
+      }
+      
+      song.title = newTitle;
+      song.artist = newArtist;
+    }
+
+    res.json({ 
+      success: true, 
+      message: `Metadatos corregidos: ${newArtist} - ${newTitle}`, 
+      newPath, 
+      artist: newArtist, 
+      title: newTitle 
+    });
+  } catch (error) {
+    console.error('[fix-metadata] Error:', error);
+    res.status(500).json({ error: 'Error al corregir metadatos: ' + error.message });
+  }
+});
+
+// ============================================================
+// RUTA - PORTADA DE ARTISTA
+// ============================================================
+
+app.get('/artist-cover/:artistName', async (req, res) => {
+  try {
+    const encodedName = req.params.artistName;
+    let artistName = decodeURIComponent(encodedName);
+    
+    const cleanName = artistName.replace(/[\[\]\(\)]/g, '').trim();
+    
+    let song = songCache.find(s => s.artist === artistName);
+    if (!song && cleanName !== artistName) {
+      song = songCache.find(s => s.artist === cleanName);
+    }
+    if (!song) {
+      const withBrackets = `[${cleanName}]`;
+      song = songCache.find(s => s.artist === withBrackets);
+    }
+
+    if (!song) return res.status(404).send('Artista no encontrado');
+
+    const albumDir = path.dirname(absolutePath(song.relPath));
+    const coverPath = path.join(albumDir, 'cover.jpg');
+    if (fs.existsSync(coverPath)) {
+      res.set('Content-Type', 'image/jpeg');
+      res.set('Cache-Control', 'public, max-age=86400');
+      res.sendFile(coverPath);
+      return;
+    }
+
+    const coverPngPath = path.join(albumDir, 'cover.png');
+    if (fs.existsSync(coverPngPath)) {
+      res.set('Content-Type', 'image/png');
+      res.set('Cache-Control', 'public, max-age=86400');
+      res.sendFile(coverPngPath);
+      return;
+    }
+
+    res.status(404).send('No cover');
+  } catch (error) {
+    console.error('[artist-cover] Error:', error);
+    res.status(500).send('Error');
+  }
+});
+
+// ============================================================
+// RUTAS - PORTADAS Y AUDIO
+// ============================================================
+
+app.get('/cover/:id', async (req, res) => {
+  const song = songMap.get(req.params.id);
+  if (!song) return res.status(404).end();
+
+  const albumDir = path.dirname(absolutePath(song.relPath));
+  const coverPath = path.join(albumDir, 'cover.jpg');
+  
+  if (fs.existsSync(coverPath)) {
+    res.set('Content-Type', 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.sendFile(coverPath);
+    return;
+  }
+
+  const coverPngPath = path.join(albumDir, 'cover.png');
+  if (fs.existsSync(coverPngPath)) {
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.sendFile(coverPngPath);
+    return;
+  }
+
+  try {
+    const { parseFile } = await import('music-metadata');
+    const filePath = absolutePath(song.relPath);
+    const meta = await parseFile(filePath, { duration: true });
+    const pic = meta.common.picture && meta.common.picture[0];
+    
+    if (pic) {
+      const mimeType = pic.format || 'image/jpeg';
+      res.set('Content-Type', mimeType);
+      res.set('Cache-Control', 'public, max-age=86400');
+      res.send(Buffer.from(pic.data));
+      return;
+    }
+  } catch (err) {}
+
+  res.status(404).send('No cover');
+});
+
+app.get('/audio/:id', (req, res) => {
+  const song = songMap.get(req.params.id);
+  if (!song) return res.status(404).end();
+
+  const filePath = absolutePath(song.relPath);
+  if (!fs.existsSync(filePath)) return res.status(404).end();
+
+  const stat = fs.statSync(filePath);
+  const range = req.headers.range;
+  const ext = path.extname(filePath).toLowerCase();
+  const mime = ext === '.mp3' ? 'audio/mpeg' : 'audio/mp4';
+
+  if (range) {
+    const [startStr, endStr] = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(startStr, 10);
+    const end = endStr ? parseInt(endStr, 10) : stat.size - 1;
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': end - start + 1,
+      'Content-Type': mime,
+    });
+    fs.createReadStream(filePath, { start, end }).pipe(res);
+  } else {
+    res.writeHead(200, {
+      'Content-Length': stat.size,
+      'Content-Type': mime,
+      'Accept-Ranges': 'bytes',
+    });
+    fs.createReadStream(filePath).pipe(res);
+  }
+});
+
+// ============================================================
+// RUTAS - PLAYLISTS
+// ============================================================
+
+app.get('/api/playlists', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const playlists = await db.getPlayLists(userId);
+    res.json({ playlists });
+  } catch (err) {
+    console.error('[api/playlists] Error:', err);
+    res.status(500).json({ error: 'Error al obtener listas de reproducción' });
+  }
+});
+
+app.get('/api/playlists/:id', async (req, res) => {
+  try {
+    const playlist = await db.getPlayList(req.params.id);
+    if (!playlist) return res.status(404).json({ error: 'Lista no encontrada' });
+    res.json({ playlist });
+  } catch (err) {
+    console.error('[api/playlists/:id] Error:', err);
+    res.status(500).json({ error: 'Error al obtener la lista' });
+  }
+});
+
+app.post('/api/playlists', async (req, res) => {
+  try {
+    const { name, description, userId } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
+    const playlist = await db.createPlayList(name, description, userId);
+    res.json({ playlist });
+  } catch (err) {
+    console.error('[api/playlists POST] Error:', err);
+    res.status(500).json({ error: 'Error al crear lista' });
+  }
+});
+
+app.post('/api/playlists/:id/songs', async (req, res) => {
+  try {
+    const { songId } = req.body;
+    if (!songId) return res.status(400).json({ error: 'songId requerido' });
+    const playlist = await db.addSongToPlayList(req.params.id, songId);
+    if (!playlist) return res.status(404).json({ error: 'Lista no encontrada' });
+    res.json({ playlist });
+  } catch (err) {
+    console.error('[api/playlists/:id/songs POST] Error:', err);
+    res.status(500).json({ error: 'Error al agregar canción' });
+  }
+});
+
+app.delete('/api/playlists/:id/songs', async (req, res) => {
+  try {
+    const { songId } = req.body;
+    if (!songId) return res.status(400).json({ error: 'songId requerido' });
+    const playlist = await db.removeSongFromPlayList(req.params.id, songId);
+    if (!playlist) return res.status(404).json({ error: 'Lista no encontrada' });
+    res.json({ playlist });
+  } catch (err) {
+    console.error('[api/playlists/:id/songs DELETE] Error:', err);
+    res.status(500).json({ error: 'Error al eliminar canción' });
+  }
+});
+
+app.delete('/api/playlists/:id', async (req, res) => {
+  try {
+    await db.deletePlayList(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/playlists/:id DELETE] Error:', err);
+    res.status(500).json({ error: 'Error al eliminar lista' });
+  }
+});
+
+// ============================================================
+// RUTAS - LETRAS DE CANCIONES
+// ============================================================
+
+app.get('/api/lyrics/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const song = songMap.get(id);
+    
+    if (!song) {
+      return res.status(404).json({ error: 'Canción no encontrada' });
+    }
+    
+    const dbLyrics = await db.getLyrics(id);
+    
+    if (dbLyrics) {
+      return res.json({
+        success: true,
+        hasLyrics: true,
+        lyrics: dbLyrics.text,
+        syncedLines: dbLyrics.synced_text ? parseSyncedLines(dbLyrics.synced_text) : null,
+        translatedLyrics: dbLyrics.translated_text || null,
+        title: song.title,
+        artist: song.artist
+      });
+    }
+    
+    const songPath = absolutePath(song.relPath);
+    const result = await getLyricsFromService(id, song.title, song.artist, songPath);
+    
+    if (!result.lyrics) {
+      return res.json({ 
+        success: false, 
+        message: 'No se encontraron letras para esta canción',
+        hasLyrics: false
+      });
+    }
+    
+    await db.saveLyrics(id, {
+      text: result.lyrics,
+      syncedText: result.syncedLines ? result.syncedLines.map(l => `[${l.time}] ${l.text}`).join('\n') : null,
+      translatedText: result.translatedLyrics || null
+    });
+    
+    res.json({
+      success: true,
+      hasLyrics: true,
+      lyrics: result.lyrics,
+      syncedLines: result.syncedLines || null,
+      translatedLyrics: result.translatedLyrics || null,
+      title: song.title,
+      artist: song.artist
+    });
+  } catch (err) {
+    console.error('[api/lyrics] Error:', err);
+    res.status(500).json({ error: 'Error al obtener la letra' });
+  }
+});
+
+function parseSyncedLines(syncedText) {
+  if (!syncedText) return null;
+  const lines = syncedText.split('\n').filter(line => line.trim() !== '');
+  const result = [];
+  const lrcRegex = /^\[(\d{1,3}):(\d{2})\.(\d{2,3})\](.*)/;
+  
+  for (const line of lines) {
+    const match = line.match(lrcRegex);
+    if (match) {
+      const minutes = parseInt(match[1], 10);
+      const seconds = parseInt(match[2], 10);
+      const fraction = parseInt(match[3], 10);
+      const text = match[4].trim();
+      let timeInSeconds;
+      if (match[3].length === 3) {
+        timeInSeconds = minutes * 60 + seconds + fraction / 1000;
+      } else {
+        timeInSeconds = minutes * 60 + seconds + fraction / 100;
+      }
+      if (text) {
+        result.push({ time: timeInSeconds, text });
+      }
+    }
+  }
+  return result.length > 0 ? result : null;
+}
+
+app.post('/api/lyrics/:id/refresh', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const song = songMap.get(id);
+    
+    if (!song) {
+      return res.status(404).json({ error: 'Canción no encontrada' });
+    }
+    
+    await db.deleteLyrics(id);
+    
+    const songPath = absolutePath(song.relPath);
+    const result = await getLyricsFromService(id, song.title, song.artist, songPath);
+    
+    if (result.lyrics) {
+      await db.saveLyrics(id, {
+        text: result.lyrics,
+        syncedText: result.syncedLines ? result.syncedLines.map(l => `[${l.time}] ${l.text}`).join('\n') : null,
+        translatedText: result.translatedLyrics || null
+      });
+    }
+    
+    res.json({
+      success: true,
+      hasLyrics: !!result.lyrics,
+      lyrics: result.lyrics || null,
+      syncedLines: result.syncedLines || null,
+      translatedLyrics: result.translatedLyrics || null
+    });
+  } catch (err) {
+    console.error('[api/lyrics/refresh] Error:', err);
+    res.status(500).json({ error: 'Error al refrescar la letra' });
+  }
+});
+
+// ============================================================
+// CIERRE GRACEFUL
+// ============================================================
+
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Cerrando servidor...');
+  await db.closeDb();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 Cerrando servidor...');
+  await db.closeDb();
+  process.exit(0);
+});
+
+// ============================================================
+// INICIAR SERVIDOR
+// ============================================================
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n🎵 ==========================================`);
+  console.log(`   🎵 MIREPO - SERVIDOR COMPLETO`);
+  console.log(`   ==========================================`);
+  console.log(`   📡 Local:    http://localhost:${PORT}`);
+  LOCAL_IPS.forEach(ip => {
+    console.log(`   📡 Red:      http://${ip}:${PORT}`);
+  });
+  console.log(`   📂 Música:   ${MUSIC_DIR}`);
+  console.log(`   ==========================================`);
+  console.log(`   ✅ Servidor listo`);
+  console.log(`   ==========================================\n`);
+});
