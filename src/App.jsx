@@ -40,7 +40,6 @@ import CollectionView from './components/CollectionView.jsx';
 import GridView from './components/GridView.jsx';
 import DuplicateFinder from './components/DuplicateFinder.jsx';
 import NowPlayingScreen from './components/NowPlayingScreen.jsx';
-import MobileSearchView from './components/MobileSearchView.jsx';
 import LikedSongsView from './components/LikedSongsView.jsx';
 import PlayListsManager from './components/PlayListsManager.jsx';
 import DownloadsView from './components/DownloadsView.jsx';
@@ -425,8 +424,6 @@ function Shell() {
               offlineMode={offlineMode}
               onRescan={library.rescan}
             />
-          ) : view.type === 'search' ? (
-            <MobileSearchView tracks={allSongs} currentTrack={current} />
           ) : view.type === 'downloads' ? (
             <DownloadsView onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'grid' ? (
@@ -569,8 +566,6 @@ function Shell() {
               offlineMode={offlineMode}
               onRescan={library.rescan}
             />
-          ) : view.type === 'search' ? (
-            <MobileSearchView tracks={allSongs} currentTrack={current} />
           ) : view.type === 'downloads' ? (
             <DownloadsView onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'grid' ? (
