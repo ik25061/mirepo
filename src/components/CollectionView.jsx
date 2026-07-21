@@ -202,7 +202,7 @@ export default function CollectionView({
           className="absolute right-0 top-0 inline-flex items-center gap-2 rounded-full bg-surface-2/60 px-3 py-2 text-xs font-semibold text-red-400/80 shadow transition hover:bg-red-500/30 hover:text-red-400"
           title={`No mostrar al artista ${name}`}
         >
-          <UserX size={16} /> No me gusta artista
+          <UserX size={16} /> 
         </button>
       )}
 
