@@ -77,6 +77,9 @@ export default function NowPlayingScreen({
     return () => { img.onload = null; img.onerror = null; };
   }, [track?.artist]);
 
+  // Estado para mostrar placeholder mientras carga la imagen central
+  const [imageLoading, setImageLoading] = useState(false);
+
   // Resetear letras al cambiar de canción
   useEffect(() => {
     setShowLyrics(false);
@@ -143,6 +146,22 @@ export default function NowPlayingScreen({
 
   // Imagen central: artista (si existe) o portada del álbum
   const centerImage = (artistImageUrl && !artistImageFailed) ? artistImageUrl : albumCoverUrl;
+
+  // Manejar carga de imagen central con placeholder
+  const handleCenterImageLoad = () => {
+    setImageLoading(false);
+  };
+
+  const handleCenterImageError = () => {
+    setImageLoading(false);
+  };
+
+  // Activar estado de carga cuando cambia la imagen
+  useEffect(() => {
+    if (centerImage) {
+      setImageLoading(true);
+    }
+  }, [centerImage]);
   // Fondo: siempre la portada del álbum con blur
   const bgImage = albumCoverUrl;
 
@@ -558,8 +577,20 @@ export default function NowPlayingScreen({
                     boxShadow: '0 8px 32px rgba(0,0,0,0.7), 0 0 80px rgba(0,0,0,0.4)',
                   }}
                 >
+                  {imageLoading && centerImage ? (
+                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#5c0303' }}>
+                      <Loader2 size={40} className="animate-spin" style={{ color: '#1db954' }} />
+                    </div>
+                  ) : null}
                   {centerImage ? (
-                    <img src={centerImage} alt={track.title} className="w-full h-full object-cover" />
+                    <img 
+                      src={centerImage} 
+                      alt={track.title} 
+                      className="w-full h-full object-cover"
+                      onLoad={handleCenterImageLoad}
+                      onError={handleCenterImageError}
+                      style={{ opacity: imageLoading ? 0 : 1, transition: 'opacity 0.3s' }}
+                    />
                   ) : (
                     <Music2 size={80} style={{ color: '#535353' }} />
                   )}
