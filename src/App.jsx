@@ -451,6 +451,7 @@ function Shell() {
               onDelete={library.removeSong}
               allSongs={allSongs}
               userId={user?.id}
+              offlineMode={offlineMode}
             />
           ) : view.type === 'likedSongs' ? (
             <LikedSongsView
@@ -593,6 +594,7 @@ function Shell() {
               onDelete={library.removeSong}
               allSongs={allSongs}
               userId={user?.id}
+              offlineMode={offlineMode}
             />
           ) : view.type === 'likedSongs' ? (
             <LikedSongsView

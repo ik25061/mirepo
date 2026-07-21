@@ -13,6 +13,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ArrowLeft, Play, UserX, Loader2 } from 'lucide-react';
 import Cover from './Cover.jsx';
 import SongRow from './SongRow.jsx';
+import DownloadAllButton from './DownloadAllButton.jsx';
 import { usePlayer } from '../context/PlayerContext.jsx';
 import { formatTime } from '../lib/format.js';
 
@@ -27,6 +28,7 @@ export default function CollectionView({
   onDelete,
   allSongs,
   userId,
+  offlineMode = false,
 }) {
   const { play } = usePlayer();
   const { kind, name, id } = collection;
@@ -190,8 +192,20 @@ export default function CollectionView({
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-20">
-      
+    <div className="relative flex flex-col gap-6 pb-20">
+
+      {/* Botón "No me gusta artista": esquina superior derecha, separado de las
+          acciones principales para evitar pulsaciones accidentales */}
+      {kind === 'Artista' && onDislikeArtist && (
+        <button
+          onClick={() => onDislikeArtist(name)}
+          className="absolute right-0 top-0 inline-flex items-center gap-2 rounded-full bg-surface-2/60 px-3 py-2 text-xs font-semibold text-red-400/80 shadow transition hover:bg-red-500/30 hover:text-red-400"
+          title={`No mostrar al artista ${name}`}
+        >
+          <UserX size={16} /> No me gusta artista
+        </button>
+      )}
+
       <button
         onClick={onBack}
         className="flex w-fit items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
@@ -235,14 +249,8 @@ export default function CollectionView({
             >
               <Play size={18} fill="currentColor" /> Reproducir
             </button>
-            {kind === 'Artista' && onDislikeArtist && (
-              <button
-                onClick={() => onDislikeArtist(name)}
-                className="inline-flex items-center gap-2 rounded-full bg-red-500/20 px-4 py-2.5 text-sm font-semibold text-red-400 shadow transition hover:bg-red-500/30"
-                title={`No mostrar al artista ${name}`}
-              >
-                <UserX size={18} /> No me gusta artista
-              </button>
+            {!offlineMode && songs.length > 0 && (
+              <DownloadAllButton songs={songs} />
             )}
           </div>
         </div>
