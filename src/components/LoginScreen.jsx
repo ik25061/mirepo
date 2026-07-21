@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Disc3, Loader2, Eye, EyeOff } from 'lucide-react';
 
-export default function LoginScreen() {
+export default function LoginScreen({ onOpenLocal, offlineSupported }) {
   const { login, register, loading } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState('');
@@ -172,7 +172,7 @@ export default function LoginScreen() {
         </form>
 
         {/* Enlace para cambiar entre login/registro */}
-        <div className="mt-5 text-center">
+        <div className="mt-5 text-center flex flex-col gap-3">
           <button
             onClick={() => {
               setIsRegister(!isRegister);
@@ -184,6 +184,15 @@ export default function LoginScreen() {
           >
             {isRegister ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
           </button>
+          {offlineSupported && (
+            <button
+              type="button"
+              onClick={onOpenLocal}
+              className="mx-auto mt-2 inline-flex items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-sm text-foreground transition hover:bg-surface-3"
+            >
+              Abrir carpeta de música local
+            </button>
+          )}
         </div>
 
         {/* Separador decorativo */}

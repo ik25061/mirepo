@@ -1,0 +1,1 @@
+cuando estoy dentro de todas las canciones de un artista como ejemplo Maná quiero tener el boton para poder descargar  todas las canciones para poder escucharlas sin conexion donde esta el boton "no me gusta artista"  y ese colocalo arriba para no tocarlo por equivocación , verifica porque el corazon dentro de esta misma opcion no se pone rojo cuando selecciono que me gusta

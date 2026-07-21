@@ -1,0 +1,9 @@
+{
+  "appId": "com.tuapp.mirepo",
+  "appName": "Mirepo",
+  "webDir": "dist",
+  "server": {
+    "cleartext": true,
+    "allowNavigation": ["192.168.1.152"]
+  }
+}

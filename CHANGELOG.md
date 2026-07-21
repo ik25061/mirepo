@@ -98,12 +98,12 @@ const MUSIC_DIR = path.join('C:', 'Users', 'rafael', 'Music');
 ### URL de API (Frontend)
 En `frontend/src/App.jsx` línea 5:
 ```javascript
-const API_URL = 'http://localhost:5001';
+const API_URL = 'http://localhost:5002';
 ```
 
 Cambiar a tu IP para acceso remoto:
 ```javascript
-const API_URL = 'http://192.168.1.100:5001';
+const API_URL = 'http://192.168.1.100:5002';
 ```
 
 ---
@@ -135,7 +135,7 @@ const API_URL = 'http://192.168.1.100:5001';
 ## 🔍 Estructura de Archivos Generada
 
 ```
-C:\Users\rafael\Music\
+E:\musica\
 ├── cancion.mp3
 ├── cancion.jpg              ← Portada del álbum
 ├── cancion_artist.jpg       ← Foto del artista

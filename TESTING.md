@@ -11,14 +11,14 @@ node serve.js
 
 **Esperado:**
 ```
-🎵 Servidor de música corriendo en puerto 5001
+🎵 Servidor de música corriendo en puerto 5002
 📁 Carpeta de música: C:\Users\rafael\Music
 ```
 
 ### 2. Probar Endpoint GET
 
 ```bash
-curl http://localhost:5001/api/songs?limit=5&offset=0
+curl http://localhost:5002/api/songs?limit=5&offset=0
 ```
 
 **Esperado:** JSON con array de canciones incluyendo `imageUrl`
@@ -26,7 +26,7 @@ curl http://localhost:5001/api/songs?limit=5&offset=0
 ### 3. Probar Sincronización
 
 ```bash
-curl -X PUT http://localhost:5001/api/songs/sync-metadata \
+curl -X PUT http://localhost:5002/api/songs/sync-metadata \
   -H "Content-Type: application/json" \
   -d '{
     "filename": "cancion.mp3"
@@ -140,7 +140,7 @@ Get-Item "C:\Users\rafael\Music\cancion_artist.jpg" | Select-Object Length, Last
 
 ### Scenario 1: Primera Sincronización
 
-1. ✅ Backend corriendo en puerto 5001
+1. ✅ Backend corriendo en puerto 5002
 2. ✅ Frontend corriendo en puerto 5171
 3. ✅ Carpeta de música tiene canciones sin sincronizar
 4. Click en 🔍 Search de canción

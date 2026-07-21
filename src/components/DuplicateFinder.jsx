@@ -1,3 +1,12 @@
+/**
+ * ============================================================
+ * DUPLICATE FINDER - BUSCADOR DE CANCIONES DUPLICADAS
+ * ============================================================
+ * 
+ * Permite escanear una carpeta en busca de canciones duplicadas
+ * usando metadatos y huella digital (AcoustID).
+ */
+
 import { useState, useRef, useEffect } from 'react';
 import { FolderOpen, Search, Trash2, AlertTriangle, Loader2, CheckCircle, XCircle, ArrowLeft, Clock } from 'lucide-react';
 import { api, serverUrl } from '../lib/api.js';
@@ -35,7 +44,6 @@ export default function DuplicateFinder({ onBack }) {
       return;
     }
 
-    // Limpiar estado anterior
     setError(null);
     setDuplicates([]);
     setLiveDuplicates([]);
@@ -47,13 +55,11 @@ export default function DuplicateFinder({ onBack }) {
     setLoading(true);
     setScanning(true);
 
-    // Cerrar SSE anterior si existe
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
 
     try {
-      // Iniciar el escaneo en el servidor
       const data = await api.scanDuplicates(folderPath);
       
       if (!data.success) {
@@ -65,7 +71,6 @@ export default function DuplicateFinder({ onBack }) {
 
       setTotal(data.total);
 
-      // Conectar al stream SSE
       const eventSource = new EventSource(`${serverUrl}/api/scan-stream/${data.scanId}`);
       eventSourceRef.current = eventSource;
 
@@ -99,7 +104,6 @@ export default function DuplicateFinder({ onBack }) {
       };
 
       eventSource.onerror = () => {
-        // Si el servidor cerró la conexión después de completar, está bien
         if (!scanComplete) {
           setError('Se perdió la conexión con el servidor durante el escaneo.');
         }
@@ -160,8 +164,9 @@ export default function DuplicateFinder({ onBack }) {
 
   return (
     <div className="flex flex-col h-full w-full animate-fade-in">
-      {/* Header */}
-      {/* buscando duplicados <div className="flex items-center gap-3 mb-5">
+      
+      {/* ===== HEADER ===== */}
+      <div className="flex items-center gap-3 mb-5">
         <button
           onClick={onBack}
           className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:bg-surface-2 hover:text-foreground transition"
@@ -174,9 +179,9 @@ export default function DuplicateFinder({ onBack }) {
             Encuentra y elimina canciones duplicadas en tu biblioteca
           </p>
         </div>
-      </div> */}
+      </div>
 
-      {/* Input section */}
+      {/* ===== INPUT SECTION ===== */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-5">
         <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-surface flex-1 w-full">
           <FolderOpen size={18} className="text-muted-foreground shrink-0" />
@@ -212,7 +217,7 @@ export default function DuplicateFinder({ onBack }) {
         </button>
       </div>
 
-      {/* Error */}
+      {/* ===== ERROR ===== */}
       {error && (
         <div className="flex items-center gap-2 mb-4 py-3 px-4 rounded-xl bg-danger/10 text-danger text-sm">
           <AlertTriangle size={16} />
@@ -220,15 +225,13 @@ export default function DuplicateFinder({ onBack }) {
         </div>
       )}
 
-      {/* Barra de progreso en vivo */}
+      {/* ===== PROGRESS BAR ===== */}
       {scanning && (
         <div className="mb-5 animate-fade-in">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 size={16} className="animate-spin text-primary" />
-              <span>
-                Analizando archivos de audio...
-              </span>
+              <span>Analizando archivos de audio...</span>
             </div>
             <span className="text-xs text-muted-foreground tabular-nums">
               {processed.toLocaleString()} / {total.toLocaleString()}
@@ -237,16 +240,12 @@ export default function DuplicateFinder({ onBack }) {
               )}
             </span>
           </div>
-
-          {/* Barra de progreso */}
           <div className="w-full h-2 rounded-full bg-surface-2 overflow-hidden">
             <div
               className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
-
-          {/* Contador de duplicados en vivo */}
           {liveDuplicates.length > 0 && (
             <div className="flex items-center gap-1.5 mt-2 text-xs text-danger">
               <AlertTriangle size={12} />
@@ -258,7 +257,7 @@ export default function DuplicateFinder({ onBack }) {
         </div>
       )}
 
-      {/* Resultados */}
+      {/* ===== RESULTS ===== */}
       {hasResults && (
         <div className="flex-1 overflow-y-auto" ref={resultsRef}>
           <div className="flex items-center justify-between mb-4">
@@ -348,7 +347,7 @@ export default function DuplicateFinder({ onBack }) {
         </div>
       )}
 
-      {/* Escaneando sin resultados aún */}
+      {/* ===== SCANNING WITHOUT RESULTS ===== */}
       {scanning && !hasResults && (
         <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in">
           <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center mb-4">
@@ -361,7 +360,7 @@ export default function DuplicateFinder({ onBack }) {
         </div>
       )}
 
-      {/* Sin duplicados - escaneo completo */}
+      {/* ===== NO DUPLICATES ===== */}
       {!scanning && scanComplete && duplicates.length === 0 && !error && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center mb-4">
@@ -374,7 +373,7 @@ export default function DuplicateFinder({ onBack }) {
         </div>
       )}
 
-      {/* Estado inicial */}
+      {/* ===== INITIAL STATE ===== */}
       {!scanning && !scanComplete && !error && !loading && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center mb-4">

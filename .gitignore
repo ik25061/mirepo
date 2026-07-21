@@ -3,3 +3,4 @@
 node_modules
 bin/
 certs/
+/node_modules

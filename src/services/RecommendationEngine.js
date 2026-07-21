@@ -1,0 +1,192 @@
+// src/services/RecommendationEngine.js
+
+export class RecommendationEngine {
+  /**
+   * Recomienda canciones basado en:
+   * - Likes del usuario
+   * - Artistas favoritos
+   * - Géneros más escuchados
+   * - Años preferidos
+   * - Historial reciente (evita repeticiones)
+   */
+  static recommend(songs, likedIds, favoriteArtists, history, limit = 20) {
+    if (!songs || songs.length === 0) return [];
+
+    const favSet = new Set(favoriteArtists || []);
+
+    // Canciones que ya le gustan (para extraer patrones)
+    const likedSongs = songs.filter(s => likedIds.has(s.id));
+
+    // Si no hay likes, recomendar aleatorias pero con artistas favoritos
+    if (likedSongs.length === 0) {
+      const favSongs = songs.filter(s => favSet.has(s.artist));
+      if (favSongs.length > 0) {
+        return favSongs.sort(() => Math.random() - 0.5).slice(0, limit);
+      }
+      return songs.sort(() => Math.random() - 0.5).slice(0, limit);
+    }
+
+    // Extraer géneros y años favoritos
+    const genreCount = {};
+    const yearCount = {};
+    likedSongs.forEach(s => {
+      const genres = Array.isArray(s.genre) ? s.genre : [s.genre || 'Sin género'];
+      genres.forEach(g => { genreCount[g] = (genreCount[g] || 0) + 1; });
+      const year = s.year || '0';
+      yearCount[year] = (yearCount[year] || 0) + 1;
+    });
+
+    // Ordenar por frecuencia
+    const topGenres = Object.keys(genreCount).sort((a,b) => genreCount[b] - genreCount[a]).slice(0, 5);
+    const topYears = Object.keys(yearCount).sort((a,b) => yearCount[b] - yearCount[a]).slice(0, 3);
+
+    // Puntuar canciones no escuchadas (ni liked ni en historial)
+    const historyIds = new Set((Array.isArray(history) ? history : []).map(h => h.songId));
+    const candidates = songs.filter(s => !likedIds.has(s.id) && !historyIds.has(s.id));
+
+    // Dividir candidatos por artista favorito y no favorito para diversidad
+    const favArtistCandidates = candidates.filter(s => favSet.has(s.artist));
+    const otherCandidates = candidates.filter(s => !favSet.has(s.artist));
+
+    // Puntuar candidatos de artistas favoritos
+    const scoredFav = favArtistCandidates.map(song => {
+      let score = 50; // Bonus base por ser artista favorito
+
+      // Género popular (+20)
+      const songGenres = Array.isArray(song.genre) ? song.genre : [song.genre];
+      if (songGenres.some(g => topGenres.includes(g))) score += 20;
+
+      // Año popular (+10)
+      if (topYears.includes(String(song.year))) score += 10;
+
+      // Si tiene portada (+5)
+      if (song.hasCover) score += 5;
+
+      return { ...song, score };
+    });
+
+    // Puntuar candidatos de otros artistas
+    const scoredOther = otherCandidates.map(song => {
+      let score = 0;
+
+      // Género popular (+30) - bonus mayor para descubrir nuevos artistas con géneros que le gustan
+      const songGenres = Array.isArray(song.genre) ? song.genre : [song.genre];
+      if (songGenres.some(g => topGenres.includes(g))) score += 30;
+
+      // Año popular (+15)
+      if (topYears.includes(String(song.year))) score += 15;
+
+      // Si tiene portada (+5)
+      if (song.hasCover) score += 5;
+
+      return { ...song, score };
+    });
+
+    // Combinar y ordenar: primero los favoritos, luego otros, con jitter
+    const scored = [...scoredFav, ...scoredOther]
+      .sort((a, b) => (b.score + Math.random() * 10) - (a.score + Math.random() * 10));
+
+    // Garantizar diversidad: seleccionar máximo 2 canciones por artista
+    const artistCounts = {};
+    const diversified = scored.filter(song => {
+      artistCounts[song.artist] = (artistCounts[song.artist] || 0) + 1;
+      return artistCounts[song.artist] <= 2;
+    });
+
+    return diversified.slice(0, limit);
+  }
+
+  /**
+   * Genera una playlist temática basada en un estado de ánimo
+   */
+  static generateMoodPlaylist(songs, mood, likedIds, favoriteArtists, limit = 15) {
+    const moodMap = {
+      'feliz': ['pop', 'dance', 'reggaeton', 'disco'],
+      'triste': ['balada', 'bolero', 'blues', 'soul'],
+      'energía': ['rock', 'metal', 'electrónica', 'punk'],
+      'relax': ['jazz', 'acústico', 'clásica', 'ambient'],
+      'romántico': ['bachata', 'salsa', 'bolero', 'romántica']
+    };
+
+    const genres = moodMap[mood] || [];
+    const favSet = new Set(favoriteArtists || []);
+
+    // s.genre puede ser un array; comparar cada elemento de forma segura
+    const matchesMood = (song) => {
+      const songGenres = Array.isArray(song.genre) ? song.genre : [song.genre || ''];
+      return songGenres.some(g =>
+        genres.some(target => String(g || '').toLowerCase().includes(target))
+      );
+    };
+
+    let candidates = songs.filter(s => !likedIds.has(s.id) && matchesMood(s));
+
+    // Si no hay coincidencias por género, usar artistas favoritos elegidos
+    if (candidates.length === 0 && favSet.size > 0) {
+      candidates = songs.filter(s => !likedIds.has(s.id) && favSet.has(s.artist));
+    }
+
+    // Si tampoco, devolver cualquier canción no liked
+    if (candidates.length === 0) {
+      candidates = songs.filter(s => !likedIds.has(s.id));
+    }
+
+    // Garantizar diversidad de artistas: máximo 2 por artista
+    const artistCounts = {};
+    const diversified = candidates.filter(song => {
+      artistCounts[song.artist] = (artistCounts[song.artist] || 0) + 1;
+      return artistCounts[song.artist] <= 2;
+    });
+
+    // Mezclar y devolver
+    return diversified.sort(() => Math.random() - 0.5).slice(0, limit);
+  }
+
+  /**
+   * Resumen mensual: estadísticas de escucha
+   */
+  static getMonthlySummary(history, songs) {
+    if (!history || history.length === 0) return null;
+    
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+    
+    const monthHistory = history.filter(h => {
+      const d = new Date(h.timestamp);
+      return d.getMonth() === month && d.getFullYear() === year;
+    });
+    
+    if (monthHistory.length === 0) return null;
+    
+    const topSongs = {};
+    const topArtists = {};
+    const topGenres = {};
+    let totalMinutes = 0;
+    
+    monthHistory.forEach(h => {
+      const song = songs.find(s => s.id === h.songId);
+      if (!song) return;
+      
+      topSongs[song.id] = (topSongs[song.id] || 0) + 1;
+      topArtists[song.artist] = (topArtists[song.artist] || 0) + 1;
+      topGenres[song.genre] = (topGenres[song.genre] || 0) + 1;
+      totalMinutes += (song.duration || 0) / 60;
+    });
+    
+    // Ordenar
+    const sortByCount = (obj) => Object.entries(obj).sort((a,b) => b[1] - a[1]);
+    const top5SongsIds = sortByCount(topSongs).slice(0, 5).map(([id]) => id);
+    const top5Songs = top5SongsIds.map(id => songs.find(s => s.id === id)).filter(Boolean);
+    
+    return {
+      month: `${month+1}/${year}`,
+      totalSongs: monthHistory.length,
+      totalMinutes: Math.round(totalMinutes),
+      topSong: top5Songs[0]?.title || 'N/A',
+      topArtist: sortByCount(topArtists)[0]?.[0] || 'N/A',
+      topGenre: sortByCount(topGenres)[0]?.[0] || 'N/A',
+      top5Songs,
+    };
+  }
+}

@@ -1,12 +1,11 @@
-import { Home, Search, Library, Music2, Copy } from 'lucide-react';
+import { Home, Library, Download, Sparkles } from 'lucide-react';
 
 export default function BottomNav({ activeView, onViewChange, hasCurrentTrack }) {
   const tabs = [
     { id: 'home', label: 'Inicio', icon: Home },
-    { id: 'search', label: 'Buscar', icon: Search },
     { id: 'library', label: 'Biblioteca', icon: Library },
-    // { id: 'duplicates', label: 'Duplicados', icon: Copy },
-    { id: 'nowplaying', label: 'Reproduciendo', icon: Music2 },
+    { id: 'downloads', label: 'Descargas', icon: Download },
+    { id: 'ai', label: 'Asistente', icon: Sparkles },
   ];
 
   return (
@@ -43,8 +42,8 @@ export default function BottomNav({ activeView, onViewChange, hasCurrentTrack })
               }}
             >
               <Icon
-                size={isNowPlaying ? 20 : 18}
-                fill={isActive && isNowPlaying && hasCurrentTrack ? 'currentColor' : 'none'}
+                size={18}
+                fill="none"
                 strokeWidth={isActive ? 2.5 : 1.8}
               />
               <span style={{ fontSize: 'clamp(7px, 2.5vw, 10px)', fontWeight: isActive ? 700 : 500, lineHeight: 1.2, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>

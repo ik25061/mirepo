@@ -8,11 +8,11 @@
  */
 
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Play, Trash2, Wand2 } from 'lucide-react';
+import { Search, Play, Trash2, Wand2, RefreshCw } from 'lucide-react';
 import SongRow from '../SongRow.jsx';
+import DownloadAllButton from '../DownloadAllButton.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import { api } from '../../lib/api.js';
-import path from 'node:path';
 
 // ============================================================
 // LOADING SKELETON
@@ -32,28 +32,38 @@ function TrackSkeleton() {
 // ============================================================
 // COMPONENTE PRINCIPAL
 // ============================================================
-export default function LibraryView({ 
-  songs, 
-  counts, 
-  onLike, 
-  onDislike, 
-  onDislikeArtist, 
+export default function LibraryView({
+  songs,
+  counts,
+  onLike,
+  onDislike,
+  onDislikeArtist,
   onDelete,
   loading,
   hasMore,
   isLoadingMore,
-  onLoadMore
+  onLoadMore,
+  allSongs,
+  offlineMode,
+  onRescan
 }) {
   const { play, current } = usePlayer();
   const [query, setQuery] = useState('');
   const [fixingMetadata, setFixingMetadata] = useState(null);
-  
+
   // ============================================================
   // REFERENCIAS PARA INTERSECTION OBSERVER
   // ============================================================
   const listRef = useRef(null);
   const loaderRef = useRef(null);
   const observerRef = useRef(null);
+
+  // ============================================================
+  // LIKED IDS - Set de IDs de canciones favoritas
+  // ============================================================
+  const likedIds = useMemo(() => {
+    return new Set(allSongs?.filter(s => s.liked).map(s => s.id) || []);
+  }, [allSongs]);
 
   // ============================================================
   // FILTRAR CANCIONES
@@ -73,13 +83,14 @@ export default function LibraryView({
   // CORREGIR METADATOS
   // ============================================================
   const handleFixMetadata = async (song) => {
-    if (!confirm(`¿Corregir metadatos de "${song.title}"?`)) return;
+    if (!confirm('¿Corregir metadatos de "' + song.title + '"?')) return;
 
     setFixingMetadata(song.id);
     try {
-      const fullPath = song.relPath.startsWith('music/') ? song.relPath : `music/${song.relPath}`;
+      const fullPath = song.relPath.startsWith('music/') ? song.relPath : 'music/' + song.relPath;
       const result = await api.fixMetadata(fullPath);
-      alert(`✅ ${result.message}\n\nNuevo nombre: ${path.basename(result.newPath)}`);
+      const newFileName = result.newPath.split('/').pop();
+      alert('✅ ' + result.message + '\n\nNuevo nombre: ' + newFileName);
     } catch (err) {
       alert('Error al corregir metadatos: ' + err.message);
     } finally {
@@ -105,7 +116,7 @@ export default function LibraryView({
   useEffect(() => {
     // Si no hay más canciones, no configurar el observer
     if (!hasMore) return;
-    
+
     // Crear el observer
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -137,42 +148,48 @@ export default function LibraryView({
 
   return (
     <div className="flex flex-col gap-4 h-full w-full">
-      
+
       {/* ===== HEADER ===== */}
-      <header className="animate-fade-in flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
+      <header className="animate-fade-in flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0">
         <div>
-          <h1 className="font-display text-3xl font-700 tracking-tight">Biblioteca</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {counts.total} {counts.total === 1 ? 'canción' : 'canciones'}
-            <span className="mx-2">·</span>
-            <span className="inline-flex items-center gap-1">
-              <Trash2 size={13} /> {counts.trash} en papelera
-            </span>
-          </p>
+          <h1 className="text-xl font-700 tracking-tight text-white">Biblioteca</h1>
+          {/* <p className="text-xs text-muted-foreground">
+            {counts.total} canciones
+            {hasMore && ' · Desplázate para más'}
+          </p> */}
         </div>
-        
-        {/* ===== BUSCADOR ===== */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:flex-initial">
-            <Search size={16} className="absolute left-3 text-muted-foreground" style={{ top: '50%', transform: 'translateY(-50%)', zIndex: 1 }} />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar en tu biblioteca"
-              className="w-full sm:w-48 rounded-full border border-border bg-surface py-2 pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary sm:w-64"
+        <div className="flex items-center gap-2">
+          {!offlineMode && songs.length > 0 && (
+            <DownloadAllButton
+              songs={songs}
+              onComplete={(result) => {
+                if (result && result.successCount > 0) {
+                  console.log('[LibraryView] Descarga completada:', result);
+                }
+              }}
             />
-          </div>
-          {filtered.length > 0 && (
+          )}
+          {!offlineMode && onRescan && (
             <button
-              onClick={() => play(filtered[0], filtered)}
-              className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow transition hover:scale-105 flex-shrink-0"
-              aria-label="Reproducir todo"
+              onClick={onRescan}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2 text-foreground text-sm hover:bg-surface-2/70 transition"
             >
-              <Play size={18} fill="currentColor" className="ml-0.5" />
+              <RefreshCw size={16} /> Rescanear
             </button>
           )}
         </div>
       </header>
+
+      {/* ===== BUSCADOR ===== */}
+      <div className="relative mb-4">
+        <Search size={16} className="absolute left-3 text-muted-foreground" style={{ top: '50%', transform: 'translateY(-50%)', zIndex: 1 }} />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar en tu biblioteca"
+          className="w-full sm:w-64 rounded-full border border-border bg-surface py-2 pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+        />
+      </div>
 
       {/* ===== CONTADOR DE RESULTADOS ===== */}
       {filtered.length > 0 && (
@@ -187,7 +204,7 @@ export default function LibraryView({
       )}
 
       {/* ===== LISTA DE CANCIONES ===== */}
-      <div 
+      <div
         ref={listRef}
         className="flex-1 overflow-y-auto rounded-xl border border-border bg-surface/50 p-2"
         style={{ overscrollBehavior: 'contain' }}
@@ -202,7 +219,7 @@ export default function LibraryView({
           <div className="flex flex-col gap-1">
             {filtered.map((song, i) => {
               const isCurrent = current?.id === song.id;
-              
+
               return (
                 <div
                   key={song.id}
@@ -214,13 +231,12 @@ export default function LibraryView({
                     queue={filtered}
                     onLike={onLike}
                     onDislike={onDislike}
-                    onDislikeArtist={onDislikeArtist}
                     onDelete={onDelete}
-                    onFixMetadata={() => handleFixMetadata(song)}
-                    showFixMetadata
-                    fixingMetadata={fixingMetadata === song.id}
+                    onFixMetadata={handleFixMetadata}
+                    fixingMetadata={fixingMetadata}
                     showDelete
                     context={null}
+                    likedIds={likedIds}
                   />
                 </div>
               );
@@ -254,15 +270,7 @@ export default function LibraryView({
         )}
       </div>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.8; }
-        }
-        .animate-pulse {
-          animation: pulse 1.5s ease-in-out infinite;
-        }
-      `}</style>
+      <style>{'\n        @keyframes pulse {\n          0%, 100% { opacity: 0.4; }\n          50% { opacity: 0.8; }\n        }\n        .animate-pulse {\n          animation: pulse 1.5s ease-in-out infinite;\n        }\n      '}</style>
     </div>
   );
 }

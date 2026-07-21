@@ -1,3 +1,7 @@
+// ============================================================
+// server/index.js - SERVIDOR PRINCIPAL (VERSIÓN COMPLETA)
+// ============================================================
+
 import express from 'express';
 import cors from 'cors';
 import fs from 'node:fs';
@@ -5,61 +9,63 @@ import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { scanLibrary, rescanLibrary, getCache, getSongById, absolutePath, MUSIC_DIR, TRASH_DIR, removeSongFromCache } from './scanner.js';
-import * as db from './db.js';
 import 'dotenv/config';
 
+import * as db from './db.js';
+import { MUSIC_DIR, TRASH_DIR, absolutePath, scanLibrary } from './scanner.js';
+import { getLyrics as getLyricsFromService } from './lyrics.js';
+
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.VITE_SERVER_PORT || process.env.PORT || 5002;
 
 console.log('🚀 Iniciando servidor...');
+console.log(`🔧 Puerto configurado: ${PORT}`);
 console.log(`📂 MUSIC_DIR: ${MUSIC_DIR}`);
 
-// ====== DETECTAR IP LOCAL ======
-function getLocalLanIp() {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal && !iface.address.startsWith('127.')) {
-        return iface.address;
-      }
-    }
-  }
-  return 'localhost';
-}
-
-const LOCAL_IP = getLocalLanIp();
-
-// ====== MIDDLEWARE ======
+// ============================================================
+// MIDDLEWARE
+// ============================================================
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Range'],
-  exposedHeaders: ['Content-Range', 'Accept-Ranges']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Range', 'Origin', 'Accept'],
+  exposedHeaders: ['Content-Range', 'Accept-Ranges'],
+  credentials: true
 }));
 app.use(express.json());
-
-// Servir archivos estáticos
 app.use('/songs', express.static(MUSIC_DIR));
 
-// ====== INICIALIZAR DB ======
-let dbReady = false;
+// ============================================================
+// VARIABLES GLOBALES
+// ============================================================
+let libraryReady = false;
+let songCache = [];
+let songMap = new Map();
 
-async function ensureDb() {
-  if (!dbReady) {
-    try {
-      console.log('🔧 Inicializando base de datos...');
-      await db.initDatabase();
-      dbReady = true;
-      console.log('✅ Base de datos lista');
-    } catch (err) {
-      console.error('❌ Error inicializando DB:', err);
-      dbReady = true;
+// ============================================================
+// FUNCIONES AUXILIARES
+// ============================================================
+
+function getLocalLanIps() {
+  const interfaces = os.networkInterfaces();
+  const ips = [];
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal && !iface.address.startsWith('127.')) {
+        ips.push(iface.address);
+      }
     }
   }
+  return ips;
 }
 
-// ====== FUNCIÓN PARA CONSTRUIR BIBLIOTECA ======
+const LOCAL_IPS = getLocalLanIps();
+const LOCAL_IP = LOCAL_IPS[0] || 'localhost';
+
+// ============================================================
+// SHUFFLE CON SEMILLA Y CURSOR
+// ============================================================
+
 function seededRandom(seed) {
   let s = seed;
   return function() {
@@ -78,143 +84,142 @@ function shuffleArray(array, seed) {
   return result;
 }
 
-async function buildLibrary({ limit, offset, userId, likedOnly = false } = {}) {
-  console.log('[buildLibrary] 🏗️ Construyendo...', { likedOnly });
-  
-  let songs = [];
-  let prefs = {};
-  let hiddenArtists = new Set();
-  
-  try {
-    const cache = getCache();
-    songs = cache.songs || [];
-    console.log(`[buildLibrary] 📚 ${songs.length} canciones en caché`);
-  } catch (err) {
-    console.error('[buildLibrary] Error obteniendo caché:', err);
-    songs = [];
-  }
-  
-  try {
-    prefs = await db.getSongPrefs(userId);
-    console.log('[buildLibrary] ✅ Prefs obtenidas');
-  } catch (err) {
-    console.warn('[buildLibrary] ⚠️ Error obteniendo prefs:', err.message);
-    prefs = {};
-  }
-  
-  try {
-    hiddenArtists = await db.getHiddenArtists(userId);
-    console.log('[buildLibrary] ✅ Artistas ocultos obtenidos');
-  } catch (err) {
-    console.warn('[buildLibrary] ⚠️ Error obteniendo artistas ocultos:', err.message);
-    hiddenArtists = new Set();
-  }
-
-  const visible = [];
-  for (const s of songs) {
-    try {
-      const p = prefs[s.id];
-      if (p && (p.deleted || p.hidden)) continue;
-      if (hiddenArtists.has(s.artist)) continue;
-      const liked = Boolean(p && p.liked);
-      if (likedOnly && !liked) continue;
-      visible.push({ ...s, liked });
-    } catch (err) {
-      console.warn('[buildLibrary] Error procesando canción:', s?.id);
-    }
-  }
-
-  const total = visible.length;
-
-  if (likedOnly) {
-    return {
-      songs: visible,
-      hiddenArtists: [...hiddenArtists],
-      counts: { total, trash: 0 },
-      pagination: { offset: 0, limit: total, total },
-    };
-  }
-
-  // Generar semilla aleatoria por usuario y día para que la biblioteca sea aleatoria cada sesión
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const seedBase = `${userId || 'anon'}-${today}`;
+/**
+ * Genera un cursor basado en userId y fecha para evitar repeticiones
+ * hasta que se agote el catálogo
+ */
+function getCursor(userId) {
+  const today = new Date().toISOString().slice(0, 10);
   let seed = 0;
-  for (let i = 0; i < seedBase.length; i++) {
-    seed = ((seed << 5) - seed) + seedBase.charCodeAt(i);
-    seed = seed & seed; // Convertir a 32-bit integer
+  const base = `${userId || 'anon'}-${today}`;
+  for (let i = 0; i < base.length; i++) {
+    seed = ((seed << 5) - seed) + base.charCodeAt(i);
+    seed = seed & seed;
   }
-  seed = Math.abs(seed) || 1;
-  
-  // Mezclar todas las canciones visibles con semilla
-  const shuffled = shuffleArray(visible, seed);
-  console.log(`[buildLibrary] 🔀 ${shuffled.length} canciones mezcladas con semilla ${seed}`);
-
-  let trashCount = 0;
-  try {
-    if (fs.existsSync(TRASH_DIR)) {
-      trashCount = fs.readdirSync(TRASH_DIR).filter((f) => !f.startsWith('.')).length;
-    }
-  } catch {}
-
-  const start = typeof offset === 'number' ? offset : 0;
-  const end = typeof limit === 'number' ? start + limit : total;
-  const paged = shuffled.slice(start, end);
-
-  console.log(`[buildLibrary] ✅ ${paged.length} canciones devueltas`);
-  
-  return {
-    songs: paged,
-    hiddenArtists: [...hiddenArtists],
-    counts: { total, trash: trashCount },
-    pagination: { offset: start, limit: typeof limit === 'number' ? limit : total, total },
-  };
+  return Math.abs(seed) || 1;
 }
 
-// ====== ESCANEAR BIBLIOTECA AL INICIAR ======
-let libraryReady = false;
+// ============================================================
+// CARGAR BIBLIOTECA EN MEMORIA
+// ============================================================
 
 async function loadLibrary() {
   try {
-    console.log('🔍 Escaneando biblioteca...');
-    await scanLibrary();
+    console.log('🔍 Cargando biblioteca desde SQLite...');
+    
+    const songs = await db.getSongsWithDetails({ limit: 999999, offset: 0 });
+    
+    songCache = songs;
+    songMap = new Map(songs.map(s => [s.id, s]));
+    
+    console.log(`✅ ${songCache.length} canciones cargadas en memoria`);
     libraryReady = true;
-    console.log('✅ Biblioteca lista');
   } catch (err) {
-    console.error('❌ Error escaneando:', err);
+    console.error('❌ Error cargando biblioteca:', err);
     libraryReady = true;
   }
 }
 
-// Cargar biblioteca en segundo plano
 loadLibrary();
 
-// ====== RUTAS ======
+// ============================================================
+// CONSTRUIR BIBLIOTECA CON SHUFFLE Y CURSOR
+// ============================================================
 
-// Test
+async function buildLibrary({ limit = 100, offset = 0, userId = null, likedOnly = false, shuffleSeed = null } = {}) {
+  console.log('[buildLibrary] 🏗️ Construyendo...', { limit, offset, userId, likedOnly });
+  
+  const effectiveUserId = userId || null;
+  
+  try {
+    // Obtener canciones con filtros básicos
+    let songs = await db.getSongsWithDetails({
+      limit: 999999, // Obtenemos todas para hacer shuffle
+      offset: 0,
+      userId: effectiveUserId
+    });
+    
+    // Filtrar canciones ocultas (dislike)
+    if (effectiveUserId) {
+      const hiddenSongs = await db.getHiddenSongIds(effectiveUserId);
+      songs = songs.filter(s => !hiddenSongs.has(s.id));
+    }
+    
+    // Si es likedOnly, filtrar
+    if (likedOnly) {
+      songs = songs.filter(s => s.liked);
+    }
+    
+    // Generar semilla para shuffle (basada en userId y fecha)
+    const seed = shuffleSeed || getCursor(effectiveUserId);
+    const shuffled = shuffleArray(songs, seed);
+    
+    // Paginación
+    const total = shuffled.length;
+    const start = offset;
+    const end = Math.min(start + limit, total);
+    const paged = shuffled.slice(start, end);
+    
+    // Obtener conteos
+    const trash = await db.getTrashCount(effectiveUserId);
+    
+    // Obtener artistas ocultos para el usuario
+    let hiddenArtists = [];
+    if (effectiveUserId) {
+      const hiddenSet = await db.getHiddenArtists(effectiveUserId);
+      hiddenArtists = [...hiddenSet];
+    }
+    
+    const result = {
+      songs: paged,
+      hiddenArtists: hiddenArtists,
+      counts: { total, trash },
+      pagination: {
+        offset: start,
+        limit: limit,
+        total: total,
+        hasMore: end < total
+      }
+    };
+    
+    console.log(`[buildLibrary] ✅ ${paged.length} canciones devueltas (total: ${total})`);
+    return result;
+    
+  } catch (err) {
+    console.error('[buildLibrary] ❌ Error:', err);
+    throw err;
+  }
+}
+
+// ============================================================
+// RUTAS - TEST Y CONFIG
+// ============================================================
+
 app.get('/api/test', (req, res) => {
-  const cache = getCache();
   res.json({ 
     success: true, 
     libraryReady,
-    songCount: cache?.songs?.length || 0,
+    songCount: songCache.length,
     musicDir: MUSIC_DIR,
-    dbReady
+    dbReady: true
   });
 });
 
-// Config IP
 app.get('/api/config/ip', (req, res) => {
   res.json({ 
     ip: LOCAL_IP, 
     port: PORT, 
-    serverUrl: `http://${LOCAL_IP}:${PORT}`
+    serverUrl: `http://${LOCAL_IP}:${PORT}`,
+    allIps: LOCAL_IPS
   });
 });
 
-// ====== RUTAS DE AUTENTICACIÓN ======
+// ============================================================
+// RUTAS - AUTENTICACIÓN
+// ============================================================
 
 app.post('/api/auth/register', async (req, res) => {
-  console.log('[auth/register]', req.body);
+  console.log('[auth/register]', req.body.username);
   const { username, password } = req.body;
   
   if (!username || !password) {
@@ -226,7 +231,6 @@ app.post('/api/auth/register', async (req, res) => {
   }
 
   try {
-    await ensureDb();
     const user = await db.createUser(username, password);
     res.json({ 
       success: true, 
@@ -251,7 +255,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 
   try {
-    await ensureDb();
     const user = await db.findUser(username, password);
     if (!user) {
       return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
@@ -278,7 +281,6 @@ app.post('/api/auth/verify', async (req, res) => {
   }
 
   try {
-    await ensureDb();
     const user = await db.getUserByToken(token);
     if (!user) {
       return res.status(401).json({ error: 'Token inválido' });
@@ -296,7 +298,6 @@ app.post('/api/auth/verify', async (req, res) => {
 app.post('/api/auth/logout', async (req, res) => {
   const { token } = req.body;
   try {
-    await ensureDb();
     if (token) {
       await db.clearUserSession(token);
     }
@@ -307,7 +308,10 @@ app.post('/api/auth/logout', async (req, res) => {
   }
 });
 
-// ====== RUTA PRINCIPAL - LIBRARY ======
+// ============================================================
+// RUTAS - BIBLIOTECA PRINCIPAL (CON SHUFFLE Y CURSOR)
+// ============================================================
+
 app.get('/api/library', async (req, res) => {
   console.log('[api/library] 📥 Solicitud recibida');
   
@@ -319,18 +323,18 @@ app.get('/api/library', async (req, res) => {
     }
     
     const userId = req.query.userId || null;
-    const limit = req.query.limit !== undefined ? parseInt(req.query.limit, 10) : 100;
-    const offset = req.query.offset !== undefined ? parseInt(req.query.offset, 10) : 0;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
     const likedOnly = req.query.liked === 'true';
+    const shuffleSeed = req.query.shuffleSeed ? parseInt(req.query.shuffleSeed, 10) : null;
     
-    console.log('[api/library] 🔍 Parámetros:', { userId, limit, offset, likedOnly });
+    console.log('[api/library] 🔍 Parámetros:', { userId, limit, offset, likedOnly, shuffleSeed });
     
-    const result = await buildLibrary({ limit, offset, userId, likedOnly });
+    const result = await buildLibrary({ limit, offset, userId, likedOnly, shuffleSeed });
     console.log('[api/library] ✅ Éxito');
     res.json(result);
   } catch (err) {
     console.error('[api/library] ❌ Error:', err);
-    console.error('[api/library] Stack:', err.stack);
     res.status(500).json({ 
       error: 'No se pudo cargar la biblioteca',
       message: err.message
@@ -338,15 +342,613 @@ app.get('/api/library', async (req, res) => {
   }
 });
 
-// ====== RUTAS DE MÚSICA ======
+// ============================================================
+// RUTAS - ARTISTAS CON PAGINACIÓN INFINITA
+// ============================================================
 
-app.post('/api/rescan', async (_req, res) => {
-  await rescanLibrary();
-  res.json(await buildLibrary());
+// ============================================================
+// RUTAS - ARTISTAS CON PAGINACIÓN INFINITA
+// ============================================================
+
+app.get('/api/artists', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    console.log(`[api/artists] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}"`);
+    
+    const result = await db.getArtistsWithPagination({ 
+      userId, 
+      limit, 
+      offset, 
+      search 
+    });
+    
+    console.log(`[api/artists] ✅ ${result.items?.length || 0} artistas devueltos, total ${result.pagination?.total || 0}`);
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/artists] ❌ Error:', err);
+    res.status(500).json({ 
+      error: 'Error al obtener artistas',
+      details: err.message 
+    });
+  }
 });
 
+app.get('/api/artists/:id/songs', async (req, res) => {
+  try {
+    const artistId = parseInt(req.params.id, 10);
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    const result = await db.getSongsByArtist({
+      artistId,
+      userId,
+      limit,
+      offset
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/artists/:id/songs] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones del artista' });
+  }
+});
+
+app.get('/api/albums', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    console.log(`[api/albums] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}"`);
+    
+    const result = await db.getAlbumsWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    console.log(`[api/albums] ✅ ${result.items?.length || 0} álbumes devueltos, total ${result.pagination?.total || 0}`);
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/albums] ❌ Error:', err);
+    res.status(500).json({ 
+      error: 'Error al obtener álbumes',
+      details: err.message 
+    });
+  }
+});
+
+app.get('/api/genres', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    console.log(`[api/genres] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}"`);
+    
+    const result = await db.getGenresWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    console.log(`[api/genres] ✅ ${result.items?.length || 0} géneros devueltos, total ${result.pagination?.total || 0}`);
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/genres] ❌ Error:', err);
+    res.status(500).json({ 
+      error: 'Error al obtener géneros',
+      details: err.message 
+    });
+  }
+});
+
+app.get('/api/years', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    console.log(`[api/years] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}"`);
+    
+    const result = await db.getYearsWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    console.log(`[api/years] ✅ ${result.items?.length || 0} años devueltos, total ${result.pagination?.total || 0}`);
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/years] ❌ Error:', err);
+    res.status(500).json({ 
+      error: 'Error al obtener años',
+      details: err.message 
+    });
+  }
+});
+
+// ============================================================
+// RUTAS - ÁLBUMES CON PAGINACIÓN INFINITA
+// ============================================================
+
+app.get('/api/albums', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    const result = await db.getAlbumsWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/albums] Error:', err);
+    res.status(500).json({ error: 'Error al obtener álbumes' });
+  }
+});
+
+app.get('/api/albums/:id/songs', async (req, res) => {
+  try {
+    const albumId = parseInt(req.params.id, 10);
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    const result = await db.getSongsByAlbum({
+      albumId,
+      userId,
+      limit,
+      offset
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/albums/:id/songs] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones del álbum' });
+  }
+});
+
+// ============================================================
+// RUTAS - GÉNEROS CON PAGINACIÓN INFINITA
+// ============================================================
+
+app.get('/api/genres', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    const result = await db.getGenresWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/genres] Error:', err);
+    res.status(500).json({ error: 'Error al obtener géneros' });
+  }
+});
+
+app.get('/api/genres/:id/songs', async (req, res) => {
+  try {
+    const genreId = parseInt(req.params.id, 10);
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    const result = await db.getSongsByGenre({
+      genreId,
+      userId,
+      limit,
+      offset
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/genres/:id/songs] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones del género' });
+  }
+});
+
+// ============================================================
+// RUTAS - AÑOS CON PAGINACIÓN INFINITA
+// ============================================================
+
+app.get('/api/years', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const search = req.query.search || '';
+    
+    const result = await db.getYearsWithPagination({
+      userId,
+      limit,
+      offset,
+      search
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/years] Error:', err);
+    res.status(500).json({ error: 'Error al obtener años' });
+  }
+});
+
+app.get('/api/years/:year/songs', async (req, res) => {
+  try {
+    const year = parseInt(req.params.year, 10);
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    const result = await db.getSongsByYear({
+      year,
+      userId,
+      limit,
+      offset
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/years/:year/songs] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones del año' });
+  }
+});
+
+// ============================================================
+// RUTA - CANCIONES QUE ME GUSTAN (CORREGIDO)
+// ============================================================
+app.get('/api/liked-songs', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'Se requiere userId' });
+    }
+    
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    console.log(`[api/liked-songs] 📥 userId=${userId}, limit=${limit}, offset=${offset}`);
+    
+    const songs = await db.getLikedSongs(parseInt(userId), limit, offset);
+    const total = await db.getLikedSongsCount(parseInt(userId));
+    
+    console.log(`[api/liked-songs] ✅ Encontradas ${songs.length} canciones, total ${total}`);
+    
+    res.json({
+      songs: songs || [],
+      pagination: {
+        offset,
+        limit,
+        total: total || 0,
+        hasMore: (offset + limit) < (total || 0)
+      }
+    });
+  } catch (err) {
+    console.error('[api/liked-songs] ❌ Error:', err);
+    res.status(500).json({ 
+      error: 'Error al obtener canciones que me gustan',
+      details: err.message 
+    });
+  }
+});
+// ============================================================
+// RUTAS - ARTISTAS FAVORITOS
+// ============================================================
+
+app.get('/api/favorite-artists', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const artists = await db.getFavoriteArtists(userId);
+    res.json({ artists });
+  } catch (err) {
+    console.error('[api/favorite-artists]', err);
+    res.status(500).json({ error: 'Error al obtener artistas favoritos' });
+  }
+});
+
+app.post('/api/favorite-artists/toggle', async (req, res) => {
+  try {
+    const { artist, userId } = req.body;
+    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
+    
+    const artistId = await db.getArtistIdByName(artist);
+    if (!artistId) {
+      return res.status(404).json({ error: 'Artista no encontrado' });
+    }
+    
+    const isFavorite = await db.toggleFavoriteArtist(artistId, userId);
+    const artists = await db.getFavoriteArtists(userId);
+    res.json({ artists, isFavorite });
+  } catch (err) {
+    console.error('[api/favorite-artists/toggle]', err);
+    res.status(500).json({ error: 'Error al cambiar artista favorito' });
+  }
+});
+
+// ============================================================
+// RUTAS - OCULTAR ARTISTAS
+// ============================================================
+
+app.post('/api/artists/hide', async (req, res) => {
+  try {
+    const { artist, userId } = req.body;
+    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
+    
+    const artistId = await db.getArtistIdByName(artist);
+    if (!artistId) {
+      return res.status(404).json({ error: 'Artista no encontrado' });
+    }
+    
+    await db.setArtistHidden(artistId, true, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/artists/hide] Error:', err);
+    res.status(500).json({ error: 'Error al ocultar artista' });
+  }
+});
+
+app.post('/api/artists/unhide', async (req, res) => {
+  try {
+    const { artist, userId } = req.body;
+    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
+    
+    const artistId = await db.getArtistIdByName(artist);
+    if (!artistId) {
+      return res.status(404).json({ error: 'Artista no encontrado' });
+    }
+    
+    await db.setArtistHidden(artistId, false, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/artists/unhide] Error:', err);
+    res.status(500).json({ error: 'Error al mostrar artista' });
+  }
+});
+
+// ============================================================
+// RUTAS - LIKES Y HIDES DE CANCIONES
+// ============================================================
+
+app.post('/api/songs/:id/like', async (req, res) => {
+  const song = songMap.get(req.params.id);
+  if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
+  const userId = req.body.userId || null;
+  const liked = Boolean(req.body.liked);
+  
+  try {
+    await db.setSongLiked(song.id, liked, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/songs/:id/like] Error:', err);
+    res.status(500).json({ error: 'Error al actualizar like' });
+  }
+});
+
+app.post('/api/songs/:id/hide', async (req, res) => {
+  const song = songMap.get(req.params.id);
+  if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
+  const userId = req.body.userId || null;
+  
+  try {
+    await db.setSongHidden(song.id, true, userId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[api/songs/:id/hide] Error:', err);
+    res.status(500).json({ error: 'Error al ocultar canción' });
+  }
+});
+
+// ============================================================
+// RUTAS - ELIMINAR CANCIÓN
+// ============================================================
+
+app.delete('/api/songs', async (req, res) => {
+  try {
+    const { id, userId } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: 'Se requiere id' });
+    }
+
+    const song = songMap.get(id);
+    if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
+
+    const fullPath = absolutePath(song.relPath);
+    
+    if (fs.existsSync(fullPath)) {
+      try {
+        if (!fs.existsSync(TRASH_DIR)) fs.mkdirSync(TRASH_DIR, { recursive: true });
+        
+        const now = new Date();
+        const trashSubDir = path.join(TRASH_DIR, 
+          `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+        );
+        if (!fs.existsSync(trashSubDir)) fs.mkdirSync(trashSubDir, { recursive: true });
+        
+        const trashName = `${Date.now()}_${path.basename(fullPath)}`;
+        const trashPath = path.join(trashSubDir, trashName);
+        
+        try {
+          fs.copyFileSync(fullPath, trashPath);
+          fs.unlinkSync(fullPath);
+        } catch {
+          try { fs.renameSync(fullPath, trashPath); } catch { fs.unlinkSync(fullPath); }
+        }
+      } catch {}
+    }
+
+    if (userId) {
+      await db.setSongHidden(song.id, true, userId);
+    }
+
+    res.json({ message: 'Canción eliminada correctamente' });
+  } catch (error) {
+    console.error('Error deleting song:', error);
+    res.status(500).json({ error: 'Error al eliminar la canción' });
+  }
+});
+
+// ============================================================
+// RUTAS - RESCAN
+// ============================================================
+
+app.post('/api/rescan', async (_req, res) => {
+  try {
+    await scanLibrary();
+    await loadLibrary();
+    const result = await buildLibrary({ limit: 100, offset: 0 });
+    res.json(result);
+  } catch (err) {
+    console.error('[api/rescan] Error:', err);
+    res.status(500).json({ error: 'Error al rescanejar' });
+  }
+});
+
+// ============================================================
+// RUTA - CORREGIR METADATOS
+// ============================================================
+
+app.post('/api/fix-metadata', async (req, res) => {
+  try {
+    const { filePath } = req.body;
+    if (!filePath) return res.status(400).json({ error: 'Se requiere filePath' });
+
+    const absPath = absolutePath(filePath);
+    if (!fs.existsSync(absPath)) return res.status(404).json({ error: 'Archivo no encontrado' });
+
+    const fileName = path.basename(absPath, path.extname(absPath));
+    let newArtist = 'Artista desconocido';
+    let newTitle = fileName;
+
+    const match = fileName.match(/^(.+?)[\-_](.+)$/);
+    if (match) {
+      newArtist = match[1].trim();
+      newTitle = match[2].trim();
+    }
+
+    if (!newArtist || newArtist.toLowerCase().includes('anónimo')) newArtist = 'Artista desconocido';
+    if (!newTitle || newTitle.toLowerCase().includes('[track') || newTitle.toLowerCase().includes('[untitled]')) newTitle = fileName;
+
+    const song = songCache.find(s => s.relPath === filePath);
+    
+    let newPath = null;
+    if (song) {
+      const oldRelPath = song.relPath;
+      const oldDir = path.dirname(oldRelPath);
+      const ext = path.extname(absPath);
+      const safeArtist = newArtist.replace(/[<>:"/\\|?*]/g, ' ').trim();
+      const safeTitle = newTitle.replace(/[<>:"/\\|?*]/g, ' ').trim();
+      const newFileName = `${safeArtist} - ${safeTitle}${ext}`;
+
+      if (path.basename(oldRelPath) !== newFileName) {
+        newPath = path.join(oldDir, newFileName);
+        const newFullPath = absolutePath(newPath);
+        try {
+          if (fs.existsSync(absPath)) {
+            fs.renameSync(absPath, newFullPath);
+            await db.updateSongPath(song.id, newPath, newTitle);
+          }
+        } catch (err) {
+          console.error('[fix-metadata] Error renombrando:', err);
+        }
+      }
+      
+      song.title = newTitle;
+      song.artist = newArtist;
+    }
+
+    res.json({ 
+      success: true, 
+      message: `Metadatos corregidos: ${newArtist} - ${newTitle}`, 
+      newPath, 
+      artist: newArtist, 
+      title: newTitle 
+    });
+  } catch (error) {
+    console.error('[fix-metadata] Error:', error);
+    res.status(500).json({ error: 'Error al corregir metadatos: ' + error.message });
+  }
+});
+
+// ============================================================
+// RUTA - PORTADA DE ARTISTA
+// ============================================================
+
+app.get('/artist-cover/:artistName', async (req, res) => {
+  try {
+    const encodedName = req.params.artistName;
+    let artistName = decodeURIComponent(encodedName);
+    
+    const cleanName = artistName.replace(/[\[\]\(\)]/g, '').trim();
+    
+    let song = songCache.find(s => s.artist === artistName);
+    if (!song && cleanName !== artistName) {
+      song = songCache.find(s => s.artist === cleanName);
+    }
+    if (!song) {
+      const withBrackets = `[${cleanName}]`;
+      song = songCache.find(s => s.artist === withBrackets);
+    }
+
+    if (!song) return res.status(404).send('Artista no encontrado');
+
+    const albumDir = path.dirname(absolutePath(song.relPath));
+    const coverPath = path.join(albumDir, 'cover.jpg');
+    if (fs.existsSync(coverPath)) {
+      res.set('Content-Type', 'image/jpeg');
+      res.set('Cache-Control', 'public, max-age=86400');
+      res.sendFile(coverPath);
+      return;
+    }
+
+    const coverPngPath = path.join(albumDir, 'cover.png');
+    if (fs.existsSync(coverPngPath)) {
+      res.set('Content-Type', 'image/png');
+      res.set('Cache-Control', 'public, max-age=86400');
+      res.sendFile(coverPngPath);
+      return;
+    }
+
+    res.status(404).send('No cover');
+  } catch (error) {
+    console.error('[artist-cover] Error:', error);
+    res.status(500).send('Error');
+  }
+});
+
+// ============================================================
+// RUTAS - PORTADAS Y AUDIO
+// ============================================================
+
 app.get('/cover/:id', async (req, res) => {
-  const song = getSongById(req.params.id);
+  const song = songMap.get(req.params.id);
   if (!song) return res.status(404).end();
 
   const albumDir = path.dirname(absolutePath(song.relPath));
@@ -386,7 +988,7 @@ app.get('/cover/:id', async (req, res) => {
 });
 
 app.get('/audio/:id', (req, res) => {
-  const song = getSongById(req.params.id);
+  const song = songMap.get(req.params.id);
   if (!song) return res.status(404).end();
 
   const filePath = absolutePath(song.relPath);
@@ -418,307 +1020,10 @@ app.get('/audio/:id', (req, res) => {
   }
 });
 
-app.post('/api/songs/:id/like', async (req, res) => {
-  const song = getSongById(req.params.id);
-  if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
-  const userId = req.body.userId || null;
-  await db.setSongFlag(song, 'liked', Boolean(req.body.liked), userId);
-  res.json({ ok: true });
-});
+// ============================================================
+// RUTAS - PLAYLISTS
+// ============================================================
 
-app.post('/api/songs/:id/hide', async (req, res) => {
-  const song = getSongById(req.params.id);
-  if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
-  const userId = req.body.userId || null;
-  await db.setSongFlag(song, 'hidden', true, userId);
-  res.json({ ok: true });
-});
-
-app.delete('/api/songs', async (req, res) => {
-  try {
-    const { id, filename, userId } = req.body;
-    if (!id && !filename) {
-      return res.status(400).json({ error: 'Se requiere id o filename' });
-    }
-
-    const song = id ? getSongById(id) : getSongById(filename);
-    if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
-
-    const fullPath = absolutePath(song.relPath);
-    
-    if (fs.existsSync(fullPath)) {
-      try {
-        if (!fs.existsSync(TRASH_DIR)) fs.mkdirSync(TRASH_DIR, { recursive: true });
-        
-        const now = new Date();
-        const trashSubDir = path.join(TRASH_DIR, 
-          `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-        );
-        if (!fs.existsSync(trashSubDir)) fs.mkdirSync(trashSubDir, { recursive: true });
-        
-        const trashName = `${Date.now()}_${path.basename(fullPath)}`;
-        const trashPath = path.join(trashSubDir, trashName);
-        
-        try {
-          fs.copyFileSync(fullPath, trashPath);
-          fs.unlinkSync(fullPath);
-        } catch {
-          try { fs.renameSync(fullPath, trashPath); } catch { fs.unlinkSync(fullPath); }
-        }
-      } catch {}
-    }
-
-    await db.setSongFlag(song, 'deleted', true, userId);
-    removeSongFromCache(song.id);
-    await db.deleteSongFromPrefs(song.id, userId);
-
-    res.json({ message: 'Canción eliminada correctamente' });
-  } catch (error) {
-    console.error('Error deleting song:', error);
-    res.status(500).json({ error: 'Error al eliminar la canción' });
-  }
-});
-
-// ====== ENDPOINTS PARA OBTENER TODOS LOS ARTISTAS/ALBUMES/GENEROS ======
-// Estos endpoints devuelven directamente desde el caché del scanner,
-// sin paginación, para que la búsqueda funcione correctamente.
-
-function buildArtistsFromCache(songs, hiddenArtists = new Set()) {
-  const map = new Map();
-  const pref = (str) => String(str || '').trim();
-  
-  for (const s of songs) {
-    if (hiddenArtists.has(s.artist)) continue;
-    const raw = pref(s.artist) || 'Artista desconocido';
-    const key = raw.toLowerCase();
-    let entry = map.get(key);
-    if (!entry) {
-      entry = { name: raw, songs: [] };
-      map.set(key, entry);
-    }
-    // Agregar esta canción al artista
-    entry.songs.push(s);
-  }
-  
-  return [...map.values()]
-    .map((g) => ({
-      name: g.name,
-      songs: g.songs,
-      coverId: g.songs.find((s) => s.hasCover)?.id || g.songs[0].id,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'es'));
-}
-
-function buildAlbumsFromCache(songs) {
-  const map = new Map();
-  const pref = (str) => String(str || '').trim();
-  
-  for (const s of songs) {
-    const raw = pref(s.album) || 'Sin álbum';
-    const key = `${raw.toLowerCase()}-${s.artist}`;
-    let entry = map.get(key);
-    if (!entry) {
-      entry = { name: raw, artist: s.artist, songs: [] };
-      map.set(key, entry);
-    } else {
-      if (!entry.artist && s.artist) entry.artist = s.artist;
-    }
-    entry.songs.push(s);
-  }
-  
-  return [...map.values()]
-    .map((g) => ({
-      name: g.name,
-      artist: g.artist,
-      songs: g.songs,
-      coverId: g.songs.find((s) => s.hasCover)?.id || g.songs[0].id,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'es'));
-}
-
-function buildYearsFromCache(songs) {
-  const map = new Map();
-  const pref = (str) => String(str || '').trim();
-  
-  for (const s of songs) {
-    const raw = pref(s.year) || 'Sin año';
-    if (!raw || raw === 'Sin año') continue;
-    const key = raw.toLowerCase();
-    let entry = map.get(key);
-    if (!entry) {
-      entry = { name: raw, songs: [] };
-      map.set(key, entry);
-    }
-    entry.songs.push(s);
-  }
-  
-  return [...map.values()]
-    .map((g) => ({
-      name: g.name,
-      songs: g.songs,
-      coverId: g.songs.find((s) => s.hasCover)?.id || g.songs[0].id,
-    }))
-    .sort((a, b) => {
-      const ya = parseInt(a.name, 10);
-      const yb = parseInt(b.name, 10);
-      if (!isNaN(ya) && !isNaN(yb)) return yb - ya;
-      if (!isNaN(ya)) return -1;
-      if (!isNaN(yb)) return 1;
-      return a.name.localeCompare(b.name, 'es');
-    });
-}
-
-function buildGenresFromCache(songs) {
-  const map = new Map();
-  const pref = (str) => String(str || '').trim();
-  
-  for (const s of songs) {
-    const raw = pref(s.genre) || 'Sin género';
-    const key = raw.toLowerCase();
-    let entry = map.get(key);
-    if (!entry) {
-      entry = { name: raw, songs: [] };
-      map.set(key, entry);
-    }
-    entry.songs.push(s);
-  }
-  
-  return [...map.values()]
-    .map((g) => ({
-      name: g.name,
-      songs: g.songs,
-      coverId: g.songs.find((s) => s.hasCover)?.id || g.songs[0].id,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'es'));
-}
-
-app.get('/api/artists', async (req, res) => {
-  try {
-    const cache = getCache();
-    const userId = req.query.userId || null;
-    let hiddenArtists = new Set();
-    let prefs = {};
-    
-    try {
-      hiddenArtists = await db.getHiddenArtists(userId);
-      prefs = await db.getSongPrefs(userId);
-    } catch {}
-
-    // Filtrar canciones ocultas/eliminadas además de artistas ocultos
-    const visibleSongs = cache.songs.filter(s => {
-      if (hiddenArtists.has(s.artist)) return false;
-      const p = prefs[s.id];
-      if (p && (p.deleted || p.hidden)) return false;
-      return true;
-    });
-
-    const artists = buildArtistsFromCache(visibleSongs);
-    res.json({ artists, count: artists.length });
-  } catch (err) {
-    console.error('[api/artists] Error:', err);
-    res.status(500).json({ error: 'Error al obtener artistas' });
-  }
-});
-
-app.get('/api/albums', async (req, res) => {
-  try {
-    const cache = getCache();
-    const userId = req.query.userId || null;
-    let hiddenArtists = new Set();
-    let prefs = {};
-    
-    try {
-      hiddenArtists = await db.getHiddenArtists(userId);
-      prefs = await db.getSongPrefs(userId);
-    } catch {}
-
-    // Filtrar canciones ocultas/eliminadas además de artistas ocultos
-    const visibleSongs = cache.songs.filter(s => {
-      if (hiddenArtists.has(s.artist)) return false;
-      const p = prefs[s.id];
-      if (p && (p.deleted || p.hidden)) return false;
-      return true;
-    });
-
-    const albums = buildAlbumsFromCache(visibleSongs);
-    res.json({ albums, count: albums.length });
-  } catch (err) {
-    console.error('[api/albums] Error:', err);
-    res.status(500).json({ error: 'Error al obtener álbumes' });
-  }
-});
-
-app.get('/api/genres', async (req, res) => {
-  try {
-    const cache = getCache();
-    const userId = req.query.userId || null;
-    let hiddenArtists = new Set();
-    let prefs = {};
-    
-    try {
-      hiddenArtists = await db.getHiddenArtists(userId);
-      prefs = await db.getSongPrefs(userId);
-    } catch {}
-
-    // Filtrar canciones ocultas/eliminadas además de artistas ocultos
-    const visibleSongs = cache.songs.filter(s => {
-      if (hiddenArtists.has(s.artist)) return false;
-      const p = prefs[s.id];
-      if (p && (p.deleted || p.hidden)) return false;
-      return true;
-    });
-
-    const genres = buildGenresFromCache(visibleSongs);
-    res.json({ genres, count: genres.length });
-  } catch (err) {
-    console.error('[api/genres] Error:', err);
-    res.status(500).json({ error: 'Error al obtener géneros' });
-  }
-});
-
-app.get('/api/years', async (req, res) => {
-  try {
-    const cache = getCache();
-    const userId = req.query.userId || null;
-    let hiddenArtists = new Set();
-    let prefs = {};
-    
-    try {
-      hiddenArtists = await db.getHiddenArtists(userId);
-      prefs = await db.getSongPrefs(userId);
-    } catch {}
-
-    // Filtrar canciones ocultas/eliminadas además de artistas ocultos
-    const visibleSongs = cache.songs.filter(s => {
-      if (hiddenArtists.has(s.artist)) return false;
-      const p = prefs[s.id];
-      if (p && (p.deleted || p.hidden)) return false;
-      return true;
-    });
-
-    const years = buildYearsFromCache(visibleSongs);
-    res.json({ years, count: years.length });
-  } catch (err) {
-    console.error('[api/years] Error:', err);
-    res.status(500).json({ error: 'Error al obtener años' });
-  }
-});
-
-app.post('/api/artists/hide', async (req, res) => {
-  const { artist, userId } = req.body;
-  if (!artist) return res.status(400).json({ error: 'Falta el artista' });
-  await db.setArtistHidden(artist, true, userId);
-  res.json({ ok: true });
-});
-
-app.post('/api/artists/unhide', async (req, res) => {
-  const { artist, userId } = req.body;
-  if (!artist) return res.status(400).json({ error: 'Falta el artista' });
-  await db.setArtistHidden(artist, false, userId);
-  res.json({ ok: true });
-});
-
-// ====== RUTAS DE PLAY LISTS ======
 app.get('/api/playlists', async (req, res) => {
   try {
     const userId = req.query.userId || null;
@@ -789,13 +1094,155 @@ app.delete('/api/playlists/:id', async (req, res) => {
   }
 });
 
-// ====== INICIAR SERVIDOR ======
+// ============================================================
+// RUTAS - LETRAS DE CANCIONES
+// ============================================================
+
+app.get('/api/lyrics/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const song = songMap.get(id);
+    
+    if (!song) {
+      return res.status(404).json({ error: 'Canción no encontrada' });
+    }
+    
+    const dbLyrics = await db.getLyrics(id);
+    
+    if (dbLyrics) {
+      return res.json({
+        success: true,
+        hasLyrics: true,
+        lyrics: dbLyrics.text,
+        syncedLines: dbLyrics.synced_text ? parseSyncedLines(dbLyrics.synced_text) : null,
+        translatedLyrics: dbLyrics.translated_text || null,
+        title: song.title,
+        artist: song.artist
+      });
+    }
+    
+    const songPath = absolutePath(song.relPath);
+    const result = await getLyricsFromService(id, song.title, song.artist, songPath);
+    
+    if (!result.lyrics) {
+      return res.json({ 
+        success: false, 
+        message: 'No se encontraron letras para esta canción',
+        hasLyrics: false
+      });
+    }
+    
+    await db.saveLyrics(id, {
+      text: result.lyrics,
+      syncedText: result.syncedLines ? result.syncedLines.map(l => `[${l.time}] ${l.text}`).join('\n') : null,
+      translatedText: result.translatedLyrics || null
+    });
+    
+    res.json({
+      success: true,
+      hasLyrics: true,
+      lyrics: result.lyrics,
+      syncedLines: result.syncedLines || null,
+      translatedLyrics: result.translatedLyrics || null,
+      title: song.title,
+      artist: song.artist
+    });
+  } catch (err) {
+    console.error('[api/lyrics] Error:', err);
+    res.status(500).json({ error: 'Error al obtener la letra' });
+  }
+});
+
+function parseSyncedLines(syncedText) {
+  if (!syncedText) return null;
+  const lines = syncedText.split('\n').filter(line => line.trim() !== '');
+  const result = [];
+  const lrcRegex = /^\[(\d{1,3}):(\d{2})\.(\d{2,3})\](.*)/;
+  
+  for (const line of lines) {
+    const match = line.match(lrcRegex);
+    if (match) {
+      const minutes = parseInt(match[1], 10);
+      const seconds = parseInt(match[2], 10);
+      const fraction = parseInt(match[3], 10);
+      const text = match[4].trim();
+      let timeInSeconds;
+      if (match[3].length === 3) {
+        timeInSeconds = minutes * 60 + seconds + fraction / 1000;
+      } else {
+        timeInSeconds = minutes * 60 + seconds + fraction / 100;
+      }
+      if (text) {
+        result.push({ time: timeInSeconds, text });
+      }
+    }
+  }
+  return result.length > 0 ? result : null;
+}
+
+app.post('/api/lyrics/:id/refresh', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const song = songMap.get(id);
+    
+    if (!song) {
+      return res.status(404).json({ error: 'Canción no encontrada' });
+    }
+    
+    await db.deleteLyrics(id);
+    
+    const songPath = absolutePath(song.relPath);
+    const result = await getLyricsFromService(id, song.title, song.artist, songPath);
+    
+    if (result.lyrics) {
+      await db.saveLyrics(id, {
+        text: result.lyrics,
+        syncedText: result.syncedLines ? result.syncedLines.map(l => `[${l.time}] ${l.text}`).join('\n') : null,
+        translatedText: result.translatedLyrics || null
+      });
+    }
+    
+    res.json({
+      success: true,
+      hasLyrics: !!result.lyrics,
+      lyrics: result.lyrics || null,
+      syncedLines: result.syncedLines || null,
+      translatedLyrics: result.translatedLyrics || null
+    });
+  } catch (err) {
+    console.error('[api/lyrics/refresh] Error:', err);
+    res.status(500).json({ error: 'Error al refrescar la letra' });
+  }
+});
+
+// ============================================================
+// CIERRE GRACEFUL
+// ============================================================
+
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Cerrando servidor...');
+  await db.closeDb();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 Cerrando servidor...');
+  await db.closeDb();
+  process.exit(0);
+});
+
+// ============================================================
+// INICIAR SERVIDOR
+// ============================================================
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🎵 ==========================================`);
   console.log(`   🎵 MIREPO - SERVIDOR COMPLETO`);
   console.log(`   ==========================================`);
   console.log(`   📡 Local:    http://localhost:${PORT}`);
-  console.log(`   📡 Red:      http://${LOCAL_IP}:${PORT}`);
+  LOCAL_IPS.forEach(ip => {
+    console.log(`   📡 Red:      http://${ip}:${PORT}`);
+  });
   console.log(`   📂 Música:   ${MUSIC_DIR}`);
   console.log(`   ==========================================`);
   console.log(`   ✅ Servidor listo`);

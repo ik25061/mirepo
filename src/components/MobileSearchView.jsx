@@ -15,9 +15,9 @@ export default function MobileSearchView({ tracks, currentTrack }) {
   const results = query.trim()
     ? tracks.filter(
         (t) =>
-          t.title.toLowerCase().includes(query.toLowerCase()) ||
-          t.artist.toLowerCase().includes(query.toLowerCase()) ||
-          t.album.toLowerCase().includes(query.toLowerCase())
+          (t.title && t.title.toLowerCase().includes(query.toLowerCase())) ||
+          (t.artist && t.artist.toLowerCase().includes(query.toLowerCase())) ||
+          (t.album && t.album.toLowerCase().includes(query.toLowerCase()))
       )
     : [];
 
@@ -300,7 +300,7 @@ export default function MobileSearchView({ tracks, currentTrack }) {
                     {track.title}
                   </p>
                   <p className="truncate" style={{ fontSize: 12, color: '#a7a7a7' }}>
-                    {track.artist} · {track.album}
+                    {track.artist || 'Desconocido'} · {track.album || 'Desconocido'}
                   </p>
                 </div>
                 <Play size={18} style={{ color: '#a7a7a7', flexShrink: 0 }} />

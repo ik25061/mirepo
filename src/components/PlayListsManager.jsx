@@ -99,6 +99,9 @@ export default function PlayListsManager({
     setPlayListSongs([]);
   };
 
+  // Calcular likedIds a partir de allSongs
+  const likedIds = new Set(allSongs?.filter(s => s.liked).map(s => s.id) || []);
+
   // Si estamos viendo una lista específica
   if (selectedPlayList) {
     return (
@@ -150,9 +153,11 @@ export default function PlayListsManager({
                 onDelete={onDelete}
                 showDelete
                 context={null}
+                likedIds={likedIds}
               />
             ))}
           </div>
+
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Music2 size={48} className="text-muted-foreground/40 mb-4" />
