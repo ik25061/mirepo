@@ -18,7 +18,6 @@ export function useAllSongs({ enabled = true } = {}) {
   const loadedRef = useRef(false);
   const prevUserIdRef = useRef(userId);
 
-  // Siempre cargar sin caché para obtener datos actualizados
   const loadAllSongs = useCallback(async (force = false) => {
     if (!enabled) {
       if (mountedRef.current) {
@@ -46,18 +45,23 @@ export function useAllSongs({ enabled = true } = {}) {
       // Obtener todas las canciones (sin likedOnly para tener la lista completa con liked)
       const data = await api.getLibrary({ limit: 99999, offset: 0, userId });
       if (mountedRef.current) {
-        setAllSongs(data.songs || []);
+        // Asegurar que las canciones tengan el campo liked correcto
+        const songs = (data.songs || []).map(s => ({
+          ...s,
+          liked: s.liked || false
+        }));
+        setAllSongs(songs);
         // Guardar caché local para fallback offline
         try {
-          if (typeof window !== 'undefined' && data.songs) {
-            window.localStorage.setItem('mirepo_lastLibrary', JSON.stringify(data.songs));
+          if (typeof window !== 'undefined' && songs) {
+            window.localStorage.setItem('mirepo_lastLibrary', JSON.stringify(songs));
           }
         } catch (err) {
           console.warn('[useAllSongs] No se pudo guardar caché:', err);
         }
         setError(null);
         loadedRef.current = true;
-        console.log('[useAllSongs] ✅ Cargadas:', data.songs?.length || 0, 'canciones');
+        console.log('[useAllSongs] ✅ Cargadas:', songs.length, 'canciones');
       }
     } catch (err) {
       console.error('[useAllSongs] ❌ Error:', err);
@@ -83,7 +87,7 @@ export function useAllSongs({ enabled = true } = {}) {
         setLoading(false);
       }
     }
-  }, [userId]);
+  }, [userId, enabled]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -122,5 +126,3 @@ export function useAllSongs({ enabled = true } = {}) {
 
   return { allSongs, loading, error, reload, toggleLiked, removeSong, loadAllSongs };
 }
-
-
