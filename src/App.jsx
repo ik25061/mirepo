@@ -77,7 +77,7 @@ function Shell() {
     downloadSongs,
     updateLiked,
     removeDownload,
-    syncLikes,          // <-- Ahora usamos syncLikes directamente
+    syncLikes,
     isDownloaded,
     syncingSongs,
     currentlySyncingSong,
@@ -104,11 +104,16 @@ function Shell() {
   const [gridLoading, setGridLoading] = useState(false);
   const [gridItems, setGridItems] = useState([]);
   const [gridType, setGridType] = useState('artists');
+  const [gridLoadMore, setGridLoadMore] = useState(null);
+  const [gridTotal, setGridTotal] = useState(0);
 
   // ============================================================
   // 3. REFERENCIAS (useRef)
   // ============================================================
   const gridLoaderRef = useRef(null);
+  const gridLoadMoreRef = useRef(null);
+  const gridLoadingRef = useRef(gridLoading);
+  const gridHasMoreRef = useRef(gridHasMore);
 
   // ============================================================
   // 4. EFECTOS (useEffect) - Siempre en el mismo orden
@@ -121,7 +126,7 @@ function Shell() {
     return () => window.removeEventListener('resize', handler);
   }, []);
 
-  // 4.2 Sincronizar likes pendientes al autenticar (NUEVO)
+  // 4.2 Sincronizar likes pendientes al autenticar
   useEffect(() => {
     if (isAuthenticated && user) {
       syncLikes(user.id);
@@ -142,46 +147,56 @@ function Shell() {
 
   const openCollection = (collection) => setView({ type: 'collection', collection });
 
-  const openGridView = useCallback((type, items) => {
+  const openGridView = useCallback((type, items, loadMoreFn, hasMore, total) => {
     setGridType(type);
     setGridItems(items);
-    setGridOffset(GRID_PAGE_SIZE);
-    setGridHasMore(items.length > GRID_PAGE_SIZE);
-    setView({ type: 'grid', gridData: { type, items: items.slice(0, GRID_PAGE_SIZE) } });
+    setGridOffset(items.length);
+    setGridHasMore(hasMore || false);
+    setGridLoadMore(() => loadMoreFn || null);
+    setGridTotal(total || items.length);
+    setView({ type: 'grid', gridData: { type, hasMore: hasMore || false, total: total || items.length } });
   }, []);
 
-  const loadMoreGridItems = useCallback(() => {
-    if (gridLoading || !gridHasMore) return;
+  const loadMoreGridItems = useCallback(async () => {
+    if (gridLoadingRef.current || !gridHasMoreRef.current || !gridLoadMoreRef.current) {
+      console.log('[App] loadMoreGridItems bloqueado');
+      return;
+    }
 
     setGridLoading(true);
+    gridLoadingRef.current = true;
 
-    setTimeout(() => {
-      const nextOffset = gridOffset;
-      const nextItems = gridItems.slice(nextOffset, nextOffset + GRID_PAGE_SIZE);
-
-      if (nextItems.length > 0) {
-        setGridOffset(prev => prev + nextItems.length);
-        setGridHasMore(gridItems.length > nextOffset + nextItems.length);
-
+    try {
+      console.log('[App] Ejecutando loadMoreGridItems...');
+      const result = await gridLoadMoreRef.current();
+      console.log('[App] Resultado loadMoreGridItems:', result);
+      if (result && Array.isArray(result.items)) {
+        setGridItems(prev => {
+          const next = [...prev, ...result.items];
+          console.log('[App] gridItems actualizado:', next.length);
+          return next;
+        });
+        if (typeof result.hasMore === 'boolean') {
+          setGridHasMore(result.hasMore);
+          gridHasMoreRef.current = result.hasMore;
+        }
         setView(prev => {
           if (prev.type === 'grid' && prev.gridData) {
-            return {
-              ...prev,
-              gridData: {
-                ...prev.gridData,
-                items: [...prev.gridData.items, ...nextItems],
-              },
-            };
+            const nextItems = [...(prev.gridData.items || []), ...result.items];
+            console.log('[App] view.gridData.items actualizado:', nextItems.length);
+            return { ...prev, gridData: { ...prev.gridData, items: nextItems } };
           }
           return prev;
         });
-      } else {
-        setGridHasMore(false);
       }
-
+      console.log('[App] gridLoading puesto en false, lock liberado');
+    } catch (err) {
+      console.error('[App] Error cargando más items del grid:', err);
+    } finally {
       setGridLoading(false);
-    }, 300);
-  }, [gridLoading, gridHasMore, gridOffset, gridItems]);
+      gridLoadingRef.current = false;
+    }
+  }, []);
 
   const openArtistFromNowPlaying = (collection) => {
     setView({ type: 'collection', collection });
@@ -192,6 +207,18 @@ function Shell() {
   // ============================================================
   // 6. HANDLERS DE LIKES/DISLIKES (useCallback)
   // ============================================================
+
+  useEffect(() => {
+    gridLoadMoreRef.current = gridLoadMore;
+  }, [gridLoadMore]);
+
+  useEffect(() => {
+    gridHasMoreRef.current = gridHasMore;
+  }, [gridHasMore]);
+
+  useEffect(() => {
+    gridLoadingRef.current = gridLoading;
+  }, [gridLoading]);
 
   const handleLike = useCallback(async (songOrId) => {
     if (!songOrId) return;
@@ -204,7 +231,7 @@ function Shell() {
       } catch (e) {
         console.error('[App] Error updateLiked:', e);
       }
-      try { toggleLiked?.(songId, true); } catch (e) {}
+      try { toggleLiked?.(songId, true); } catch (e) { }
     } else {
       lib.toggleLike(songId);
     }
@@ -222,8 +249,8 @@ function Shell() {
       } catch (e) {
         console.error('[App] Error updateLiked(false):', e);
       }
-      try { await removeDownload(songId); } catch (e) {}
-      try { toggleLiked?.(songId, false); } catch (e) {}
+      try { await removeDownload(songId); } catch (e) { }
+      try { toggleLiked?.(songId, false); } catch (e) { }
     } else if (typeof song !== 'string') {
       lib.dislikeSong(song);
     }
@@ -235,18 +262,18 @@ function Shell() {
   const GRID_PAGE_SIZE = 30;
   const library = offlineMode
     ? {
-        ...lib,
-        songs: localSongs,
-        counts: { total: localSongs.length, trash: 0 },
-        loading: localLoading,
-        error: localError,
-        hasMore: false,
-        isLoadingMore: false,
-        toggleLike: toggleLocalLike,
-        dislikeSong: () => {},
-        dislikeArtist: () => {},
-        removeSong: () => {},
-      }
+      ...lib,
+      songs: localSongs,
+      counts: { total: localSongs.length, trash: 0 },
+      loading: localLoading,
+      error: localError,
+      hasMore: false,
+      isLoadingMore: false,
+      toggleLike: toggleLocalLike,
+      dislikeSong: () => { },
+      dislikeArtist: () => { },
+      removeSong: () => { },
+    }
     : lib;
 
   const allSongs = offlineMode ? localSongs : serverAllSongs;
@@ -404,7 +431,7 @@ function Shell() {
             <DownloadsView onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'grid' ? (
             <GridView
-              items={view.gridData.items}
+              items={gridItems}
               type={view.gridData.type}
               onBack={() => setView({ type: 'home' })}
               onOpenCollection={openCollectionHandler}
@@ -413,6 +440,7 @@ function Shell() {
               isLoadingMore={gridLoading}
               onLoadMore={loadMoreGridItems}
               loadMoreRef={gridLoaderRef}
+              total={gridTotal}
             />
           ) : view.type === 'duplicates' ? (
             <DuplicateFinder onBack={() => setView({ type: 'home' })} />
@@ -425,6 +453,7 @@ function Shell() {
               onDislikeArtist={library.dislikeArtist}
               onDelete={library.removeSong}
               allSongs={allSongs}
+              userId={user?.id}
             />
           ) : view.type === 'likedSongs' ? (
             <LikedSongsView
@@ -546,7 +575,7 @@ function Shell() {
             <DownloadsView onBack={() => setView({ type: 'home' })} />
           ) : view.type === 'grid' ? (
             <GridView
-              items={view.gridData.items}
+              items={gridItems}
               type={view.gridData.type}
               onBack={() => setView({ type: 'home' })}
               onOpenCollection={openCollectionHandler}
@@ -555,6 +584,7 @@ function Shell() {
               isLoadingMore={gridLoading}
               onLoadMore={loadMoreGridItems}
               loadMoreRef={gridLoaderRef}
+              total={gridTotal}
             />
           ) : view.type === 'duplicates' ? (
             <DuplicateFinder onBack={() => setView({ type: 'home' })} />
@@ -567,6 +597,7 @@ function Shell() {
               onDislikeArtist={library.dislikeArtist}
               onDelete={library.removeSong}
               allSongs={allSongs}
+              userId={user?.id}
             />
           ) : view.type === 'likedSongs' ? (
             <LikedSongsView
