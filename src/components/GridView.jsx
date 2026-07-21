@@ -211,7 +211,7 @@ export default function GridView({
     onOpenCollection({ 
       kind: kindMap[type] || 'Lista', 
       name: item.name || String(item.year), 
-      songs: item.songs || [],
+      songs: [], // Always fetch from API
       id: item.id || item.year
     });
   };
