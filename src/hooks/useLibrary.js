@@ -3,8 +3,8 @@
  * USE LIBRARY - HOOK PARA GESTIONAR LA BIBLIOTECA
  * ============================================================
  * 
- * Implementa scroll infinito usando IntersectionObserver.
- * Basado en: https://dev.to/franklin030601/creando-un-scroll-infinito-con-react-js-27gf
+ * Implementa scroll infinito con shuffle diario y cursor
+ * para evitar repeticiones hasta agotar el catálogo.
  */
 
 import { useCallback, useEffect, useState, useRef } from 'react';
@@ -12,7 +12,6 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api.js';
 
 // HOOK PRINCIPAL
-// ============================================================
 export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {}) {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const userId = user?.id;
@@ -27,6 +26,7 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [shuffleSeed, setShuffleSeed] = useState(null);
   
   // ============================================================
   // REFERENCIAS
@@ -34,6 +34,20 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
   const initialLoadDoneRef = useRef(false);
   const prevUserIdRef = useRef(userId);
   const PAGE_SIZE = 100;
+
+  // ============================================================
+  // GENERAR SEMILLA DIARIA
+  // ============================================================
+  const getDailySeed = useCallback(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const base = `${userId || 'anon'}-${today}`;
+    let seed = 0;
+    for (let i = 0; i < base.length; i++) {
+      seed = ((seed << 5) - seed) + base.charCodeAt(i);
+      seed = seed & seed;
+    }
+    return Math.abs(seed) || 1;
+  }, [userId]);
 
   // ============================================================
   // CARGA INICIAL
@@ -59,7 +73,16 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
       console.log('[useLibrary] 📥 Carga inicial...');
       setLoading(true);
       
-      const data = await api.getLibrary({ limit: PAGE_SIZE, offset: 0, userId });
+      const seed = getDailySeed();
+      setShuffleSeed(seed);
+      
+      const data = await api.getLibrary({ 
+        limit: PAGE_SIZE, 
+        offset: 0, 
+        userId,
+        shuffleSeed: seed
+      });
+      
       console.log('[useLibrary] 📊 Datos recibidos:', data.songs?.length || 0, 'canciones');
       
       const incoming = data.songs || [];
@@ -86,15 +109,12 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, enabled, getDailySeed]);
 
   // ============================================================
   // CARGA DE MÁS CANCIONES (SCROLL INFINITO)
   // ============================================================
   const loadMore = useCallback(async () => {
-    // ============================================================
-    // PREVENIR CARGAS MÚLTIPLES
-    // ============================================================
     if (isLoadingMore) {
       console.log('[useLibrary] ⏳ Ya cargando más, ignorando...');
       return;
@@ -120,7 +140,14 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
     
     try {
       const offset = page * PAGE_SIZE;
-      const data = await api.getLibrary({ limit: PAGE_SIZE, offset, userId });
+      const seed = shuffleSeed || getDailySeed();
+      
+      const data = await api.getLibrary({ 
+        limit: PAGE_SIZE, 
+        offset, 
+        userId,
+        shuffleSeed: seed
+      });
       
       const incoming = data.songs || [];
       const total = typeof data.counts?.total === 'number' ? data.counts.total : offset + incoming.length;
@@ -133,9 +160,7 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
         return;
       }
 
-      // ============================================================
-      // AGREGAR NUEVAS CANCIONES (NO REEMPLAZAR)
-      // ============================================================
+      // Agregar nuevas canciones (no reemplazar)
       setSongs(prev => {
         const combined = [...prev, ...incoming];
         console.log('[useLibrary] 📊 Total canciones:', combined.length);
@@ -154,7 +179,7 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, loading, hasMore, error, page, userId]);
+  }, [isLoadingMore, loading, hasMore, error, page, userId, shuffleSeed, getDailySeed]);
 
   // ============================================================
   // RESCANEAR BIBLIOTECA
@@ -194,7 +219,7 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
     setSongs([]);
     setPage(1);
     setLoading(true);
-    loadInitial();
+    loadInitial(true);
   }, [loadInitial]);
 
   // ============================================================
@@ -207,7 +232,6 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
     }
 
     console.log('[useLibrary] 🔄 useEffect - userId:', userId);
-    // Si userId cambió, forzar recarga
     if (prevUserIdRef.current !== userId) {
       initialLoadDoneRef.current = false;
       prevUserIdRef.current = userId;
@@ -216,9 +240,7 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
   }, [loadInitial, enabled]);
 
   // ============================================================
-
-  // ============================================================
-  // TOGGLE LIKE - INDEPENDIENTE DE SI LA CANCIÓN ESTÁ EN LA LISTA
+  // TOGGLE LIKE
   // ============================================================
   const toggleLike = useCallback(async (songOrId) => {
     const songId = typeof songOrId === 'string' ? songOrId : songOrId.id;
@@ -228,19 +250,16 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
     const existingSong = songs.find((s) => s.id === songId);
     const newLiked = !(existingSong ? existingSong.liked : fallbackLiked);
 
-    // Actualizar en songs (las 100 cargadas)
     setSongs((prev) => {
       return prev.map((s) => (s.id === songId ? { ...s, liked: newLiked } : s));
     });
     
-    // Notificar a allSongs para que también actualice su estado
     onToggleLiked?.(songId, newLiked);
     
     try {
       await api.like(songId, newLiked, userId);
     } catch {
       setSongs((prev) => prev.map((s) => (s.id === songId ? { ...s, liked: !newLiked } : s)));
-      // Revertir en allSongs también
       onToggleLiked?.(songId, !newLiked);
     }
   }, [songs, userId, onToggleLiked]);
@@ -250,11 +269,9 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
   // ============================================================
   const dislikeSong = useCallback(async (song) => {
     setSongs((prev) => prev.filter((s) => s.id !== song.id));
-    // Notificar a allSongs para remover la canción
     onRemoveSong?.(song.id);
     await api.hideSong(song.id, userId);
   }, [userId, onRemoveSong]);
-
 
   // ============================================================
   // DISLIKE ARTISTA
