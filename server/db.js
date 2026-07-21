@@ -19,6 +19,15 @@ let db = null;
 let dbReady = false;
 let dbPromise = null;
 
+// Función helper para normalizar texto (quitar acentos, lowercase)
+function normalizeText(text) {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 export async function getDb() {
   if (db && dbReady) return db;
   if (dbPromise) return dbPromise;
@@ -185,8 +194,10 @@ export async function getArtistsWithPagination({ userId = null, limit = 20, offs
   }
 
   if (search) {
-    sql += ` AND a.name LIKE ?`;
-    params.push(`%${search}%`);
+    const normalizedSearch = normalizeText(search);
+    // Usar REPLACE para quitar acentos de los datos y comparar con término normalizado
+    sql += ` AND LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.name,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u')) LIKE LOWER(?)`;
+    params.push(`%${normalizedSearch}%`);
   }
 
   sql += ` ORDER BY a.name LIMIT ? OFFSET ?`;
@@ -328,8 +339,9 @@ export async function getAlbumsWithPagination({ userId = null, limit = 100, offs
   const params = [];
 
   if (search) {
-    sql += ` AND (al.name LIKE ? OR a.name LIKE ?)`;
-    params.push(`%${search}%`, `%${search}%`);
+    const normalizedSearch = normalizeText(search);
+    sql += ` AND (LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(al.name,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u')) LIKE LOWER(?) OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.name,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u')) LIKE LOWER(?))`;
+    params.push(`%${normalizedSearch}%`, `%${normalizedSearch}%`);
   }
 
   sql += ` ORDER BY al.name LIMIT ? OFFSET ?`;
@@ -449,8 +461,9 @@ export async function getGenresWithPagination({ userId = null, limit = 100, offs
   const params = [];
 
   if (search) {
-    sql += ` AND g.name LIKE ?`;
-    params.push(`%${search}%`);
+    const normalizedSearch = normalizeText(search);
+    sql += ` AND LOWER(g.name) LIKE LOWER(?)`;
+    params.push(`%${normalizedSearch}%`);
   }
 
   sql += ` ORDER BY g.name LIMIT ? OFFSET ?`;

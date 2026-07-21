@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { ArrowLeft, Play, Search } from 'lucide-react';
+import { ArrowLeft, Play, Search, Loader2 } from 'lucide-react';
 import Cover from './Cover.jsx';
 import { usePlayer } from '../context/PlayerContext.jsx';
 import { artistCoverUrl } from '../lib/api.js';
@@ -137,10 +137,13 @@ export default function GridView({
   };
 
   // ============================================================
-  // ORDENAMIENTO Y BÚSQUEDA
+  // ORDENAMIENTO Y BÚSQUEDA (API si hay conexión, local si offline)
   // ============================================================
   const [sortBy, setSortBy] = useState('name');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null); // null = no search, [] = no results
+  const [searching, setSearching] = useState(false);
+  const searchTimeoutRef = useRef(null);
 
   const normalizeText = (text) => {
     return text
@@ -150,14 +153,62 @@ export default function GridView({
       .trim();
   };
 
+  // Buscar en API cuando hay conexión y searchQuery cambia
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (!searchQuery.trim() || !navigator.onLine) {
+      setSearchResults(null);
+      setSearching(false);
+      return;
+    }
+
+    // Resetear resultados mientras se busca (evita mostrar datos viejos)
+    setSearchResults([]);
+    setSearching(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const endpoint = `/api/${type}?search=${encodeURIComponent(searchQuery)}&limit=9999`;
+        const response = await fetch(endpoint);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        setSearchResults(data.items || []);
+      } catch (err) {
+        console.error('[GridView] Error buscando en API:', err);
+        setSearchResults(null);
+      } finally {
+        setSearching(false);
+      }
+    }, 400); // Debounce 400ms
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [searchQuery, type]);
+
+  // Determinar qué items mostrar: resultados de API, filtro local, o todo
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return localItems;
+
+    if (navigator.onLine) {
+      // Con conexión: SOLO usar resultados de la API
+      // searchResults = null significa "sin búsqueda activa" (no debería pasar aquí)
+      // searchResults = [] significa "buscando" o "sin resultados"
+      // Si la API falló, mostrar vacío en lugar de datos locales incorrectos
+      return searchResults ?? [];
+    }
+
+    // Sin conexión: filtrar localmente
     const query = normalizeText(searchQuery);
     return localItems.filter((item) => {
       const name = normalizeText(item.name || item.year || '');
       return name.includes(query);
     });
-  }, [localItems, searchQuery]);
+  }, [localItems, searchQuery, searchResults]);
 
   const sorted = useMemo(() => {
     const list = [...filtered];
@@ -282,8 +333,16 @@ export default function GridView({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={`Buscar ${getTitle().toLowerCase()}...`}
-            className="w-full rounded-lg border border-border bg-surface pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            className="w-full rounded-lg border border-border bg-surface pl-10 pr-10 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
+          {searching && (
+            <Loader2 size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-primary animate-spin" />
+          )}
+          {!searching && searchQuery && searchResults?.length === 0 && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+              0 resultados
+            </span>
+          )}
         </div>
     
       </header>

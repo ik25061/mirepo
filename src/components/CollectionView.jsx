@@ -4,8 +4,9 @@
  * ============================================================
  * 
  * Estrategia de carga:
- * 1. Filtra localmente desde allSongs (para modo offline y descargas)
- * 2. Si no hay resultados locales y hay conexión, consulta el endpoint del servidor
+ * 1. Si hay conexión, consulta directamente la API (paginación completa)
+ * 2. Si no hay conexión o la API falla, filtra localmente desde allSongs
+ * 3. En modo descargas/offline, usa siempre el filtro local
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -67,8 +68,9 @@ export default function CollectionView({
     
     setIsLoadingMore(true);
     try {
+      const currentOffset = reset ? 0 : offset;
       let endpoint = '';
-      const params = { limit: PAGE_SIZE, offset: reset ? 0 : offset, userId };
+      const params = { limit: PAGE_SIZE, offset: currentOffset, userId };
       
       if (kind === 'Artista') endpoint = `/api/artists/${id}/songs`;
       else if (kind === 'Álbum') endpoint = `/api/albums/${id}/songs`;
@@ -76,11 +78,17 @@ export default function CollectionView({
       else if (kind === 'Año') endpoint = `/api/years/${id}/songs`;
       else {
         setIsLoadingMore(false);
+        setLoading(false);
         return;
       }
 
       const qs = new URLSearchParams(params);
       const response = await fetch(`${endpoint}?${qs.toString()}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const data = await response.json();
       
       const newSongs = data.songs || [];
@@ -90,15 +98,18 @@ export default function CollectionView({
       setTotal(data.pagination?.total || newSongs.length);
       setSource('api');
     } catch (err) {
-      console.error('Error cargando desde API:', err);
+      console.error('[CollectionView] Error cargando desde API:', err.message);
     } finally {
       setIsLoadingMore(false);
+      setLoading(false);
     }
   }, [kind, id, offset, userId, isLoadingMore]);
 
-  // Inicialización: priorizar local, fallback a API
+  // Inicialización: priorizar API si hay conexión, fallback a local si offline
   useEffect(() => {
     if (!kind || !id) return;
+    
+    console.log('[CollectionView] Inicializando:', { kind, name, id, userId, online: navigator.onLine });
     
     setSongs([]);
     setOffset(0);
@@ -107,21 +118,26 @@ export default function CollectionView({
     setSource('local');
     hasAttemptedApiRef.current = false;
 
-    // Paso 1: Usar datos locales primero (offline support)
-    if (localFiltered.length > 0) {
-      setSongs(localFiltered);
-      setTotal(localFiltered.length);
-      setHasMore(false); // Datos locales no tienen paginación
-      setSource('local');
-    } else if (navigator.onLine && !hasAttemptedApiRef.current) {
-      // Paso 2: Si no hay locales y hay conexión, consultar API
+    if (navigator.onLine) {
+      // Prioridad 1: API (paginación completa, resultados reales)
+      console.log('[CollectionView] Hay conexión, cargando desde API...');
       hasAttemptedApiRef.current = true;
       setLoading(true);
-      loadFromApi(true);
+      // Ejecutar loadFromApi fuera del setState batch
+      setTimeout(() => loadFromApi(true), 0);
+    } else if (localFiltered.length > 0) {
+      // Prioridad 2: Datos locales (offline o modo descargas)
+      console.log('[CollectionView] Sin conexión, usando datos locales:', localFiltered.length);
+      setSongs(localFiltered);
+      setTotal(localFiltered.length);
+      setHasMore(false);
+      setSource('local');
+      setLoading(false);
     } else {
+      console.log('[CollectionView] Sin datos disponibles');
       setLoading(false);
     }
-  }, [kind, id, name]); // Remover localFiltered y loadFromApi para evitar loops
+  }, [kind, id, name, userId]); // Añadir userId para actualizar si cambia
 
   // Configurar IntersectionObserver para scroll infinito (solo en modo API)
   useEffect(() => {
