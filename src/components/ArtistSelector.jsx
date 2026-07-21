@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useMemo } from 'react';
 import { api, artistCoverUrl } from '../lib/api.js';
 import { Check, Heart, Search, Loader2 } from 'lucide-react';
 
@@ -68,7 +69,7 @@ export default function ArtistSelector({ userId }) {
       }
 
       const currentOffset = reset ? 0 : offsetRef.current;
-      const currentSearch = searchRef.current;
+      const currentSearch = searchRef.current.trim();
       console.log(`[ArtistSelector] Cargando artistas desde offset ${currentOffset}, search="${currentSearch}"`);
       
       const res = await api.getArtists({ 
@@ -144,6 +145,36 @@ export default function ArtistSelector({ userId }) {
     loadArtists(true);
     loadFavorites();
   }, [userId]);
+
+  // ============================================================
+  // 2.5 BÚSQUEDA CON DEBOUNCE - BUSCAR EN TODA LA BD
+  // ============================================================
+
+  const searchTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    // Limpiar timeout anterior
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Resetear offset para nueva búsqueda
+    setOffset(0);
+    offsetRef.current = 0;
+    initialLoadDone.current = true; // Prevenir carga inicial duplicada
+
+    // Debounce: esperar 300ms después de dejar de escribir
+    searchTimeoutRef.current = setTimeout(() => {
+      console.log(`[ArtistSelector] Buscando: "${search}"`);
+      loadArtists(true);
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [search, loadArtists]);
 
   const observerReadyRef = useRef(false);
 
@@ -234,11 +265,8 @@ export default function ArtistSelector({ userId }) {
     );
   }
 
-  const displayedArtists = useMemo(() => {
-    if (!search.trim()) return allArtists;
-    const q = search.toLowerCase().trim();
-    return allArtists.filter(a => (a.name || '').toLowerCase().includes(q));
-  }, [allArtists, search]);
+  // No necesitamos filtrar localmente - el servidor ya filtra por búsqueda
+  const displayedArtists = allArtists;
 
   const totalArtists = total || allArtists.length;
 
