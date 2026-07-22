@@ -77,11 +77,14 @@ function Shell() {
     downloadSongs,
     updateLiked,
     removeDownload,
+    markSongForDeletion,
     syncLikes,
+    syncDeletions,
     isDownloaded,
     syncingSongs,
     currentlySyncingSong,
     pendingLikeChanges,
+    deletingSongs,
   } = useDownload();
 
   const { current, isPlaying, togglePlay, next, prev, stop, removeFromQueue } = usePlayer();
@@ -96,6 +99,7 @@ function Shell() {
   const [view, setView] = useState({ type: 'home' });
   const [showNowPlaying, setShowNowPlaying] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [shouldScrollToCurrent, setShouldScrollToCurrent] = useState(false);
 
   // Estado para scroll infinito en grid
@@ -126,12 +130,32 @@ function Shell() {
     return () => window.removeEventListener('resize', handler);
   }, []);
 
-  // 4.2 Sincronizar likes pendientes al autenticar
+  // 4.1b Detectar cambios de conectividad (online/offline).
+  // Sin estos listeners la app no reacciona al recuperar la conexión:
+  // se queda en la pantalla offline y no dispara la sincronización ni
+  // las notificaciones. Al mantener isOnline en estado, el re-render
+  // ocurre automáticamente en cuanto vuelve la red.
   useEffect(() => {
-    if (isAuthenticated && user) {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, []);
+
+  // 4.2 Sincronizar likes/dislikes/eliminaciones pendientes al autenticar
+  // y al recuperar la conexión. syncLikes se encarga internamente de los
+  // likes y de las eliminaciones diferidas; si no hay nada pendiente,
+  // no hace nada. Incluir isOnline hace que el sync (y sus notificaciones
+  // toast) se disparen también al reconectar estando ya logueado.
+  useEffect(() => {
+    if (isOnline && isAuthenticated && user) {
       syncLikes(user.id);
     }
-  }, [isAuthenticated, user, syncLikes]);
+  }, [isOnline, isAuthenticated, user, syncLikes]);
 
   // ============================================================
   // 5. FUNCIONES (useCallback) - Siempre en el mismo orden
@@ -257,12 +281,13 @@ function Shell() {
       } catch (e) {
         console.error('[App] Error updateLiked(false):', e);
       }
-      try { await removeDownload(songId); } catch (e) { }
+      // Marcar para eliminación diferida (se elimina del servidor al conectar)
+      try { await markSongForDeletion(songId); } catch (e) { }
       try { toggleLiked?.(songId, false); } catch (e) { }
     } else if (typeof song !== 'string') {
       lib.dislikeSong(song);
     }
-  }, [isDownloaded, updateLiked, removeDownload, removeFromQueue, lib, toggleLiked]);
+  }, [isDownloaded, updateLiked, markSongForDeletion, removeFromQueue, lib, toggleLiked]);
 
   // ============================================================
   // 7. CONSTANTES LOCALES
@@ -309,7 +334,7 @@ function Shell() {
   }
 
   // 8.2 Modo offline (sin conexión)
-  if (!navigator.onLine) {
+  if (!isOnline) {
     return <OfflineMode />;
   }
 
@@ -389,17 +414,19 @@ function Shell() {
       <div className="flex flex-col h-full bg-background text-foreground overflow-hidden" style={{ background: '#121212' }}>
         {/* ===== NOTIFICACIÓN DE SINCRONIZACIÓN ===== */}
         <SyncNotification
-          isOnline={navigator.onLine}
+          isOnline={isOnline}
           isSyncing={syncingSongs.length > 0}
           syncingSongs={syncingSongs}
           lastSync={null}
           pendingCount={pendingLikeChanges.length}
+          isDeleting={deletingSongs.length > 0}
+          deletingSongs={deletingSongs}
         />
 
         {/* ===== INDICADOR DE CONEXIÓN ===== */}
         <div className="flex items-center justify-between px-3 py-1 flex-shrink-0 bg-surface/50 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            {navigator.onLine ? (
+            {isOnline ? (
               <Wifi size={12} className="text-primary" />
             ) : (
               <WifiOff size={12} className="text-danger" />
@@ -534,17 +561,19 @@ function Shell() {
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground relative" style={{ background: '#121212', color: '#fff' }}>
       {/* ===== NOTIFICACIÓN DE SINCRONIZACIÓN ===== */}
       <SyncNotification
-        isOnline={navigator.onLine}
+        isOnline={isOnline}
         isSyncing={syncingSongs.length > 0}
         syncingSongs={syncingSongs}
         lastSync={null}
         pendingCount={pendingLikeChanges.length}
+        isDeleting={deletingSongs.length > 0}
+        deletingSongs={deletingSongs}
       />
       <Sidebar view={view} onNavigate={setView} trashCount={library.counts.trash} />
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center justify-between px-6 py-1 flex-shrink-0 bg-surface/30 border-b border-border/30 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            {navigator.onLine ? (
+            {isOnline ? (
               <Wifi size={14} className="text-primary" />
             ) : (
               <WifiOff size={14} className="text-danger" />

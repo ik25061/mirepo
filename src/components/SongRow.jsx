@@ -30,7 +30,7 @@ export default function SongRow({
   const isCurrent = current?.id === song.id;
 
   // ===== OBTENER ESTADO DE DESCARGA Y SINCRONIZACIÓN =====
-  const { isDownloaded, downloadSong, currentlySyncingSong } = useDownload();
+  const { isDownloaded, downloadSong, currentlySyncingSong, markSongForDeletion } = useDownload();
   const songDownloaded = isDownloaded(song.id);
   const isSyncing = currentlySyncingSong === song.id;
 
@@ -61,8 +61,19 @@ export default function SongRow({
       // Eliminar de la cola de reproducción (esto maneja el paso a la siguiente)
       removeFromQueue(song.id);
 
-      // Ejecutar eliminación en el servidor
-      await onDelete(song);
+      // Si la canción está descargada, marcar para eliminación diferida
+      // (se elimina del servidor cuando se conecta)
+      if (songDownloaded) {
+        try {
+          await markSongForDeletion(songId);
+          console.log('[SongRow] Canción marcada para eliminación diferida:', song.title);
+        } catch (e) {
+          console.error('[SongRow] Error marcando para eliminación:', e);
+        }
+      } else {
+        // Si no está descargada, eliminar directamente del servidor
+        await onDelete(song);
+      }
 
       setConfirmDelete(false);
     } else {
@@ -183,7 +194,7 @@ export default function SongRow({
             addToQueue(song, 'next');
           }}
           className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary`}
-          title="Reproducir después de la actual"
+          title="Reproducir después de la actualidad"
         >
           <PlayCircle size={12} className="sm:size-4" />
         </button>
@@ -223,7 +234,7 @@ export default function SongRow({
         )}
 
         {/* Eliminar canción */}
-        {/* {showDelete && onDelete && (
+        {showDelete && onDelete && (
           <button
             onClick={handleDelete}
             className={iconBtn + ' ' + (
@@ -231,43 +242,11 @@ export default function SongRow({
                 ? 'bg-red-500/20 text-red-500 opacity-100'
                 : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-500'
             )}
-            title={confirmDelete ? 'Pulsa de nuevo para confirmar' : 'Eliminar (mover a papelera)'}
+            title={confirmDelete ? 'Pulsa de nuevo para confirmar' : (songDownloaded ? 'Eliminar (marcada para borrado offline)' : 'Eliminar (mover a papelera)')}
           >
             {confirmDelete ? <Check size={12} className="sm:size-4" /> : <Trash2 size={12} className="sm:size-4" />}
           </button>
-        )} */}
-
-        {/* Corregir metadatos */}
-        {/* {onFixMetadata && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onFixMetadata(song);
-            }}
-            className={`${iconBtn} sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary`}
-            title="Corregir metadatos"
-          >
-            <Wand2 size={12} className="sm:size-4" />
-          </button>
-        )} */}
-
-        {/* ===== BOTÓN DE DESCARGA INDIVIDUAL ===== */}
-        {/* <button
-          onClick={handleDownload}
-          disabled={songDownloaded}
-          className={`${iconBtn} ${
-            songDownloaded 
-              ? 'text-primary' 
-              : 'sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary'
-          }`}
-          title={songDownloaded ? 'Ya descargada' : 'Descargar canción'}
-        >
-          <Download 
-            size={12} 
-            className="sm:size-4" 
-            fill={songDownloaded ? 'currentColor' : 'none'} 
-          />
-        </button> */}
+        )}
 
         {/* Ver letra */}
         {onShowLyrics && (

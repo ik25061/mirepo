@@ -11,6 +11,7 @@ export default function OfflineMode() {
     loading,
     reload,
     updateLiked,
+    markSongForDeletion,
   } = useDownload();
   const { current, isPlaying, togglePlay, next, prev, removeFromQueue } = usePlayer();
   const [showNowPlaying, setShowNowPlaying] = useState(false);
@@ -40,19 +41,21 @@ export default function OfflineMode() {
     }
   }, [updateLiked, likedIds]);
 
-  // "No me gusta": quitar de la cola actual y desmarcar el like (queda como
-  // cambio pendiente). No se borra el archivo descargado para no perder la
-  // única copia disponible sin conexión.
+  // "No me gusta": quitar de la cola actual, desmarcar el like y marcar la
+  // canción para eliminación diferida. markSongForDeletion elimina la descarga
+  // local y encola la eliminación pendiente que se aplicará en el servidor al
+  // recuperar la conexión (mismo comportamiento que en modo online).
   const handleDislike = useCallback(async (songOrId) => {
     const songId = typeof songOrId === 'string' ? songOrId : songOrId?.id;
     if (!songId) return;
     removeFromQueue(songId);
     try {
-      if (likedIds.has(songId)) await updateLiked(songId, false);
+      await updateLiked(songId, false);
+      await markSongForDeletion(songId);
     } catch (e) {
       console.error('[OfflineMode] Error al marcar no me gusta:', e);
     }
-  }, [removeFromQueue, updateLiked, likedIds]);
+  }, [removeFromQueue, updateLiked, markSongForDeletion]);
 
   if (loading) {
     return (
