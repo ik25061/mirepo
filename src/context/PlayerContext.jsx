@@ -292,9 +292,28 @@ export function PlayerProvider({ children }) {
     if (indexRef.current > 0) playIndex(indexRef.current - 1);
   }, [playIndex]);
 
-  const next = useCallback(() => {
+  const next = useCallback(async () => {
     const q = queueRef.current;
     if (q.length === 0) return;
+
+    // Eliminar la descarga de la canción actual si "eliminar después de escuchar"
+    // está activo. Se ejecuta tanto al terminar la canción de forma natural
+    // como al pulsar manualmente "Siguiente" en el reproductor.
+    const songId = currentRef.current?.id;
+    const songTitle = currentRef.current?.title;
+    if (autoDeleteEnabledRef.current && songId) {
+      try {
+        const downloaded = await getDownloadedSong(songId);
+        if (downloaded?.id) {
+          console.log('[Player] next() autoDelete: eliminando descarga de', songTitle);
+          await removeDownloadedSong(songId);
+          try { window.dispatchEvent(new CustomEvent('mirepo-reload-downloads')); } catch {}
+        }
+      } catch (err) {
+        console.warn('[Player] next() autoDelete: error al eliminar descarga', err);
+      }
+    }
+
     if (repeatModeRef.current === 2 && indexRef.current >= 0 && indexRef.current < q.length) { playIndex(indexRef.current); return; }
     const upNext = upNextRef.current;
     if (upNext.length > 0) {
@@ -391,21 +410,7 @@ export function PlayerProvider({ children }) {
     const advanceTrack = async () => {
       if (advancingRef.current) return;
       advancingRef.current = true;
-      // Eliminar descarga si auto-delete está activo
-      const songId = currentRef.current?.id;
-      const songTitle = currentRef.current?.title;
-      if (autoDeleteEnabledRef.current && songId) {
-        try {
-          const downloaded = await getDownloadedSong(songId);
-          if (downloaded?.id) {
-            console.log('[Player] autoDelete: eliminando descarga de', songTitle);
-            await removeDownloadedSong(songId);
-            try { window.dispatchEvent(new CustomEvent('mirepo-reload-downloads')); } catch {}
-          }
-        } catch (err) {
-          console.warn('[Player] autoDelete: error al eliminar descarga', err);
-        }
-      }
+      // La eliminación automática de la descarga se maneja dentro de next()
       next();
     };
 
@@ -426,18 +431,7 @@ export function PlayerProvider({ children }) {
 
     const onEnded = async () => {
       if (!crossfadingRef.current && !advancingRef.current) {
-        const songId = currentRef.current?.id;
-        const songTitle = currentRef.current?.title;
-        if (autoDeleteEnabledRef.current && songId) {
-          try {
-            const downloaded = await getDownloadedSong(songId);
-            if (downloaded?.id) {
-              console.log('[Player] onEnded autoDelete: eliminando descarga de', songTitle);
-              await removeDownloadedSong(songId);
-              try { window.dispatchEvent(new CustomEvent('mirepo-reload-downloads')); } catch {}
-            }
-          } catch (err) { console.warn('[Player] autoDelete: error', err); }
-        }
+        // La eliminación automática de la descarga se maneja dentro de next()
         setTimeout(() => advanceTrack(), 100);
       }
     };
