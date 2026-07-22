@@ -71,6 +71,7 @@ function Shell() {
 
   const {
     downloadedIds,
+    downloadedSongs,
     isDownloading,
     downloadProgress,
     downloadSongs,
@@ -219,22 +220,30 @@ function Shell() {
     gridLoadingRef.current = gridLoading;
   }, [gridLoading]);
 
+  const allSongs = offlineMode ? localSongs : serverAllSongs;
+
   const handleLike = useCallback(async (songOrId) => {
     if (!songOrId) return;
     const songId = typeof songOrId === 'string' ? songOrId : songOrId.id;
     if (!songId) return;
 
+    // Alternar: si ya esta liked, quitar el like; si no, agregarlo
+    const songInLibrary = allSongs.find(s => s.id === songId);
+    const songDownloaded = downloadedSongs.find(s => s.id === songId);
+    const currentlyLiked = !!(songInLibrary?.liked || songDownloaded?.liked);
+    const newLiked = !currentlyLiked;
+
     if (isDownloaded(songId)) {
       try {
-        await updateLiked(songId, true);
+        await updateLiked(songId, newLiked);
       } catch (e) {
         console.error('[App] Error updateLiked:', e);
       }
-      try { toggleLiked?.(songId, true); } catch (e) { }
+      try { toggleLiked?.(songId, newLiked); } catch (e) { }
     } else {
-      lib.toggleLike(songId);
+      lib.toggleLike(songOrId);
     }
-  }, [isDownloaded, updateLiked, lib, toggleLiked]);
+  }, [isDownloaded, updateLiked, lib, toggleLiked, allSongs, downloadedSongs]);
 
   const handleDislike = useCallback(async (song) => {
     if (!song) return;
@@ -275,7 +284,14 @@ function Shell() {
     }
     : lib;
 
-  const allSongs = offlineMode ? localSongs : serverAllSongs;
+  // likedIds combina canciones liked del servidor (allSongs) y del
+  // almacenamiento local (downloadedSongs). Esto es necesario porque
+  // cuando una cancion esta descargada el like se guarda en IndexedDB
+  // y no siempre esta reflejado en allSongs.
+  const likedIds = new Set([
+    ...allSongs.filter(s => s.liked).map(s => s.id),
+    ...downloadedSongs.filter(s => s.liked).map(s => s.id),
+  ]);
 
   // ============================================================
   // 8. RENDERIZADO CONDICIONAL (después de todos los hooks)
@@ -337,7 +353,7 @@ function Shell() {
           onLike={handleLike}
           onDislike={handleDislike}
           onDislikeArtist={library.dislikeArtist}
-          likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
+          likedIds={likedIds}
           onClose={handleCloseNowPlaying}
           allTracks={allSongs}
           onDelete={library.removeSong}
@@ -475,7 +491,7 @@ function Shell() {
           ) : view.type === 'ai' ? (
             <AIRecommendations
               songs={allSongs}
-              likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
+              likedIds={likedIds}
               history={[]}
             />
           ) : null}
@@ -490,7 +506,7 @@ function Shell() {
           onOpen={() => current && setShowNowPlaying(true)}
           onLike={handleLike}
           onDislike={handleDislike}
-          likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
+          likedIds={likedIds}
           onViewChange={(v) => {
             if (v === 'nowplaying' && current) {
               setShowNowPlaying(true);
@@ -618,7 +634,7 @@ function Shell() {
           ) : view.type === 'ai' ? (
             <AIRecommendations
               songs={allSongs}
-              likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
+              likedIds={likedIds}
               history={[]}
             />
           ) : null}
@@ -626,7 +642,7 @@ function Shell() {
         <PlayerBar
           onLike={handleLike}
           onDislike={handleDislike}
-          likedIds={new Set(allSongs.filter(s => s.liked).map(s => s.id))}
+          likedIds={likedIds}
         />
       </div>
     </div>
