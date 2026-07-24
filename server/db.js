@@ -43,6 +43,9 @@ export async function getDb() {
       await db.exec('PRAGMA journal_mode = WAL');
       await db.exec('PRAGMA synchronous = NORMAL');
       
+      // Crear esquema si no existe
+      await initSchema(db);
+
       dbReady = true;
       console.log('[db] ✅ Conectado a localfy.db');
       return db;
@@ -81,6 +84,8 @@ export async function getSongsWithDetails({ limit = 100, offset = 0, userId = nu
       v.track,
       v.hasLyrics,
       v.main_artist_name AS artist,
+      v.main_artist_id AS artist_id,
+      v.album_id AS album_id,
       v.album_name AS album,
       v.album_year AS year,
       v.cover_path,
@@ -243,12 +248,14 @@ export async function getSongsByArtist({ artistId, userId = null, limit = 100, o
       s.duration,
       s.track,
       s.hasLyrics,
+      al.id AS album_id,
       al.name AS album,
       al.year AS year,
+      al.cover_path,
       (SELECT CASE WHEN EXISTS (
-        SELECT 1 FROM user_song_interactions usi 
-        WHERE usi.song_id = s.id 
-        AND usi.user_id = ? 
+        SELECT 1 FROM user_song_interactions usi
+        WHERE usi.song_id = s.id
+        AND usi.user_id = ?
         AND usi.interaction_type = 'LIKE'
       ) THEN 1 ELSE 0 END) AS liked
     FROM songs s
@@ -339,33 +346,27 @@ export async function getAlbumsWithPagination({ userId = null, limit = 100, offs
   const params = [];
 
   if (search) {
-    const normalizedSearch = normalizeText(search);
-    sql += ` AND (LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(al.name,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u')) LIKE LOWER(?) OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.name,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u')) LIKE LOWER(?))`;
-    params.push(`%${normalizedSearch}%`, `%${normalizedSearch}%`);
+    sql += ` AND (al.name LIKE ? OR a.name LIKE ?)`;
+    params.push(`%${search}%`, `%${search}%`);
   }
 
   sql += ` ORDER BY al.name LIMIT ? OFFSET ?`;
   params.push(limit, offset);
 
-  const albums = await database.all(sql, params);
+  const items = await database.all(sql, params);
 
-  let countSql = `SELECT COUNT(*) as total FROM albums al WHERE 1=1`;
+  let countSql = `SELECT COUNT(*) as total FROM albums al LEFT JOIN artists a ON al.main_artist_id = a.id WHERE 1=1`;
   const countParams = [];
   if (search) {
-    countSql += ` AND (al.name LIKE ? OR al.name LIKE ?)`;
+    countSql += ` AND (al.name LIKE ? OR a.name LIKE ?)`;
     countParams.push(`%${search}%`, `%${search}%`);
   }
   const totalResult = await database.get(countSql, countParams);
   const total = totalResult.total;
 
   return {
-    items: albums,
-    pagination: {
-      offset,
-      limit,
-      total,
-      hasMore: offset + limit < total
-    }
+    items,
+    pagination: { offset, limit, total, hasMore: offset + limit < total }
   };
 }
 
@@ -388,7 +389,8 @@ export async function getSongsByAlbum({ albumId, userId = null, limit = 100, off
         AND usi.interaction_type = 'LIKE'
       ) THEN 1 ELSE 0 END) AS liked
     FROM songs s
-    LEFT JOIN artists a ON s.artist_id = a.id
+    LEFT JOIN song_artists sa ON s.id = sa.song_id AND sa.is_main = 1
+    LEFT JOIN artists a ON sa.artist_id = a.id
     WHERE s.album_id = ?
   `;
   const params = [userId || null, albumId];
@@ -512,7 +514,8 @@ export async function getSongsByGenre({ genreId, userId = null, limit = 100, off
         AND usi.interaction_type = 'LIKE'
       ) THEN 1 ELSE 0 END) AS liked
     FROM songs s
-    LEFT JOIN artists a ON s.artist_id = a.id
+    LEFT JOIN song_artists sa ON s.id = sa.song_id AND sa.is_main = 1
+    LEFT JOIN artists a ON sa.artist_id = a.id
     LEFT JOIN albums al ON s.album_id = al.id
     JOIN song_genres sg ON s.id = sg.song_id
     WHERE sg.genre_id = ?
@@ -586,9 +589,18 @@ export async function getYearsWithPagination({ userId = null, limit = 100, offse
     FROM albums al
     LEFT JOIN songs s ON s.album_id = al.id
     WHERE al.year IS NOT NULL
-    GROUP BY al.year
   `;
   const params = [];
+
+  if (userId) {
+    sql += ` AND s.id NOT IN (
+      SELECT song_id FROM user_song_interactions
+      WHERE user_id = ? AND interaction_type = 'HIDE'
+    )`;
+    params.push(userId);
+  }
+
+  sql += ` GROUP BY al.year`;
 
   if (search) {
     sql += ` AND CAST(al.year AS TEXT) LIKE ?`;
@@ -640,7 +652,8 @@ export async function getSongsByYear({ year, userId = null, limit = 100, offset 
         AND usi.interaction_type = 'LIKE'
       ) THEN 1 ELSE 0 END) AS liked
     FROM songs s
-    LEFT JOIN artists a ON s.artist_id = a.id
+    LEFT JOIN song_artists sa ON s.id = sa.song_id AND sa.is_main = 1
+    LEFT JOIN artists a ON sa.artist_id = a.id
     LEFT JOIN albums al ON s.album_id = al.id
     WHERE al.year = ?
   `;
@@ -680,6 +693,83 @@ export async function getSongsByYear({ year, userId = null, limit = 100, offset 
   if (userId) {
     countSql += ` AND s.id NOT IN (
       SELECT song_id FROM user_song_interactions 
+      WHERE user_id = ? AND interaction_type = 'HIDE'
+    )`;
+    countParams.push(userId);
+  }
+  const totalResult = await database.get(countSql, countParams);
+  const total = totalResult.total;
+
+  return {
+    songs,
+    pagination: {
+      offset,
+      limit,
+      total,
+      hasMore: offset + limit < total
+    }
+  };
+}
+
+// ============================================================
+// FUNCIONES PARA CANCIONES SIN ALBUM NI ARTISTA
+// ============================================================
+
+export async function getSongsWithoutAlbumOrArtist({ userId = null, limit = 100, offset = 0 } = {}) {
+  const database = await getDb();
+
+  let sql = `
+    SELECT
+      s.id,
+      s.title,
+      s.relPath,
+      s.duration,
+      s.track,
+      s.hasLyrics,
+      (SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM user_song_interactions usi
+        WHERE usi.song_id = s.id
+        AND usi.user_id = ?
+        AND usi.interaction_type = 'LIKE'
+      ) THEN 1 ELSE 0 END) AS liked
+    FROM songs s
+    WHERE s.album_id IS NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM song_artists sa WHERE sa.song_id = s.id
+      )
+  `;
+  const params = [userId || null];
+
+  if (userId) {
+    sql += ` AND s.id NOT IN (
+      SELECT song_id FROM user_song_interactions
+      WHERE user_id = ? AND interaction_type = 'HIDE'
+    )`;
+    params.push(userId);
+  }
+
+  sql += ` ORDER BY s.title LIMIT ? OFFSET ?`;
+  params.push(limit, offset);
+
+  const songs = await database.all(sql, params);
+
+  for (const song of songs) {
+    song.genre = [];
+    song.liked = !!song.liked;
+  }
+
+  let countSql = `
+    SELECT COUNT(*) as total
+    FROM songs s
+    WHERE s.album_id IS NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM song_artists sa WHERE sa.song_id = s.id
+      )
+  `;
+  const countParams = [];
+  if (userId) {
+    countSql += ` AND s.id NOT IN (
+      SELECT song_id FROM user_song_interactions
       WHERE user_id = ? AND interaction_type = 'HIDE'
     )`;
     countParams.push(userId);
@@ -1193,18 +1283,27 @@ export async function getOrCreateArtist(database, name) {
   return result.lastID;
 }
 
-export async function getOrCreateAlbum(database, name, mainArtistId, year) {
+export async function getOrCreateAlbum(database, name, mainArtistId, year, coverPath = null) {
   if (!name || name === 'Álbum desconocido') return null;
   
   const row = await database.get(
-    'SELECT id FROM albums WHERE name = ? AND main_artist_id = ?',
+    'SELECT id, cover_path FROM albums WHERE name = ? AND year = ?',
     [name, mainArtistId]
   );
-  if (row) return row.id;
+  if (row) {
+    // Si ya existe pero no tiene cover y ahora tenemos uno, actualizarlo
+    if (!row.cover_path && coverPath) {
+      await database.run(
+        'UPDATE albums SET cover_path = ? WHERE id = ?',
+        [coverPath, row.id]
+      );
+    }
+    return row.id;
+  }
   
   const result = await database.run(
-    'INSERT INTO albums (name, main_artist_id, year) VALUES (?, ?, ?)',
-    [name, mainArtistId, year]
+    'INSERT INTO albums (name, main_artist_id, year, cover_path) VALUES (?, ?, ?, ?)',
+    [name, mainArtistId, year, coverPath]
   );
   return result.lastID;
 }
@@ -1217,6 +1316,178 @@ export async function getOrCreateGenre(database, name) {
   
   const result = await database.run('INSERT INTO genres (name) VALUES (?)', [name]);
   return result.lastID;
+}
+
+// ============================================================
+// INICIALIZACIÓN DEL ESQUEMA
+// ============================================================
+
+async function initSchema(database) {
+  // Crear tablas si no existen
+  await database.exec(`
+    CREATE TABLE IF NOT EXISTS artists (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS albums (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      main_artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
+      year INTEGER,
+      cover_path TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(name, year)
+    );
+
+    CREATE TABLE IF NOT EXISTS album_artists (
+      album_id INTEGER REFERENCES albums(id) ON DELETE CASCADE,
+      artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
+      is_main INTEGER DEFAULT 0 CHECK(is_main IN (0,1)),
+      PRIMARY KEY (album_id, artist_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS songs (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      relPath TEXT NOT NULL,
+      duration INTEGER,
+      track INTEGER,
+      hasLyrics INTEGER DEFAULT 0 CHECK(hasLyrics IN (0,1)),
+      album_id INTEGER REFERENCES albums(id) ON DELETE SET NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS song_artists (
+      song_id TEXT REFERENCES songs(id) ON DELETE CASCADE,
+      artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
+      is_main INTEGER DEFAULT 0 CHECK(is_main IN (0,1)),
+      PRIMARY KEY (song_id, artist_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS genres (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS song_genres (
+      song_id TEXT REFERENCES songs(id) ON DELETE CASCADE,
+      genre_id INTEGER REFERENCES genres(id) ON DELETE CASCADE,
+      PRIMARY KEY (song_id, genre_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      salt TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      session_token TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS user_song_interactions (
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      song_id TEXT REFERENCES songs(id) ON DELETE CASCADE,
+      interaction_type TEXT CHECK(interaction_type IN ('LIKE', 'HIDE')),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, song_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS user_artist_interactions (
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
+      interaction_type TEXT CHECK(interaction_type IN ('FAVORITE', 'HIDE')),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, artist_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS user_favorite_albums (
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      album_id INTEGER REFERENCES albums(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, album_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS user_favorite_genres (
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      genre_id INTEGER REFERENCES genres(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, genre_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS playlists (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS playlist_songs (
+      playlist_id TEXT REFERENCES playlists(id) ON DELETE CASCADE,
+      song_id TEXT REFERENCES songs(id) ON DELETE CASCADE,
+      position INTEGER NOT NULL,
+      added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (playlist_id, song_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS lyrics (
+      song_id TEXT PRIMARY KEY REFERENCES songs(id) ON DELETE CASCADE,
+      text TEXT,
+      synced_text TEXT,
+      translated_text TEXT,
+      language TEXT DEFAULT 'es',
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Crear vistas
+  try {
+    await database.exec(`
+      CREATE VIEW IF NOT EXISTS v_complete_songs AS
+      SELECT
+        s.id AS song_id,
+        s.title AS song_title,
+        s.relPath AS relative_path,
+        s.duration,
+        s.track,
+        s.hasLyrics,
+        al.id AS album_id,
+        al.name AS album_name,
+        al.year AS album_year,
+        al.cover_path,
+        GROUP_CONCAT(art.name, ', ') AS artists_names,
+        MAX(CASE WHEN sa.is_main = 1 THEN art.id END) AS main_artist_id,
+        MAX(CASE WHEN sa.is_main = 1 THEN art.name END) AS main_artist_name
+      FROM songs s
+      LEFT JOIN albums al ON s.album_id = al.id
+      LEFT JOIN song_artists sa ON s.id = sa.song_id
+      LEFT JOIN artists art ON sa.artist_id = art.id
+      GROUP BY s.id
+    `);
+
+    await database.exec(`
+      CREATE VIEW IF NOT EXISTS v_playlist_details AS
+      SELECT
+        ps.playlist_id,
+        p.name AS playlist_name,
+        p.user_id AS owner_id,
+        ps.position,
+        vcs.*
+      FROM playlist_songs ps
+      JOIN playlists p ON ps.playlist_id = p.id
+      JOIN v_complete_songs vcs ON ps.song_id = vcs.song_id
+      ORDER BY ps.playlist_id, ps.position
+    `);
+  } catch (err) {
+    // Si las vistas ya existen, ignorar error
+    console.log('[db] Vistas ya creadas (o error menor):', err.message);
+  }
+
+  console.log('[db] ✅ Esquema verificado/creado');
 }
 
 // ============================================================

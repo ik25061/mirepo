@@ -53,7 +53,11 @@ export default function CollectionView({
     return allSongs.filter(song => {
       if (kind === 'Artista') return song.artist === name;
       if (kind === 'Álbum') return song.album === name || song.albumId === id;
-      if (kind === 'Género') return song.genre === name || song.genreId === id;
+      if (kind === 'Género') {
+        // El género puede ser un array de géneros o un string
+        const genres = Array.isArray(song.genre) ? song.genre : [song.genre || ''];
+        return genres.includes(name) || song.genreId === id;
+      }
       if (kind === 'Año') {
         const yearNum = Number(id);
         if (!Number.isFinite(yearNum)) return false;

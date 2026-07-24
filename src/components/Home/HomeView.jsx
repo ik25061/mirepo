@@ -25,6 +25,7 @@ import RecommendationsSection from './RecommendationsSection.jsx';
 import { usePlayer } from '../../context/PlayerContext.jsx';
 import { api } from '../../lib/api.js';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useMemo } from 'react';
 import { RecommendationEngine } from '../../services/RecommendationEngine.js';
 
 // ============================================================
@@ -376,7 +377,34 @@ export default function HomeView({
   const greeting = hour < 6 ? 'Buenas noches' : hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
 
   // ============================================================
-  // 3.8 RENDERIZADO
+  // 3.8 VARIABLES PARA CANCIONES SIN CLASIFICAR
+  // ============================================================
+
+  // Estado para forzar re-render aleatorio de canciones sin clasificar
+  const [unknownRandomSeed, setUnknownRandomSeed] = useState(0);
+  
+  // Función para obtener 10 canciones aleatorias de unknownSongs
+  const get10RandomUnknown = useCallback(() => {
+    const shuffled = [...unknownSongs];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled.slice(0, 10);
+  }, [unknownSongs]);
+
+  // 10 canciones aleatorias actuales (se refrescan con cada cambio de unknownRandomSeed)
+  const unknownSongs10 = useMemo(() => get10RandomUnknown(), [get10RandomUnknown, unknownRandomSeed]);
+
+  // Efecto para cambiar las 10 canciones una sola vez al montar la vista
+  // Se usa [] como dependencia para evitar bucles infinitos causados por
+  // cambios repetidos en unknownSongs.length (p. ej. al hacer like/unlike)
+  useEffect(() => {
+    setUnknownRandomSeed(Date.now());
+  }, []);
+
+  // ============================================================
+  // 3.9 RENDERIZADO
   // ============================================================
 
   return (
@@ -570,33 +598,65 @@ export default function HomeView({
       </Carousel>
 
       {/* ============================================================
-      10. CAROUSEL: SIN ARTISTA O ÁLBUM
+      10. SECCIÓN: SIN ARTISTA O ÁLBUM (LISTA DE CANCIONES)
       ============================================================ */}
       {unknownSongs.length > 0 && (
-        <Carousel
-          title="🎵 Sin artista o álbum"
-          action={
-            unknownSongs.length > 10 && (
-              <button 
-                onClick={() => onOpenCollection({ kind: 'Lista', name: 'Sin artista o álbum', songs: unknownSongs })} 
-                className="text-xs font-medium text-muted-foreground hover:text-white transition-colors"
-              >
-                Ver todo
-              </button>
-            )
-          }
-        >
-          {unknownSongs.slice(0, 10).map((song) => (
-            <CollectionCard
-              key={song.id}
-              title={song.title}
-              subtitle={song.artist || 'Artista desconocido'}
-              coverSong={{ coverId: song.id, hasCover: song.hasCover }}
-              songs={[song]}
-              onOpen={() => onOpenCollection({ kind: 'Lista', name: 'Sin artista o álbum', songs: unknownSongs })}
-            />
-          ))}
-        </Carousel>
+        <section className="animate-fade-in overflow-hidden rounded-xl border border-border bg-gradient-to-b from-primary/5 to-surface sm:rounded-2xl">
+          <div className="flex items-center gap-4 p-4 sm:p-6 sm:pb-4">
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-500/60 text-white shadow-lg sm:h-20 sm:w-20 sm:rounded-xl">
+              <span className="text-2xl sm:text-4xl">🎵</span>
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-sm font-700 text-white sm:text-2xl">Sin artista o álbum</h2>
+              <p className="text-xs text-muted-foreground">
+                {unknownSongs.length} {unknownSongs.length === 1 ? 'canción sin clasificar' : 'canciones sin clasificar'}
+              </p>
+            </div>
+            {unknownSongs.length > 0 && (
+              <div className="ml-auto flex items-center gap-2">
+                <button 
+                  onClick={() => shufflePlay(get10RandomUnknown())} 
+                  className="hidden h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-2 text-white shadow-lg transition hover:scale-105 sm:grid sm:h-12 sm:w-12" 
+                  title="Reproducción aleatoria de 10"
+                >
+                  <Shuffle size={16} className="sm:size-5" />
+                </button>
+                <button 
+                  onClick={() => play(unknownSongs10[0], unknownSongs10)} 
+                  className="hidden h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 sm:grid sm:h-12 sm:w-12"
+                >
+                  <Play size={18} fill="currentColor" className="ml-0.5 sm:size-6" />
+                </button>
+                {unknownSongs.length > 10 && (
+                  <button 
+                    onClick={() => onOpenCollection({ kind: 'Lista', name: 'Sin artista o álbum', songs: unknownSongs })} 
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Ver todas
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1.5 px-3 pb-4 sm:px-5 sm:pb-5">
+            {unknownSongs10.map((song, i) => (
+              <SongRow
+                key={song.id}
+                song={song}
+                index={i}
+                queue={unknownSongs10}
+                onLike={onLike}
+                onDislike={onDislike}
+                onDislikeArtist={onDislikeArtist}
+                onDelete={onDelete}
+                showDelete
+                context={null}
+                likedIds={likedIds}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ============================================================

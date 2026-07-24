@@ -147,15 +147,16 @@ function Shell() {
   }, []);
 
   // 4.2 Sincronizar likes/dislikes/eliminaciones pendientes al autenticar
-  // y al recuperar la conexión. syncLikes se encarga internamente de los
-  // likes y de las eliminaciones diferidas; si no hay nada pendiente,
-  // no hace nada. Incluir isOnline hace que el sync (y sus notificaciones
-  // toast) se disparen también al reconectar estando ya logueado.
+  // y al recuperar la conexión. syncLikes y syncDeletions se encargan
+  // de las operaciones pendientes; si no hay nada pendiente, no hacen nada.
+  // Incluir isOnline hace que el sync (y sus notificaciones toast) se
+  // disparen también al reconectar estando ya logueado.
   useEffect(() => {
     if (isOnline && isAuthenticated && user) {
       syncLikes(user.id);
+      syncDeletions(user.id);
     }
-  }, [isOnline, isAuthenticated, user, syncLikes]);
+  }, [isOnline, isAuthenticated, user, syncLikes, syncDeletions]);
 
   // ============================================================
   // 5. FUNCIONES (useCallback) - Siempre en el mismo orden

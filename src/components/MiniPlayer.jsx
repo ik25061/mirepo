@@ -66,7 +66,7 @@ export default function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOp
             onClick={() => onLike(track)}
             className="flex items-center justify-center w-6 h-6 rounded-full"
           >
-            <Heart size={12} fill={likedIds?.has(track.id) ? 'currentColor' : 'none'} className={likedIds?.has(track.id) ? 'text-primary' : 'text-white'} />
+            <Heart size={12} fill={likedIds?.has(track.id) ? 'currentColor' : 'none'} className={likedIds?.has(track.id) ? 'text-red-500' : 'text-white'} />
           </button>
         )}
 

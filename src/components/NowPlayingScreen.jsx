@@ -626,7 +626,7 @@ export default function NowPlayingScreen({
               <button
                 onClick={() => onLike?.(track.id)}
                 className="ml-3 flex-shrink-0 p-2 hover:scale-110 transition-transform"
-                style={{ color: isLiked ? '#1db954' : '#a7a7a7' }}
+                style={{ color: isLiked ? '#ef4444' : '#a7a7a7' }}
               >
                 <Heart size={26} fill={isLiked ? 'currentColor' : 'none'} />
               </button>

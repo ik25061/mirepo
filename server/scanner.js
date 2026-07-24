@@ -1,6 +1,11 @@
 // ============================================================
 // scanner.js - ESCANEO DE BIBLIOTECA
 // ============================================================
+// Nueva estructura de carpetas:
+//   D:/artista/cancion.mp3
+//   D:/artista/cancion.lrc
+//   D:/artista/album - nombrealbum.jpg  (cover con nombre del álbum)
+// ============================================================
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -17,7 +22,7 @@ import {
 } from './db.js';
 
 // ====== CONFIGURACIÓN ======
-export const MUSIC_DIR = process.env.VITE_MUSIC_PATH || 'E:/musica';
+export const MUSIC_DIR = process.env.VITE_MUSIC_PATH || 'D:/musica';
 export const TRASH_DIR = path.join(MUSIC_DIR, 'trash');
 
 console.log('[scanner] 📂 MUSIC_DIR:', MUSIC_DIR);
@@ -74,10 +79,15 @@ function cleanName(file) {
     .trim();
 }
 
+/**
+ * Extrae artista y álbum de la ruta relativa.
+ * NUEVA ESTRUCTURA: artista/cancion.mp3 → solo artista disponible de la ruta
+ * El álbum se obtiene exclusivamente de metadatos ID3.
+ */
 function extractArtistAlbum(relPath) {
   const parts = relPath.split(path.sep);
-  if (parts.length >= 2) {
-    return { artist: parts[0], album: parts[1] };
+  if (parts.length >= 1) {
+    return { artist: parts[0], album: null };
   }
   return { artist: 'Artista desconocido', album: 'Álbum desconocido' };
 }
@@ -93,11 +103,11 @@ function extractMainArtist(artistName) {
     /\s*feat\.?\s.*/i,
     /\s*ft\.?\s.*/i,
     /\s*featuring\s.*/i,
-    /\s*&\s.*/,
+    /\s*&\s.*/i,
     /\s*con\s.*/i,
     /\s*vs\.?\s.*/i,
-    /\s*,\s.*/,
-    /\s*;\s.*/,
+    /\s*,\s.*/i,
+    /\s*;\s.*/i,
   ];
 
   let name = artistName.trim();
@@ -109,6 +119,43 @@ function extractMainArtist(artistName) {
     }
   }
   return name || artistName;
+}
+
+/**
+ * Busca un archivo de cover en el directorio del artista
+ * con el formato: "album - nombrealbum.jpg" o "album - nombrealbum.png"
+ */
+function findCoverForAlbum(artistDir, albumName) {
+  if (!albumName || albumName === 'Álbum desconocido') return null;
+  
+  try {
+    const entries = fs.readdirSync(artistDir, { withFileTypes: true });
+    const coverExts = ['.jpg', '.jpeg', '.png', '.webp'];
+    
+    for (const entry of entries) {
+      if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (coverExts.includes(ext)) {
+          // El formato esperado es: "album - nombrealbum.ext"
+          // Buscamos archivos que contengan el nombre del álbum
+          const nameWithoutExt = path.basename(entry.name, ext);
+          // Normalizar para comparación: quitar espacios extra, lowercase
+          const normalizedName = nameWithoutExt.replace(/\s+/g, ' ').trim().toLowerCase();
+          const normalizedAlbum = albumName.replace(/\s+/g, ' ').trim().toLowerCase();
+          
+          // El nombre del archivo debe contener el nombre del álbum
+          // y tener un guión (separador album - nombre) o coincidir directamente
+          if (normalizedName.includes(normalizedAlbum) || 
+              normalizedName.endsWith(normalizedAlbum)) {
+            return path.join(artistDir, entry.name);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    // Si no existe el directorio o no se puede leer, ignorar silenciosamente
+  }
+  return null;
 }
 
 async function readSong(file) {
@@ -137,6 +184,7 @@ async function readSong(file) {
     if (genres.length === 0) genres = ['Sin género'];
   }
   
+  // Detectar letra .lrc al lado del archivo de audio
   const basePath = file.slice(0, -path.extname(file).length);
   const hasLyrics = fs.existsSync(`${basePath}.lrc`);
   
@@ -144,19 +192,54 @@ async function readSong(file) {
   const rawArtist = common.artist || common.albumartist || pathArtist || 'Artista desconocido';
   const mainArtist = extractMainArtist(rawArtist);
   
+  // Obtener nombre del álbum (solo de metadatos, ya no de la ruta)
+  const albumName = common.album || 'Álbum desconocido';
+  
+  // Buscar cover en el directorio del artista con el nuevo formato
+  // El cover está en: D:/artista/album - nombrealbum.jpg
+  let coverPath = null;
+  if (albumName && albumName !== 'Álbum desconocido') {
+    const artistDir = path.dirname(file); // MUSIC_DIR/artista
+    const foundCover = findCoverForAlbum(artistDir, albumName);
+    if (foundCover) {
+      coverPath = path.relative(MUSIC_DIR, foundCover);
+    }
+  }
+  
+  // Fallback: si no se encontró cover por nombre de álbum, buscar cualquier imagen
+  if (!coverPath) {
+    const artistDir = path.dirname(file);
+    try {
+      const entries = fs.readdirSync(artistDir, { withFileTypes: true });
+      const coverExts = ['.jpg', '.jpeg', '.png', '.webp'];
+      for (const entry of entries) {
+        if (entry.isFile()) {
+          const ext = path.extname(entry.name).toLowerCase();
+          if (coverExts.includes(ext)) {
+            coverPath = path.relative(MUSIC_DIR, path.join(artistDir, entry.name));
+            break; // Tomar la primera imagen encontrada
+          }
+        }
+      }
+    } catch (err) {
+      // ignorar
+    }
+  }
+
   return {
     id,
     relPath,
     title: common.title || cleanName(file),
     artist: mainArtist,
-    rawArtist: rawArtist, // Guardamos el original para colaboradores
-    album: common.album || pathAlbum || 'Álbum desconocido',
+    rawArtist: rawArtist,
+    album: albumName,
     genre: genres,
     year: common.year || null,
     track: (common.track && common.track.no) || null,
     duration: format.duration ? Math.round(format.duration) : null,
-    hasCover: Boolean(picture),
+    hasCover: Boolean(picture) || Boolean(coverPath),
     hasLyrics,
+    coverPath, // Guardamos para insertar en albums.cover_path
   };
 }
 
@@ -221,10 +304,10 @@ async function saveSongsToDatabase(songs) {
         mainArtistId = await getOrCreateArtist(database, song.artist);
       }
 
-      // 2. Obtener o crear álbum
+      // 2. Obtener o crear álbum (ahora con cover_path)
       let albumId = null;
       if (song.album && song.album !== 'Álbum desconocido') {
-        albumId = await getOrCreateAlbum(database, song.album, mainArtistId, song.year);
+        albumId = await getOrCreateAlbum(database, song.album, mainArtistId, song.year, song.coverPath);
       }
 
       // 3. Insertar canción
@@ -249,6 +332,15 @@ async function saveSongsToDatabase(songs) {
           `INSERT OR IGNORE INTO song_artists (song_id, artist_id, is_main)
            VALUES (?, ?, 1)`,
           [song.id, mainArtistId]
+        );
+      }
+
+      // 4.5. Insertar relación álbum-artista principal
+      if (albumId && mainArtistId) {
+        await database.run(
+          `INSERT OR IGNORE INTO album_artists (album_id, artist_id, is_main)
+           VALUES (?, ?, 1)`,
+          [albumId, mainArtistId]
         );
       }
 

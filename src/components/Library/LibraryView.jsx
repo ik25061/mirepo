@@ -66,6 +66,11 @@ export default function LibraryView({
   }, [allSongs]);
 
   // ============================================================
+  // ESTADO DE ORDENAMIENTO
+  // ============================================================
+  const [sortBy, setSortBy] = useState('added'); // 'added', 'az', 'artist', 'genre'
+
+  // ============================================================
   // FILTRAR CANCIONES
   // ============================================================
   const filtered = useMemo(() => {
@@ -78,6 +83,34 @@ export default function LibraryView({
         s.album.toLowerCase().includes(q)
     );
   }, [songs, query]);
+
+  // ============================================================
+  // ORDENAR CANCIONES
+  // ============================================================
+  const sortedSongs = useMemo(() => {
+    const list = [...filtered];
+    switch (sortBy) {
+      case 'az':
+        list.sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'es'));
+        break;
+      case 'artist':
+        list.sort((a, b) => String(a.artist || '').localeCompare(String(b.artist || ''), 'es'));
+        break;
+      case 'genre':
+        list.sort((a, b) => {
+          const genreA = Array.isArray(a.genre) ? (a.genre[0] || '') : (a.genre || '');
+          const genreB = Array.isArray(b.genre) ? (b.genre[0] || '') : (b.genre || '');
+          return String(genreA).localeCompare(String(genreB), 'es');
+        });
+        break;
+      case 'added':
+      default:
+        // Mantener orden original (por ID)
+        list.sort((a, b) => (a.id || '').localeCompare(b.id || ''));
+        break;
+    }
+    return list;
+  }, [filtered, sortBy]);
 
   // ============================================================
   // CORREGIR METADATOS
@@ -191,15 +224,28 @@ export default function LibraryView({
         />
       </div>
 
-      {/* ===== CONTADOR DE RESULTADOS ===== */}
-      {filtered.length > 0 && (
-        <div className="flex-shrink-0">
+      {/* ===== BARRA DE ORDENAMIENTO ===== */}
+      {sortedSongs.length > 0 && (
+        <div className="flex-shrink-0 flex items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            {filtered.length} {filtered.length === 1 ? 'canción' : 'canciones'}
+            {sortedSongs.length} {sortedSongs.length === 1 ? 'canción' : 'canciones'}
             {hasMore && (
               <span className="text-muted-foreground/60"> · Desplázate para cargar más</span>
             )}
           </p>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground">Ordenar:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="rounded-lg border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              <option value="added">Agregado</option>
+              <option value="az">A - Z</option>
+              <option value="artist">Artista</option>
+              <option value="genre">Género</option>
+            </select>
+          </div>
         </div>
       )}
 
@@ -209,7 +255,11 @@ export default function LibraryView({
         className="flex-1 overflow-y-auto rounded-xl border border-border bg-surface/50 p-2"
         style={{ overscrollBehavior: 'contain' }}
       >
-        {filtered.length === 0 ? (
+        {sortedSongs.length === 0 && filtered.length > 0 ? (
+          <p className="px-3 py-8 text-center text-sm text-muted-foreground">
+            No se encontraron coincidencias.
+          </p>
+        ) : sortedSongs.length === 0 ? (
           <p className="px-3 py-8 text-center text-sm text-muted-foreground">
             {songs.length === 0
               ? 'No hay canciones. Agrega archivos a la carpeta /music del servidor.'
@@ -217,7 +267,7 @@ export default function LibraryView({
           </p>
         ) : (
           <div className="flex flex-col gap-1">
-            {filtered.map((song, i) => {
+            {sortedSongs.map((song, i) => {
               const isCurrent = current?.id === song.id;
 
               return (

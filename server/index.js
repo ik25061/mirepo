@@ -353,7 +353,7 @@ app.get('/api/library', async (req, res) => {
 app.get('/api/artists', async (req, res) => {
   try {
     const userId = req.query.userId || null;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
     const offset = parseInt(req.query.offset, 10) || 0;
     const search = req.query.search || '';
     
@@ -402,7 +402,7 @@ app.get('/api/artists/:id/songs', async (req, res) => {
 app.get('/api/albums', async (req, res) => {
   try {
     const userId = req.query.userId || null;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
     const offset = parseInt(req.query.offset, 10) || 0;
     const search = req.query.search || '';
     
@@ -430,7 +430,7 @@ app.get('/api/albums', async (req, res) => {
 app.get('/api/genres', async (req, res) => {
   try {
     const userId = req.query.userId || null;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
     const offset = parseInt(req.query.offset, 10) || 0;
     const search = req.query.search || '';
     
@@ -458,7 +458,7 @@ app.get('/api/genres', async (req, res) => {
 app.get('/api/years', async (req, res) => {
   try {
     const userId = req.query.userId || null;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
     const offset = parseInt(req.query.offset, 10) || 0;
     const search = req.query.search || '';
     
@@ -483,31 +483,6 @@ app.get('/api/years', async (req, res) => {
   }
 });
 
-// ============================================================
-// RUTAS - ÁLBUMES CON PAGINACIÓN INFINITA
-// ============================================================
-
-app.get('/api/albums', async (req, res) => {
-  try {
-    const userId = req.query.userId || null;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
-    const offset = parseInt(req.query.offset, 10) || 0;
-    const search = req.query.search || '';
-    
-    const result = await db.getAlbumsWithPagination({
-      userId,
-      limit,
-      offset,
-      search
-    });
-    
-    res.json(result);
-  } catch (err) {
-    console.error('[api/albums] Error:', err);
-    res.status(500).json({ error: 'Error al obtener álbumes' });
-  }
-});
-
 app.get('/api/albums/:id/songs', async (req, res) => {
   try {
     const albumId = parseInt(req.params.id, 10);
@@ -526,31 +501,6 @@ app.get('/api/albums/:id/songs', async (req, res) => {
   } catch (err) {
     console.error('[api/albums/:id/songs] Error:', err);
     res.status(500).json({ error: 'Error al obtener canciones del álbum' });
-  }
-});
-
-// ============================================================
-// RUTAS - GÉNEROS CON PAGINACIÓN INFINITA
-// ============================================================
-
-app.get('/api/genres', async (req, res) => {
-  try {
-    const userId = req.query.userId || null;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
-    const offset = parseInt(req.query.offset, 10) || 0;
-    const search = req.query.search || '';
-    
-    const result = await db.getGenresWithPagination({
-      userId,
-      limit,
-      offset,
-      search
-    });
-    
-    res.json(result);
-  } catch (err) {
-    console.error('[api/genres] Error:', err);
-    res.status(500).json({ error: 'Error al obtener géneros' });
   }
 });
 
@@ -575,31 +525,6 @@ app.get('/api/genres/:id/songs', async (req, res) => {
   }
 });
 
-// ============================================================
-// RUTAS - AÑOS CON PAGINACIÓN INFINITA
-// ============================================================
-
-app.get('/api/years', async (req, res) => {
-  try {
-    const userId = req.query.userId || null;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
-    const offset = parseInt(req.query.offset, 10) || 0;
-    const search = req.query.search || '';
-    
-    const result = await db.getYearsWithPagination({
-      userId,
-      limit,
-      offset,
-      search
-    });
-    
-    res.json(result);
-  } catch (err) {
-    console.error('[api/years] Error:', err);
-    res.status(500).json({ error: 'Error al obtener años' });
-  }
-});
-
 app.get('/api/years/:year/songs', async (req, res) => {
   try {
     const year = parseInt(req.params.year, 10);
@@ -618,6 +543,29 @@ app.get('/api/years/:year/songs', async (req, res) => {
   } catch (err) {
     console.error('[api/years/:year/songs] Error:', err);
     res.status(500).json({ error: 'Error al obtener canciones del año' });
+  }
+});
+
+// ============================================================
+// RUTA - CANCIONES SIN ÁLBUM NI ARTISTA
+// ============================================================
+
+app.get('/api/songs/no-album-no-artist', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    const result = await db.getSongsWithoutAlbumOrArtist({
+      userId,
+      limit,
+      offset
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/songs/no-album-no-artist] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones sin álbum ni artista' });
   }
 });
 
@@ -659,9 +607,32 @@ app.get('/api/liked-songs', async (req, res) => {
     });
   }
 });
+
+// ============================================================
+// RUTA - CANCIONES SIN ALBUM NI ARTISTA
+// ============================================================
+
+app.get('/api/songs/no-album-no-artist', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    
+    const result = await db.getSongsWithoutAlbumOrArtist({
+      userId,
+      limit,
+      offset
+    });
+    
+    res.json(result);
+  } catch (err) {
+    console.error('[api/songs/no-album-no-artist] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones sin album ni artista' });
+  }
+});
+
 // ============================================================
 // RUTAS - ARTISTAS FAVORITOS
-// ============================================================
 
 app.get('/api/favorite-artists', async (req, res) => {
   try {
@@ -919,21 +890,27 @@ app.get('/artist-cover/:artistName', async (req, res) => {
 
     if (!song) return res.status(404).send('Artista no encontrado');
 
-    const albumDir = path.dirname(absolutePath(song.relPath));
-    const coverPath = path.join(albumDir, 'cover.jpg');
-    if (fs.existsSync(coverPath)) {
-      res.set('Content-Type', 'image/jpeg');
-      res.set('Cache-Control', 'public, max-age=86400');
-      res.sendFile(coverPath);
-      return;
-    }
-
-    const coverPngPath = path.join(albumDir, 'cover.png');
-    if (fs.existsSync(coverPngPath)) {
-      res.set('Content-Type', 'image/png');
-      res.set('Cache-Control', 'public, max-age=86400');
-      res.sendFile(coverPngPath);
-      return;
+    // Buscar en el directorio del artista cualquier imagen (nueva estructura)
+    const artistDir = path.dirname(absolutePath(song.relPath));
+    const coverExts = ['.jpg', '.jpeg', '.png', '.webp'];
+    
+    try {
+      const entries = fs.readdirSync(artistDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isFile()) {
+          const ext = path.extname(entry.name).toLowerCase();
+          if (coverExts.includes(ext)) {
+            const coverFullPath = path.join(artistDir, entry.name);
+            const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+            res.set('Content-Type', mimeType);
+            res.set('Cache-Control', 'public, max-age=86400');
+            res.sendFile(coverFullPath);
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      // ignorar
     }
 
     res.status(404).send('No cover');
@@ -951,24 +928,43 @@ app.get('/cover/:id', async (req, res) => {
   const song = songMap.get(req.params.id);
   if (!song) return res.status(404).end();
 
-  const albumDir = path.dirname(absolutePath(song.relPath));
-  const coverPath = path.join(albumDir, 'cover.jpg');
+  // 1. Intentar con cover_path de la BD (nueva estructura)
+  if (song.cover_path) {
+    const coverFullPath = absolutePath(song.cover_path);
+    if (fs.existsSync(coverFullPath)) {
+      const ext = path.extname(coverFullPath).toLowerCase();
+      const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+      res.set('Content-Type', mimeType);
+      res.set('Cache-Control', 'public, max-age=86400');
+      res.sendFile(coverFullPath);
+      return;
+    }
+  }
+
+  // 2. Buscar cualquier imagen en el directorio del artista (nueva estructura)
+  const artistDir = path.dirname(absolutePath(song.relPath));
+  const coverExts = ['.jpg', '.jpeg', '.png', '.webp'];
   
-  if (fs.existsSync(coverPath)) {
-    res.set('Content-Type', 'image/jpeg');
-    res.set('Cache-Control', 'public, max-age=86400');
-    res.sendFile(coverPath);
-    return;
+  try {
+    const entries = fs.readdirSync(artistDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (coverExts.includes(ext)) {
+          const coverFullPath = path.join(artistDir, entry.name);
+          const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+          res.set('Content-Type', mimeType);
+          res.set('Cache-Control', 'public, max-age=86400');
+          res.sendFile(coverFullPath);
+          return;
+        }
+      }
+    }
+  } catch (err) {
+    // ignorar
   }
 
-  const coverPngPath = path.join(albumDir, 'cover.png');
-  if (fs.existsSync(coverPngPath)) {
-    res.set('Content-Type', 'image/png');
-    res.set('Cache-Control', 'public, max-age=86400');
-    res.sendFile(coverPngPath);
-    return;
-  }
-
+  // 3. Fallback: extraer portada embebida del archivo de audio
   try {
     const { parseFile } = await import('music-metadata');
     const filePath = absolutePath(song.relPath);
