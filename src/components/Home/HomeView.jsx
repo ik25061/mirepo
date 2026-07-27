@@ -361,7 +361,13 @@ export default function HomeView({
   const artists = fullArtists;
   const genres = fullGenres;
   const years = fullYears;
-  const likedIds = new Set(allSongsFromServer.filter(s => s.liked).map(s => s.id));
+  
+  // Combinar IDs de canciones liked desde todas las fuentes
+  const likedIds = useMemo(() => {
+    const ids = new Set(allSongsFromServer.filter(s => s.liked).map(s => s.id));
+    likedSongs.forEach(s => ids.add(s.id));
+    return ids;
+  }, [allSongsFromServer, likedSongs]);
 
   const unknownSongs = allSongsFromServer.filter(s =>
     !s.artist || s.artist === 'Artista desconocido' ||

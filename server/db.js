@@ -350,10 +350,29 @@ export async function getAlbumsWithPagination({ userId = null, limit = 100, offs
     params.push(`%${search}%`, `%${search}%`);
   }
 
-  sql += ` ORDER BY al.name LIMIT ? OFFSET ?`;
+  sql += ` ORDER BY al.name, al.year LIMIT ? OFFSET ?`;
   params.push(limit, offset);
 
   const items = await database.all(sql, params);
+
+  // Agrupar álbumes del mismo artista con nombres similares
+  const grouped = new Map();
+  for (const item of items) {
+    const baseName = normalizeText(item.name).split(/[:\-–()]/)[0].trim();
+    const key = `${item.artist}|${baseName}|${item.year || 'null'}`;
+    
+    if (!grouped.has(key)) {
+      grouped.set(key, item);
+    } else {
+      const existing = grouped.get(key);
+      // Fusionar: mantener el que tenga más canciones o portada
+      if (item.song_count > existing.song_count || (!existing.cover_path && item.cover_path)) {
+        grouped.set(key, item);
+      }
+    }
+  }
+
+  const mergedItems = Array.from(grouped.values());
 
   let countSql = `SELECT COUNT(*) as total FROM albums al LEFT JOIN artists a ON al.main_artist_id = a.id WHERE 1=1`;
   const countParams = [];
@@ -365,7 +384,7 @@ export async function getAlbumsWithPagination({ userId = null, limit = 100, offs
   const total = totalResult.total;
 
   return {
-    items,
+    items: mergedItems,
     pagination: { offset, limit, total, hasMore: offset + limit < total }
   };
 }
@@ -1276,8 +1295,53 @@ export async function updateSongPath(songId, newPath, newTitle) {
 export async function getOrCreateArtist(database, name) {
   if (!name || name === 'Artista desconocido') return null;
   
-  const row = await database.get('SELECT id FROM artists WHERE name = ?', [name]);
-  if (row) return row.id;
+  // Buscar coincidencia exacta primero
+  const exactRow = await database.get('SELECT id, name FROM artists WHERE name = ?', [name]);
+  if (exactRow) return exactRow.id;
+  
+  // Normalizar el nombre para comparación
+  const normalizedInput = normalizeText(name);
+  
+  // Buscar artistas existentes para detectar variaciones
+  const existingArtists = await database.all('SELECT id, name FROM artists');
+  
+  let bestMatch = null;
+  let bestScore = 0;
+  
+  for (const artist of existingArtists) {
+    const normalizedExisting = normalizeText(artist.name);
+    
+    // Coincidencia exacta normalizada
+    if (normalizedInput === normalizedExisting) {
+      return artist.id;
+    }
+    
+    // Verificar si el nombre coincide con una variación (ej: "AFROJACK" en "AFROJACK & Shermanology")
+    const inputWords = normalizedInput.split(/\s+/);
+    const existingWords = normalizedExisting.split(/\s+/);
+    
+    // Si el input es más corto y todas sus palabras están en el nombre existente
+    if (inputWords.length <= existingWords.length && inputWords.length <= 2) {
+      const allMatch = inputWords.every(w => existingWords.includes(w));
+      if (allMatch && inputWords.length > bestScore) {
+        bestScore = inputWords.length;
+        bestMatch = artist;
+      }
+    }
+    
+    // Si el nombre existente es más corto y todas sus palabras están en el input
+    if (existingWords.length <= inputWords.length && existingWords.length <= 2) {
+      const allMatch = existingWords.every(w => inputWords.includes(w));
+      if (allMatch && existingWords.length > bestScore) {
+        bestScore = existingWords.length;
+        bestMatch = artist;
+      }
+    }
+  }
+  
+  if (bestMatch) {
+    return bestMatch.id;
+  }
   
   const result = await database.run('INSERT INTO artists (name) VALUES (?)', [name]);
   return result.lastID;
@@ -1287,8 +1351,8 @@ export async function getOrCreateAlbum(database, name, mainArtistId, year, cover
   if (!name || name === 'Álbum desconocido') return null;
   
   const row = await database.get(
-    'SELECT id, cover_path FROM albums WHERE name = ? AND year = ?',
-    [name, mainArtistId]
+    'SELECT id, cover_path FROM albums WHERE name = ? AND year = ? AND main_artist_id = ?',
+    [name, year || null, mainArtistId]
   );
   if (row) {
     // Si ya existe pero no tiene cover y ahora tenemos uno, actualizarlo
