@@ -33,11 +33,30 @@ export default function PlayerBar({ onLike, onDislike, likedIds }) {
     removeFromQueue,
   } = usePlayer();
 
+  const [localLikedIds, setLocalLikedIds] = useState(new Set());
+
   const handleDislike = () => {
     if (onDislike && current) {
       removeFromQueue(current.id);
       onDislike(current);
     }
+  };
+
+  const handleLike = async (song) => {
+    if (!onLike) return;
+    // Actualizar estado local inmediatamente para feedback visual
+    setLocalLikedIds(prev => {
+      const newSet = new Set(prev);
+      const isCurrentlyLiked = likedIds?.has(song.id) ?? newSet.has(song.id) ?? song.liked ?? false;
+      if (isCurrentlyLiked) {
+        newSet.delete(song.id);
+      } else {
+        newSet.add(song.id);
+      }
+      return newSet;
+    });
+    // Llamar al callback original
+    onLike(song);
   };
 
   const [showCrossfade, setShowCrossfade] = useState(false);
@@ -53,7 +72,7 @@ export default function PlayerBar({ onLike, onDislike, likedIds }) {
   const VolIcon = volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
   // Calcular si la canción actual está liked
-  const isLiked = likedIds?.has(current.id) ?? current.liked ?? false;
+  const isLiked = localLikedIds.has(current?.id) || (likedIds?.has(current?.id) || current?.liked || false);
 
   return (
     <footer className="border-t border-border bg-surface px-3 py-2 sm:px-5" style={{ overflow: 'hidden' }}>
@@ -65,7 +84,7 @@ export default function PlayerBar({ onLike, onDislike, likedIds }) {
             <p className="truncate text-[10px] text-muted-foreground sm:text-xs">{current.artist}</p>
           </div>
           <button
-            onClick={() => onLike?.(current)}
+            onClick={() => handleLike(current)}
             className={'ml-1 hidden shrink-0 rounded-full p-2 transition sm:block ' + (isLiked ? 'text-primary' : 'text-muted-foreground hover:text-foreground')}
           >
             <Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />

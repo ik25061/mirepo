@@ -105,11 +105,18 @@ export default function CollectionView({
       setSource('api');
     } catch (err) {
       console.error('[CollectionView] Error cargando desde API:', err.message);
+      // Fallback a datos locales si la API falla
+      if (localFiltered.length > 0 && reset) {
+        setSongs(localFiltered);
+        setTotal(localFiltered.length);
+        setHasMore(false);
+        setSource('local');
+      }
     } finally {
       setIsLoadingMore(false);
       setLoading(false);
     }
-  }, [kind, id, offset, userId, isLoadingMore]);
+  }, [kind, id, offset, userId, isLoadingMore, localFiltered]);
 
   // Inicialización: priorizar API si hay conexión, fallback a local si offline
   useEffect(() => {

@@ -278,8 +278,11 @@ export async function scanFullLibrary() {
   
   console.log(`[scanner] ✅ ${songs.length} canciones leídas`);
   
-  // Guardar en la base de datos SQLite
+  // Guardar en la base de datos SQLite (con limpieza de registros obsoletos)
   await saveSongsToDatabase(songs);
+  
+  // Limpiar registros huérfanos (canciones que ya no existen en el filesystem)
+  await cleanupDatabase(audioFiles.map(f => path.relative(MUSIC_DIR, f)));
   
   // Actualizar cache en memoria
   songCache = songs;
@@ -364,6 +367,64 @@ async function saveSongsToDatabase(songs) {
     await database.exec('ROLLBACK');
     console.error('[scanner] Error en transacción:', err);
     throw err;
+  }
+}
+
+// ====== LIMPIEZA DE REGISTROS OBSOLETOS ======
+
+async function cleanupDatabase(currentFiles) {
+  const database = await getDb();
+  const currentFilesSet = new Set(currentFiles);
+  
+  console.log('[scanner] 🧹 Limpiando registros obsoletos...');
+  
+  try {
+    // Obtener todas las canciones de la BD
+    const allSongs = await database.all('SELECT id, relPath FROM songs');
+    
+    let deletedSongs = 0;
+    let deletedArtists = 0;
+    let deletedAlbums = 0;
+    
+    for (const song of allSongs) {
+      // Si la canción ya no existe en el filesystem, eliminarla
+      if (!currentFilesSet.has(song.relPath)) {
+        await database.run('DELETE FROM songs WHERE id = ?', [song.id]);
+        deletedSongs++;
+      }
+    }
+    
+    console.log(`[scanner] ✅ ${deletedSongs} canciones eliminadas`);
+    
+    // Limpiar artistas sin canciones
+    await database.exec(`
+      DELETE FROM artists 
+      WHERE id NOT IN (SELECT DISTINCT artist_id FROM song_artists)
+    `);
+    const artistsResult = await database.get('SELECT changes() as count');
+    deletedArtists = artistsResult.count;
+    
+    // Limpiar álbumes sin canciones
+    await database.exec(`
+      DELETE FROM albums 
+      WHERE id NOT IN (SELECT DISTINCT album_id FROM songs WHERE album_id IS NOT NULL)
+    `);
+    const albumsResult = await database.get('SELECT changes() as count');
+    deletedAlbums = albumsResult.count;
+    
+    console.log(`[scanner] ✅ ${deletedArtists} artistas eliminados`);
+    console.log(`[scanner] ✅ ${deletedAlbums} álbumes eliminados`);
+    
+    // Limpiar géneros sin canciones
+    await database.exec(`
+      DELETE FROM genres 
+      WHERE id NOT IN (SELECT DISTINCT genre_id FROM song_genres)
+    `);
+    const genresResult = await database.get('SELECT changes() as count');
+    console.log(`[scanner] ✅ ${genresResult.count} géneros eliminados`);
+    
+  } catch (err) {
+    console.error('[scanner] Error en limpieza:', err);
   }
 }
 
