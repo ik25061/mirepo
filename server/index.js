@@ -128,48 +128,62 @@ loadLibrary();
 
 async function buildLibrary({ limit = 100, offset = 0, userId = null, likedOnly = false, shuffleSeed = null } = {}) {
   console.log('[buildLibrary] 🏗️ Construyendo...', { limit, offset, userId, likedOnly });
-  
+
   const effectiveUserId = userId || null;
-  
+
   try {
-    // Obtener canciones con filtros básicos
-    let songs = await db.getSongsWithDetails({
-      limit: 999999, // Obtenemos todas para hacer shuffle
-      offset: 0,
-      userId: effectiveUserId
-    });
-    
-    // Filtrar canciones ocultas (dislike)
-    if (effectiveUserId) {
-      const hiddenSongs = await db.getHiddenSongIds(effectiveUserId);
-      songs = songs.filter(s => !hiddenSongs.has(s.id));
+    // Usar la biblioteca ya cargada en memoria (songCache) en lugar de
+    // volver a consultar SQLite completo (con subconsulta de géneros por
+    // canción) en cada petición: esto es lo que causaba la lentitud.
+    if (!libraryReady) {
+      await loadLibrary();
     }
-    
-    // Si es likedOnly, filtrar
+
+    // Sets de "me gusta" / "ocultas" del usuario: 2 consultas indexadas
+    // rápidas, en vez de una consulta por cada canción del catálogo.
+    let likedIds = new Set();
+    let hiddenIds = new Set();
+    if (effectiveUserId) {
+      [likedIds, hiddenIds] = await Promise.all([
+        db.getLikedSongIds(effectiveUserId),
+        db.getHiddenSongIds(effectiveUserId)
+      ]);
+    }
+
+    // Clonar solo lo necesario (sin volver a tocar la base de datos) y
+    // aplicar el estado de like/hidden específico de este usuario.
+    let songs = songCache
+      .filter(s => !hiddenIds.has(s.id))
+      .map(s => ({
+        ...s,
+        liked: likedIds.has(s.id),
+        hidden: false
+      }));
+
     if (likedOnly) {
       songs = songs.filter(s => s.liked);
     }
-    
+
     // Generar semilla para shuffle (basada en userId y fecha)
     const seed = shuffleSeed || getCursor(effectiveUserId);
     const shuffled = shuffleArray(songs, seed);
-    
+
     // Paginación
     const total = shuffled.length;
     const start = offset;
     const end = Math.min(start + limit, total);
     const paged = shuffled.slice(start, end);
-    
+
     // Obtener conteos
     const trash = await db.getTrashCount(effectiveUserId);
-    
+
     // Obtener artistas ocultos para el usuario
     let hiddenArtists = [];
     if (effectiveUserId) {
       const hiddenSet = await db.getHiddenArtists(effectiveUserId);
       hiddenArtists = [...hiddenSet];
     }
-    
+
     const result = {
       songs: paged,
       hiddenArtists: hiddenArtists,
@@ -181,10 +195,10 @@ async function buildLibrary({ limit = 100, offset = 0, userId = null, likedOnly 
         hasMore: end < total
       }
     };
-    
+
     console.log(`[buildLibrary] ✅ ${paged.length} canciones devueltas (total: ${total})`);
     return result;
-    
+
   } catch (err) {
     console.error('[buildLibrary] ❌ Error:', err);
     throw err;

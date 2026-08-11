@@ -886,6 +886,15 @@ export async function getHiddenSongIds(userId) {
   return new Set(rows.map(r => r.song_id));
 }
 
+export async function getLikedSongIds(userId) {
+  const database = await getDb();
+  const rows = await database.all(
+    'SELECT song_id FROM user_song_interactions WHERE user_id = ? AND interaction_type = "LIKE"',
+    [userId]
+  );
+  return new Set(rows.map(r => r.song_id));
+}
+
 // ============================================================
 // FUNCIONES PARA INTERACCIONES CON CANCIONES
 // ============================================================
