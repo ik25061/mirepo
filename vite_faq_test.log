@@ -1,0 +1,12 @@
+🌐 IP de red local detectada: 192.168.1.152
+🔧 Puerto del servidor: 5002
+🔧 Puerto del cliente: 5172
+🔁 Proxy de Vite → http://localhost:5002
+📱 Para conectar desde móvil usa IP: 192.168.1.152
+   (configurable en .env con VITE_SERVER_HOST)
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m627[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5111[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.152:[1m5111[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m

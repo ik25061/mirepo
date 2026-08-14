@@ -1,0 +1,1090 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mirepo · FAQ de la API</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --bg-soft: #11151f;
+    --card: #141926;
+    --card-hover: #182036;
+    --border: #232b3d;
+    --text: #e6e9ef;
+    --text-dim: #98a2b8;
+    --accent: #7c5cff;
+    --accent-2: #4fd1c5;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --orange: #e67e22;
+    --blue: #3498db;
+    --purple: #9b59b6;
+    --get: #2ecc71;
+    --post: #f39c12;
+    --delete: #e74c3c;
+    --mono: "Cascadia Code", "JetBrains Mono", Consolas, "Courier New", monospace;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    background: radial-gradient(1200px 600px at 80% -10%, #1c1440 0%, transparent 60%),
+                radial-gradient(900px 500px at 0% 0%, #0c2330 0%, transparent 50%),
+                var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  a { color: var(--accent-2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ---------- HEADER ---------- */
+  header {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(14px);
+    background: rgba(11, 14, 20, 0.82);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 22px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  header .logo { font-weight: 800; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+  header .logo .dot {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #fff;
+  }
+  header .spacer { flex: 1; }
+  .status-pill {
+    font-size: 12.5px; font-family: var(--mono);
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--bg-soft);
+    color: var(--text-dim); display: inline-flex; align-items: center; gap: 8px;
+  }
+  .status-pill .led { width: 8px; height: 8px; border-radius: 50%; background: #555; }
+  .status-pill.ok .led { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .status-pill.err .led { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .status-pill.ok { color: var(--green); }
+  .status-pill.err { color: var(--red); }
+  .btn {
+    cursor: pointer; border: 1px solid var(--border); background: var(--bg-soft);
+    color: var(--text); padding: 8px 14px; border-radius: 9px;
+    font-size: 13.5px; font-weight: 600; transition: all .15s;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent-2); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), #4a3a8f); border: none; color: #fff; }
+  .btn.primary:hover { filter: brightness(1.15); color: #fff; }
+  .btn.small { padding: 5px 10px; font-size: 12px; border-radius: 7px; }
+
+  /* ---------- LAYOUT ---------- */
+  .layout { display: flex; gap: 22px; max-width: 1280px; margin: 0 auto; padding: 22px; align-items: flex-start; }
+  nav.side {
+    position: sticky; top: 76px; width: 235px; flex-shrink: 0;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px; max-height: calc(100vh - 100px); overflow: auto;
+  }
+  nav.side h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 10px; }
+  nav.side a {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--text-dim); font-size: 13px; padding: 6px 8px; border-radius: 7px;
+  }
+  nav.side a:hover { background: var(--bg-soft); color: var(--text); text-decoration: none; }
+  nav.side a .count { margin-left: auto; font-size: 11px; font-family: var(--mono); color: var(--text-dim); opacity: .7; }
+  main { flex: 1; min-width: 0; }
+
+  /* ---------- HERO ---------- */
+  .hero { margin-bottom: 22px; }
+  .hero h1 { font-size: 28px; margin-bottom: 6px; }
+  .hero p { color: var(--text-dim); line-height: 1.6; max-width: 820px; }
+  .hero .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .badge { font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--text-dim); }
+  .badge b { color: var(--accent-2); }
+.search-box { position: relative; margin-bottom: 18px; }
+  .search-box input {
+    width: 100%; padding: 11px 14px 11px 40px; border-radius: 11px;
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    font-size: 14px; outline: none; transition: border .15s;
+  }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box .icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text-dim); }
+
+  /* ---------- SECCIÓN / CARD ---------- */
+  section.cat { margin-bottom: 26px; scroll-margin-top: 80px; }
+  .cat-title {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 18px; font-weight: 800; margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cat-title .icon { font-size: 20px; }
+  .cat-title .pill {
+    font-size: 11.5px; font-family: var(--mono); color: var(--text-dim);
+    background: var(--bg-soft); border: 1px solid var(--border);
+    padding: 2px 9px; border-radius: 999px;
+  }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    margin-bottom: 14px; overflow: hidden; transition: border .15s, box-shadow .15s;
+  }
+  .card:hover { border-color: #323d55; box-shadow: 0 6px 24px rgba(0,0,0,.35); }
+  .card-head {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 14px 18px; cursor: pointer; user-select: none;
+  }
+  .card-head:hover { background: var(--card-hover); }
+  .method {
+    font-family: var(--mono); font-weight: 800; font-size: 12px;
+    color: #fff; padding: 4px 10px; border-radius: 6px; letter-spacing: .5px;
+  }
+  .method.get    { background: var(--get); }
+  .method.post   { background: var(--post); }
+  .method.delete { background: var(--delete); }
+  .endpoint-path {
+    font-family: var(--mono); font-size: 14.5px; font-weight: 600; color: #c8d3e8;
+    word-break: break-all;
+  }
+  .endpoint-path .ph { color: var(--accent); background: rgba(124,92,255,.12); border-radius: 4px; padding: 0 3px; }
+  .card-head .desc { width: 100%; color: var(--text-dim); font-size: 13px; margin-top: 2px; }
+  .chev { margin-left: auto; color: var(--text-dim); transition: transform .2s; font-size: 13px; }
+  .card.open .chev { transform: rotate(180deg); }
+
+  .card-body { display: none; padding: 0 18px 18px; border-top: 1px dashed var(--border); }
+  .card.open .card-body { display: block; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .panel h5 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+
+  table.params { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.params th {
+    text-align: left; color: var(--text-dim); font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .8px; padding: 5px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  table.params td { padding: 6px 8px; border-bottom: 1px solid #1a2030; vertical-align: top; }
+  table.params tr:last-child td { border-bottom: none; }
+  table.params .p-name { font-family: var(--mono); color: var(--accent-2); font-weight: 600; white-space: nowrap; }
+  table.params .p-type { font-family: var(--mono); color: var(--orange); font-size: 11px; }
+  table.params .p-flag { font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 700; }
+  table.params .req    { color: #fff; background: var(--red); }
+  table.params .opt    { color: var(--text-dim); background: #2a3247; }
+  table.params .p-desc { color: var(--text-dim); }
+
+  pre.code {
+    background: #0a0d14; border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; font-family: var(--mono); font-size: 12px; line-height: 1.55;
+    overflow: auto; color: #a5f3d2; max-height: 300px; white-space: pre-wrap; word-break: break-word;
+  }
+.test-zone { margin-top: 14px; display: none; }
+  .card.open .test-zone { display: block; }
+  .test-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .test-input {
+    flex: 1; min-width: 160px; padding: 8px 11px; border-radius: 8px;
+    border: 1px solid var(--border); background: #0a0d14; color: var(--text);
+    font-family: var(--mono); font-size: 12.5px; outline: none;
+  }
+  .test-input:focus { border-color: var(--accent); }
+  .field-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .field-row label { font-size: 12px; color: var(--text-dim); font-family: var(--mono); min-width: 130px; }
+  .field-row .test-input { flex: 1; min-width: 120px; }
+  .resp {
+    margin-top: 10px; border: 1px solid var(--border); border-radius: 8px; display: none; overflow: hidden;
+  }
+  .resp-head {
+    display: flex; align-items: center; gap: 10px; padding: 7px 12px; font-size: 12px;
+    background: var(--bg-soft); border-bottom: 1px solid var(--border); font-family: var(--mono);
+  }
+  .resp-head .code-ok { color: var(--green); font-weight: 800; }
+  .resp-head .code-err { color: var(--red); font-weight: 800; }
+  .resp-head .time { margin-left: auto; color: var(--text-dim); }
+  .resp pre { max-height: 380px; margin: 0; }
+  .resp.empty-ok { padding: 14px; color: var(--green); font-size: 13px; }
+  .loading { color: var(--accent-2); font-size: 13px; padding: 8px 0; display: none; }
+  .loading .spin {
+    display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border);
+    border-top-color: var(--accent-2); border-radius: 50%; animation: spin .7s linear infinite;
+    vertical-align: middle; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .note { font-size: 12px; color: var(--text-dim); margin-top: 8px; line-height: 1.5; }
+  .note b { color: var(--accent-2); }
+/* ---------- FAQ ---------- */
+  .faq-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; }
+  .faq-item summary {
+    cursor: pointer; padding: 15px 18px; font-weight: 700; font-size: 14.5px;
+    list-style: none; display: flex; align-items: center; gap: 10px;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::before { content: "?"; width: 20px; height: 20px; font-size: 12px; font-weight: 800;
+    background: var(--accent); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+  .faq-item[open] summary::before { content: "×"; }
+  .faq-item .faq-body { padding: 0 18px 16px 48px; color: var(--text-dim); font-size: 13.5px; line-height: 1.7; }
+  .faq-item .faq-body code {
+    font-family: var(--mono); font-size: 12px; background: var(--bg-soft);
+    border: 1px solid var(--border); padding: 1px 6px; border-radius: 5px; color: var(--accent-2);
+  }
+
+  footer { text-align: center; padding: 30px; color: var(--text-dim); font-size: 12.5px; border-top: 1px solid var(--border); margin-top: 30px; }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: #2a3247; border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: #37415c; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="dot">♪</span> Mirepo · API</div>
+  <span class="spacer"></span>
+  <span class="status-pill" id="statusPill"><span class="led"></span><span id="statusText">Verificando servidor…</span></span>
+  <button class="btn" onclick="checkServer(true)">↻ Revisar servidor</button>
+  <button class="btn primary" onclick="toggleAll()" id="btnToggle">▼ Desplegar todo</button>
+</header>
+
+<div class="layout">
+  <nav class="side" id="sideNav">
+    <h4>Endpoints</h4>
+    <div id="navList"></div>
+  </nav>
+
+  <main>
+    <div class="hero">
+      <h1>📡 Documentación de la API de Mirepo</h1>
+      <p>
+        Referencia completa de los endpoints del servidor Express (<b id="serverPort">:5002</b>).
+        Haz clic en cada endpoint para ver sus parámetros, ejemplo de respuesta y opciones para
+        <b>probarlo en vivo</b> directamente desde esta página. Las peticiones se envían por el proxy de Vite,
+        igual que la aplicación principal.
+      </p>
+      <div class="badges">
+        <span class="badge"><b id="countEndpoints">0</b> endpoints</span>
+        <span class="badge"><b>GET</b> consultas</span>
+        <span class="badge"><b>POST</b> escritura</span>
+        <span class="badge"><b>DELETE</b> borrado</span>
+        <span class="badge">Base URL: <b>/</b> (relativa)</span>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <span class="icon">🔎</span>
+      <input type="text" id="searchInput" placeholder="Buscar endpoint, método, ruta o descripción…" oninput="applyFilter()" />
+    </div>
+
+    <div id="content"></div>
+<!-- ================= FAQ ================= -->
+    <section class="cat" id="cat-faq" style="margin-top:34px;">
+      <div class="cat-title"><span class="icon">❓</span> Preguntas frecuentes <span class="pill">FAQ</span></div>
+
+      <details class="faq-item">
+        <summary>¿Qué es <code>userId</code> y por qué muchas rutas lo piden?</summary>
+        <div class="faq-body">
+          Es el ID numérico del usuario (lo devuelve <code>/api/auth/login</code>). Se usa para personalizar
+          la biblioteca: canciones que te gustan, artistas favoritos, artistas ocultos y playlists.
+          Si no lo pasas, la API devuelve los datos sin personalización (modo anónimo).
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>¿Cómo obtengo el <code>id</code> de una canción para usar <code>/audio/:id</code> o <code>/cover/:id</code>?</summary>
+        <div class="faq-body">
+          Haz una petición a <code>/api/library</code> o <code>/api/artists/:id/songs</code>.
+          Cada canción trae un campo <code>id</code> (cadena hexadecimal). Ese mismo <code>id</code>
+          se usa en <code>/audio/:id</code>, <code>/cover/:id</code>, <code>/api/lyrics/:id</code>,
+          <code>/api/songs/:id/like</code>, etc.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>¿Por qué <code>/api/library</code> puede devolver un error 503?</summary>
+        <div class="faq-body">
+          Porque la biblioteca aún se está cargando en memoria cuando arranca el servidor
+          (el campo <code>libraryReady</code> de <code>/api/test</code> será <code>false</code>).
+          Espera unos segundos y vuelve a intentarlo. La mayoría de las otras rutas consultan SQLite
+          y no tienen este retraso.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>¿Cómo hago streaming de audio con barras de progreso y seek?</summary>
+        <div class="faq-body">
+          El endpoint <code>/audio/:id</code> soporta peticiones HTTP <code>Range</code> (bytes) y responde con
+          <code>206 Partial Content</code>, <code>Content-Range</code> y <code>Accept-Ranges: bytes</code>,
+          así que un elemento <code>&lt;audio&gt;</code> puede hacer seek y mostrar progreso sin problema.
+          Es el mecanismo que usa el reproductor de Mirepo.
+        </div>
+      </details>
+<details class="faq-item">
+        <summary>¿Qué significan los códigos de estado que devuelve la API?</summary>
+        <div class="faq-body">
+          <code>200</code> OK · <code>206</code> contenido parcial (streaming con Range) ·
+          <code>400</code> faltan datos (p. ej. <code>userId</code> en liked-songs) · <code>401</code> token inválido ·
+          <code>404</code> recurso no encontrado (canción, artista, playlist…) · <code>409</code> conflicto (usuario ya existe) ·
+          <code>503</code> biblioteca aún cargando · <code>500</code> error interno.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>¿Hay límites de paginación?</summary>
+        <div class="faq-body">
+          Sí. Las rutas que aceptan <code>limit</code> lo limitan a un máximo de <b>100</b> resultados por página
+          aunque pidas más. Usa <code>offset</code> o la propiedad <code>hasMore</code> de la respuesta
+          para recorrer todas las páginas.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>¿Cómo autenticarme para probar los endpoints de usuario?</summary>
+        <div class="faq-body">
+          1) Registra un usuario en <code>POST /api/auth/register</code> (o inicia sesión en
+          <code>POST /api/auth/login</code>). 2) La respuesta trae <code>user.id</code> y <code>token</code>.
+          3) Usa <code>user.id</code> como <code>userId</code> en el resto de rutas. El <code>token</code> solo hace falta
+          en <code>/api/auth/verify</code> y <code>/api/auth/logout</code>.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>¿Esta página funciona en mi móvil?</summary>
+        <div class="faq-body">
+          Sí, siempre que estés en la misma red: abre <code>http://IP_DEL_PC:5172/faq_api.html</code>.
+          Las peticiones usan rutas relativas, así que van al mismo host/puerto desde el que abriste la página
+          (Vite hace de proxy hacia Express). Si abres el archivo directo desde el disco no funcionará.
+        </div>
+      </details>
+    </section>
+  </main>
+</div>
+
+<footer>Mirepo · Referencia de API generada a partir de <b><span id="serverMono">server/index.js</span></b> — Uso interno</footer>
+<script>
+const ENDPOINTS = [
+  // ============ SISTEMA ============
+  {
+    cat: 'Sistema', icon: '🖥️', method: 'GET', path: '/api/test', tag: 'Estado',
+    desc: 'Estado del servidor: biblioteca cargada, cantidad de canciones y directorio de música.',
+    params: [
+      { name: '(sin parámetros)', in: '-', type: '-', required: false, desc: 'Petición directa' }
+    ],
+    example: { success: true, libraryReady: true, songCount: 48213, musicDir: 'C:\\...\\music', dbReady: true }
+  },
+  {
+    cat: 'Sistema', icon: '🖥️', method: 'GET', path: '/api/config/ip', tag: 'Config',
+    desc: 'Información de red del servidor: IP local, puerto y URL accesible.',
+    params: [
+      { name: '(sin parámetros)', in: '-', type: '-', required: false, desc: 'Petición directa' }
+    ],
+    example: { ip: '192.168.1.10', port: 5002, serverUrl: 'http://192.168.1.10:5002', allIps: ['192.168.1.10'] }
+  },
+
+  // ============ AUTENTICACIÓN ============
+  {
+    cat: 'Autenticación', icon: '🔑', method: 'POST', path: '/api/auth/register', tag: 'auth',
+    desc: 'Crea una cuenta de usuario. Usuario y contraseña deben tener al menos 3 caracteres.',
+    body: { username: 'demo', password: 'demo123' },
+    params: [
+      { name: 'username', in: 'body', type: 'string', required: true, desc: 'Nombre de usuario (mín. 3 caracteres)' },
+      { name: 'password', in: 'body', type: 'string', required: true, desc: 'Contraseña (mín. 3 caracteres)' }
+    ],
+    errors: { 400: 'Datos incompletos', 409: 'El usuario ya existe' },
+    example: { success: true, user: { id: 1, username: 'demo' }, message: 'Usuario creado correctamente' }
+  },
+  {
+    cat: 'Autenticación', icon: '🔑', method: 'POST', path: '/api/auth/login', tag: 'auth',
+    desc: 'Inicia sesión y devuelve el token de sesión y el id del usuario.',
+    body: { username: 'demo', password: 'demo123' },
+    params: [
+      { name: 'username', in: 'body', type: 'string', required: true, desc: 'Nombre de usuario' },
+      { name: 'password', in: 'body', type: 'string', required: true, desc: 'Contraseña' }
+    ],
+    errors: { 400: 'Datos incompletos', 401: 'Usuario o contraseña incorrectos' },
+    example: { success: true, user: { id: 1, username: 'demo' }, token: '4f8a2c…(64 hex)' }
+  },
+  {
+    cat: 'Autenticación', icon: '🔑', method: 'POST', path: '/api/auth/verify', tag: 'auth',
+    desc: 'Verifica que un token de sesión siga siendo válido y devuelve el usuario.',
+    body: { token: '4f8a2c…' },
+    params: [
+      { name: 'token', in: 'body', type: 'string', required: true, desc: 'Token devuelto en el login' }
+    ],
+    errors: { 401: 'No hay token / Token inválido' },
+    example: { success: true, user: { id: 1, username: 'demo' } }
+  },
+  {
+    cat: 'Autenticación', icon: '🔑', method: 'POST', path: '/api/auth/logout', tag: 'auth',
+    desc: 'Cierra la sesión e invalida el token.',
+    body: { token: '4f8a2c…' },
+    params: [
+      { name: 'token', in: 'body', type: 'string', required: false, desc: 'Token a invalidar (opcional)' }
+    ],
+    example: { success: true }
+  },
+
+  // ============ BIBLIOTECA ============
+  {
+    cat: 'Biblioteca', icon: '📚', method: 'GET', path: '/api/library', tag: 'library',
+    desc: 'Biblioteca principal con paginación, filtro de "me gusta" y shuffle determinista por seed.',
+    query: { userId: '', limit: '10', liked: '', shuffleSeed: '' },
+    params: [
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario (personaliza likes/ocultos)' },
+      { name: 'limit', in: 'query', type: 'number', required: false, desc: 'Máx. 100 por página (default 100)' },
+      { name: 'offset', in: 'query', type: 'number', required: false, desc: 'Resultados a saltar (default 0)' },
+      { name: 'liked', in: 'query', type: 'true|false', required: false, desc: '"true" devuelve solo canciones que te gustan' },
+      { name: 'shuffleSeed', in: 'query', type: 'number', required: false, desc: 'Semilla para orden aleatorio reproducible' }
+    ],
+    errors: { 503: 'Biblioteca aún cargando' },
+    example: { songs: [ { id: '0ba6b23a2abd90e2', title: 'Contigo en la distancia', artist: 'Olga Guillot', album: 'Recuerdos de oro' } ], songsCount: 48213, totalSongs: 48213, offset: 0, limit: 10 }
+  },
+  {
+    cat: 'Biblioteca', icon: '📚', method: 'POST', path: '/api/rescan', tag: 'library',
+    desc: 'Vuelve a escanear toda la carpeta de música y recarga la biblioteca en memoria (puede tardar).',
+    params: [
+      { name: '(sin parámetros)', in: '-', type: '-', required: false, desc: 'Cuerpo vacío' }
+    ],
+    note: '<b>Cuidado:</b> esta operación puede tardar bastante si hay muchas canciones.',
+    example: { songs: [], songsCount: 48213, totalSongs: 48213, offset: 0, limit: 100 }
+  },
+// ============ ARTISTAS ============
+  {
+    cat: 'Artistas', icon: '🎤', method: 'GET', path: '/api/artists', tag: 'paginado',
+    desc: 'Lista de artistas con paginación infinita y búsqueda.',
+    query: { userId: '', limit: '10', offset: '', search: '' },
+    params: [
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario (oculta artistas ocultos)' },
+      { name: 'limit', in: 'query', type: 'number', required: false, desc: 'Máx. 100 (default 100)' },
+      { name: 'offset', in: 'query', type: 'number', required: false, desc: 'Resultados a saltar (default 0)' },
+      { name: 'search', in: 'query', type: 'string', required: false, desc: 'Filtro por nombre del artista' }
+    ],
+    example: { items: [ { id: 1, name: 'Olga Guillot', songCount: 42, albumCount: 3 } ], pagination: { offset: 0, limit: 10, total: 2481, hasMore: true } }
+  },
+  {
+    cat: 'Artistas', icon: '🎤', method: 'GET', path: '/api/artists/:id/songs', tag: 'paginado',
+    desc: 'Canciones de un artista específico.',
+    query: { userId: '', limit: '10', offset: '' },
+    pathParams: { id: '' },
+    params: [
+      { name: 'id', in: 'path', type: 'number', required: true, desc: 'ID del artista (ver /api/artists)' },
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario' },
+      { name: 'limit', in: 'query', type: 'number', required: false, desc: 'Máx. 100 (default 100)' },
+      { name: 'offset', in: 'query', type: 'number', required: false, desc: 'Resultados a saltar' }
+    ],
+    example: { songs: [ { id: '0ba6b23a2abd90e2', title: 'Contigo en la distancia', artist: 'Olga Guillot', album: 'Recuerdos de oro' } ], pagination: { offset: 0, limit: 10, total: 42, hasMore: true } }
+  },
+  {
+    cat: 'Artistas', icon: '🎤', method: 'GET', path: '/api/favorite-artists', tag: 'favoritos',
+    desc: 'Artistas marcados como favoritos del usuario.',
+    query: { userId: '1' },
+    params: [
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario (sin él devuelve favoritos globales)' }
+    ],
+    example: { artists: [ { id: 1, name: 'Luis Miguel', isFavorite: true } ] }
+  },
+  {
+    cat: 'Artistas', icon: '🎤', method: 'POST', path: '/api/favorite-artists/toggle', tag: 'favoritos',
+    desc: 'Agrega o quita un artista de favoritos (alterna el estado).',
+    body: { artist: 'Luis Miguel', userId: 1 },
+    params: [
+      { name: 'artist', in: 'body', type: 'string', required: true, desc: 'Nombre exacto del artista' },
+      { name: 'userId', in: 'body', type: 'number', required: false, desc: 'ID del usuario' }
+    ],
+    errors: { 400: 'Falta el artista', 404: 'Artista no encontrado' },
+    example: { artists: [ { id: 1, name: 'Luis Miguel' } ], isFavorite: true }
+  },
+{
+    cat: 'Artistas', icon: '🎤', method: 'POST', path: '/api/artists/hide', tag: 'ocultar',
+    desc: 'Oculta un artista para el usuario (desaparece de su biblioteca).',
+    body: { artist: 'Artista Molesto', userId: 1 },
+    params: [
+      { name: 'artist', in: 'body', type: 'string', required: true, desc: 'Nombre exacto del artista' },
+      { name: 'userId', in: 'body', type: 'number', required: false, desc: 'ID del usuario' }
+    ],
+    errors: { 400: 'Falta el artista', 404: 'Artista no encontrado' },
+    example: { ok: true }
+  },
+  {
+    cat: 'Artistas', icon: '🎤', method: 'POST', path: '/api/artists/unhide', tag: 'ocultar',
+    desc: 'Deja de ocultar un artista y lo vuelve visible.',
+    body: { artist: 'Artista Molesto', userId: 1 },
+    params: [
+      { name: 'artist', in: 'body', type: 'string', required: true, desc: 'Nombre exacto del artista' },
+      { name: 'userId', in: 'body', type: 'number', required: false, desc: 'ID del usuario' }
+    ],
+    errors: { 400: 'Falta el artista', 404: 'Artista no encontrado' },
+    example: { ok: true }
+  },
+  {
+    cat: 'Artistas', icon: '🎤', method: 'GET', path: '/artist-cover/:artistName', tag: 'imagen',
+    desc: 'Devuelve la foto/portada del artista como imagen (jpg/png/webp). Cacheada 24 h.',
+    pathParams: { artistName: 'Luis%20Miguel' },
+    params: [
+      { name: 'artistName', in: 'path', type: 'string', required: true, desc: 'Nombre del artista (URL-encoded)' }
+    ],
+    kind: 'image',
+    example: '<imagen binaria> → Content-Type: image/jpeg'
+  },
+
+  // ============ ÁLBUMES ============
+  {
+    cat: 'Álbumes', icon: '💿', method: 'GET', path: '/api/albums', tag: 'paginado',
+    desc: 'Lista de álbumes con paginación y búsqueda.',
+    query: { userId: '', limit: '10', offset: '', search: '' },
+    params: [
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario' },
+      { name: 'limit', in: 'query', type: 'number', required: false, desc: 'Máx. 100 (default 100)' },
+      { name: 'offset', in: 'query', type: 'number', required: false, desc: 'Resultados a saltar' },
+      { name: 'search', in: 'query', type: 'string', required: false, desc: 'Filtro por nombre del álbum' }
+    ],
+    example: { items: [ { id: 1, name: 'Romance', artist: 'Luis Miguel', year: 1991, songCount: 10, cover_path: 'Luis Miguel\\Romance\\folder.jpg' } ], pagination: { offset: 0, limit: 10, total: 521, hasMore: true } }
+  },
+  {
+    cat: 'Álbumes', icon: '💿', method: 'GET', path: '/api/albums/:id/songs', tag: 'paginado',
+    desc: 'Canciones de un álbum específico.',
+    query: { userId: '', limit: '10', offset: '' },
+    pathParams: { id: '' },
+    params: [
+      { name: 'id', in: 'path', type: 'number', required: true, desc: 'ID del álbum (ver /api/albums)' },
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario' },
+      { name: 'limit', in: 'query', type: 'number', required: false, desc: 'Máx. 100 (default 100)' },
+      { name: 'offset', in: 'query', type: 'number', required: false, desc: 'Resultados a saltar' }
+    ],
+    example: { songs: [ { id: '06e4aa13696f8226', title: 'Contigo en la Distancia', artist: 'Luis Miguel', album: 'Romance' } ], pagination: { offset: 0, limit: 10, total: 10, hasMore: false } }
+  },
+// ============ GÉNEROS ============
+  {
+    cat: 'Géneros', icon: '🎵', method: 'GET', path: '/api/genres', tag: 'paginado',
+    desc: 'Lista de géneros con paginación y búsqueda.',
+    query: { userId: '', limit: '10', offset: '', search: '' },
+    params: [
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario' },
+      { name: 'limit', in: 'query', type: 'number', required: false, desc: 'Máx. 100 (default 100)' },
+      { name: 'offset', in: 'query', type: 'number', required: false, desc: 'Resultados a saltar' },
+      { name: 'search', in: 'query', type: 'string', required: false, desc: 'Filtro por nombre del género' }
+    ],
+    example: { items: [ { id: 1, name: 'Boleros', songCount: 521 } ], pagination: { offset: 0, limit: 10, total: 42, hasMore: true } }
+  },
+  {
+    cat: 'Géneros', icon: '🎵', method: 'GET', path: '/api/genres/:id/songs', tag: 'paginado',
+    desc: 'Canciones de un género específico.',
+    query: { userId: '', limit: '10', offset: '' },
+    pathParams: { id: '' },
+    params: [
+      { name: 'id', in: 'path', type: 'number', required: true, desc: 'ID del género (ver /api/genres)' },
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario' },
+      { name: 'limit', in: 'query', type: 'number', required: false, desc: 'Máx. 100 (default 100)' },
+      { name: 'offset', in: 'query', type: 'number', required: false, desc: 'Resultados a saltar' }
+    ],
+    example: { songs: [ { id: '0ba6b23a2abd90e2', title: 'Contigo en la distancia', artist: 'Olga Guillot', genre: 'Boleros' } ], pagination: { offset: 0, limit: 10, total: 521, hasMore: true } }
+  },
+
+  // ============ AÑOS ============
+  {
+    cat: 'Años', icon: '📅', method: 'GET', path: '/api/years', tag: 'paginado',
+    desc: 'Lista de años de publicación con conteos de canciones.',
+    query: { userId: '', limit: '10', offset: '', search: '' },
+    params: [
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario' },
+      { name: 'limit', in: 'query', type: 'number', required: false, desc: 'Máx. 100 (default 100)' },
+      { name: 'offset', in: 'query', type: 'number', required: false, desc: 'Resultados a saltar' },
+      { name: 'search', in: 'query', type: 'string', required: false, desc: 'Filtro (p. ej. "199")' }
+    ],
+    example: { items: [ { year: 1991, songCount: 12 } ], pagination: { offset: 0, limit: 10, total: 52, hasMore: true } }
+  },
+  {
+    cat: 'Años', icon: '📅', method: 'GET', path: '/api/years/:year/songs', tag: 'paginado',
+    desc: 'Canciones publicadas en un año específico.',
+    query: { userId: '', limit: '10', offset: '' },
+    pathParams: { year: '1991' },
+    params: [
+      { name: 'year', in: 'path', type: 'number', required: true, desc: 'Año (ej: 1991)' },
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario' },
+      { name: 'limit', in: 'query', type: 'number', required: false, desc: 'Máx. 100 (default 100)' },
+      { name: 'offset', in: 'query', type: 'number', required: false, desc: 'Resultados a saltar' }
+    ],
+    example: { songs: [ { id: '06e4aa13696f8226', title: 'Contigo en la Distancia', artist: 'Luis Miguel', year: 1991 } ], pagination: { offset: 0, limit: 10, total: 12, hasMore: false } }
+  },
+
+  // ============ CANCIONES ============
+  {
+    cat: 'Canciones', icon: '🎼', method: 'GET', path: '/api/songs/no-album-no-artist', tag: 'huérfanas',
+    desc: 'Canciones sin álbum ni artista asignados (para limpiar la biblioteca).',
+    query: { userId: '', limit: '10', offset: '' },
+    params: [
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario' },
+      { name: 'limit', in: 'query', type: 'number', required: false, desc: 'Máx. 100 (default 100)' },
+      { name: 'offset', in: 'query', type: 'number', required: false, desc: 'Resultados a saltar' }
+    ],
+    example: { songs: [ { id: 'a1b2c3d4e5f6a7b8', title: 'Pista sin datos', artist: 'Artista desconocido' } ], pagination: { offset: 0, limit: 10, total: 3, hasMore: false } }
+  },
+  {
+    cat: 'Canciones', icon: '🎼', method: 'GET', path: '/api/liked-songs', tag: 'likes',
+    desc: 'Canciones marcadas como "me gusta" del usuario.',
+    query: { userId: '1', limit: '10', offset: '' },
+    params: [
+      { name: 'userId', in: 'query', type: 'number', required: true, desc: 'ID del usuario (obligatorio)' },
+      { name: 'limit', in: 'query', type: 'number', required: false, desc: 'Máx. 100 (default 100)' },
+      { name: 'offset', in: 'query', type: 'number', required: false, desc: 'Resultados a saltar' }
+    ],
+    errors: { 400: 'Se requiere userId' },
+    example: { songs: [ { id: '0ba6b23a2abd90e2', title: 'Contigo en la distancia', artist: 'Olga Guillot' } ], pagination: { offset: 0, limit: 10, total: 512, hasMore: true } }
+  },
+{
+    cat: 'Canciones', icon: '🎼', method: 'POST', path: '/api/songs/:id/like', tag: 'likes',
+    desc: 'Marca o desmarca una canción como "me gusta".',
+    body: { userId: 1, liked: true },
+    pathParams: { id: '0ba6b23a2abd90e2' },
+    params: [
+      { name: 'id', in: 'path', type: 'string', required: true, desc: 'ID de la canción' },
+      { name: 'userId', in: 'body', type: 'number', required: false, desc: 'ID del usuario' },
+      { name: 'liked', in: 'body', type: 'boolean', required: true, desc: 'true = dar like, false = quitar like' }
+    ],
+    errors: { 404: 'Canción no encontrada' },
+    example: { ok: true }
+  },
+  {
+    cat: 'Canciones', icon: '🎼', method: 'POST', path: '/api/songs/:id/hide', tag: 'ocultar',
+    desc: 'Oculta una canción de la biblioteca del usuario.',
+    body: { userId: 1 },
+    pathParams: { id: '0ba6b23a2abd90e2' },
+    params: [
+      { name: 'id', in: 'path', type: 'string', required: true, desc: 'ID de la canción' },
+      { name: 'userId', in: 'body', type: 'number', required: false, desc: 'ID del usuario' }
+    ],
+    errors: { 404: 'Canción no encontrada' },
+    example: { ok: true }
+  },
+  {
+    cat: 'Canciones', icon: '🎼', method: 'DELETE', path: '/api/songs', tag: 'borrar',
+    desc: 'Elimina una canción del disco. Se mueve a la papelera (music/trash/AAAA-MM) en vez de borrarse definitivamente.',
+    body: { id: '0ba6b23a2abd90e2', userId: 1 },
+    params: [
+      { name: 'id', in: 'body', type: 'string', required: true, desc: 'ID de la canción' },
+      { name: 'userId', in: 'body', type: 'number', required: false, desc: 'ID del usuario (la oculta también para él)' }
+    ],
+    errors: { 400: 'Se requiere id', 404: 'Canción no encontrada' },
+    note: '<b>Cuidado:</b> mueve el archivo de audio fuera de la biblioteca.',
+    example: { message: 'Canción eliminada correctamente' }
+  },
+
+  // ============ MEDIA (AUDIO / PORTADAS) ============
+  {
+    cat: 'Media', icon: '🎧', method: 'GET', path: '/audio/:id', tag: 'streaming',
+    desc: 'Streaming del archivo de audio. Soporta cabecera HTTP Range (bytes) para seek y progreso → responde 206.',
+    pathParams: { id: '0ba6b23a2abd90e2' },
+    params: [
+      { name: 'id', in: 'path', type: 'string', required: true, desc: 'ID de la canción' },
+      { name: 'Range', in: 'header', type: 'string', required: false, desc: 'Ej: "bytes=0-1023" para descargas parciales' }
+    ],
+    kind: 'audio',
+    example: '<audio binario> → Content-Type: audio/mpeg, Accept-Ranges: bytes'
+  },
+  {
+    cat: 'Media', icon: '🖼️', method: 'GET', path: '/cover/:id', tag: 'portada',
+    desc: 'Portada de la canción (jpg/png/webp). Busca cover_path de la BD, luego imágenes de la carpeta y finalmente arte embebido del MP3. Cacheada 24 h.',
+    pathParams: { id: '0ba6b23a2abd90e2' },
+    params: [
+      { name: 'id', in: 'path', type: 'string', required: true, desc: 'ID de la canción' }
+    ],
+    kind: 'image',
+    example: '<imagen binaria> → Content-Type: image/jpeg, Cache-Control: public, max-age=86400'
+  },
+  {
+    cat: 'Media', icon: '📂', method: 'GET', path: '/songs/*', tag: 'estático',
+    desc: 'Servicio estático de la carpeta de música completa (relPath de cada canción).',
+    params: [
+      { name: 'path', in: 'path', type: 'string', required: true, desc: 'Relativo a la carpeta música, ej: /songs/Luis Miguel/Romance/…mp3' }
+    ],
+    example: '<archivo de la carpeta de música>'
+  },
+// ============ PLAYLISTS ============
+  {
+    cat: 'Playlists', icon: '📃', method: 'GET', path: '/api/playlists', tag: 'lists',
+    desc: 'Listas de reproducción del usuario.',
+    query: { userId: '1' },
+    params: [
+      { name: 'userId', in: 'query', type: 'number', required: false, desc: 'ID del usuario (sin él, todas las listas)' }
+    ],
+    example: { playlists: [ { id: 1, name: 'Mis favoritas', description: '', songCount: 20 } ] }
+  },
+  {
+    cat: 'Playlists', icon: '📃', method: 'GET', path: '/api/playlists/:id', tag: 'lists',
+    desc: 'Detalle de una lista con sus canciones.',
+    pathParams: { id: '1' },
+    params: [
+      { name: 'id', in: 'path', type: 'number', required: true, desc: 'ID de la lista' }
+    ],
+    errors: { 404: 'Lista no encontrada' },
+    example: { playlist: { id: 1, name: 'Mis favoritas', songs: [ { id: '0ba6b23a2abd90e2', title: 'Contigo en la distancia', artist: 'Olga Guillot' } ] } }
+  },
+  {
+    cat: 'Playlists', icon: '📃', method: 'POST', path: '/api/playlists', tag: 'lists',
+    desc: 'Crea una nueva lista de reproducción.',
+    body: { name: 'Mi nueva lista', description: 'Rock clásico', userId: 1 },
+    params: [
+      { name: 'name', in: 'body', type: 'string', required: true, desc: 'Nombre de la lista' },
+      { name: 'description', in: 'body', type: 'string', required: false, desc: 'Descripción' },
+      { name: 'userId', in: 'body', type: 'number', required: false, desc: 'ID del usuario dueño' }
+    ],
+    errors: { 400: 'El nombre es requerido' },
+    example: { playlist: { id: 9, name: 'Mi nueva lista', description: 'Rock clásico', songs: [] } }
+  },
+  {
+    cat: 'Playlists', icon: '📃', method: 'POST', path: '/api/playlists/:id/songs', tag: 'lists',
+    desc: 'Agrega una canción a la lista.',
+    body: { songId: '0ba6b23a2abd90e2' },
+    pathParams: { id: '1' },
+    params: [
+      { name: 'id', in: 'path', type: 'number', required: true, desc: 'ID de la lista' },
+      { name: 'songId', in: 'body', type: 'string', required: true, desc: 'ID de la canción' }
+    ],
+    errors: { 400: 'songId requerido', 404: 'Lista no encontrada' },
+    example: { playlist: { id: 1, name: 'Mis favoritas', songs: [ /* … */ ] } }
+  },
+  {
+    cat: 'Playlists', icon: '📃', method: 'DELETE', path: '/api/playlists/:id/songs', tag: 'lists',
+    desc: 'Quita una canción de la lista.',
+    body: { songId: '0ba6b23a2abd90e2' },
+    pathParams: { id: '1' },
+    params: [
+      { name: 'id', in: 'path', type: 'number', required: true, desc: 'ID de la lista' },
+      { name: 'songId', in: 'body', type: 'string', required: true, desc: 'ID de la canción a quitar' }
+    ],
+    errors: { 400: 'songId requerido', 404: 'Lista no encontrada' },
+    example: { playlist: { id: 1, name: 'Mis favoritas', songs: [] } }
+  },
+  {
+    cat: 'Playlists', icon: '📃', method: 'DELETE', path: '/api/playlists/:id', tag: 'lists',
+    desc: 'Elimina la lista de reproducción por completo.',
+    pathParams: { id: '1' },
+    params: [
+      { name: 'id', in: 'path', type: 'number', required: true, desc: 'ID de la lista' }
+    ],
+    example: { ok: true }
+  },
+
+  // ============ LETRAS ============
+  {
+    cat: 'Letras', icon: '📝', method: 'GET', path: '/api/lyrics/:id', tag: 'lyrics',
+    desc: 'Letra de una canción. Primero consulta la cache local y, si no existe, la busca en fuentes externas (Genius, LRCLib, etc.).',
+    pathParams: { id: '0ba6b23a2abd90e2' },
+    params: [
+      { name: 'id', in: 'path', type: 'string', required: true, desc: 'ID de la canción' }
+    ],
+    errors: { 404: 'Canción no encontrada' },
+    example: { success: true, hasLyrics: true, lyrics: 'Contigo en la distancia…', syncedLines: [ { time: 12.34, text: 'Contigo en la distancia' } ], translatedLyrics: null, title: 'Contigo en la distancia', artist: 'Olga Guillot' }
+  },
+  {
+    cat: 'Letras', icon: '📝', method: 'POST', path: '/api/lyrics/:id/refresh', tag: 'lyrics',
+    desc: 'Borra la letra cacheada de la canción y la vuelve a buscar en las fuentes externas.',
+    pathParams: { id: '0ba6b23a2abd90e2' },
+    params: [
+      { name: 'id', in: 'path', type: 'string', required: true, desc: 'ID de la canción' }
+    ],
+    errors: { 404: 'Canción no encontrada' },
+    example: { success: true, hasLyrics: true, lyrics: '…', syncedLines: null, translatedLyrics: null }
+  },
+
+  // ============ HERRAMIENTAS ============
+  {
+    cat: 'Herramientas', icon: '🛠️', method: 'POST', path: '/api/fix-metadata', tag: 'metadatos',
+    desc: 'Corrige los metadatos de una canción a partir del nombre del archivo ("Artista - Título"), renombra el archivo y actualiza la BD.',
+    body: { filePath: 'Olga Guillot\\Recuerdos de oro\\Contigo en la distancia.mp3' },
+    params: [
+      { name: 'filePath', in: 'body', type: 'string', required: true, desc: 'ruta relativa dentro de la carpeta de música' }
+    ],
+    errors: { 400: 'Se requiere filePath', 404: 'Archivo no encontrado' },
+    note: 'El path debe ser <b>relativo</b> a la carpeta de música (como viene en el campo <code>relPath</code> de una canción).',
+    example: { success: true, message: 'Metadatos corregidos: Olga Guillot - Contigo en la distancia', newPath: null, artist: 'Olga Guillot', title: 'Contigo en la distancia' }
+  }
+];
+// ============================================================
+// HELPERS
+// ============================================================
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function highlightPath(path) {
+  return esc(path).replace(/(:[a-zA-Z]+|\*)/g, '<span class="ph">$1</span>');
+}
+
+function fmtJson(obj) {
+  return JSON.stringify(obj, null, 2).replace(/"(true|false|null|\d+)"|\b(true|false|null)\b/g, '$2');
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+const grouped = {};
+const order = ['Sistema', 'Autenticación', 'Biblioteca', 'Artistas', 'Álbumes', 'Géneros', 'Años', 'Canciones', 'Playlists', 'Letras', 'Media', 'Herramientas'];
+for (const ep of ENDPOINTS) {
+  if (!grouped[ep.cat]) grouped[ep.cat] = [];
+  grouped[ep.cat].push(ep);
+}
+order.forEach(cat => {
+  if (grouped[cat]) grouped[cat].sort((a, b) => a.path.localeCompare(b.path));
+});
+const cats = order.filter(c => grouped[c]);
+
+document.getElementById('countEndpoints').textContent = ENDPOINTS.length;
+
+// Navegación lateral
+document.getElementById('navList').innerHTML = cats.map(cat =>
+  `<a href="#cat-${encodeURIComponent(cat)}" data-nav="${esc(cat)}"><span>${grouped[cat][0].icon}</span> ${esc(cat)} <span class="count">${grouped[cat].length}</span></a>`
+).join('') + `<a href="#cat-faq"><span>❓</span> FAQ <span class="count">${document.querySelectorAll('.faq-item').length}</span></a>`;
+
+function paramsTable(ep) {
+  if (!ep.params || !ep.params.length) return '';
+  const rows = ep.params.map(p =>
+    `<tr>
+      <td class="p-name">${esc(p.name)}</td>
+      <td><span class="p-type">${esc(p.in)}</span></td>
+      <td><span class="p-type">${esc(p.type)}</span></td>
+      <td>${p.required ? '<span class="p-flag req">obligatorio</span>' : '<span class="p-flag opt">opcional</span>'}</td>
+      <td class="p-desc">${p.desc}</td>
+    </tr>`).join('');
+  return `<table class="params">
+    <tr><th>Parámetro</th><th>Ubicación</th><th>Tipo</th><th></th><th>Descripción</th></tr>${rows}</table>`;
+}
+
+function errorsBlock(ep) {
+  if (!ep.errors) return '';
+  return `<div class="note"><b>Errores:</b> ${Object.entries(ep.errors).map(([c, m]) => `<code>${c}</code> ${m}`).join(' · ')}</div>`;
+}
+
+function testZone(ep, idx) {
+  const pp = ep.pathParams || {};
+  const qq = ep.query || {};
+  const bb = ep.body || {};
+  const pathFields = Object.keys(pp).map(k =>
+    `<div class="field-row"><label>path · ${esc(k)}</label><input class="test-input" data-field="pp_${k}" value="${esc(pp[k])}" placeholder="${esc(k)}" /></div>`
+  ).join('');
+  const queryFields = Object.keys(qq).map(k =>
+    `<div class="field-row"><label>query · ${esc(k)}</label><input class="test-input" data-field="q_${k}" value="${esc(qq[k])}" placeholder="(vacío)" /></div>`
+  ).join('');
+  const bodyFields = Object.keys(bb).map(k =>
+    `<div class="field-row"><label>body · ${esc(k)}</label><input class="test-input" data-field="b_${k}" value="${esc(bb[k])}" placeholder="(vacío)" /></div>`
+  ).join('');
+
+  const showPreview = ep.kind === 'image' || ep.kind === 'audio';
+  const runBtn = `<button class="btn primary" onclick="runTest(${idx})">▶ Probar</button>`;
+
+  return `<div class="test-zone">
+    <div class="panel">
+      <h5>🧪 Probador en vivo</h5>
+      ${pathFields || ''}
+      ${queryFields || ''}
+      ${bodyFields || ''}
+      <div class="test-bar">
+        <span style="font-size:12px;color:var(--text-dim);font-family:var(--mono);" id="url_${idx}">…</span>
+        ${runBtn}
+        ${showPreview ? `<button class="btn" onclick="openPreview(${idx})">🔗 Abrir en pestaña</button>` : ''}
+      </div>
+      <div class="note">Tip: si dejas un campo vacío se omite.</div>
+    </div>
+    <div class="loading" id="loading_${idx}"><span class="spin"></span> Enviando petición…</div>
+    <div class="resp" id="resp_${idx}"></div>
+  </div>`;
+}
+
+function buildCard(ep, idx) {
+  return `<div class="card" id="card_${idx}" data-card="${idx}">
+    <div class="card-head" onclick="toggleCard(${idx})">
+      <span class="method ${ep.method.toLowerCase()}">${ep.method}</span>
+      <span class="endpoint-path">${highlightPath(ep.path)}</span>
+      <span class="chev" id="chev_${idx}">▼</span>
+      <div class="desc">${ep.desc}</div>
+    </div>
+    <div class="card-body">
+      <div class="grid2">
+        <div class="panel"><h5>📋 Parámetros</h5>${paramsTable(ep)}${errorsBlock(ep)}${ep.note ? `<div class="note">${ep.note}</div>` : ''}</div>
+        <div class="panel"><h5>📥 Respuesta de ejemplo</h5><pre class="code">${typeof ep.example === 'string' ? esc(ep.example) : fmtJson(ep.example)}</pre></div>
+      </div>
+      ${testZone(ep, idx)}
+    </div>
+  </div>`;
+}
+
+const content = document.getElementById('content');
+content.innerHTML = cats.map(cat =>
+  `<section class="cat" id="cat-${encodeURIComponent(cat)}">
+    <div class="cat-title"><span class="icon">${grouped[cat][0].icon}</span> ${esc(cat)} <span class="pill">${grouped[cat].length} endpoint${grouped[cat].length !== 1 ? 's' : ''}</span></div>
+    ${grouped[cat].map((ep, i) => buildCard(ep, ENDPOINTS.indexOf(ep))).join('')}
+  </section>`
+).join('');
+// ============================================================
+// INTERACCIÓN
+// ============================================================
+function toggleCard(idx) {
+  const card = document.getElementById('card_' + idx);
+  if (!card) return;
+  card.classList.toggle('open');
+}
+
+function toggleAll() {
+  const anyOpen = document.querySelectorAll('.card.open').length > 0;
+  document.querySelectorAll('.card').forEach(c => {
+    if (anyOpen) c.classList.remove('open');
+    else c.classList.add('open');
+  });
+}
+
+function applyFilter() {
+  const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  document.querySelectorAll('.card').forEach(card => {
+    const idx = card.dataset.card;
+    const ep = ENDPOINTS[idx];
+    if (!ep) return;
+    const hay = (ep.method + ' ' + ep.path + ' ' + ep.desc + ' ' + ep.cat + ' ' + (ep.tag || '')).toLowerCase();
+    card.style.display = hay.includes(q) ? '' : 'none';
+  });
+  document.querySelectorAll('section.cat').forEach(sec => {
+    const visible = sec.querySelectorAll('.card:not([style*="display: none"])').length;
+    const isFaq = sec.id === 'cat-faq';
+    sec.style.display = (!isFaq && visible === 0) ? 'none' : '';
+  });
+}
+
+// ============================================================
+// CONSTRUIR URL DE PRUEBA
+// ============================================================
+function collectParams(ep, idx) {
+  const pathParams = {};
+  const query = {};
+  const body = {};
+  const root = document.getElementById('card_' + idx);
+  let urlPath = ep.path;
+
+  if (root) {
+    root.querySelectorAll('.test-input').forEach(inp => {
+      const parts = inp.dataset.field ? inp.dataset.field.split('_') : [];
+      if (parts.length < 2) return;
+      const type = parts[0];
+      const name = parts.slice(1).join('_');
+      const val = inp.value.trim();
+      if (type === 'pp') pathParams[name] = val;
+      else if (type === 'q') { if (val !== '') query[name] = val; }
+      else if (type === 'b') { if (val !== '') body[name] = val; }
+    });
+  }
+
+  urlPath = urlPath.replace(/:([a-zA-Z]+)/g, (m, name) => {
+    return pathParams[name] !== undefined && pathParams[name] !== '' ? encodeURIComponent(pathParams[name]) : m;
+  });
+
+  return { path: urlPath, query, body };
+}
+
+function buildQueryString(query) {
+  const qs = Object.entries(query)
+    .filter(([, v]) => v !== '')
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join('&');
+  return qs ? '?' + qs : '';
+}
+// ============================================================
+// EJECUTAR PRUEBA
+// ============================================================
+async function runTest(idx) {
+  const ep = ENDPOINTS[idx];
+  if (!ep) return;
+
+  const { path, query, body } = collectParams(ep, idx);
+  const url = path + buildQueryString(query);
+  const respEl = document.getElementById('resp_' + idx);
+  const loadingEl = document.getElementById('loading_' + idx);
+  if (respEl) respEl.style.display = 'none';
+  if (loadingEl) loadingEl.style.display = 'block';
+
+  const opts = { method: ep.method, headers: { 'Accept': 'application/json' } };
+  const hasBody = ep.method === 'POST' || ep.method === 'DELETE' || ep.method === 'PUT';
+  if (hasBody && Object.keys(body).length > 0) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+
+  const start = performance.now();
+  try {
+    const res = await fetch(url, opts);
+    const time = (performance.now() - start).toFixed(0) + ' ms';
+    if (loadingEl) loadingEl.style.display = 'none';
+    paintResponse(idx, res, time);
+  } catch (err) {
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (respEl) {
+      respEl.style.display = 'block';
+      respEl.innerHTML = '<div class="resp-head"><span class="code-err">❌ ERROR</span><span class="time"></span></div>';
+      const pre = document.createElement('pre');
+      pre.className = 'code';
+      pre.textContent = 'No se pudo conectar con la API: ' + err.message;
+      respEl.appendChild(pre);
+    }
+  }
+}
+
+async function paintResponse(idx, res, time) {
+  const respEl = document.getElementById('resp_' + idx);
+  if (!respEl) return;
+  respEl.style.display = 'block';
+  respEl.innerHTML = '';
+
+  const head = document.createElement('div');
+  head.className = 'resp-head';
+  head.innerHTML = `<span class="${res.ok ? 'code-ok' : 'code-err'}">${res.status} ${res.ok ? 'OK' : 'Error'}</span>${res.ok ? ' · ' + (res.statusText || '') : ''}<span class="time">${time}</span>`;
+  respEl.appendChild(head);
+
+  const ctype = (res.headers.get('content-type') || '');
+  if (ctype.includes('application/json')) {
+    try {
+      const data = await res.json();
+      const pre = document.createElement('pre');
+      pre.className = 'code';
+      pre.textContent = JSON.stringify(data, null, 2);
+      respEl.appendChild(pre);
+    } catch (e) { /* noop */ }
+  } else {
+    const pre = document.createElement('pre');
+    pre.className = 'code';
+    try { pre.textContent = await res.text(); }
+    catch (e) { pre.textContent = `[${ctype || 'respuesta binaria/desconocida'}]`; }
+    respEl.appendChild(pre);
+  }
+}
+
+function openPreview(idx) {
+  const ep = ENDPOINTS[idx];
+  if (!ep) return;
+  const { path, query } = collectParams(ep, idx);
+  window.open(path + buildQueryString(query), '_blank');
+}
+
+// ============================================================
+// SERVIDOR
+// ============================================================
+async function checkServer() {
+  const pill = document.getElementById('statusPill');
+  const text = document.getElementById('statusText');
+  pill.className = 'status-pill';
+  text.textContent = 'Verificando…';
+  try {
+    const res = await fetch('/api/test', { headers: { 'Accept': 'application/json' } });
+    const data = await res.json();
+    if (res.ok && data && !data.error) {
+      pill.classList.add('ok');
+      text.textContent = `Servidor OK · ${data.songCount ?? '?'} canciones${data.libraryReady ? '' : ' (biblioteca cargando…)'}`;
+    } else {
+      throw new Error(data && data.error ? data.error : 'error desconocido');
+    }
+  } catch (err) {
+    pill.classList.add('err');
+    text.textContent = 'Servidor no disponible';
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load', () => {
+  checkServer();
+});
+</script>
+</body>
+</html>
