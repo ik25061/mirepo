@@ -988,7 +988,7 @@ async function runTest(idx) {
   if (!ep) return;
 
   const { path, query, body } = collectParams(ep, idx);
-  const url = path + buildQueryString(query);
+  const url = API_BASE + path + buildQueryString(query);
   const respEl = document.getElementById('resp_' + idx);
   const loadingEl = document.getElementById('loading_' + idx);
   if (respEl) respEl.style.display = 'none';
@@ -1053,23 +1053,45 @@ function openPreview(idx) {
   const ep = ENDPOINTS[idx];
   if (!ep) return;
   const { path, query } = collectParams(ep, idx);
-  window.open(path + buildQueryString(query), '_blank');
+  window.open(API_BASE + path + buildQueryString(query), '_blank');
 }
 
 // ============================================================
 // SERVIDOR
 // ============================================================
+let API_BASE = '';
+
+// Auto-detecta la mejor URL base para llegar al backend
+// (relativa cuando la página se sirve junto a un proxy o el propio Express,
+// y absoluta a :5002 como respaldo).
+async function detectBase() {
+  const candidates = [];
+  if (location.protocol.startsWith('http')) candidates.push('');
+  candidates.push(
+    'http://localhost:5002',
+    'http://127.0.0.1:5002',
+    `http://${location.hostname}:5002`
+  );
+  for (const base of [...new Set(candidates)]) {
+    try {
+      const r = await fetch(base + '/api/test', { method: 'GET', headers: { 'Accept': 'application/json' } });
+      if (r.ok) return base; // r.json para confirmar
+    } catch (e) { /* siguiente candidato */ }
+  }
+  return '';
+}
+
 async function checkServer() {
   const pill = document.getElementById('statusPill');
   const text = document.getElementById('statusText');
   pill.className = 'status-pill';
   text.textContent = 'Verificando…';
   try {
-    const res = await fetch('/api/test', { headers: { 'Accept': 'application/json' } });
+    const res = await fetch(API_BASE + '/api/test', { headers: { 'Accept': 'application/json' } });
     const data = await res.json();
     if (res.ok && data && !data.error) {
       pill.classList.add('ok');
-      text.textContent = `Servidor OK · ${data.songCount ?? '?'} canciones${data.libraryReady ? '' : ' (biblioteca cargando…)'}`;
+      text.textContent = `Servidor OK · ${data.songCount ?? '?'} canciones${data.libraryReady ? '' : ' (biblioteca cargando…)'} · via ${API_BASE || '/'}`;
     } else {
       throw new Error(data && data.error ? data.error : 'error desconocido');
     }
@@ -1082,7 +1104,8 @@ async function checkServer() {
 // ============================================================
 // INIT
 // ============================================================
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
+  API_BASE = await detectBase();
   checkServer();
 });
 </script>

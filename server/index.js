@@ -34,6 +34,11 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use('/songs', express.static(MUSIC_DIR));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+if (fs.existsSync(PUBLIC_DIR)) {
+  app.use(express.static(PUBLIC_DIR));
+}
 
 // ============================================================
 // VARIABLES GLOBALES
