@@ -735,6 +735,7 @@ app.post('/api/songs/:id/like', async (req, res) => {
   
   try {
     await db.setSongLiked(song.id, liked, userId);
+    console.log(`[api/songs/:id/like] ✅ Like ${liked ? 'agregado' : 'quitado'}`);
     res.json({ ok: true });
   } catch (err) {
     console.error('[api/songs/:id/like] Error:', err);
@@ -749,6 +750,7 @@ app.post('/api/songs/:id/hide', async (req, res) => {
   
   try {
     await db.setSongHidden(song.id, true, userId);
+    console.log(`[api/songs/:id/hide] ✅ Cancelada`);
     res.json({ ok: true });
   } catch (err) {
     console.error('[api/songs/:id/hide] Error:', err);
@@ -798,6 +800,7 @@ app.delete('/api/songs', async (req, res) => {
       await db.setSongHidden(song.id, true, userId);
     }
 
+    console.log(`[api/songs DELETE] ✅ Canción ${id} movida a papelera`);
     res.json({ message: 'Canción eliminada correctamente' });
   } catch (error) {
     console.error('Error deleting song:', error);
