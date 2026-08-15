@@ -909,24 +909,42 @@ app.get('/artist-cover/:artistName', async (req, res) => {
 
     if (!song) return res.status(404).send('Artista no encontrado');
 
-    // Buscar en el directorio del artista cualquier imagen (nueva estructura)
+    // Buscar en el directorio del artista la imagen del artista.
+    // NUEVA ESTRUCTURA: en la misma carpeta hay dos imágenes:
+    //   "artist - nombreartista.jpg" (foto del artista)
+    //   "album - nombrealbum.jpg"    (portada del álbum)
+    // Aquí siempre priorizamos el archivo con prefijo "artist".
     const artistDir = path.dirname(absolutePath(song.relPath));
     const coverExts = ['.jpg', '.jpeg', '.png', '.webp'];
-    
+
     try {
       const entries = fs.readdirSync(artistDir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isFile()) {
-          const ext = path.extname(entry.name).toLowerCase();
-          if (coverExts.includes(ext)) {
-            const coverFullPath = path.join(artistDir, entry.name);
-            const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
-            res.set('Content-Type', mimeType);
-            res.set('Cache-Control', 'public, max-age=86400');
-            res.sendFile(coverFullPath);
-            return;
-          }
-        }
+      const imageFiles = entries
+        .filter(e => e.isFile() && coverExts.includes(path.extname(e.name).toLowerCase()))
+        .map(e => e.name);
+
+      // 1. Prioridad: archivo cuyo nombre empieza con "artist" (artist - nombreartista.jpg)
+      const artistImage = imageFiles.find(name => /^artist[\s\-_]*/i.test(name));
+
+      // 2. Fallback: archivo que contenga el nombre del artista normalizado
+      const normalizedArtist = cleanName.replace(/\s+/g, ' ').trim();
+      const artistImageByName = !artistImage
+        ? imageFiles.find(name => {
+            const normalized = path.basename(name, path.extname(name)).replace(/\s+/g, ' ').trim().toLowerCase();
+            return normalized.includes(normalizedArtist.toLowerCase()) &&
+                   !/^album[\s\-_]*/i.test(name);
+          })
+        : null;
+
+      const chosenName = artistImage || artistImageByName;
+      if (chosenName) {
+        const coverFullPath = path.join(artistDir, chosenName);
+        const ext = path.extname(coverFullPath).toLowerCase();
+        const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+        res.set('Content-Type', mimeType);
+        res.set('Cache-Control', 'public, max-age=86400');
+        res.sendFile(coverFullPath);
+        return;
       }
     } catch (err) {
       // ignorar
@@ -960,24 +978,37 @@ app.get('/cover/:id', async (req, res) => {
     }
   }
 
-  // 2. Buscar cualquier imagen en el directorio del artista (nueva estructura)
-  const artistDir = path.dirname(absolutePath(song.relPath));
+  // 2. Buscar imagen en el directorio de la canción (nueva estructura)
+  const songDir = path.dirname(absolutePath(song.relPath));
   const coverExts = ['.jpg', '.jpeg', '.png', '.webp'];
-  
+
   try {
-    const entries = fs.readdirSync(artistDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isFile()) {
-        const ext = path.extname(entry.name).toLowerCase();
-        if (coverExts.includes(ext)) {
-          const coverFullPath = path.join(artistDir, entry.name);
-          const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
-          res.set('Content-Type', mimeType);
-          res.set('Cache-Control', 'public, max-age=86400');
-          res.sendFile(coverFullPath);
-          return;
-        }
-      }
+    const entries = fs.readdirSync(songDir, { withFileTypes: true });
+    const imageFiles = entries
+      .filter(e => e.isFile() && coverExts.includes(path.extname(e.name).toLowerCase()))
+      .map(e => e.name);
+
+    // 2a. Prioridad: portada del álbum ("album - nombrealbum.jpg")
+    const albumCover = imageFiles.find(name => /^album[\s\-_]*/i.test(name));
+
+    // 2b. Fallback: imagen cuyo nombre contenga el álbum de la canción
+    const songAlbumCover = !albumCover
+      ? imageFiles.find(name => {
+          const normalized = path.basename(name, path.extname(name)).replace(/\s+/g, ' ').trim().toLowerCase();
+          const album = (song.album || '').replace(/\s+/g, ' ').trim().toLowerCase();
+          return album && normalized.includes(album) && !/^artist[\s\-_]*/i.test(name);
+        })
+      : null;
+
+    const chosenCover = albumCover || songAlbumCover;
+    if (chosenCover) {
+      const coverFullPath = path.join(songDir, chosenCover);
+      const ext = path.extname(coverFullPath).toLowerCase();
+      const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+      res.set('Content-Type', mimeType);
+      res.set('Cache-Control', 'public, max-age=86400');
+      res.sendFile(coverFullPath);
+      return;
     }
   } catch (err) {
     // ignorar
@@ -1109,6 +1140,50 @@ app.delete('/api/playlists/:id', async (req, res) => {
   }
 });
 
+// Resuelve un lote de IDs de canción a sus datos completos (título, artista,
+// duración, etc.), en el mismo orden en que se piden. Pensado para clientes
+// (como la app Android) que guardan playlists como listas de songIds y no
+// quieren descargar toda la biblioteca solo para mostrar unas pocas canciones.
+app.get('/api/songs/by-ids', async (req, res) => {
+  try {
+    const idsParam = (req.query.ids || '').toString();
+    const ids = idsParam.split(',').map(s => s.trim()).filter(Boolean);
+
+    if (ids.length === 0) {
+      return res.json({ songs: [] });
+    }
+
+    if (!libraryReady) {
+      await loadLibrary();
+    }
+
+    const userId = req.query.userId || null;
+    let likedIds = new Set();
+    let hiddenIds = new Set();
+    if (userId) {
+      [likedIds, hiddenIds] = await Promise.all([
+        db.getLikedSongIds(userId),
+        db.getHiddenSongIds(userId)
+      ]);
+    }
+
+    const idSet = new Set(ids);
+    const byId = new Map(
+      songCache
+        .filter(s => idSet.has(s.id) && !hiddenIds.has(s.id))
+        .map(s => [s.id, { ...s, liked: likedIds.has(s.id), hidden: false }])
+    );
+
+    // Mantener el orden pedido (el orden de la playlist) y omitir IDs que ya
+    // no existan en la biblioteca (canción borrada/movida).
+    const songs = ids.map(id => byId.get(id)).filter(Boolean);
+
+    res.json({ songs });
+  } catch (err) {
+    console.error('[api/songs/by-ids] Error:', err);
+    res.status(500).json({ error: 'Error al obtener canciones' });
+  }
+});
 // ============================================================
 // RUTAS - LETRAS DE CANCIONES
 // ============================================================

@@ -177,7 +177,7 @@ export async function getTrashCount(userId = null) {
 export async function getArtistsWithPagination({ userId = null, limit = 20, offset = 0, search = '' } = {}) {
   const database = await getDb();
 
-  let sql = `
+  let baseSql = `
     SELECT
       a.id,
       a.name,
@@ -188,43 +188,45 @@ export async function getArtistsWithPagination({ userId = null, limit = 20, offs
     FROM artists a
     WHERE 1=1
   `;
-  const params = [];
+  const baseParams = [];
 
   if (userId) {
-    sql += ` AND a.id NOT IN (
+    baseSql += ` AND a.id NOT IN (
       SELECT artist_id FROM user_artist_interactions 
       WHERE user_id = ? AND interaction_type = 'HIDE'
     )`;
-    params.push(userId);
+    baseParams.push(userId);
   }
 
-  if (search) {
+  let total;
+  let items;
+
+  if (!search) {
+    // Sin búsqueda: paginación en SQL (rápido)
+    const sql = baseSql + ` ORDER BY a.name LIMIT ? OFFSET ?`;
+    items = await database.all(sql, [...baseParams, limit, offset]);
+
+    let countSql = `SELECT COUNT(*) as total FROM artists a WHERE 1=1`;
+    const countParams = [];
+    if (userId) {
+      countSql += ` AND a.id NOT IN (
+        SELECT artist_id FROM user_artist_interactions 
+        WHERE user_id = ? AND interaction_type = 'HIDE'
+      )`;
+      countParams.push(userId);
+    }
+    const totalResult = await database.get(countSql, countParams);
+    total = totalResult.total;
+  } else {
+    // Con búsqueda: filtrado tolerante a mayúsculas/minúsculas y acentos.
+    // Se normalizan AMBOS lados con normalizeText(), por lo que
+    // "Mana", "maná", "MANA" y "mana" coinciden con "Maná".
     const normalizedSearch = normalizeText(search);
-    // Usar REPLACE para quitar acentos de los datos y comparar con término normalizado
-    sql += ` AND LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.name,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u')) LIKE LOWER(?)`;
-    params.push(`%${normalizedSearch}%`);
+    const all = await database.all(baseSql, baseParams);
+    const filtered = all.filter(a => normalizeText(a.name).includes(normalizedSearch));
+    total = filtered.length;
+    items = filtered.slice(offset, offset + limit);
   }
-
-  sql += ` ORDER BY a.name LIMIT ? OFFSET ?`;
-  params.push(limit, offset);
-
-  const items = await database.all(sql, params);
-  
-  let countSql = `SELECT COUNT(*) as total FROM artists a WHERE 1=1`;
-  const countParams = [];
-  if (userId) {
-    countSql += ` AND a.id NOT IN (
-      SELECT artist_id FROM user_artist_interactions 
-      WHERE user_id = ? AND interaction_type = 'HIDE'
-    )`;
-    countParams.push(userId);
-  }
-  if (search) {
-    countSql += ` AND a.name LIKE ?`;
-    countParams.push(`%${search}%`);
-  }
-  const totalResult = await database.get(countSql, countParams);
-  const total = totalResult.total;
 
   return {
     items,
@@ -327,6 +329,26 @@ export async function getArtistIdByName(name) {
 // FUNCIONES PARA ÁLBUMES CON PAGINACIÓN
 // ============================================================
 
+// Agrupa álbumes del mismo artista con nombres similares (helper)
+function mergeAlbums(items) {
+  const grouped = new Map();
+  for (const item of items) {
+    const baseName = normalizeText(item.name).split(/[:-–()]/)[0].trim();
+    const key = `${item.artist}|${baseName}|${item.year || 'null'}`;
+
+    if (!grouped.has(key)) {
+      grouped.set(key, item);
+    } else {
+      const existing = grouped.get(key);
+      // Fusionar: mantener el que tenga más canciones o portada
+      if (item.song_count > existing.song_count || (!existing.cover_path && item.cover_path)) {
+        grouped.set(key, item);
+      }
+    }
+  }
+  return Array.from(grouped.values());
+}
+
 export async function getAlbumsWithPagination({ userId = null, limit = 100, offset = 0, search = '' } = {}) {
   const database = await getDb();
 
@@ -345,46 +367,61 @@ export async function getAlbumsWithPagination({ userId = null, limit = 100, offs
   `;
   const params = [];
 
-  if (search) {
-    sql += ` AND (al.name LIKE ? OR a.name LIKE ?)`;
-    params.push(`%${search}%`, `%${search}%`);
-  }
+  let total;
+  let items;
 
-  sql += ` ORDER BY al.name, al.year LIMIT ? OFFSET ?`;
-  params.push(limit, offset);
+  if (!search) {
+    // Sin búsqueda: paginación directa en SQL (rápido).
+    sql += ` ORDER BY al.name, al.year LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
+    const allRows = await database.all(sql, params);
+    items = mergeAlbums(allRows);
+    const totalResult = await database.get(
+      `SELECT COUNT(*) as total FROM albums al LEFT JOIN artists a ON al.main_artist_id = a.id`
+    );
+    total = totalResult.total;
+  } else {
+    // Búsqueda: query ligero (sin subconsultas por fila) para poder filtrar
+    // en JS con normalización (tolera mayúsculas/minúsculas y acentos).
+    const lightRows = await database.all(`
+      SELECT al.id, al.name, a.name AS artist, al.year, al.cover_path
+      FROM albums al
+      LEFT JOIN artists a ON al.main_artist_id = a.id
+      ORDER BY al.name, al.year
+    `);
 
-  const items = await database.all(sql, params);
+    const normalizedSearch = normalizeText(search);
+    const filtered = lightRows.filter(
+      item =>
+        normalizeText(item.name).includes(normalizedSearch) ||
+        normalizeText(item.artist || '').includes(normalizedSearch)
+    );
 
-  // Agrupar álbumes del mismo artista con nombres similares
-  const grouped = new Map();
-  for (const item of items) {
-    const baseName = normalizeText(item.name).split(/[:\-–()]/)[0].trim();
-    const key = `${item.artist}|${baseName}|${item.year || 'null'}`;
-    
-    if (!grouped.has(key)) {
-      grouped.set(key, item);
-    } else {
-      const existing = grouped.get(key);
-      // Fusionar: mantener el que tenga más canciones o portada
-      if (item.song_count > existing.song_count || (!existing.cover_path && item.cover_path)) {
-        grouped.set(key, item);
-      }
+    const merged = mergeAlbums(filtered);
+    total = merged.length;
+    items = merged.slice(offset, offset + limit);
+
+    // Rellenar song_count/coverId solo para la página devuelta
+    if (items.length > 0) {
+      const ids = items.map(i => i.id);
+      const placeholders = ids.map(() => '?').join(',');
+      const extra = await database.all(
+        `SELECT al.id AS id,
+                (SELECT COUNT(*) FROM songs s WHERE s.album_id = al.id) AS song_count,
+                (SELECT s.id FROM songs s WHERE s.album_id = al.id LIMIT 1) AS coverId
+         FROM albums al WHERE al.id IN (${placeholders})`,
+        ids
+      );
+      const extraMap = new Map(extra.map(r => [r.id, r]));
+      items = items.map(it => {
+        const e = extraMap.get(it.id);
+        return e ? { ...it, song_count: e.song_count, coverId: e.coverId } : it;
+      });
     }
   }
 
-  const mergedItems = Array.from(grouped.values());
-
-  let countSql = `SELECT COUNT(*) as total FROM albums al LEFT JOIN artists a ON al.main_artist_id = a.id WHERE 1=1`;
-  const countParams = [];
-  if (search) {
-    countSql += ` AND (al.name LIKE ? OR a.name LIKE ?)`;
-    countParams.push(`%${search}%`, `%${search}%`);
-  }
-  const totalResult = await database.get(countSql, countParams);
-  const total = totalResult.total;
-
   return {
-    items: mergedItems,
+    items,
     pagination: { offset, limit, total, hasMore: offset + limit < total }
   };
 }
@@ -481,28 +518,31 @@ export async function getGenresWithPagination({ userId = null, limit = 100, offs
   `;
   const params = [];
 
+  // Sin búsqueda: paginación directa en SQL (rápido).
+  // Con búsqueda: se cargan todos y el filtrado se hace en JS con
+  // normalización (tolera mayúsculas/minúsculas y acentos).
+  sql += ` ORDER BY g.name`;
+  if (!search) {
+    sql += ` LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
+  }
+
+  const allRows = await database.all(sql, params);
+
+  let items = allRows;
+  let total;
   if (search) {
     const normalizedSearch = normalizeText(search);
-    sql += ` AND LOWER(g.name) LIKE LOWER(?)`;
-    params.push(`%${normalizedSearch}%`);
+    const filtered = allRows.filter(g => normalizeText(g.name).includes(normalizedSearch));
+    total = filtered.length;
+    items = filtered.slice(offset, offset + limit);
+  } else {
+    const totalResult = await database.get(`SELECT COUNT(*) as total FROM genres g`);
+    total = totalResult.total;
   }
-
-  sql += ` ORDER BY g.name LIMIT ? OFFSET ?`;
-  params.push(limit, offset);
-
-  const genres = await database.all(sql, params);
-
-  let countSql = `SELECT COUNT(*) as total FROM genres g WHERE 1=1`;
-  const countParams = [];
-  if (search) {
-    countSql += ` AND g.name LIKE ?`;
-    countParams.push(`%${search}%`);
-  }
-  const totalResult = await database.get(countSql, countParams);
-  const total = totalResult.total;
 
   return {
-    items: genres,
+    items,
     pagination: {
       offset,
       limit,

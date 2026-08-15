@@ -120,7 +120,7 @@ export default function LibraryView({
 
     setFixingMetadata(song.id);
     try {
-      const fullPath = song.relPath.startsWith('music/') ? song.relPath : 'music/' + song.relPath;
+      const fullPath = song.relPath || song.id;
       const result = await api.fixMetadata(fullPath);
       const newFileName = result.newPath.split('/').pop();
       alert('✅ ' + result.message + '\n\nNuevo nombre: ' + newFileName);

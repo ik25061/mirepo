@@ -1,10 +1,13 @@
 // ============================================================
 // scanner.js - ESCANEO DE BIBLIOTECA
 // ============================================================
-// Nueva estructura de carpetas:
-//   D:/artista/cancion.mp3
-//   D:/artista/cancion.lrc
-//   D:/artista/album - nombrealbum.jpg  (cover con nombre del álbum)
+// Estructura de carpetas:
+//   E:/musica/nombrecarpeta/cancion.mp3
+//   E:/musica/nombrecarpeta/cancion.lrc
+//   E:/musica/nombrecarpeta/artist - nombreartista.jpg  (foto del artista)
+//   E:/musica/nombrecarpeta/album - nombrealbum.jpg      (cover del álbum)
+// El nombre de la carpeta (nombrecarpeta) NO se usa como dato de la canción;
+// todos los datos (titulo, artista, genero, album, año) salen de los metadatos.
 // ============================================================
 
 import fs from 'node:fs';
@@ -22,7 +25,7 @@ import {
 } from './db.js';
 
 // ====== CONFIGURACIÓN ======
-export const MUSIC_DIR = process.env.VITE_MUSIC_PATH || 'D:/musica';
+export const MUSIC_DIR = process.env.VITE_MUSIC_PATH || 'E:/musica';
 export const TRASH_DIR = path.join(MUSIC_DIR, 'trash');
 
 console.log('[scanner] 📂 MUSIC_DIR:', MUSIC_DIR);
@@ -81,15 +84,14 @@ function cleanName(file) {
 
 /**
  * Extrae artista y álbum de la ruta relativa.
- * NUEVA ESTRUCTURA: artista/cancion.mp3 → solo artista disponible de la ruta
- * El álbum se obtiene exclusivamente de metadatos ID3.
+ * NUEVA ESTRUCTURA: E:/musica/nombrecarpeta/cancion.mp3
+ * El nombre de la carpeta (nombrecarpeta) NO se toma como dato de la canción:
+ * el artista y álbum se obtienen exclusivamente de los metadatos ID3/Vorbis.
  */
 function extractArtistAlbum(relPath) {
-  const parts = relPath.split(path.sep);
-  if (parts.length >= 1) {
-    return { artist: parts[0], album: null };
-  }
-  return { artist: 'Artista desconocido', album: 'Álbum desconocido' };
+  // No tomar el nombre de la carpeta como dato de la canción.
+  // El artista y álbum se obtienen de los metadatos del archivo de audio.
+  return { artist: null, album: null };
 }
 
 function extractMainArtist(artistName) {
@@ -195,31 +197,36 @@ async function readSong(file) {
   // Obtener nombre del álbum (solo de metadatos, ya no de la ruta)
   const albumName = common.album || 'Álbum desconocido';
   
-  // Buscar cover en el directorio del artista con el nuevo formato
-  // El cover está en: D:/artista/album - nombrealbum.jpg
+  // Buscar cover en el directorio donde vive la canción con el nuevo formato
+  // El cover está en: E:/musica/nombrecarpeta/album - nombrealbum.jpg
   let coverPath = null;
   if (albumName && albumName !== 'Álbum desconocido') {
-    const artistDir = path.dirname(file); // MUSIC_DIR/artista
-    const foundCover = findCoverForAlbum(artistDir, albumName);
+    const songDir = path.dirname(file); // E:/musica/nombrecarpeta
+    const foundCover = findCoverForAlbum(songDir, albumName);
     if (foundCover) {
       coverPath = path.relative(MUSIC_DIR, foundCover);
     }
   }
   
-  // Fallback: si no se encontró cover por nombre de álbum, buscar cualquier imagen
+  // Fallback: si no se encontró cover por nombre de álbum,
+  // priorizar archivos con prefijo "album - ..." y excluir "artist - ..."
   if (!coverPath) {
-    const artistDir = path.dirname(file);
+    const songDir = path.dirname(file);
     try {
-      const entries = fs.readdirSync(artistDir, { withFileTypes: true });
+      const entries = fs.readdirSync(songDir, { withFileTypes: true });
       const coverExts = ['.jpg', '.jpeg', '.png', '.webp'];
-      for (const entry of entries) {
-        if (entry.isFile()) {
-          const ext = path.extname(entry.name).toLowerCase();
-          if (coverExts.includes(ext)) {
-            coverPath = path.relative(MUSIC_DIR, path.join(artistDir, entry.name));
-            break; // Tomar la primera imagen encontrada
-          }
-        }
+      const imageFiles = entries
+        .filter(e => e.isFile() && coverExts.includes(path.extname(e.name).toLowerCase()))
+        .map(e => e.name);
+      // 1. Preferir el archivo de portada de álbum: "album - nombrealbum.jpg"
+      const albumFile = imageFiles.find(name => /^album[\s\-_]*/i.test(name));
+      // 2. Si no hay, tomar cualquier imagen que NO sea la del artista
+      const firstNonArtist = albumFile
+        ? null
+        : imageFiles.find(name => !/^artist[\s\-_]*/i.test(name));
+      const chosen = albumFile || firstNonArtist;
+      if (chosen) {
+        coverPath = path.relative(MUSIC_DIR, path.join(songDir, chosen));
       }
     } catch (err) {
       // ignorar

@@ -2,7 +2,7 @@
 npm install
 
 # Crear la carpeta de música (opcional)
-# Asegúrate de que D:/musica exista o cambia MUSIC_PATH en .env
+# Asegúrate de que E:/musica exista o cambia VITE_MUSIC_PATH en .env
 
 # Ejecutar en modo desarrollo
 npm run dev

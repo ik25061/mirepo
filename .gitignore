@@ -6,3 +6,7 @@ certs/
 /node_modules
 consultas pendientes.txt
 consultas pendientes.txt
+
+# Archivos temporales de SQLite (WAL/SHM)
+server/localfy.db-shm
+server/localfy.db-wal
