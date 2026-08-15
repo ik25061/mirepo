@@ -1358,11 +1358,29 @@ export async function getOrCreateArtist(database, name) {
 
 export async function getOrCreateAlbum(database, name, mainArtistId, year, coverPath = null) {
   if (!name || name === 'Álbum desconocido') return null;
-  
-  const row = await database.get(
-    'SELECT id, cover_path FROM albums WHERE name = ? AND year = ? AND main_artist_id = ?',
-    [name, year || null, mainArtistId]
-  );
+
+  const safeYear = year ?? null;
+
+  // Buscar álbum existente por (name, year) — coincide con el UNIQUE(name, year)
+  // de la tabla. No incluimos main_artist_id en la búsqueda porque:
+  // 1. El constraint UNIQUE es solo (name, year), no (name, year, main_artist_id)
+  // 2. main_artist_id puede ser NULL (canciones con artista desconocido) y en SQL
+  //    "WHERE col = NULL" nunca devuelve filas (NULL = NULL es desconocido)
+  // 3. Varias canciones del mismo álbum pueden tener artistas diferentes
+  const findAlbum = async () => {
+    if (safeYear === null) {
+      return await database.get(
+        'SELECT id, cover_path FROM albums WHERE name = ? AND year IS NULL',
+        [name]
+      );
+    }
+    return await database.get(
+      'SELECT id, cover_path FROM albums WHERE name = ? AND year = ?',
+      [name, safeYear]
+    );
+  };
+
+  let row = await findAlbum();
   if (row) {
     // Si ya existe pero no tiene cover y ahora tenemos uno, actualizarlo
     if (!row.cover_path && coverPath) {
@@ -1373,12 +1391,33 @@ export async function getOrCreateAlbum(database, name, mainArtistId, year, cover
     }
     return row.id;
   }
-  
+
+  // No existe — intentar crear. Usamos INSERT OR IGNORE como salvaguarda
+  // contra condiciones de carrera o duplicados inesperados.
   const result = await database.run(
-    'INSERT INTO albums (name, main_artist_id, year, cover_path) VALUES (?, ?, ?, ?)',
-    [name, mainArtistId, year, coverPath]
+    'INSERT OR IGNORE INTO albums (name, main_artist_id, year, cover_path) VALUES (?, ?, ?, ?)',
+    [name, mainArtistId, safeYear, coverPath]
   );
-  return result.lastID;
+
+  if (result.lastID) {
+    return result.lastID;
+  }
+
+  // INSERT fue ignorado (carrera o duplicado inesperado) — buscar el álbum existente
+  row = await findAlbum();
+  if (row) {
+    if (!row.cover_path && coverPath) {
+      await database.run(
+        'UPDATE albums SET cover_path = ? WHERE id = ?',
+        [coverPath, row.id]
+      );
+    }
+    return row.id;
+  }
+
+  // No debería llegar aquí
+  console.warn(`[db] getOrCreateAlbum: estado inesperado para álbum "${name}" (${safeYear})`);
+  return null;
 }
 
 export async function getOrCreateGenre(database, name) {
