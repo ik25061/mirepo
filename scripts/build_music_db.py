@@ -22,6 +22,7 @@ import tempfile
 import argparse
 import hashlib
 import sqlite3
+import json
 from mutagen import File, id3
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
@@ -420,7 +421,7 @@ def obtener_metadatos_archivo(ruta_mp3):
 # CONSTRUCCIÓN DE LA BASE DE DATOS
 # ============================================================
 
-def procesar_directorio(db_path, raiz_musica, calcular_hash=False):
+def procesar_directorio(db_path, raiz_musica, calcular_hash=False, progress_path=None):
     db_path = os.path.abspath(db_path)
     raiz_musica = os.path.abspath(raiz_musica)
 
@@ -473,6 +474,11 @@ def procesar_directorio(db_path, raiz_musica, calcular_hash=False):
     con_letra = 0
     errores = 0
 
+    # Contar total de .mp3 una sola vez para poder mostrar % de progreso.
+    total_mp3 = _total_mp3(raiz_musica)
+    escribir_progreso(progress_path, 0, total_mp3, 'scanning')
+    procesados = 0
+
     # Recorrer recursivamente (como walk() en scanner.js):
     #   mus/letra/.../cancion.mp3
     for letra in sorted(os.listdir(raiz_musica)):
@@ -484,6 +490,10 @@ def procesar_directorio(db_path, raiz_musica, calcular_hash=False):
         print(f"Escaneando directorio: {letra}")
 
         for ruta_mp3 in sorted(_caminar_mp3(ruta_letra)):
+            procesados += 1
+            # Escribir avance periódicamente (cada 15 archivos y al final).
+            if procesados % 15 == 0 or procesados == total_mp3:
+                escribir_progreso(progress_path, procesados, total_mp3, 'scanning')
             archivo = os.path.basename(ruta_mp3)
             rel_path = os.path.relpath(ruta_mp3, raiz_musica)  # separadores nativos, como path.relative
 
@@ -585,13 +595,51 @@ def _caminar_mp3(ruta):
                 yield os.path.join(dirpath, f)
 
 
+# ============================================================
+# PROGRESO (archivo JSON para el SSE del server)
+# ============================================================
+
+def _total_mp3(raiz):
+    """Cuenta todos los .mp3 bajo `raiz`, sin bajar por trash (igual que el server)."""
+    total = 0
+    raiz_abs = os.path.abspath(raiz)
+    for dirpath, dirnames, filenames in os.walk(raiz_abs):
+        if os.path.abspath(dirpath).lower() == os.path.abspath(os.path.join(raiz_abs, 'trash')).lower():
+            dirnames[:] = []
+            continue
+        for f in filenames:
+            if f.lower().endswith('.mp3'):
+                total += 1
+    return total
+
+
+def escribir_progreso(path, processed, total, phase='scanning'):
+    """Escribe el estado del rescan en un JSON que el server consulta (SSE)."""
+    try:
+        if not path:
+            return
+        pct = round(processed * 100 / total) if total else 0
+        tmp = path + '.tmp'
+        with open(tmp, 'w', encoding='utf-8') as f:
+            json.dump({
+                'phase': phase,
+                'processed': processed,
+                'total': total,
+                'pct': pct,
+            }, f, ensure_ascii=False)
+        os.replace(tmp, path)
+    except Exception:
+        pass
+
+
 def main():
     parser = argparse.ArgumentParser(description="Reconstruye la base de datos musical alineada con el server.")
     parser.add_argument('--db', default=DB_PATH, help=f"Ruta de la base de datos (default: {DB_PATH})")
     parser.add_argument('--music', default=RAIZ_MUSICA, help=f"Carpeta de música (default: {RAIZ_MUSICA})")
     parser.add_argument('--hash', action='store_true', help="Calcular file_hash (sha256) de cada archivo")
+    parser.add_argument('--progress', default=None, help="Archivo JSON donde escribir el progreso (para el SSE del server)")
     args = parser.parse_args()
-    procesar_directorio(args.db, args.music, calcular_hash=args.hash)
+    procesar_directorio(args.db, args.music, calcular_hash=args.hash, progress_path=args.progress)
 
 
 if __name__ == "__main__":

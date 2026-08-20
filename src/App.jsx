@@ -467,6 +467,8 @@ function Shell() {
               allSongs={allSongs}
               offlineMode={offlineMode}
               onRescan={library.rescan}
+
+              rescanState={library.rescanState}
             />
           ) : view.type === 'downloads' ? (
             <DownloadsView onBack={() => setView({ type: 'home' })} />
@@ -612,6 +614,8 @@ function Shell() {
               allSongs={allSongs}
               offlineMode={offlineMode}
               onRescan={library.rescan}
+
+              rescanState={library.rescanState}
             />
           ) : view.type === 'downloads' ? (
             <DownloadsView onBack={() => setView({ type: 'home' })} />

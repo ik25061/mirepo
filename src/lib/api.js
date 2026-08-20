@@ -179,6 +179,7 @@ export const api = {
   },
 
   rescan: () => request('/api/rescan', { method: 'POST' }),
+  rescanStreamUrl: () => `${getApiUrl() || ''}/api/rescan-stream`,
 
   like: (id, liked, userId) => 
     request(`/api/songs/${id}/like`, {

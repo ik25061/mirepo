@@ -26,7 +26,16 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [shuffleSeed, setShuffleSeed] = useState(null);
+    const [shuffleSeed, setShuffleSeed] = useState(null);
+  // Estado de progreso del rescan (alimentado por el SSE /api/rescan-stream).
+  const [rescanState, setRescanState] = useState({
+    active: false,
+    phase: 'idle',
+    message: '',
+    pct: 0,
+    processed: 0,
+    total: 0,
+  });
   
   // ============================================================
   // REFERENCIAS
@@ -181,7 +190,7 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
     }
   }, [isLoadingMore, loading, hasMore, error, page, userId, shuffleSeed, getDailySeed]);
 
-  // ============================================================
+    // ============================================================
   // RESCANEAR BIBLIOTECA
   // ============================================================
   const rescan = useCallback(async () => {
@@ -190,7 +199,61 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
     setSongs([]);
     setPage(1);
     setIsLoadingMore(false);
-    
+    setRescanState((prev) => ({
+      ...prev,
+      active: true,
+      phase: 'start',
+      message: 'Iniciando rescan...',
+      pct: 0,
+      processed: 0,
+      total: 0,
+    }));
+
+    // Abrir el stream SSE ANTES de disparar el POST: el POST es bloqueante, pero
+    // el server escribe el avance real en un archivo JSON que este stream
+    // reenvía como eventos de progreso.
+    const streamUrl = api.rescanStreamUrl();
+    const eventSource = (typeof window !== 'undefined' && streamUrl)
+      ? new EventSource(streamUrl)
+      : null;
+    let sseClosed = false;
+    const closeSSE = () => {
+      if (eventSource && !sseClosed) {
+        sseClosed = true;
+        try { eventSource.close(); } catch {}
+      }
+    };
+
+    if (eventSource) {
+      eventSource.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'progress' && msg.phase !== 'idle') {
+            if (msg.phase === 'done') return; // 'done' se envía como tipo completo
+            setRescanState((prev) => ({
+              ...prev,
+              active: true,
+              phase: msg.phase || 'scanning',
+              message: msg.message || 'Rescaneando la biblioteca...',
+              pct: typeof msg.pct === 'number'
+                ? msg.pct
+                : (msg.total ? Math.round((msg.processed / msg.total) * 100) : prev.pct),
+              processed: msg.processed ?? prev.processed,
+              total: msg.total ?? prev.total,
+            }));
+          } else if (msg.type === 'done') {
+            closeSSE();
+          }
+        } catch (err) {
+          console.error('[useLibrary] Error parseando evento SSE de rescan:', err);
+        }
+      };
+      eventSource.onerror = () => {
+        // La conexión SSE puede cerrarse al terminar el rescan: no es un error
+        // fatídico. Si el POST sigue en vuelo, dejamos que avise el resultado.
+      };
+    }
+
     try {
       const data = await api.rescan();
       const incoming = data.songs || [];
@@ -204,10 +267,13 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
       const paging = data.pagination || { offset: 0, limit: incoming.length, total };
       setHasMore(paging.offset + paging.limit < paging.total);
       initialLoadDoneRef.current = true;
+      setRescanState((prev) => ({ ...prev, active: false, phase: 'done', message: `Rescan completado (${total} canciones)`, pct: 100 }));
     } catch (err) {
       setError(err.message);
+      setRescanState((prev) => ({ ...prev, active: false, phase: 'error', message: err.message, pct: 100 }));
     } finally {
       setLoading(false);
+      closeSSE();
     }
   }, []);
 
@@ -314,6 +380,7 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
     reload,
     loadMore,
     rescan,
+    rescanState,
     toggleLike,
     dislikeSong,
     dislikeArtist,

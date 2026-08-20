@@ -42,6 +42,25 @@ if (fs.existsSync(PUBLIC_DIR)) {
 }
 
 // ============================================================
+// PROGRESO DE RESCAN (archivo JSON + SSE)
+// ============================================================
+// build_music_db.py y este index.js escriben su avance en un archivo JSON.
+// El endpoint SSE /api/rescan-stream lo consulta por polling y lo reenvía
+// al cliente, de modo que la UI puede mostrar una barra de progreso real.
+const RESCAN_PROGRESS_FILE = path.join(__dirname, 'localfy-rescan.json');
+
+function writeRescanProgress(payload) {
+    try {
+    // fs.writeFileSync (no async/promise) para evitar race conditions en el poller del SSE.
+    // El tercer argumento debe ser un objeto options; pasarlo como string ('utf-8') equivale a pasarlo
+    // como callback y lanza "The 'cb' argument must be of type function".
+    fs.writeFileSync(RESCAN_PROGRESS_FILE, JSON.stringify({ ts: Date.now(), ...payload }), { encoding: 'utf-8' });
+  } catch (err) {
+    console.error('[rescan] No se pudo escribir estado de progreso:', err.message);
+  }
+}
+
+// ============================================================
 // VARIABLES GLOBALES
 // ============================================================
 let libraryReady = false;
@@ -813,18 +832,71 @@ app.delete('/api/songs', async (req, res) => {
 // RUTAS - RESCAN
 // ============================================================
 
+// SSE: emite el avance del rescan en vivo (la UI abre este stream antes del POST).
+app.get('/api/rescan-stream', async (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  });
+  res.write('retry: 2000\n\n');
+
+  const send = (type, payload = {}) => {
+    try { res.write(`data: ${JSON.stringify({ type, ...payload })}\n\n`); } catch {}
+  };
+
+  const started = Date.now();
+  const TIMEOUT = 5 * 60 * 1000; // 5 min máximo (evita conexiones que nunca terminan)
+  let lastDone = false;
+  let clientClosed = false;
+  req.on('close', () => { clientClosed = true; });
+
+  try {
+    while (!lastDone && !clientClosed) {
+      let state = null;
+      try {
+        state = JSON.parse(fs.readFileSync(RESCAN_PROGRESS_FILE, 'utf-8'));
+      } catch {
+        state = null; // aún no hay rescan en curso
+      }
+
+            const safe = state || { phase: 'idle', pct: 0, processed: 0, total: 0 };
+      send('progress', safe);
+      if (state && (state.phase === 'done' || state.phase === 'error')) lastDone = true;
+
+      if (Date.now() - started > TIMEOUT) break;
+      await new Promise(r => setTimeout(r, 400));
+    }
+  } catch (err) {
+    console.error('[rescan-stream] ❌ Error:', err);
+  } finally {
+    send('done');
+    try { res.end(); } catch {}
+  }
+});
+
 app.post('/api/rescan', async (_req, res) => {
   try {
     console.log('[api/rescan] 🔄 Liberando conexión SQLite y reconstruyendo BD con build_music_db.py...');
+
+    writeRescanProgress({ phase: 'start', pct: 2, processed: 0, total: 0, message: 'Preparando rescan...' });
 
     // 1. Cerrar la BD del server para que Python pueda reescribir el esquema
     //    sin conflictos de WAL/locking.
     await db.closeDb();
 
-    // 2. Ejecutar scripts/build_music_db.py (reconstruye server/localfy.db desde la música).
-    const { stdout, stderr } = await runBuildDbPython({ musicDir: MUSIC_DIR });
+    writeRescanProgress({ phase: 'building', pct: 5, processed: 0, total: 0, message: 'Reconstruyendo la base de datos...' });
+
+    // 2. Ejecutar scripts/build_music_db.py (reconstruye server/localfy.db desde
+    //    la música). El propio script escribe progreso en RESCAN_PROGRESS_FILE.
+    const { stdout, stderr } = await runBuildDbPython({
+      musicDir: MUSIC_DIR,
+      progressPath: RESCAN_PROGRESS_FILE,
+    });
     if (stdout) console.log('[api/rescan]', String(stdout).trim());
     if (stderr) console.warn('[api/rescan] (stderr)', String(stderr).trim());
+
+    writeRescanProgress({ phase: 'loading', pct: 95, processed: 0, total: 0, message: 'Recargando la biblioteca en memoria...' });
 
     // 3. Reabrir la BD: getDb() vuelve a ejecutar initSchema (tablas de usuario,
     //    vistas, etc. que el script Python no toca).
@@ -835,9 +907,11 @@ app.post('/api/rescan', async (_req, res) => {
 
     // 5. Responder con la biblioteca reconstruida (mismo contrato que antes).
     const result = await buildLibrary({ limit: 100, offset: 0 });
+    writeRescanProgress({ phase: 'done', pct: 100, message: `Rescan completado (${result.counts?.total ?? 0} canciones)` });
     res.json(result);
   } catch (err) {
     console.error('[api/rescan] Error:', err);
+    writeRescanProgress({ phase: 'error', pct: 100, message: err.message });
 
     // Recargar aunque falle: evita servir datos viejos si la BD quedó a medias.
     try {

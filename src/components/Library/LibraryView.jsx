@@ -43,9 +43,10 @@ export default function LibraryView({
   hasMore,
   isLoadingMore,
   onLoadMore,
-  allSongs,
+    allSongs,
   offlineMode,
-  onRescan
+  onRescan,
+  rescanState
 }) {
   const { play, current } = usePlayer();
   const [query, setQuery] = useState('');
@@ -202,15 +203,46 @@ export default function LibraryView({
               }}
             />
           )}
-          {!offlineMode && onRescan && (
+                    {!offlineMode && onRescan && (
             <button
               onClick={onRescan}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2 text-foreground text-sm hover:bg-surface-2/70 transition"
+              disabled={rescanState?.active}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2 text-foreground text-sm hover:bg-surface-2/70 disabled:opacity-60 disabled:cursor-not-allowed transition"
             >
-              <RefreshCw size={16} /> Rescanear
+              {rescanState?.active ? (
+                <>
+                  <RefreshCw size={16} className="animate-spin" /> Escaneando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw size={16} /> Rescanear
+                </>
+              )}
             </button>
           )}
         </div>
+
+        {/* ===== BARRA DE PROGRESO DE RESCAN ===== */}
+        {rescanState?.active && (
+          <div className="mb-3 animate-fade-in">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-muted-foreground truncate">
+                {rescanState.message || 'Rescaneando la biblioteca...'}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {rescanState.total > 0
+                  ? `${rescanState.processed} / ${rescanState.total}`
+                  : `${rescanState.pct}%`}
+              </span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-surface-2/70 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
+                style={{ width: `${Math.max(0, Math.min(100, rescanState.pct))}%` }}
+              />
+            </div>
+          </div>
+                )}
       </header>
 
       {/* ===== BUSCADOR ===== */}

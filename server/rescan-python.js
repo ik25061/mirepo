@@ -29,11 +29,13 @@ const DEFAULT_MUSIC = process.env.VITE_MUSIC_PATH || 'E:/musica';
  * @param {object} [opts]
  * @param {string} [opts.dbPath]  Ruta de la BD a reconstruir (default: server/localfy.db)
  * @param {string} [opts.musicDir] Carpeta de música (default: VITE_MUSIC_PATH o E:/musica)
+ * @param {string} [opts.progressPath] Archivo JSON donde el script escribe el progreso (para el SSE del server)
  * @returns {Promise<{ stdout: string, stderr: string }>}
  */
-export async function runBuildDbPython({ dbPath, musicDir } = {}) {
+export async function runBuildDbPython({ dbPath, musicDir, progressPath } = {}) {
   const candidates = [process.env.PYTHON, 'python', 'python3', 'py'].filter(Boolean);
   const args = ['--db', dbPath || DEFAULT_DB, '--music', musicDir || DEFAULT_MUSIC];
+  if (progressPath) args.push('--progress', progressPath);
 
   const execOnce = (pythonCmd) => new Promise((resolve, reject) => {
     execFile(pythonCmd, [PYTHON_BUILD_SCRIPT, ...args], {
