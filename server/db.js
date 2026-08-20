@@ -19,6 +19,10 @@ let db = null;
 let dbReady = false;
 let dbPromise = null;
 
+// Caché de artistas normalizados para getOrCreateArtist (se invalida al
+// cerrar/reabrir la BD, p. ej. tras un rescan con build_music_db.py).
+let artistCache = null;
+
 // Función helper para normalizar texto (quitar acentos, lowercase)
 function normalizeText(text) {
   if (!text) return '';
@@ -26,6 +30,34 @@ function normalizeText(text) {
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
+}
+
+// Rellena song.genre para TODAS las canciones de la lista con UNA sola
+// consulta SQL (evita el problema N+1: una query de géneros por canción).
+async function attachGenres(database, songs) {
+  if (!songs || songs.length === 0) return;
+  const bySong = new Map();
+  const CHUNK = 500; // mantenerse bajo el límite de variables de SQLite (~999)
+  for (let i = 0; i < songs.length; i += CHUNK) {
+    const chunk = songs.slice(i, i + CHUNK);
+    const ids = chunk.map(s => s.id);
+    const placeholders = ids.map(() => '?').join(',');
+    const rows = await database.all(
+      `SELECT sg.song_id, g.name
+       FROM song_genres sg
+       JOIN genres g ON g.id = sg.genre_id
+       WHERE sg.song_id IN (${placeholders})
+       ORDER BY g.name`,
+      ids
+    );
+    for (const row of rows) {
+      if (!bySong.has(row.song_id)) bySong.set(row.song_id, []);
+      bySong.get(row.song_id).push(row.name);
+    }
+  }
+  for (const song of songs) {
+    song.genre = bySong.get(song.id) || [];
+  }
 }
 
 export async function getDb() {
@@ -39,9 +71,16 @@ export async function getDb() {
         driver: sqlite3.Database,
       });
       
+      // La BD se abrió (posiblemente tras un rescan que la reconstruyó):
+      // descartar cachés que apunten al esquema/datos anteriores.
+      artistCache = null;
+
       await db.exec('PRAGMA foreign_keys = ON');
       await db.exec('PRAGMA journal_mode = WAL');
       await db.exec('PRAGMA synchronous = NORMAL');
+      await db.exec('PRAGMA busy_timeout = 5000');
+      await db.exec('PRAGMA cache_size = -20000'); // ~20 MB de caché
+      await db.exec('PRAGMA temp_store = MEMORY');
       
       // Crear esquema si no existe
       await initSchema(db);
@@ -64,6 +103,7 @@ export async function closeDb() {
     db = null;
     dbReady = false;
     dbPromise = null;
+    artistCache = null;
     console.log('[db] 🔒 Conexión cerrada');
   }
 }
@@ -120,14 +160,8 @@ export async function getSongsWithDetails({ limit = 100, offset = 0, userId = nu
 
   const songs = await database.all(sql, params);
 
+  await attachGenres(database, songs);
   for (const song of songs) {
-    const genres = await database.all(`
-      SELECT g.name
-      FROM genres g
-      JOIN song_genres sg ON g.id = sg.genre_id
-      WHERE sg.song_id = ?
-    `, [song.id]);
-    song.genre = genres.map(g => g.name);
     song.liked = !!song.liked;
     song.hidden = !!song.hidden;
     song.hasCover = !!song.cover_path;
@@ -280,14 +314,8 @@ export async function getSongsByArtist({ artistId, userId = null, limit = 100, o
 
   const songs = await database.all(sql, params);
 
+  await attachGenres(database, songs);
   for (const song of songs) {
-    const genres = await database.all(`
-      SELECT g.name
-      FROM genres g
-      JOIN song_genres sg ON g.id = sg.genre_id
-      WHERE sg.song_id = ?
-    `, [song.id]);
-    song.genre = genres.map(g => g.name);
     song.liked = !!song.liked;
   }
 
@@ -464,14 +492,8 @@ export async function getSongsByAlbum({ albumId, userId = null, limit = 100, off
 
   const songs = await database.all(sql, params);
 
+  await attachGenres(database, songs);
   for (const song of songs) {
-    const genres = await database.all(`
-      SELECT g.name
-      FROM genres g
-      JOIN song_genres sg ON g.id = sg.genre_id
-      WHERE sg.song_id = ?
-    `, [song.id]);
-    song.genre = genres.map(g => g.name);
     song.liked = !!song.liked;
   }
 
@@ -594,14 +616,8 @@ export async function getSongsByGenre({ genreId, userId = null, limit = 100, off
 
   const songs = await database.all(sql, params);
 
+  await attachGenres(database, songs);
   for (const song of songs) {
-    const genres = await database.all(`
-      SELECT g.name
-      FROM genres g
-      JOIN song_genres sg2 ON g.id = sg2.genre_id
-      WHERE sg2.song_id = ?
-    `, [song.id]);
-    song.genre = genres.map(g => g.name);
     song.liked = !!song.liked;
   }
 
@@ -659,14 +675,14 @@ export async function getYearsWithPagination({ userId = null, limit = 100, offse
     params.push(userId);
   }
 
-  sql += ` GROUP BY al.year`;
-
   if (search) {
+    // El filtro DEBE ir en WHERE (antes de GROUP BY); concatenarlo después de
+    // "GROUP BY" generaba SQL inválido. Se mueve aquí.
     sql += ` AND CAST(al.year AS TEXT) LIKE ?`;
     params.push(`%${search}%`);
   }
 
-  sql += ` ORDER BY al.year DESC LIMIT ? OFFSET ?`;
+  sql += ` GROUP BY al.year ORDER BY al.year DESC LIMIT ? OFFSET ?`;
   params.push(limit, offset);
 
   const years = await database.all(sql, params);
@@ -731,14 +747,8 @@ export async function getSongsByYear({ year, userId = null, limit = 100, offset 
 
   const songs = await database.all(sql, params);
 
+  await attachGenres(database, songs);
   for (const song of songs) {
-    const genres = await database.all(`
-      SELECT g.name
-      FROM genres g
-      JOIN song_genres sg ON g.id = sg.genre_id
-      WHERE sg.song_id = ?
-    `, [song.id]);
-    song.genre = genres.map(g => g.name);
     song.liked = !!song.liked;
   }
 
@@ -866,6 +876,7 @@ export async function getLikedSongs(userId, limit = 100, offset = 0) {
         a.name AS artist,
         al.name AS album,
         al.year AS year,
+        al.cover_path,
         1 AS liked
       FROM songs s
       JOIN user_song_interactions usi ON s.id = usi.song_id
@@ -877,18 +888,11 @@ export async function getLikedSongs(userId, limit = 100, offset = 0) {
       LIMIT ? OFFSET ?
     `, [userId, limit, offset]);
 
-    // Obtener géneros para cada canción
+    await attachGenres(database, songs);
     for (const song of songs) {
-      const genres = await database.all(`
-        SELECT g.name
-        FROM genres g
-        JOIN song_genres sg ON g.id = sg.genre_id
-        WHERE sg.song_id = ?
-      `, [song.id]);
-      song.genre = genres.map(g => g.name);
       // Asegurar que liked esté en true
       song.liked = true;
-      song.hasCover = false;
+      song.hasCover = !!song.cover_path;
     }
 
     return songs;
@@ -1351,14 +1355,18 @@ export async function getOrCreateArtist(database, name) {
   // Normalizar el nombre para comparación
   const normalizedInput = normalizeText(name);
   
-  // Buscar artistas existentes para detectar variaciones
-  const existingArtists = await database.all('SELECT id, name FROM artists');
+  // Cargar (una sola vez) la lista de artistas en caché, en vez de recargar
+  // toda la tabla `artists` por cada canción del escaneo (evita O(N) repetido).
+  if (!artistCache) {
+    const rows = await database.all('SELECT id, name FROM artists');
+    artistCache = rows.map(r => ({ id: r.id, normalized: normalizeText(r.name) }));
+  }
   
   let bestMatch = null;
   let bestScore = 0;
   
-  for (const artist of existingArtists) {
-    const normalizedExisting = normalizeText(artist.name);
+  for (const artist of artistCache) {
+    const normalizedExisting = artist.normalized;
     
     // Coincidencia exacta normalizada
     if (normalizedInput === normalizedExisting) {
@@ -1393,6 +1401,8 @@ export async function getOrCreateArtist(database, name) {
   }
   
   const result = await database.run('INSERT INTO artists (name) VALUES (?)', [name]);
+  // Mantener la caché al día para no tener que recargarla en la siguiente canción.
+  artistCache.push({ id: result.lastID, normalized: normalizedInput });
   return result.lastID;
 }
 
@@ -1594,6 +1604,21 @@ async function initSchema(database) {
       language TEXT DEFAULT 'es',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+  `);
+
+  // Índices para las consultas/joins más frecuentes. Se crean con IF NOT
+  // EXISTS, así que no rompen un esquema ya existente (solo aceleran).
+  await database.exec(`
+    CREATE INDEX IF NOT EXISTS idx_usi_user_type ON user_song_interactions(user_id, interaction_type);
+    CREATE INDEX IF NOT EXISTS idx_usi_song_type ON user_song_interactions(song_id, interaction_type);
+    CREATE INDEX IF NOT EXISTS idx_uai_user_type ON user_artist_interactions(user_id, interaction_type);
+    CREATE INDEX IF NOT EXISTS idx_sa_artist ON song_artists(artist_id);
+    CREATE INDEX IF NOT EXISTS idx_sa_song ON song_artists(song_id, is_main);
+    CREATE INDEX IF NOT EXISTS idx_sg_genre ON song_genres(genre_id);
+    CREATE INDEX IF NOT EXISTS idx_sg_song ON song_genres(song_id);
+    CREATE INDEX IF NOT EXISTS idx_ps_playlist ON playlist_songs(playlist_id, position);
+    CREATE INDEX IF NOT EXISTS idx_song_album ON songs(album_id);
+    CREATE INDEX IF NOT EXISTS idx_playlist_user ON playlists(user_id);
   `);
 
   // Crear vistas
