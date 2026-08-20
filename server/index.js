@@ -395,14 +395,16 @@ app.get('/api/artists', async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
     const offset = parseInt(req.query.offset, 10) || 0;
     const search = req.query.search || '';
-    
-    console.log(`[api/artists] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}"`);
+    const minSongs = parseInt(req.query.minSongs, 10) || 0;
+
+    console.log(`[api/artists] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}", minSongs=${minSongs}`);
     
     const result = await db.getArtistsWithPagination({ 
       userId, 
       limit, 
       offset, 
-      search 
+      search,
+      minSongs
     });
     
     console.log(`[api/artists] ✅ ${result.items?.length || 0} artistas devueltos, total ${result.pagination?.total || 0}`);
@@ -444,14 +446,16 @@ app.get('/api/albums', async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
     const offset = parseInt(req.query.offset, 10) || 0;
     const search = req.query.search || '';
-    
-    console.log(`[api/albums] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}"`);
+    const minSongs = parseInt(req.query.minSongs, 10) || 0;
+
+    console.log(`[api/albums] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}", minSongs=${minSongs}`);
     
     const result = await db.getAlbumsWithPagination({
       userId,
       limit,
       offset,
-      search
+      search,
+      minSongs
     });
     
     console.log(`[api/albums] ✅ ${result.items?.length || 0} álbumes devueltos, total ${result.pagination?.total || 0}`);
@@ -472,14 +476,16 @@ app.get('/api/genres', async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
     const offset = parseInt(req.query.offset, 10) || 0;
     const search = req.query.search || '';
-    
-    console.log(`[api/genres] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}"`);
+    const minSongs = parseInt(req.query.minSongs, 10) || 0;
+
+    console.log(`[api/genres] 📥 userId=${userId}, limit=${limit}, offset=${offset}, search="${search}", minSongs=${minSongs}`);
     
     const result = await db.getGenresWithPagination({
       userId,
       limit,
       offset,
-      search
+      search,
+      minSongs
     });
     
     console.log(`[api/genres] ✅ ${result.items?.length || 0} géneros devueltos, total ${result.pagination?.total || 0}`);
