@@ -18,6 +18,7 @@ import os
 import re
 import sys
 import shutil
+import tempfile
 import argparse
 import hashlib
 import sqlite3
@@ -420,10 +421,27 @@ def obtener_metadatos_archivo(ruta_mp3):
 # ============================================================
 
 def procesar_directorio(db_path, raiz_musica, calcular_hash=False):
-    # Backup de seguridad (como fix-db-names.mjs)
+    db_path = os.path.abspath(db_path)
+    raiz_musica = os.path.abspath(raiz_musica)
+
+    # ============================================================
+    # ESTRATEGIA "FUERA DEL ARBOL VIGILADO POR VITE"
+    # ============================================================
+    # El watcher de archivos de Vite (dev) se cae con EBUSY cuando se
+    # crea un archivo grande nuevo (ej: backup de 66MB) o se reescribe
+    # localfy.db de golpe dentro de server/ (que está en la raíz vigilada).
+    # Por eso aquí se construye TODO en el directorio temporal del sistema
+    # (fuera del proyecto) y solo al final se hace UN os.replace() atómico
+    # de la BD hacia server/localfy.db: un único evento del watcher.
+    # ============================================================
+
+    build_dir = tempfile.gettempdir()
+    os.makedirs(build_dir, exist_ok=True)
+
+    # 1. Backup de seguridad (en TEMP, fuera del árbol vigilado)
     if os.path.exists(db_path):
         stamp = __import__('datetime').datetime.now().strftime('%Y%m%d-%H%M%S')
-        backup = f"{db_path}.bak-{stamp}"
+        backup = os.path.join(build_dir, f"localfy-backup-{stamp}.db")
         shutil.copy2(db_path, backup)
         print(f"📦 Backup creado: {backup}")
     else:
@@ -433,7 +451,17 @@ def procesar_directorio(db_path, raiz_musica, calcular_hash=False):
         print(f"❌ Error: La ruta {raiz_musica} no existe.")
         return
 
-    conn = sqlite3.connect(db_path)
+    # 2. BD de trabajo temporal (también en TEMP: no genera eventos en server/)
+    build_db = os.path.join(build_dir, f"localfy-build-{os.getpid()}.db")
+    for sufijo in ('', '-journal', '-wal', '-shm'):
+        ruta_ver = build_db + sufijo
+        if os.path.exists(ruta_ver):
+            try:
+                os.remove(ruta_ver)
+            except OSError:
+                pass
+
+    conn = sqlite3.connect(build_db)
     conn.execute("PRAGMA foreign_keys = ON")  # igual que db.js
     conn.create_function("normalizar", 1, normalizar_para_buscar)
     cursor = conn.cursor()
@@ -520,6 +548,28 @@ def procesar_directorio(db_path, raiz_musica, calcular_hash=False):
 
     conn.commit()
     conn.close()
+
+    # 3. Reemplazo atómico de la BD temporal -> server/localfy.db
+    #    (1 solo evento del watcher en lugar de miles). El server cierra la
+    #    conexión antes de reescanear, así que no hay handle bloqueando.
+    try:
+        os.replace(build_db, db_path)
+    except OSError as e:
+        # No perder el trabajo: el temp queda disponible para recuperarlo
+        print(f"❌ No se pudo mover la BD temporal a {db_path}: {e}")
+        print(f"   La BD construida quedó en: {build_db}")
+        raise
+
+    # Limpiar WAL/SHM antiguos de la BD anterior (pertenecían al archivo viejo;
+    # el server re-abre con PRAGMA journal_mode=WAL y los recrea limpios).
+    for sufijo in ('-wal', '-shm'):
+        ruta_stale = db_path + sufijo
+        try:
+            if os.path.exists(ruta_stale):
+                os.remove(ruta_stale)
+        except OSError:
+            pass
+
     print(f"\n🎉 Base de datos reconstruida exitosamente en: {db_path}")
     print(f"   Canciones insertadas: {insertados}")
     print(f"   Con letra (.lrc):     {con_letra}")
