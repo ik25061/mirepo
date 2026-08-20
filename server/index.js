@@ -12,8 +12,9 @@ import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
 
 import * as db from './db.js';
-import { MUSIC_DIR, TRASH_DIR, absolutePath, scanLibrary } from './scanner.js';
+import { MUSIC_DIR, TRASH_DIR, absolutePath } from './scanner.js';
 import { getLyrics as getLyricsFromService } from './lyrics.js';
+import { runBuildDbPython } from './rescan-python.js';
 
 const app = express();
 const PORT = process.env.VITE_SERVER_PORT || process.env.PORT || 5002;
@@ -814,13 +815,39 @@ app.delete('/api/songs', async (req, res) => {
 
 app.post('/api/rescan', async (_req, res) => {
   try {
-    await scanLibrary();
+    console.log('[api/rescan] 🔄 Liberando conexión SQLite y reconstruyendo BD con build_music_db.py...');
+
+    // 1. Cerrar la BD del server para que Python pueda reescribir el esquema
+    //    sin conflictos de WAL/locking.
+    await db.closeDb();
+
+    // 2. Ejecutar scripts/build_music_db.py (reconstruye server/localfy.db desde la música).
+    const { stdout, stderr } = await runBuildDbPython({ musicDir: MUSIC_DIR });
+    if (stdout) console.log('[api/rescan]', String(stdout).trim());
+    if (stderr) console.warn('[api/rescan] (stderr)', String(stderr).trim());
+
+    // 3. Reabrir la BD: getDb() vuelve a ejecutar initSchema (tablas de usuario,
+    //    vistas, etc. que el script Python no toca).
+    await db.getDb();
+
+    // 4. Recargar la biblioteca en memoria con los datos nuevos.
     await loadLibrary();
+
+    // 5. Responder con la biblioteca reconstruida (mismo contrato que antes).
     const result = await buildLibrary({ limit: 100, offset: 0 });
     res.json(result);
   } catch (err) {
     console.error('[api/rescan] Error:', err);
-    res.status(500).json({ error: 'Error al rescanejar' });
+
+    // Recargar aunque falle: evita servir datos viejos si la BD quedó a medias.
+    try {
+      await db.getDb();
+      await loadLibrary();
+    } catch (reloadErr) {
+      console.error('[api/rescan] No se pudo recargar la biblioteca tras el error:', reloadErr);
+    }
+
+    res.status(500).json({ error: `Error al rescanejar: ${err.message}` });
   }
 });
 
