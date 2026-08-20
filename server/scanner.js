@@ -177,15 +177,20 @@ async function readSong(file) {
 
   const picture = common.picture && common.picture[0];
   
-  let genres = ['Sin género'];
-  if (common.genre && common.genre[0]) {
-    genres = common.genre[0]
-      .split(';')
-      .map(g => g.trim())
-      .filter(g => g.length > 0);
-    if (genres.length === 0) genres = ['Sin género'];
+  let genres = [];
+  if (common.genre) {
+    // Procesar todos los elementos del array (music-metadata puede devolver varios)
+    for (const rawGenre of common.genre) {
+      if (!rawGenre) continue;
+      // Dividir por los separadores más comunes: ; / , y |
+      const parts = rawGenre.split(/[;/\|]/).map(g => g.trim()).filter(g => g.length > 0);
+      genres.push(...parts);
+    }
   }
-  
+  // Eliminar duplicados y normalizar
+  genres = [...new Set(genres)];
+  if (genres.length === 0) genres = ['Sin género'];
+
   // Detectar letra .lrc al lado del archivo de audio
   const basePath = file.slice(0, -path.extname(file).length);
   const hasLyrics = fs.existsSync(`${basePath}.lrc`);
