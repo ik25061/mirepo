@@ -208,37 +208,42 @@ export async function getTrashCount(userId = null) {
 // ============================================================
 
 // En server/db.js
-export async function getArtistsWithPagination({ userId = null, limit = 20, offset = 0, search = '' } = {}) {
+export async function getArtistsWithPagination({ userId = null, limit = 20, offset = 0, search = '', minSongs = 0 } = {}) {
   const database = await getDb();
-
-  let baseSql = `
-    SELECT
-      a.id,
-      a.name,
-      (SELECT COUNT(*) FROM song_artists sa WHERE sa.artist_id = a.id) AS song_count,
-      (SELECT s.id FROM songs s 
-       JOIN song_artists sa2 ON s.id = sa2.song_id 
-       WHERE sa2.artist_id = a.id LIMIT 1) AS coverId
-    FROM artists a
-    WHERE 1=1
-  `;
-  const baseParams = [];
-
-  if (userId) {
-    baseSql += ` AND a.id NOT IN (
-      SELECT artist_id FROM user_artist_interactions 
-      WHERE user_id = ? AND interaction_type = 'HIDE'
-    )`;
-    baseParams.push(userId);
-  }
 
   let total;
   let items;
 
   if (!search) {
     // Sin búsqueda: paginación en SQL (rápido)
-    const sql = baseSql + ` ORDER BY a.name LIMIT ? OFFSET ?`;
-    items = await database.all(sql, [...baseParams, limit, offset]);
+    let sql = `
+      SELECT
+        a.id,
+        a.name,
+        (SELECT COUNT(*) FROM song_artists sa WHERE sa.artist_id = a.id) AS song_count,
+        (SELECT s.id FROM songs s
+         JOIN song_artists sa2 ON s.id = sa2.song_id
+         WHERE sa2.artist_id = a.id LIMIT 1) AS coverId
+      FROM artists a
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (userId) {
+      sql += ` AND a.id NOT IN (
+        SELECT artist_id FROM user_artist_interactions
+        WHERE user_id = ? AND interaction_type = 'HIDE'
+      )`;
+      params.push(userId);
+    }
+
+    if (minSongs > 0) {
+      sql += ` AND (SELECT COUNT(*) FROM song_artists sa WHERE sa.artist_id = a.id) >= ?`;
+      params.push(minSongs);
+    }
+
+    sql += ` ORDER BY a.name LIMIT ? OFFSET ?`;
+    items = await database.all(sql, [...params, limit, offset]);
 
     let countSql = `SELECT COUNT(*) as total FROM artists a WHERE 1=1`;
     const countParams = [];
@@ -249,17 +254,52 @@ export async function getArtistsWithPagination({ userId = null, limit = 20, offs
       )`;
       countParams.push(userId);
     }
+    if (minSongs > 0) {
+      countSql += ` AND (SELECT COUNT(*) FROM song_artists sa WHERE sa.artist_id = a.id) >= ?`;
+      countParams.push(minSongs);
+    }
     const totalResult = await database.get(countSql, countParams);
     total = totalResult.total;
   } else {
     // Con búsqueda: filtrado tolerante a mayúsculas/minúsculas y acentos.
-    // Se normalizan AMBOS lados con normalizeText(), por lo que
-    // "Mana", "maná", "MANA" y "mana" coinciden con "Maná".
+    // OPTIMIZACIÓN: Fetch "ligero" de nombres e IDs primero.
+    let lightSql = `SELECT id, name FROM artists a WHERE 1=1`;
+    const lightParams = [];
+    if (userId) {
+      lightSql += ` AND a.id NOT IN (
+        SELECT artist_id FROM user_artist_interactions
+        WHERE user_id = ? AND interaction_type = 'HIDE'
+      )`;
+      lightParams.push(userId);
+    }
+
+    const allArtists = await database.all(lightSql, lightParams);
     const normalizedSearch = normalizeText(search);
-    const all = await database.all(baseSql, baseParams);
-    const filtered = all.filter(a => normalizeText(a.name).includes(normalizedSearch));
+    const filtered = allArtists.filter(a => normalizeText(a.name).includes(normalizedSearch));
+
     total = filtered.length;
-    items = filtered.slice(offset, offset + limit);
+    const page = filtered.slice(offset, offset + limit);
+
+    // Rellenar detalles (conteo y portada) solo para los elementos de esta página
+    if (page.length > 0) {
+      const ids = page.map(p => p.id);
+      const placeholders = ids.map(() => '?').join(',');
+      const detailedSql = `
+        SELECT
+          a.id,
+          a.name,
+          (SELECT COUNT(*) FROM song_artists sa WHERE sa.artist_id = a.id) AS song_count,
+          (SELECT s.id FROM songs s
+           JOIN song_artists sa2 ON s.id = sa2.song_id
+           WHERE sa2.artist_id = a.id LIMIT 1) AS coverId
+        FROM artists a
+        WHERE a.id IN (${placeholders})
+        ORDER BY a.name
+      `;
+      items = await database.all(detailedSql, ids);
+    } else {
+      items = [];
+    }
   }
 
   return {
@@ -377,40 +417,50 @@ function mergeAlbums(items) {
   return Array.from(grouped.values());
 }
 
-export async function getAlbumsWithPagination({ userId = null, limit = 100, offset = 0, search = '' } = {}) {
+export async function getAlbumsWithPagination({ userId = null, limit = 100, offset = 0, search = '', minSongs = 0 } = {}) {
   const database = await getDb();
-
-  let sql = `
-    SELECT
-      al.id,
-      al.name,
-      a.name AS artist,
-      al.year,
-      al.cover_path,
-      (SELECT COUNT(*) FROM songs s WHERE s.album_id = al.id) AS song_count,
-      (SELECT s.id FROM songs s WHERE s.album_id = al.id LIMIT 1) AS coverId
-    FROM albums al
-    LEFT JOIN artists a ON al.main_artist_id = a.id
-    WHERE 1=1
-  `;
-  const params = [];
 
   let total;
   let items;
 
   if (!search) {
     // Sin búsqueda: paginación directa en SQL (rápido).
+    let sql = `
+      SELECT
+        al.id,
+        al.name,
+        a.name AS artist,
+        al.year,
+        al.cover_path,
+        (SELECT COUNT(*) FROM songs s WHERE s.album_id = al.id) AS song_count,
+        (SELECT s.id FROM songs s WHERE s.album_id = al.id LIMIT 1) AS coverId
+      FROM albums al
+      LEFT JOIN artists a ON al.main_artist_id = a.id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (minSongs > 0) {
+      sql += ` AND (SELECT COUNT(*) FROM songs s WHERE s.album_id = al.id) >= ?`;
+      params.push(minSongs);
+    }
+
     sql += ` ORDER BY al.name, al.year LIMIT ? OFFSET ?`;
     params.push(limit, offset);
+
     const allRows = await database.all(sql, params);
     items = mergeAlbums(allRows);
-    const totalResult = await database.get(
-      `SELECT COUNT(*) as total FROM albums al LEFT JOIN artists a ON al.main_artist_id = a.id`
-    );
+
+    let countSql = `SELECT COUNT(*) as total FROM albums al WHERE 1=1`;
+    const countParams = [];
+    if (minSongs > 0) {
+      countSql += ` AND (SELECT COUNT(*) FROM songs s WHERE s.album_id = al.id) >= ?`;
+      countParams.push(minSongs);
+    }
+    const totalResult = await database.get(countSql, countParams);
     total = totalResult.total;
   } else {
-    // Búsqueda: query ligero (sin subconsultas por fila) para poder filtrar
-    // en JS con normalización (tolera mayúsculas/minúsculas y acentos).
+    // Búsqueda: query ligero para filtrar en JS
     const lightRows = await database.all(`
       SELECT al.id, al.name, a.name AS artist, al.year, al.cover_path
       FROM albums al
@@ -429,17 +479,16 @@ export async function getAlbumsWithPagination({ userId = null, limit = 100, offs
     total = merged.length;
     items = merged.slice(offset, offset + limit);
 
-    // Rellenar song_count/coverId solo para la página devuelta
     if (items.length > 0) {
       const ids = items.map(i => i.id);
       const placeholders = ids.map(() => '?').join(',');
-      const extra = await database.all(
-        `SELECT al.id AS id,
+      const detailedSql = `
+        SELECT al.id AS id,
                 (SELECT COUNT(*) FROM songs s WHERE s.album_id = al.id) AS song_count,
                 (SELECT s.id FROM songs s WHERE s.album_id = al.id LIMIT 1) AS coverId
-         FROM albums al WHERE al.id IN (${placeholders})`,
-        ids
-      );
+         FROM albums al WHERE al.id IN (${placeholders})
+      `;
+      const extra = await database.all(detailedSql, ids);
       const extraMap = new Map(extra.map(r => [r.id, r]));
       items = items.map(it => {
         const e = extraMap.get(it.id);
@@ -524,43 +573,71 @@ export async function getSongsByAlbum({ albumId, userId = null, limit = 100, off
 // FUNCIONES PARA GÉNEROS CON PAGINACIÓN
 // ============================================================
 
-export async function getGenresWithPagination({ userId = null, limit = 100, offset = 0, search = '' } = {}) {
+export async function getGenresWithPagination({ userId = null, limit = 100, offset = 0, search = '', minSongs = 0 } = {}) {
   const database = await getDb();
 
-  let sql = `
-    SELECT
-      g.id,
-      g.name,
-      (SELECT COUNT(*) FROM song_genres sg WHERE sg.genre_id = g.id) AS song_count,
-      (SELECT s.id FROM songs s 
-       JOIN song_genres sg2 ON s.id = sg2.song_id 
-       WHERE sg2.genre_id = g.id LIMIT 1) AS coverId
-    FROM genres g
-    WHERE 1=1
-  `;
-  const params = [];
-
-  // Sin búsqueda: paginación directa en SQL (rápido).
-  // Con búsqueda: se cargan todos y el filtrado se hace en JS con
-  // normalización (tolera mayúsculas/minúsculas y acentos).
-  sql += ` ORDER BY g.name`;
-  if (!search) {
-    sql += ` LIMIT ? OFFSET ?`;
-    params.push(limit, offset);
-  }
-
-  const allRows = await database.all(sql, params);
-
-  let items = allRows;
   let total;
-  if (search) {
-    const normalizedSearch = normalizeText(search);
-    const filtered = allRows.filter(g => normalizeText(g.name).includes(normalizedSearch));
-    total = filtered.length;
-    items = filtered.slice(offset, offset + limit);
-  } else {
-    const totalResult = await database.get(`SELECT COUNT(*) as total FROM genres g`);
+  let items;
+
+  if (!search) {
+    // Sin búsqueda: paginación directa en SQL (rápido).
+    let sql = `
+      SELECT
+        g.id,
+        g.name,
+        (SELECT COUNT(*) FROM song_genres sg WHERE sg.genre_id = g.id) AS song_count,
+        (SELECT s.id FROM songs s
+         JOIN song_genres sg2 ON s.id = sg2.song_id
+         WHERE sg2.genre_id = g.id LIMIT 1) AS coverId
+      FROM genres g
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (minSongs > 0) {
+      sql += ` AND (SELECT COUNT(*) FROM song_genres sg WHERE sg.genre_id = g.id) >= ?`;
+      params.push(minSongs);
+    }
+
+    sql += ` ORDER BY g.name LIMIT ? OFFSET ?`;
+    items = await database.all(sql, [...params, limit, offset]);
+
+    let countSql = `SELECT COUNT(*) as total FROM genres WHERE 1=1`;
+    const countParams = [];
+    if (minSongs > 0) {
+      countSql += ` AND (SELECT COUNT(*) FROM song_genres sg WHERE sg.genre_id = g.id) >= ?`;
+      countParams.push(minSongs);
+    }
+    const totalResult = await database.get(countSql, countParams);
     total = totalResult.total;
+  } else {
+    // Búsqueda: query ligero para filtrar en JS con normalización
+    const allGenres = await database.all(`SELECT id, name FROM genres ORDER BY name`);
+    const normalizedSearch = normalizeText(search);
+    const filtered = allGenres.filter(g => normalizeText(g.name).includes(normalizedSearch));
+
+    total = filtered.length;
+    const page = filtered.slice(offset, offset + limit);
+
+    if (page.length > 0) {
+      const ids = page.map(p => p.id);
+      const placeholders = ids.map(() => '?').join(',');
+      const detailedSql = `
+        SELECT
+          g.id,
+          g.name,
+          (SELECT COUNT(*) FROM song_genres sg WHERE sg.genre_id = g.id) AS song_count,
+          (SELECT s.id FROM songs s
+           JOIN song_genres sg2 ON s.id = sg2.song_id
+           WHERE sg2.genre_id = g.id LIMIT 1) AS coverId
+        FROM genres g
+        WHERE g.id IN (${placeholders})
+        ORDER BY g.name
+      `;
+      items = await database.all(detailedSql, ids);
+    } else {
+      items = [];
+    }
   }
 
   return {
