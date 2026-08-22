@@ -318,38 +318,38 @@ export async function getSongsByArtist({ artistId, userId = null, limit = 100, o
 
   let sql = `
     SELECT
-      s.id,
-      s.title,
-      s.relPath,
-      s.duration,
-      s.track,
-      s.hasLyrics,
-      al.id AS album_id,
-      al.name AS album,
-      al.year AS year,
-      al.cover_path,
+      v.song_id AS id,
+      v.song_title AS title,
+      v.relative_path AS relPath,
+      v.duration,
+      v.track,
+      v.hasLyrics,
+      v.album_id,
+      v.album_name AS album,
+      v.album_year AS year,
+      v.cover_path,
+      v.main_artist_name AS artist,
       (SELECT CASE WHEN EXISTS (
         SELECT 1 FROM user_song_interactions usi
-        WHERE usi.song_id = s.id
+        WHERE usi.song_id = v.song_id
         AND usi.user_id = ?
         AND usi.interaction_type = 'LIKE'
       ) THEN 1 ELSE 0 END) AS liked
-    FROM songs s
-    LEFT JOIN albums al ON s.album_id = al.id
-    JOIN song_artists sa ON s.id = sa.song_id
+    FROM v_complete_songs v
+    JOIN song_artists sa ON v.song_id = sa.song_id
     WHERE sa.artist_id = ?
   `;
   const params = [userId || null, artistId];
 
   if (userId) {
-    sql += ` AND s.id NOT IN (
+    sql += ` AND v.song_id NOT IN (
       SELECT song_id FROM user_song_interactions 
       WHERE user_id = ? AND interaction_type = 'HIDE'
     )`;
     params.push(userId);
   }
 
-  sql += ` ORDER BY s.title LIMIT ? OFFSET ?`;
+  sql += ` ORDER BY v.song_title LIMIT ? OFFSET ?`;
   params.push(limit, offset);
 
   const songs = await database.all(sql, params);
