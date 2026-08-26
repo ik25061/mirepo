@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
 
 import * as db from './db.js';
+import { Meilisearch } from 'meilisearch';
 import { MUSIC_DIR, TRASH_DIR, absolutePath } from './scanner.js';
 import { getLyrics as getLyricsFromService } from './lyrics.js';
 import { runBuildDbPython } from './rescan-python.js';
@@ -57,6 +58,39 @@ function writeRescanProgress(payload) {
     fs.writeFileSync(RESCAN_PROGRESS_FILE, JSON.stringify({ ts: Date.now(), ...payload }), { encoding: 'utf-8' });
   } catch (err) {
     console.error('[rescan] No se pudo escribir estado de progreso:', err.message);
+  }
+}
+
+// ============================================================
+// MEILISEARCH SETUP
+// ============================================================
+const meiliClient = new Meilisearch({
+  host: process.env.MEILI_HOST || 'http://127.0.0.1:7700',
+  apiKey: process.env.MEILI_MASTER_KEY || 'masterKey',
+});
+
+const songIndex = meiliClient.index('songs');
+
+async function syncToMeilisearch() {
+  try {
+    if (!libraryReady) await loadLibrary();
+    console.log('🔍 Sincronizando Meilisearch...');
+
+    // Preparar documentos para Meilisearch
+    const docs = songCache.map(s => ({
+      id: s.id,
+      title: s.title,
+      artist: s.artist,
+      album: s.album,
+      year: s.year,
+      bpm: s.bpm,
+      key: s.key_name,
+    }));
+
+    await songIndex.updateDocuments(docs);
+    console.log('✅ Meilisearch sincronizado');
+  } catch (err) {
+    console.error('❌ Error Meilisearch:', err.message);
   }
 }
 
@@ -139,6 +173,7 @@ async function loadLibrary() {
     
     console.log(`✅ ${songCache.length} canciones cargadas en memoria`);
     libraryReady = true;
+    syncToMeilisearch();
   } catch (err) {
     console.error('❌ Error cargando biblioteca:', err);
     libraryReady = true;
@@ -754,13 +789,25 @@ app.post('/api/artists/unhide', async (req, res) => {
 // ============================================================
 
 app.post('/api/songs/:id/like', async (req, res) => {
-  const song = songMap.get(req.params.id);
-  if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
+  const { id } = req.params;
   const userId = req.body.userId || null;
   const liked = Boolean(req.body.liked);
-  
+
+  // Buscar en cache o DB como respaldo
+  let song = songMap.get(id);
+  if (!song) {
+    const songs = await db.getSongsByIds(id, userId);
+    song = songs[0];
+  }
+
+  if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
+
   try {
     await db.setSongLiked(song.id, liked, userId);
+    // Actualizar cache si existe
+    if (songMap.has(id)) {
+      songMap.get(id).liked = liked;
+    }
     console.log(`[api/songs/:id/like] ✅ Like ${liked ? 'agregado' : 'quitado'}`);
     res.json({ ok: true });
   } catch (err) {
@@ -770,13 +817,19 @@ app.post('/api/songs/:id/like', async (req, res) => {
 });
 
 app.post('/api/songs/:id/hide', async (req, res) => {
-  const song = songMap.get(req.params.id);
-  if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
+  const { id } = req.params;
   const userId = req.body.userId || null;
-  
+
+  let song = songMap.get(id);
+  if (!song) {
+    const songs = await db.getSongsByIds(id, userId);
+    song = songs[0];
+  }
+  if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
+
   try {
     await db.setSongHidden(song.id, true, userId);
-    console.log(`[api/songs/:id/hide] ✅ Cancelada`);
+    console.log(`[api/songs/:id/hide] ✅ Ocultada`);
     res.json({ ok: true });
   } catch (err) {
     console.error('[api/songs/:id/hide] Error:', err);
@@ -795,11 +848,20 @@ app.delete('/api/songs', async (req, res) => {
       return res.status(400).json({ error: 'Se requiere id' });
     }
 
-    const song = songMap.get(id);
-    if (!song) return res.status(404).json({ error: 'Canción no encontrada' });
+    let song = songMap.get(id);
+    if (!song) {
+      const songs = await db.getSongsByIds(id, userId);
+      song = songs[0];
+    }
+
+    if (!song) {
+      console.log(`[api/songs DELETE] ❌ Canción ${id} no encontrada`);
+      return res.status(404).json({ error: 'Canción no encontrada en el catálogo' });
+    }
 
     const fullPath = absolutePath(song.relPath);
-    
+    console.log(`[api/songs DELETE] 🗑️ Intentando eliminar: ${fullPath}`);
+
     if (fs.existsSync(fullPath)) {
       try {
         if (!fs.existsSync(TRASH_DIR)) fs.mkdirSync(TRASH_DIR, { recursive: true });
@@ -813,30 +875,59 @@ app.delete('/api/songs', async (req, res) => {
         const trashName = `${Date.now()}_${path.basename(fullPath)}`;
         const trashPath = path.join(trashSubDir, trashName);
         
-        try {
-          fs.copyFileSync(fullPath, trashPath);
-          fs.unlinkSync(fullPath);
-        } catch {
-          try { fs.renameSync(fullPath, trashPath); } catch { fs.unlinkSync(fullPath); }
-        }
-      } catch {}
+        fs.copyFileSync(fullPath, trashPath);
+        fs.unlinkSync(fullPath);
+        console.log(`[api/songs DELETE] ✅ Archivo movido a papelera: ${trashPath}`);
+      } catch (err) {
+        console.error('[api/songs DELETE] ❌ Error moviendo archivo:', err.message);
+        return res.status(500).json({ error: 'Error físico al eliminar el archivo', details: err.message });
+      }
+    } else {
+      console.warn(`[api/songs DELETE] ⚠️ El archivo no existe en disco: ${fullPath}`);
     }
 
     if (userId) {
       await db.setSongHidden(song.id, true, userId);
     }
 
-    console.log(`[api/songs DELETE] ✅ Canción ${id} movida a papelera`);
+    // Quitar de la memoria
+    songMap.delete(id);
+    songCache = songCache.filter(s => s.id !== id);
+
     res.json({ message: 'Canción eliminada correctamente' });
   } catch (error) {
-    console.error('Error deleting song:', error);
-    res.status(500).json({ error: 'Error al eliminar la canción' });
+    console.error('[api/songs DELETE] ❌ Error general:', error);
+    res.status(500).json({ error: 'Error interno al procesar eliminación', details: error.message });
   }
 });
 
 // ============================================================
 // RUTAS - RESCAN
 // ============================================================
+
+app.get('/api/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.json({ songs: [] });
+
+    console.log(`[api/search] 🔍 Buscando: "${q}"`);
+
+    const searchResult = await songIndex.search(q, {
+      limit: 50,
+    });
+
+    console.log(`[api/search] 🎯 Meilisearch devolvió ${searchResult.hits.length} hits`);
+
+    const ids = searchResult.hits.map(h => h.id);
+    const songs = ids.map(id => songMap.get(id)).filter(Boolean);
+
+    console.log(`[api/search] ✅ Devolviendo ${songs.length} canciones encontradas en el catálogo`);
+    res.json({ songs });
+  } catch (err) {
+    console.error('[api/search] ❌ Error:', err.message);
+    res.status(500).json({ error: 'Error en la búsqueda', details: err.message });
+  }
+});
 
 // SSE: emite el avance del rescan en vivo (la UI abre este stream antes del POST).
 app.get('/api/rescan-stream', async (req, res) => {
