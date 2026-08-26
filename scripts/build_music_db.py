@@ -158,6 +158,8 @@ DDL_VIEWS = {
       s.relPath AS relative_path,
       s.duration,
       s.track,
+      s.bpm,
+      s.key_name,
       s.hasLyrics,
       al.id AS album_id,
       al.name AS album_name,

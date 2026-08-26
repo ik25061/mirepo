@@ -1721,6 +1721,23 @@ async function initSchema(database) {
 
   // Crear vistas
   try {
+    // Las vistas pueden traer un esquema desactualizado si fueron creadas por una
+    // versión anterior de scripts/build_music_db.py (que omitía bpm/key_name). Como
+    // aquí usamos CREATE VIEW IF NOT EXISTS, una vista existente a la que le falten
+    // esas columnas no se corregiría sola y rompería las queries que seleccionan
+    // v.bpm / v.key_name (p. ej. getSongsWithDetails) con "no such column".
+    // Detectamos el esquema y, si falta bpm o key_name, reconstruimos la vista.
+    try {
+      const cols = await database.all(
+        `SELECT name FROM pragma_table_info('v_complete_songs') WHERE name IN ('bpm','key_name')`
+      );
+      if (cols.length < 2) {
+        console.log('[db] 🔧 v_complete_songs sin bpm/key_name; reconstruyendo vistas...');
+        await database.exec('DROP VIEW IF EXISTS v_playlist_details');
+        await database.exec('DROP VIEW IF EXISTS v_complete_songs');
+      }
+    } catch { /* La vista aún no existe; el CREATE IF NOT EXISTS de abajo la creará */ }
+
     await database.exec(`
       CREATE VIEW IF NOT EXISTS v_complete_songs AS
       SELECT
