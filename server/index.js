@@ -1353,6 +1353,40 @@ app.get('/api/lyrics/:id', async (req, res) => {
   }
 });
 
+// Guarda una letra encontrada por el cliente (p.ej. vía LRCLIB directo
+// cuando el servidor no estaba disponible) como archivo .lrc físico junto
+// al archivo de audio, con el mismo nombre base — el mismo patrón que
+// scanner.js usa para detectar hasLyrics al escanear.
+app.post('/api/lyrics/:id/save-file', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+
+    if (!content || typeof content !== 'string' || !content.trim()) {
+      return res.status(400).json({ error: 'Falta el contenido de la letra' });
+    }
+
+    const song = songMap.get(id) || songCache.find(s => s.id === id);
+    if (!song || !song.relPath) {
+      return res.status(404).json({ error: 'Canción no encontrada' });
+    }
+
+    const audioAbsPath = absolutePath(song.relPath);
+    const ext = path.extname(audioAbsPath);
+    const lrcPath = audioAbsPath.slice(0, -ext.length) + '.lrc';
+
+    await fs.promises.writeFile(lrcPath, content, 'utf-8');
+
+    await db.setSongHasLyrics(id);
+    song.hasLyrics = true; // reflejar el cambio en memoria sin esperar a un rescan
+
+    res.json({ ok: true, path: lrcPath });
+  } catch (err) {
+    console.error('[api/lyrics/:id/save-file] Error:', err);
+    res.status(500).json({ error: 'Error al guardar la letra' });
+  }
+});
+
 function parseSyncedLines(syncedText) {
   if (!syncedText) return null;
   const lines = syncedText.split('\n').filter(line => line.trim() !== '');

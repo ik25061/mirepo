@@ -122,6 +122,8 @@ export async function getSongsWithDetails({ limit = 100, offset = 0, userId = nu
       v.relative_path AS relPath,
       v.duration,
       v.track,
+      v.bpm,
+      v.key_name,
       v.hasLyrics,
       v.main_artist_name AS artist,
       v.main_artist_id AS artist_id,
@@ -949,6 +951,8 @@ export async function getLikedSongs(userId, limit = 100, offset = 0) {
         s.relPath,
         s.duration,
         s.track,
+        s.bpm,
+        s.key_name,
         s.hasLyrics,
         a.name AS artist,
         al.name AS album,
@@ -1380,6 +1384,11 @@ export async function saveLyrics(songId, { text, syncedText, translatedText }) {
   );
 }
 
+export async function setSongHasLyrics(songId) {
+  const database = await getDb();
+  await database.run('UPDATE songs SET hasLyrics = 1 WHERE id = ?', [songId]);
+}
+
 export async function deleteLyrics(songId) {
   const database = await getDb();
   await database.run('DELETE FROM lyrics WHERE song_id = ?', [songId]);
@@ -1593,6 +1602,8 @@ async function initSchema(database) {
       relPath TEXT NOT NULL,
       duration INTEGER,
       track INTEGER,
+      bpm REAL,
+      key_name TEXT,
       hasLyrics INTEGER DEFAULT 0 CHECK(hasLyrics IN (0,1)),
       album_id INTEGER REFERENCES albums(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -1629,9 +1640,11 @@ async function initSchema(database) {
     CREATE TABLE IF NOT EXISTS user_song_interactions (
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
       song_id TEXT REFERENCES songs(id) ON DELETE CASCADE,
-      interaction_type TEXT CHECK(interaction_type IN ('LIKE', 'HIDE')),
+      interaction_type TEXT CHECK(interaction_type IN ('LIKE', 'HIDE', 'PLAY')),
+      play_count INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (user_id, song_id)
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, song_id, interaction_type)
     );
 
     CREATE TABLE IF NOT EXISTS user_artist_interactions (
@@ -1683,6 +1696,14 @@ async function initSchema(database) {
     );
   `);
 
+  // Asegurar que las columnas bpm y key_name existen (migración para bases de datos existentes)
+  try {
+    await database.exec('ALTER TABLE songs ADD COLUMN bpm REAL');
+  } catch (e) { /* Ya existe */ }
+  try {
+    await database.exec('ALTER TABLE songs ADD COLUMN key_name TEXT');
+  } catch (e) { /* Ya existe */ }
+
   // Índices para las consultas/joins más frecuentes. Se crean con IF NOT
   // EXISTS, así que no rompen un esquema ya existente (solo aceleran).
   await database.exec(`
@@ -1708,6 +1729,8 @@ async function initSchema(database) {
         s.relPath AS relative_path,
         s.duration,
         s.track,
+        s.bpm,
+        s.key_name,
         s.hasLyrics,
         al.id AS album_id,
         al.name AS album_name,

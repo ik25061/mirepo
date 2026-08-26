@@ -248,6 +248,8 @@ async function readSong(file) {
     genre: genres,
     year: common.year || null,
     track: (common.track && common.track.no) || null,
+    bpm: common.bpm || null,
+    key_name: common.key || null,
     duration: format.duration ? Math.round(format.duration) : null,
     hasCover: Boolean(picture) || Boolean(coverPath),
     hasLyrics,
@@ -328,14 +330,16 @@ async function saveSongsToDatabase(songs) {
       // 3. Insertar canción
       await database.run(
         `INSERT OR REPLACE INTO songs
-         (id, title, relPath, duration, track, hasLyrics, album_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         (id, title, relPath, duration, track, bpm, key_name, hasLyrics, album_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           song.id,
           song.title,
           song.relPath,
           song.duration,
           song.track,
+          song.bpm,
+          song.key_name,
           song.hasLyrics ? 1 : 0,
           albumId
         ]
