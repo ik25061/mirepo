@@ -389,6 +389,46 @@ export async function getSongsByArtist({ artistId, userId = null, limit = 100, o
   };
 }
 
+export async function getSongsByIds(ids, userId = null) {
+  const database = await getDb();
+  const idArray = Array.isArray(ids) ? ids : ids.split(',').map(id => id.trim());
+  if (idArray.length === 0) return [];
+
+  const placeholders = idArray.map(() => '?').join(',');
+  const sql = `
+    SELECT
+      v.song_id AS id,
+      v.song_title AS title,
+      v.relative_path AS relPath,
+      v.duration,
+      v.track,
+      v.bpm,
+      v.key_name,
+      v.hasLyrics,
+      v.main_artist_name AS artist,
+      v.album_id,
+      v.album_name AS album,
+      v.album_year AS year,
+      v.cover_path,
+      (SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM user_song_interactions usi
+        WHERE usi.song_id = v.song_id
+        AND usi.user_id = ?
+        AND usi.interaction_type = 'LIKE'
+      ) THEN 1 ELSE 0 END) AS liked
+    FROM v_complete_songs v
+    WHERE v.song_id IN (${placeholders})
+  `;
+
+  const songs = await database.all(sql, [userId, ...idArray]);
+  await attachGenres(database, songs);
+  for (const song of songs) {
+    song.liked = !!song.liked;
+    song.hasCover = !!song.cover_path;
+  }
+  return songs;
+}
+
 export async function getArtistIdByName(name) {
   const database = await getDb();
   const result = await database.get('SELECT id FROM artists WHERE name = ?', [name]);
@@ -1721,12 +1761,11 @@ async function initSchema(database) {
 
   // Crear vistas
   try {
-    // Las vistas pueden traer un esquema desactualizado si fueron creadas por una
-    // versión anterior de scripts/build_music_db.py (que omitía bpm/key_name). Como
-    // aquí usamos CREATE VIEW IF NOT EXISTS, una vista existente a la que le falten
-    // esas columnas no se corregiría sola y rompería las queries que seleccionan
-    // v.bpm / v.key_name (p. ej. getSongsWithDetails) con "no such column".
-    // Detectamos el esquema y, si falta bpm o key_name, reconstruimos la vista.
+    // Guarda contra vistas desactualizadas: si una versión previa de
+    // scripts/build_music_db.py creó v_complete_songs sin bpm/key_name, el
+    // CREATE VIEW IF NOT EXISTS de abajo no la corregiría y getSongsWithDetails
+    // rompería con "no such column: v.bpm" (biblioteca vacía). Detectamos el
+    // esquema y, si falta bpm o key_name, reconstruimos la vista.
     try {
       const cols = await database.all(
         `SELECT name FROM pragma_table_info('v_complete_songs') WHERE name IN ('bpm','key_name')`

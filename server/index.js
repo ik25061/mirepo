@@ -74,7 +74,11 @@ const songIndex = meiliClient.index('songs');
 async function syncToMeilisearch() {
   try {
     if (!libraryReady) await loadLibrary();
-    console.log('🔍 Sincronizando Meilisearch...');
+    if (songCache.length === 0) {
+      console.log('⚠️ Meilisearch: biblioteca vacía, saltando sincronización');
+      return;
+    }
+    console.log(`🔍 Intentando sincronizar ${songCache.length} canciones con Meilisearch...`);
 
     // Preparar documentos para Meilisearch
     const docs = songCache.map(s => ({
@@ -87,10 +91,10 @@ async function syncToMeilisearch() {
       key: s.key_name,
     }));
 
-    await songIndex.updateDocuments(docs);
-    console.log('✅ Meilisearch sincronizado');
+    const task = await songIndex.updateDocuments(docs);
+    console.log('✅ Meilisearch: tarea de sincronización enviada:', task.taskUid);
   } catch (err) {
-    console.error('❌ Error Meilisearch:', err.message);
+    console.warn('⚠️ Meilisearch: no se pudo sincronizar (¿está el servicio encendido en el puerto 7700?)');
   }
 }
 
@@ -912,19 +916,33 @@ app.get('/api/search', async (req, res) => {
 
     console.log(`[api/search] 🔍 Buscando: "${q}"`);
 
-    const searchResult = await songIndex.search(q, {
-      limit: 50,
-    });
+    let ids = [];
+    try {
+      const searchResult = await songIndex.search(q, {
+        limit: 50,
+      });
+      console.log(`[api/search] 🎯 Meilisearch devolvió ${searchResult.hits.length} hits`);
+      ids = searchResult.hits.map(h => h.id);
+    } catch (meiliErr) {
+      console.error('[api/search] ❌ Meilisearch falló (¿está encendido?):', meiliErr.message);
+      // Fallback: búsqueda simple en el cache de memoria para no dejar al usuario sin nada
+      const normalizedQ = q.toLowerCase();
+      ids = songCache
+        .filter(s =>
+          s.title.toLowerCase().includes(normalizedQ) ||
+          (s.artist && s.artist.toLowerCase().includes(normalizedQ))
+        )
+        .slice(0, 50)
+        .map(s => s.id);
+      console.log(`[api/search] 💡 Usando fallback de memoria: ${ids.length} resultados`);
+    }
 
-    console.log(`[api/search] 🎯 Meilisearch devolvió ${searchResult.hits.length} hits`);
-
-    const ids = searchResult.hits.map(h => h.id);
     const songs = ids.map(id => songMap.get(id)).filter(Boolean);
 
     console.log(`[api/search] ✅ Devolviendo ${songs.length} canciones encontradas en el catálogo`);
     res.json({ songs });
   } catch (err) {
-    console.error('[api/search] ❌ Error:', err.message);
+    console.error('[api/search] ❌ Error general:', err.message);
     res.status(500).json({ error: 'Error en la búsqueda', details: err.message });
   }
 });
