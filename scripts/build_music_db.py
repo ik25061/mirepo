@@ -564,13 +564,23 @@ def procesar_directorio(db_path, raiz_musica, calcular_hash=False, progress_path
     # 3. Reemplazo atómico de la BD temporal -> server/localfy.db
     #    (1 solo evento del watcher en lugar de miles). El server cierra la
     #    conexión antes de reescanear, así que no hay handle bloqueando.
-    try:
-        os.replace(build_db, db_path)
-    except OSError as e:
-        # No perder el trabajo: el temp queda disponible para recuperarlo
-        print(f"❌ No se pudo mover la BD temporal a {db_path}: {e}")
-        print(f"   La BD construida quedó en: {build_db}")
-        raise
+    #    REINTENTOS: En Windows, a veces el archivo tarda un poco en liberarse.
+    max_retries = 5
+    import time
+    for attempt in range(max_retries):
+        try:
+            os.replace(build_db, db_path)
+            print(f"✅ Base de datos reemplazada exitosamente (intento {attempt + 1})")
+            break
+        except OSError as e:
+            if attempt < max_retries - 1:
+                print(f"⚠️ Intento {attempt + 1} fallido: {e}. Reintentando en 1s...")
+                time.sleep(1)
+            else:
+                # No perder el trabajo: el temp queda disponible para recuperarlo
+                print(f"❌ No se pudo mover la BD temporal a {db_path} tras {max_retries} intentos: {e}")
+                print(f"   La BD construida quedó en: {build_db}")
+                raise
 
     # Limpiar WAL/SHM antiguos de la BD anterior (pertenecían al archivo viejo;
     # el server re-abre con PRAGMA journal_mode=WAL y los recrea limpios).

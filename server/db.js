@@ -18,6 +18,17 @@ const DB_PATH = path.join(__dirname, 'localfy.db');
 let db = null;
 let dbReady = false;
 let dbPromise = null;
+let isRescanning = false;
+
+export function setRescanning(value) {
+  isRescanning = value;
+  if (value) {
+    console.log('[db] 🛠️ Modo mantenimiento activado (Rescan en curso)');
+  } else {
+    console.log('[db] 🛠️ Modo mantenimiento desactivado');
+  }
+}
+
 
 // Caché de artistas normalizados para getOrCreateArtist (se invalida al
 // cerrar/reabrir la BD, p. ej. tras un rescan con build_music_db.py).
@@ -61,6 +72,9 @@ async function attachGenres(database, songs) {
 }
 
 export async function getDb() {
+  if (isRescanning) {
+    throw new Error('Base de datos bloqueada por reescaneo en curso');
+  }
   if (db && dbReady) return db;
   if (dbPromise) return dbPromise;
   

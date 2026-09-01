@@ -994,6 +994,9 @@ app.post('/api/rescan', async (_req, res) => {
   try {
     console.log('[api/rescan] 🔄 Liberando conexión SQLite y reconstruyendo BD con build_music_db.py...');
 
+    // 0. Activar bloqueo para que ninguna otra petición abra la BD mientras Python trabaja
+    db.setRescanning(true);
+
     writeRescanProgress({ phase: 'start', pct: 2, processed: 0, total: 0, message: 'Preparando rescan...' });
 
     // 1. Cerrar la BD del server para que Python pueda reescribir el esquema
@@ -1015,6 +1018,7 @@ app.post('/api/rescan', async (_req, res) => {
 
     // 3. Reabrir la BD: getDb() vuelve a ejecutar initSchema (tablas de usuario,
     //    vistas, etc. que el script Python no toca).
+    db.setRescanning(false);
     await db.getDb();
 
     // 4. Recargar la biblioteca en memoria con los datos nuevos.
@@ -1030,6 +1034,7 @@ app.post('/api/rescan', async (_req, res) => {
 
     // Recargar aunque falle: evita servir datos viejos si la BD quedó a medias.
     try {
+      db.setRescanning(false);
       await db.getDb();
       await loadLibrary();
     } catch (reloadErr) {
