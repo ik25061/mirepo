@@ -10,3 +10,7 @@ consultas pendientes.txt
 # Archivos temporales de SQLite (WAL/SHM)
 server/localfy.db-shm
 server/localfy.db-wal
+
+server/*.db
+server/*.db.bak-*
+server/songs_cache.json
