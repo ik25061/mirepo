@@ -8764,5 +8764,636 @@
     "title": "_1784022576",
     "artist": "CADETES DE LINARES",
     "timestamp": 1788352671299
+  },
+  "d26b14d2a1c0cfcd": {
+    "lyrics": "Anoche soñé\nQue te habías ido\nA buscar un cariño\nQue no sea tan pobre\nComo el que yo te doy\n\nAnoche lloré\nPor tu amor perdido\nLágrimas de sangre\nDe mi corazón\n\nAnoche sentí\nQue mi pobre alma\nNo podía soportar\nAquel dolor de muerte\n\nLlorando a grito abierto, desperté\nY ya despierto, te grité\n\"No me abandones\"\nLa calma en un momento recobré\nY en ese instante me olvidé\nDe tus amores\n\nA tus amenazas\nYa no tengo miedo\nPuedes marcharte\nAl fin que en mis sueños\n\nComprobé que de amor nadie se muere\nQue se sufre cuando se ama\nY aunque se destroza el alma\nA olvidar también se aprende\n\nAnoche sentí\nQue mi pobre alma\nNo podía soportar\nAquel dolor de muerte\n\nLlorando a grito abierto, desperté\nY ya despierto, te grité\n\"No me abandones\"\nY en ese instante me olvidé\nDe tus amores\n\nA tus amenazas\nYa no tengo miedo\nYa puedes marcharte\nAl fin que en mis sueños\n\nComprobé que de amor nadie se muere\nQue se sufre cuando se ama\nY aunque se destroza el alma\nA olvidar también se aprende",
+    "syncedLines": [
+      {
+        "time": 18.08,
+        "text": "Anoche soñé"
+      },
+      {
+        "time": 19.9,
+        "text": "Que te habías ido"
+      },
+      {
+        "time": 22.95,
+        "text": "A buscar un cariño"
+      },
+      {
+        "time": 25.35,
+        "text": "Que no sea tan pobre"
+      },
+      {
+        "time": 27.45,
+        "text": "Como el que yo te doy"
+      },
+      {
+        "time": 30.65,
+        "text": "Anoche lloré"
+      },
+      {
+        "time": 32.78,
+        "text": "Por tu amor perdido"
+      },
+      {
+        "time": 35.22,
+        "text": "Lágrimas de sangre"
+      },
+      {
+        "time": 37.73,
+        "text": "De mi corazón"
+      },
+      {
+        "time": 40.63,
+        "text": "Anoche sentí"
+      },
+      {
+        "time": 42.89,
+        "text": "Que mi pobre alma"
+      },
+      {
+        "time": 45.53,
+        "text": "No podía soportar"
+      },
+      {
+        "time": 47.6,
+        "text": "Aquel dolor de muerte"
+      },
+      {
+        "time": 51.22,
+        "text": "Llorando a grito abierto, desperté"
+      },
+      {
+        "time": 54.83,
+        "text": "Y ya despierto, te grité"
+      },
+      {
+        "time": 58.28,
+        "text": "\"No me abandones\""
+      },
+      {
+        "time": 61.47,
+        "text": "La calma en un momento recobré"
+      },
+      {
+        "time": 64.65,
+        "text": "Y en ese instante me olvidé"
+      },
+      {
+        "time": 68.39,
+        "text": "De tus amores"
+      },
+      {
+        "time": 72.93,
+        "text": "A tus amenazas"
+      },
+      {
+        "time": 75.57,
+        "text": "Ya no tengo miedo"
+      },
+      {
+        "time": 78.37,
+        "text": "Puedes marcharte"
+      },
+      {
+        "time": 80.45,
+        "text": "Al fin que en mis sueños"
+      },
+      {
+        "time": 83.64,
+        "text": "Comprobé que de amor nadie se muere"
+      },
+      {
+        "time": 87.66,
+        "text": "Que se sufre cuando se ama"
+      },
+      {
+        "time": 90.04,
+        "text": "Y aunque se destroza el alma"
+      },
+      {
+        "time": 92.61,
+        "text": "A olvidar también se aprende"
+      },
+      {
+        "time": 113.36,
+        "text": "Anoche sentí"
+      },
+      {
+        "time": 115.47,
+        "text": "Que mi pobre alma"
+      },
+      {
+        "time": 118.31,
+        "text": "No podía soportar"
+      },
+      {
+        "time": 120.48,
+        "text": "Aquel dolor de muerte"
+      },
+      {
+        "time": 124.05,
+        "text": "Llorando a grito abierto, desperté"
+      },
+      {
+        "time": 127.31,
+        "text": "Y ya despierto, te grité"
+      },
+      {
+        "time": 131.03,
+        "text": "\"No me abandones\""
+      },
+      {
+        "time": 137.31,
+        "text": "Y en ese instante me olvidé"
+      },
+      {
+        "time": 141.08,
+        "text": "De tus amores"
+      },
+      {
+        "time": 145.69,
+        "text": "A tus amenazas"
+      },
+      {
+        "time": 148.2,
+        "text": "Ya no tengo miedo"
+      },
+      {
+        "time": 150.49,
+        "text": "Ya puedes marcharte"
+      },
+      {
+        "time": 153.13,
+        "text": "Al fin que en mis sueños"
+      },
+      {
+        "time": 156.33,
+        "text": "Comprobé que de amor nadie se muere"
+      },
+      {
+        "time": 160.38,
+        "text": "Que se sufre cuando se ama"
+      },
+      {
+        "time": 162.76,
+        "text": "Y aunque se destroza el alma"
+      },
+      {
+        "time": 165.34,
+        "text": "A olvidar también se aprende"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "Anoche Soñe Contigo",
+    "artist": "Los Invasores de Nuevo León",
+    "timestamp": 1788376546524
+  },
+  "b058c7da5e3f20ad": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "La mujer de mis anhelos",
+    "artist": "Tin Tan",
+    "timestamp": 1788376552007
+  },
+  "9585beca0f234d09": {
+    "lyrics": "No me extraña que seas asi\npues yo se siempre van de la mano\nla hermosura y la vanidad,\nlo del alma tu lo haces a un lado\ny me ignoras sintiendote asi\ncon derecho de verme hacia abajo\npor no ser mi apariencia mejor\nque la de un iluso y pobre diablo\n\nPero me perdonas\ntan rojo es tu corazon como lo es el mio\nsolo que mi corazon aun esta tan frio\npues no lo ha hechado a perder una cara bonita\n\nPero me perdonas\nel tiempo hara su labor seremos iguales\ntan vieja tu como yo, ya sin vanidades\ny eso a ti te va a doler mucho mas que a mi\n\nLa balanza hoy esta a tu favor\ntu decides un si o rechazarme\ncorazones como el que te ofrezco\nno hallaras de esos ya no se hacen\n\nPero me perdonas\ntan rojo es tu corazon como lo es el mio\nsolo que mi corazon aun esta tan frio\npues no lo ha hechado a perder una cara bonita\n\nPero me perdonas\nel tiempo hara su labor seremos iguales\ntan vieja tu como yo, ya sin vanidades\ny eso a ti te va a doler mucho mas que a mi\nPero me perdonas",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Pero Me Perdonas",
+    "artist": "El Poder Del Norte",
+    "timestamp": 1788376559042
+  },
+  "1a84a3ac68aa7ae7": {
+    "lyrics": "Que las cerezas están maduras, eso lo se\nQue tu eres joven y muy bonita, también lo se\nTal vez el sol, sobre tus labios, se posara\nY tu boquita día tras día, madurara\n\nPara Abril o para Mayo, veré\nQue me ofrezcas la primera, prueba de amor\nPara Abril o para Mayo, tendrás\nUn poquito de coraje y me besaras\n\nQue las cerezas están maduras, eso lo se\nQue tu eres joven y muy bonita, también lo se\nTal vez el sol, sobre tus labios, se posara\nY tu boquita día tras día, madurara\n\nPara Abril o para Mayo, veré\nQue me ofrezcas la primera, prueba de amor\nPara Abril o para Mayo, tendrás\nUn poquito de coraje y me besaras\nPara Abril o para Mayo, me besaras\nPara Abril o para Mayo, me besaras\nPara Abril o para Mayo, me besaras",
+    "syncedLines": [
+      {
+        "time": 9.04,
+        "text": "Que las cerezas están maduras, eso lo se"
+      },
+      {
+        "time": 14.44,
+        "text": "Que tu eres joven y muy bonita, también lo se"
+      },
+      {
+        "time": 21.67,
+        "text": "Tal vez el sol, sobre tus labios, se posara"
+      },
+      {
+        "time": 27.95,
+        "text": "Y tu boquita día tras día, madurara"
+      },
+      {
+        "time": 35.19,
+        "text": "Para Abril o para Mayo, veré"
+      },
+      {
+        "time": 42.45,
+        "text": "Que me ofrezcas la primera, prueba de amor"
+      },
+      {
+        "time": 50.56,
+        "text": "Para Abril o para Mayo, tendrás"
+      },
+      {
+        "time": 55.97,
+        "text": "Un poquito de coraje y me besaras"
+      },
+      {
+        "time": 64.05,
+        "text": "Que las cerezas están maduras, eso lo se"
+      },
+      {
+        "time": 98.35,
+        "text": "Que tu eres joven y muy bonita, también lo se"
+      },
+      {
+        "time": 105.58,
+        "text": "Tal vez el sol, sobre tus labios, se posara"
+      },
+      {
+        "time": 111.94,
+        "text": "Y tu boquita día tras día, madurara"
+      },
+      {
+        "time": 119.15,
+        "text": "Para Abril o para Mayo, veré"
+      },
+      {
+        "time": 126.33,
+        "text": "Que me ofrezcas la primera, prueba de amor"
+      },
+      {
+        "time": 132.66,
+        "text": "Para Abril o para Mayo, tendrás"
+      },
+      {
+        "time": 140.81,
+        "text": "Un poquito de coraje y me besaras"
+      },
+      {
+        "time": 148.05,
+        "text": "Para Abril o para Mayo, me besaras"
+      },
+      {
+        "time": 155.23,
+        "text": "Para Abril o para Mayo, me besaras"
+      },
+      {
+        "time": 160.65,
+        "text": "Para Abril o para Mayo, me besaras"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "Las Cerezas",
+    "artist": "Los Hermanos Carrión",
+    "timestamp": 1788376560939
+  },
+  "df569c8b949fc5d8": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Cuarteto Imperial - 488 Kilometros",
+    "artist": "Garra Records",
+    "timestamp": 1788376567521
+  },
+  "242ed5ad713c5066": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Ese baboso",
+    "artist": "Los Estrambóticos",
+    "timestamp": 1788376573448
+  },
+  "b0a22cf1570340ec": {
+    "lyrics": "Aie, bodege, bodega\nChante nos joies et nos folies\nAie, bodege, bodega\nTu es l’étoile de nos nuits\nSi tu as la cucaracha\nSacrées bestioles, cancrelas\nFais un pactole, ligotes-la\nAu gré du vent, du haut du mât\nC’est un raz-de-marée que voilà\nN’hésitons pas hissons-la\nElle se noiera, quel débarras\nCar un vent de fête nous fait savoir\nQu’une tempête va déferler\nSur la mer boire de Bodega\nTonnerre de Dieu c’est Dyonisos\nBénis ma chair, bénis mes os\nTonnerre de Dieu, toi Dyonisos\nBénis ma chair, bénis mes os\nAie bodege, bodega\nChante nos joies et nos folies\nAie, bodege, bodega\nTu es l’étoile de nos nuits\nAie, bodege, bodega\nBrûle mon coeur et mes soucis\nIl sera toujours midi\nSous le soleil de bodega\nFou de bagou le plus beau des gars\nEst à genoux au pastaga\nJ’entends hurler le mellino\nSans picador ni corrida\nLorsque tangua la sangria\nSuccomba le capitaine Tracas\nAie, bodege, bodega\nChante nos joies et nos folies\nAie, bodege, bodega\nTu es l’étoile de nos nuits\nAie, bodeg’s, bodega\nBrûle mon coeur et mes soucis\nIl sera toujours midi\nSous le soleil de bodega\nA la bodega",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Sous Le Soleil De Bodega",
+    "artist": "Les Négresses Vertes",
+    "timestamp": 1788376576912
+  },
+  "744a9f25c604bcc6": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "01 Cut Killer Show - La Fouine 2",
+    "artist": "Cut Killer Show",
+    "timestamp": 1788376579892
+  },
+  "5c989a81104b1801": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Los Pilares de la Cárcel",
+    "artist": "Grupo Mojado",
+    "timestamp": 1788376583122
+  },
+  "24434e55e214cd6f": {
+    "lyrics": "Ni la distancia\nNi el tiempo\nPodrán\nDe mi mente\nTu imagen\nBorrar\nPorque\nTe llevo\nGrabada\nMuy dentro\nDe mi alma\nY no\nTe puedo\nOlvidar\nNi la distancia\nNi el tiempo\nBorraran\nLo que siento\nY nadie\nPodrá\nLograr\nQue este\nAmor\nSe convierta\nEn olvido\nPorque\nNunca\nNadie\nSe ha querido\nComo tu\nMe quieres\nComo yo\nTe quiero\nNadie se\nHa querido\nIgual\n\nQue me importa\nQue el viento\nNo sople\nQue me importa\nQue se seque\nEl mar\nQue me importa\nQue todo\nSe acabe\nSi lo nuestro\nNo se\nHa de acabar\nQue me importa\nQue el Sol\nYa no alumbre\nY la Luna\nSe niegue\nA brillar\nQue me importa\nQue el mundo\nSe acabe\nSi al fin\nQue lo nuestro\nHa de continuar\n\nNi el tiempo\nBorraran\nLo que siento\nY nadie\nPodrá\nLograr\nQue este\nAmor\nSe convierta\nEn olvido\nPorque\nNunca\nNadie\nSe ha querido\nComo tu\nMe quieres\nComo yo\nTe quiero\nNadie se\nHa querido\nIgual\n\nQue me importa\nQue el viento\nNo sople\nQue me importa\nQue se seque\nEl mar\nQue me importa\nQue todo\nSe acabe\nSi lo nuestro\nNo se\nHa de acabar\nQue me importa\nQue el Sol\nYa no alumbre\nY la Luna\nSe niegue\nA brillar\nQue me importa\nQue el mundo\nSe acabe\nSi al fin\nQue lo nuestro\nHa de continuar",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Ni La Distancia Ni El Tiempo",
+    "artist": "Los Herederos de Nuevo Leon",
+    "timestamp": 1788376585997
+  },
+  "4c9c2f84ef95fe2c": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Canto a la Humanidad",
+    "artist": "El Roockie",
+    "timestamp": 1788376591448
+  },
+  "609f5a2f569b7540": {
+    "lyrics": "Si ya te soñé conmigo, pues hoy que puedo desear\n\nSi ya te soñé conmigo, pues hoy que puedo desear\nSoñé tenerte en mis brazos, como tú viniste al mundo,\nNomás que con más edad,\nAhí me entregaste todo, gracias tan bello sueño\nNo me queda que pensar,\nTanto desearte y amarte, y ni un beso recibí\n\nPero gracias a mi sueño, como regalo del cielo\nComo yo quería te vi,\nY fue como yo te hice mía, fui el primer hombre en tu vida\nQue dichoso me sentí\nSi tú no vienes conmigo, voy a pedirle a la vida,\nUna cosa sin cesar\nPoderte seguir amando, aunque tu a mi no me quieras\nSiempre poderte soñar\n\nQuisiera saber que piensas, de tus labios escuchar\nSi es que vinieras conmigo, si te agrada lo que digo\nO si quisieras soñar,\nPor mi parte estoy contento, así es como yo me siento,\nPues no se tú, que dirás\nSi tú no vienes conmigo, voy a pedirle a la vida,\nUna cosa sin cesar\nPoderte seguir amando, aunque tu a mi no me quieras\nSiempre poderte soñar",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Te Soñé Conmigo",
+    "artist": "Los Tigres del Norte",
+    "timestamp": 1788376598326
+  },
+  "ee4f30dcd73c234a": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "10.El abandono",
+    "artist": "Las Jilgerillas lg",
+    "timestamp": 1788376602050
+  },
+  "89dea28b47337bfe": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Por Amor a la Verdad",
+    "artist": "3 de Copas - 3 de Copas Edicion Especial",
+    "timestamp": 1788376607816
+  },
+  "3aedbe3e1e472965": {
+    "lyrics": "Palomita mensajera\nTú que vuelas por los cielos\nAnda en busca de esa ingrata\nQue burló mi corazón\n\nAnda y dile que le espero\nPa' entregarle aquellos besos\nRegresarle las caricias\nQue una noche me entregó\n\nPalomita... mensajera\nY si no quiere venir\nEs que tiene quien le quiera\nPero algún día ha de sufrir\n\nPalomita... mensajera\nYa no sé que voy a hacer\nCada día que va pasando\nSiento que he de enloquecer\n\nPalomita... mensajera\nY si no quiere venir\nEs que tiene quien le quiera\nPero algún día ha de sufrir\n\nPalomita... mensajera\nYa no sé que voy a hacer\nCada día que va pasando\nSiento que he de enloquecer\n\nPalomita... mensajera\nY si no quiere venir\nEs que tiene quien le quiera\nPero algún día ha de sufrir",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Palomita Mensajera",
+    "artist": "Los Caminantes",
+    "timestamp": 1788376614147
+  },
+  "746a9b88f723e1ff": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Un Sueno Mas",
+    "artist": "Los Herederos de Nuevo Leon",
+    "timestamp": 1788376618981
+  },
+  "58ef83dad6f203f2": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Santa Lucia",
+    "artist": "Teodoro Cottrau",
+    "timestamp": 1788376627422
+  },
+  "63bae1a738c84863": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "SIEMPRE ENAMORADA",
+    "artist": "MUJERES",
+    "timestamp": 1788376630077
+  },
+  "7a8fccd6bf91029f": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Leaving",
+    "artist": "Horsed",
+    "timestamp": 1788376633212
+  },
+  "3caae705ed4c8f17": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Embriagame",
+    "artist": "Desconocido",
+    "timestamp": 1788376638525
+  },
+  "b6f00dadbfb69c21": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Esta Vez",
+    "artist": "tito",
+    "timestamp": 1788376644596
+  },
+  "c14e2e2c07daaf69": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Café Colón",
+    "artist": "Mariachi Oro de México",
+    "timestamp": 1788376647668
+  },
+  "2d6dce7f42a3a8fa": {
+    "lyrics": "En el rancho el cajonsito terminaron 12 vidas\na javier torres señores le amargaron ese dia\nle pegaron donde duele dejaron la fiera erida\n\njavier torres anda erido\ny le anda irviendo la sangre\ndice que esos acsesinos jamas podran perdonarle\npor que lo del cajonsito le trae recuerdos muy grandes\n\nsi me tenian programado ai nos veremos despues\nya se les voltio el chirrion aora va la de alreves\nyo no e de irme primero ni tampoko irme despues\n\nvengan a buscar a un hombre ya no le agan al cobarde\nami me gusta el peligro si es ke kieren acabarme\nami me persina un cura y me santiguan los frailes\n\nde culiacan a los yanos es tan cortito el camino\nya saben donde encontrarme le aviso a mis enemigos\nya no maten inosente venga a acabar kon migo\n\nlos valientes de palavara\nson vien claros de pesuña\nmil veces muere el kobarde\ny el valiente nomas una\nya javier lo demostro desde ke yoro en su cuna",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El Cajoncito",
+    "artist": "El Tigrillo Palma",
+    "timestamp": 1788376650636
+  },
+  "20feb070f5bd1403": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Siempre estás presente",
+    "artist": "Nicho Hinojosa",
+    "timestamp": 1788376654021
+  },
+  "a7a887aa60da46b5": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Ahora tengo",
+    "artist": "Reyli Barba Arrocha",
+    "timestamp": 1788376659970
+  },
+  "327067922a4272ee": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Rasta Road Trip",
+    "artist": "Kilibeat",
+    "timestamp": 1788376662837
+  },
+  "c5ed1c4d8bab1430": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Masizzo_No hay otro amor_",
+    "artist": "Desconocido",
+    "timestamp": 1788376665254
+  },
+  "7d7f1f152d58f668": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "La canción del avión",
+    "artist": "Barney",
+    "timestamp": 1788376668599
+  },
+  "20c61e36bf93066a": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Wacce nake so refix",
+    "artist": "Rankingbwoy",
+    "timestamp": 1788376672490
+  },
+  "53dd22d1d59c3a2e": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "grillito cumbia",
+    "artist": "muñequitas 2004",
+    "timestamp": 1788376679335
+  },
+  "785aef685b0ca657": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Vereda Tropical",
+    "artist": "Rigo Tovar",
+    "timestamp": 1788376695552
+  },
+  "516979edd7d37adb": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Perro Faldero",
+    "artist": "Los Traileros del Norte",
+    "timestamp": 1788376706721
+  },
+  "139ea3380c63b153": {
+    "lyrics": "Hay gente que me mira y que me ve como un delincuente.\nHay gente que me mira y que me ve diferente.\nHay gente que me mira y que me ve un bicho repelente.\nHay gente que me mira y que me ve pero no me entiende.\n\nMe miran al pasar cuando sales y cuando entras.\nTe miran bien o mal me da igual que miren como quieran.\nA mi es que la verdad su opinion no me interesa.\nSolo me preocupa solo quiero que me mire ella ella ella.\n\nY no me ve no me ve no me ve y ella no me ve no me ve no me ve.\nPara sus ojos soy transparente ella no me ve no me ve no me ve.\nY no me ve no me ve no me ve y ella no me ve no me ve no me ve.\nPara sus ojos soy transparente ella no me ve no me ve no me ve. no no\n\nHay gente que me mira y que me ve un loco sin remedio.\nHay gente que me mira y que me ve y se tira de los pelos.\nPara mi la verdad su opinion vale igual que un cero.\nQue me mire ella que me mire eso es lo que quiero quiero quiero.",
+    "syncedLines": [
+      {
+        "time": 13.15,
+        "text": "Hay gente que me mira y que me ve como un delincuente."
+      },
+      {
+        "time": 16.32,
+        "text": "Hay gente que me mira y que me ve diferente."
+      },
+      {
+        "time": 22.61,
+        "text": "Hay gente que me mira y que me ve un bicho repelente."
+      },
+      {
+        "time": 27.12,
+        "text": "Hay gente que me mira y que me ve pero no me entiende."
+      },
+      {
+        "time": 33.29,
+        "text": "Me miran al pasar cuando sales y cuando entras."
+      },
+      {
+        "time": 41.67,
+        "text": "Te miran bien o mal me da igual que miren como quieran."
+      },
+      {
+        "time": 47.55,
+        "text": "A mi es que la verdad su opinion no me interesa."
+      },
+      {
+        "time": 51.64,
+        "text": "Solo me preocupa solo quiero que me mire ella ella ella."
+      },
+      {
+        "time": 57.81,
+        "text": "Y no me ve no me ve no me ve y ella no me ve no me ve no me ve."
+      },
+      {
+        "time": 62.45,
+        "text": "Para sus ojos soy transparente ella no me ve no me ve no me ve."
+      },
+      {
+        "time": 67.7,
+        "text": "Y no me ve no me ve no me ve y ella no me ve no me ve no me ve."
+      },
+      {
+        "time": 72.58,
+        "text": "Para sus ojos soy transparente ella no me ve no me ve no me ve. no no"
+      },
+      {
+        "time": 88.26,
+        "text": "Hay gente que me mira y que me ve un loco sin remedio."
+      },
+      {
+        "time": 91.98,
+        "text": "Hay gente que me mira y que me ve y se tira de los pelos."
+      },
+      {
+        "time": 97.64,
+        "text": "Para mi la verdad su opinion vale igual que un cero."
+      },
+      {
+        "time": 102.38,
+        "text": "Que me mire ella que me mire eso es lo que quiero quiero quiero."
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "No me ve",
+    "artist": "El Arrebato",
+    "timestamp": 1788376717439
+  },
+  "ae6be3675c5a1b75": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Moves Like Jagger",
+    "artist": "Desconocido",
+    "timestamp": 1788376729239
+  },
+  "23bda512f50e74a4": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Indios Y Vaqueros",
+    "artist": "Los Plebeyos",
+    "timestamp": 1788376731944
+  },
+  "0018eb7547052b97": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El Tata",
+    "artist": "Los Bronce De Apodaca",
+    "timestamp": 1788376734033
+  },
+  "d13096baf79a36da": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Wake Up",
+    "artist": "Stop",
+    "timestamp": 1788376737292
+  },
+  "1f9ac1292b020dac": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "EL SALUDO",
+    "artist": "KOMBO KOLOMBIA",
+    "timestamp": 1788376742306
+  },
+  "30dd472d23057b8c": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Activate",
+    "artist": "Jah Fabio",
+    "timestamp": 1788376744265
   }
 }
