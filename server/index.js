@@ -991,57 +991,60 @@ app.get('/api/rescan-stream', async (req, res) => {
 });
 
 app.post('/api/rescan', async (_req, res) => {
-  try {
-    console.log('[api/rescan] 🔄 Liberando conexión SQLite y reconstruyendo BD con build_music_db.py...');
+  // Responder inmediatamente para evitar el timeout del cliente (33k canciones tardan mucho)
+  res.status(202).json({ success: true, message: 'Rescan iniciado en segundo plano' });
 
-    // 0. Activar bloqueo para que ninguna otra petición abra la BD mientras Python trabaja
+  try {
+    console.log('[api/rescan] 🔄 Iniciando proceso asíncrono...');
+
+    // 0. Activar bloqueo
     db.setRescanning(true);
 
     writeRescanProgress({ phase: 'start', pct: 2, processed: 0, total: 0, message: 'Preparando rescan...' });
 
-    // 1. Cerrar la BD del server para que Python pueda reescribir el esquema
-    //    sin conflictos de WAL/locking.
+    // 1. Cerrar la BD
     await db.closeDb();
 
-    writeRescanProgress({ phase: 'building', pct: 5, processed: 0, total: 0, message: 'Reconstruyendo la base de datos...' });
+    // Pequeña pausa para asegurar que Windows libere los manejadores de archivos
+    await new Promise(r => setTimeout(r, 1000));
 
-    // 2. Ejecutar scripts/build_music_db.py (reconstruye server/localfy.db desde
-    //    la música). El propio script escribe progreso en RESCAN_PROGRESS_FILE.
+    writeRescanProgress({ phase: 'building', pct: 5, processed: 0, total: 0, message: 'Ejecutando script de reconstrucción...' });
+
+    // 2. Ejecutar script Python
     const { stdout, stderr } = await runBuildDbPython({
       musicDir: MUSIC_DIR,
       progressPath: RESCAN_PROGRESS_FILE,
     });
+
     if (stdout) console.log('[api/rescan]', String(stdout).trim());
     if (stderr) console.warn('[api/rescan] (stderr)', String(stderr).trim());
 
-    writeRescanProgress({ phase: 'loading', pct: 95, processed: 0, total: 0, message: 'Recargando la biblioteca en memoria...' });
+    writeRescanProgress({ phase: 'loading', pct: 95, processed: 0, total: 0, message: 'Recargando catálogo...' });
 
-    // 3. Reabrir la BD: getDb() vuelve a ejecutar initSchema (tablas de usuario,
-    //    vistas, etc. que el script Python no toca).
+    // 3. Reabrir la BD
     db.setRescanning(false);
     await db.getDb();
 
-    // 4. Recargar la biblioteca en memoria con los datos nuevos.
+    // 4. Recargar biblioteca en memoria
     await loadLibrary();
 
-    // 5. Responder con la biblioteca reconstruida (mismo contrato que antes).
-    const result = await buildLibrary({ limit: 100, offset: 0 });
-    writeRescanProgress({ phase: 'done', pct: 100, message: `Rescan completado (${result.counts?.total ?? 0} canciones)` });
-    res.json(result);
-  } catch (err) {
-    console.error('[api/rescan] Error:', err);
-    writeRescanProgress({ phase: 'error', pct: 100, message: err.message });
+    // 5. Sincronizar con Meilisearch (Asegurar que canciones nuevas aparezcan en el buscador)
+    await syncToMeilisearch();
 
-    // Recargar aunque falle: evita servir datos viejos si la BD quedó a medias.
+    writeRescanProgress({ phase: 'done', pct: 100, message: `¡Escaneo completado!` });
+    console.log('[api/rescan] ✅ Proceso completado exitosamente.');
+
+  } catch (err) {
+    console.error('[api/rescan] ❌ Error fatal:', err.message);
+    writeRescanProgress({ phase: 'error', pct: 100, message: `Error: ${err.message}` });
+
     try {
       db.setRescanning(false);
       await db.getDb();
       await loadLibrary();
     } catch (reloadErr) {
-      console.error('[api/rescan] No se pudo recargar la biblioteca tras el error:', reloadErr);
+      console.error('[api/rescan] No se pudo recuperar el sistema:', reloadErr.message);
     }
-
-    res.status(500).json({ error: `Error al rescanejar: ${err.message}` });
   }
 });
 
