@@ -961,7 +961,7 @@ app.get('/api/rescan-stream', async (req, res) => {
   };
 
   const started = Date.now();
-  const TIMEOUT = 5 * 60 * 1000; // 5 min máximo (evita conexiones que nunca terminan)
+  const TIMEOUT = 30 * 60 * 1000; // 30 min: suficiente para bibliotecas grandes (30k+ canciones)
   let lastDone = false;
   let clientClosed = false;
   req.on('close', () => { clientClosed = true; });
@@ -975,7 +975,7 @@ app.get('/api/rescan-stream', async (req, res) => {
         state = null; // aún no hay rescan en curso
       }
 
-            const safe = state || { phase: 'idle', pct: 0, processed: 0, total: 0 };
+      const safe = state || { phase: 'idle', pct: 0, processed: 0, total: 0 };
       send('progress', safe);
       if (state && (state.phase === 'done' || state.phase === 'error')) lastDone = true;
 
@@ -985,12 +985,14 @@ app.get('/api/rescan-stream', async (req, res) => {
   } catch (err) {
     console.error('[rescan-stream] ❌ Error:', err);
   } finally {
-    send('done');
+    // Solo avisar de "terminado" si de verdad detectamos phase done/error.
+    if (lastDone) send('done');
     try { res.end(); } catch {}
   }
 });
 
 app.post('/api/rescan', async (_req, res) => {
+  const rescanStartedAt = Date.now();
   // Responder inmediatamente para evitar el timeout del cliente (33k canciones tardan mucho)
   res.status(202).json({ success: true, message: 'Rescan iniciado en segundo plano' });
 
@@ -1031,7 +1033,13 @@ app.post('/api/rescan', async (_req, res) => {
     // 5. Sincronizar con Meilisearch (Asegurar que canciones nuevas aparezcan en el buscador)
     await syncToMeilisearch();
 
-    writeRescanProgress({ phase: 'done', pct: 100, message: `¡Escaneo completado!` });
+    writeRescanProgress({
+      phase: 'done',
+      pct: 100,
+      message: `¡Escaneo completado!`,
+      totalSongsLibrary: songCache.length,
+      durationSec: Math.round((Date.now() - rescanStartedAt) / 1000)
+    });
     console.log('[api/rescan] ✅ Proceso completado exitosamente.');
 
   } catch (err) {
@@ -1407,6 +1415,9 @@ app.get('/api/songs/by-ids', async (req, res) => {
 
     res.json({ songs });
   } catch (err) {
+    if (err.message === 'Base de datos bloqueada por reescaneo en curso') {
+      return res.status(503).json({ error: 'rescanning', message: 'Reescaneo en curso, prueba de nuevo en unos segundos' });
+    }
     console.error('[api/songs/by-ids] Error:', err);
     res.status(500).json({ error: 'Error al obtener canciones' });
   }
@@ -1465,6 +1476,9 @@ app.get('/api/lyrics/:id', async (req, res) => {
       artist: song.artist
     });
   } catch (err) {
+    if (err.message === 'Base de datos bloqueada por reescaneo en curso') {
+      return res.status(503).json({ error: 'rescanning', message: 'Reescaneo en curso, prueba de nuevo en unos segundos' });
+    }
     console.error('[api/lyrics] Error:', err);
     res.status(500).json({ error: 'Error al obtener la letra' });
   }
