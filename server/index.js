@@ -50,6 +50,14 @@ if (fs.existsSync(PUBLIC_DIR)) {
 // al cliente, de modo que la UI puede mostrar una barra de progreso real.
 const RESCAN_PROGRESS_FILE = path.join(__dirname, 'localfy-rescan.json');
 
+// RESET DE INICIO: Borrar rastros de escaneos colgados de sesiones previas
+try {
+  fs.writeFileSync(RESCAN_PROGRESS_FILE, JSON.stringify({ phase: 'idle', pct: 0, processed: 0, total: 0, ts: Date.now() }), 'utf-8');
+  console.log('[rescan] 🧹 Estado de progreso reseteado correctamente.');
+} catch (err) {
+  console.error('[rescan] Error reseteando progreso al inicio:', err.message);
+}
+
 function writeRescanProgress(payload) {
     try {
     // fs.writeFileSync (no async/promise) para evitar race conditions en el poller del SSE.
@@ -160,6 +168,10 @@ function getCursor(userId) {
     seed = seed & seed;
   }
   return Math.abs(seed) || 1;
+}
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 // ============================================================
@@ -1158,16 +1170,18 @@ app.get('/artist-cover/:artistName', async (req, res) => {
         .filter(e => e.isFile() && coverExts.includes(path.extname(e.name).toLowerCase()))
         .map(e => e.name);
 
-      // 1. Prioridad: archivo cuyo nombre empieza con "artist" (artist - nombreartista.jpg)
-      const artistImage = imageFiles.find(name => /^artist[\s\-_]*/i.test(name));
+      // 1. Prioridad: archivo cuyo nombre empieza con "artist" Y contiene el nombre del artista
+      const artistImage = imageFiles.find(name => {
+          const pattern = new RegExp("^artist[\\s\\-_]*" + escapeRegExp(cleanName), "i");
+          return pattern.test(name);
+      });
 
-      // 2. Fallback: archivo que contenga el nombre del artista normalizado
-      const normalizedArtist = cleanName.replace(/\s+/g, ' ').trim();
+      // 2. Fallback: archivo que contenga el nombre del artista normalizado exacto
+      const normalizedArtist = cleanName.replace(/\s+/g, ' ').trim().toLowerCase();
       const artistImageByName = !artistImage
         ? imageFiles.find(name => {
-            const normalized = path.basename(name, path.extname(name)).replace(/\s+/g, ' ').trim().toLowerCase();
-            return normalized.includes(normalizedArtist.toLowerCase()) &&
-                   !/^album[\s\-_]*/i.test(name);
+            const fileName = path.basename(name, path.extname(name)).replace(/\s+/g, ' ').trim().toLowerCase();
+            return fileName === normalizedArtist && !/^album[\s\-_]*/i.test(name);
           })
         : null;
 
