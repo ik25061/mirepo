@@ -9395,5 +9395,1048 @@
     "title": "Activate",
     "artist": "Jah Fabio",
     "timestamp": 1788376744265
+  },
+  "a82efe43787778ab": {
+    "lyrics": "Caen los años después de ti\nhojas secas en mi jardín\npero así, sólo así, sé vivir\n\nSilba el tiempo detrás de mí\nfrente al muro del horizonte\ny así, sólo así, sé vivir\n\nPaso el tiempo muerto a solas descifrando a Dios\nMuerto el tiempo, muerto el corazón\n\nNo hay camino ya, sólo estelas en el mar\nde mi vida dibujando su final\nY si pudiera ir donde estás\ncoger tu mano y cara a cara volar\nte diría que te quiero sin piedad\n\nSi el silencio viene a por mí\nque me coja pensando en ti\nporque así, sólo así, soy feliz.\n\nPaso el tiempo muerto a solas descifrando a Dios\nMuerto el tiempo, muerto el corazón\n\nNo hay camino ya, sólo estelas en el mar\nde mi vida dibujando su final\nY si pudiera ir donde estás\ncoger tu mano y cara a cara volar\nte diría que te quiero sin piedad\n\n(Gracias a Yitán por esta letra)",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El tiempo a solas",
+    "artist": "La Oreja de Van Gogh",
+    "timestamp": 1788421330248
+  },
+  "e290706977c91b3c": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Compa Chuy - Comandante Antrax",
+    "artist": "Desconocido",
+    "timestamp": 1788421335097
+  },
+  "ed04896c1483b5ad": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "La aventurita",
+    "artist": "PIPO",
+    "timestamp": 1788421348213
+  },
+  "5f470210e5813bc0": {
+    "lyrics": "En Chihuahua lo agarraron\nSin tener una razón\nY después lo torturaron\nSin tenerle compasión\nA su amigo lo encerraron\nY abordaron el avión\n\nYa con rumbo a Sinaloa\nAtilano les gritaba\n\"Ahora yo soy el que manda\nSi quieren usen sus armas\nQuiero ver ese valor\nQue en el suelo demostraban\"\n\nEn la nave recordó\nTodo lo que le habían hecho\nQue con pinzas machacaron\nPartes nobles de su cuerpo\nY que estrellaría el avión\nAunque muriera por eso\n\nEn la torre de control\nTodo aquello se grababa\nSe oían gritos de terror\nY tres hombres que lloraban\nAtilano se reía\nY más los amenazaba\n\nEl teniente y los soldados\nDe su acción se arrepentían\nTorturaron a un gran gallo\nPienso que no lo sabían\nEn el avión de la muerte\nSe subieron aquel día\n\nEl teniente le decía\n\"Mi mujer me está esperando\"\nAtilano contestó\n\"Ahora vamos a estrellarnos\nYo también tengo mujer\nY se quedará llorando\"\n\nLlegando a Badiraguato\nHelicópteros se alzaban\nIba a estrellarse al cuartel\nPor la escuela no hizo nada\nLos boludos se bajaron\nSentían que se los llevaba\n\nDijo adiós a sus amigos\nCamaradas de aviación\nY después allá en el cerro\nSe estrelló con el avión\nEn Chihuahua y Sinaloa\nGran recuerdo les dejo",
+    "syncedLines": [
+      {
+        "time": 0.59,
+        "text": "En Chihuahua lo agarraron"
+      },
+      {
+        "time": 4.97,
+        "text": "Sin tener una razón"
+      },
+      {
+        "time": 9.39,
+        "text": "Y después lo torturaron"
+      },
+      {
+        "time": 13.51,
+        "text": "Sin tenerle compasión"
+      },
+      {
+        "time": 17.9,
+        "text": "A su amigo lo encerraron"
+      },
+      {
+        "time": 22.42,
+        "text": "Y abordaron el avión"
+      },
+      {
+        "time": 30.09,
+        "text": "Ya con rumbo a Sinaloa"
+      },
+      {
+        "time": 34.66,
+        "text": "Atilano les gritaba"
+      },
+      {
+        "time": 38.73,
+        "text": "\"Ahora yo soy el que manda"
+      },
+      {
+        "time": 43.13,
+        "text": "Si quieren usen sus armas"
+      },
+      {
+        "time": 47.55,
+        "text": "Quiero ver ese valor"
+      },
+      {
+        "time": 51.8,
+        "text": "Que en el suelo demostraban\""
+      },
+      {
+        "time": 59.31,
+        "text": "En la nave recordó"
+      },
+      {
+        "time": 63.74,
+        "text": "Todo lo que le habían hecho"
+      },
+      {
+        "time": 68.1,
+        "text": "Que con pinzas machacaron"
+      },
+      {
+        "time": 72.34,
+        "text": "Partes nobles de su cuerpo"
+      },
+      {
+        "time": 76.73,
+        "text": "Y que estrellaría el avión"
+      },
+      {
+        "time": 80.98,
+        "text": "Aunque muriera por eso"
+      },
+      {
+        "time": 88.41,
+        "text": "En la torre de control"
+      },
+      {
+        "time": 92.73,
+        "text": "Todo aquello se grababa"
+      },
+      {
+        "time": 97.02,
+        "text": "Se oían gritos de terror"
+      },
+      {
+        "time": 101.53,
+        "text": "Y tres hombres que lloraban"
+      },
+      {
+        "time": 105.61,
+        "text": "Atilano se reía"
+      },
+      {
+        "time": 110.15,
+        "text": "Y más los amenazaba"
+      },
+      {
+        "time": 125.08,
+        "text": "El teniente y los soldados"
+      },
+      {
+        "time": 129.3,
+        "text": "De su acción se arrepentían"
+      },
+      {
+        "time": 133.68,
+        "text": "Torturaron a un gran gallo"
+      },
+      {
+        "time": 137.98,
+        "text": "Pienso que no lo sabían"
+      },
+      {
+        "time": 142.15,
+        "text": "En el avión de la muerte"
+      },
+      {
+        "time": 146.34,
+        "text": "Se subieron aquel día"
+      },
+      {
+        "time": 153.89,
+        "text": "El teniente le decía"
+      },
+      {
+        "time": 158.15,
+        "text": "\"Mi mujer me está esperando\""
+      },
+      {
+        "time": 162.51,
+        "text": "Atilano contestó"
+      },
+      {
+        "time": 166.69,
+        "text": "\"Ahora vamos a estrellarnos"
+      },
+      {
+        "time": 170.95,
+        "text": "Yo también tengo mujer"
+      },
+      {
+        "time": 175.42,
+        "text": "Y se quedará llorando\""
+      },
+      {
+        "time": 182.72,
+        "text": "Llegando a Badiraguato"
+      },
+      {
+        "time": 187.14,
+        "text": "Helicópteros se alzaban"
+      },
+      {
+        "time": 191.58,
+        "text": "Iba a estrellarse al cuartel"
+      },
+      {
+        "time": 195.94,
+        "text": "Por la escuela no hizo nada"
+      },
+      {
+        "time": 200.18,
+        "text": "Los boludos se bajaron"
+      },
+      {
+        "time": 204.14,
+        "text": "Sentían que se los llevaba"
+      },
+      {
+        "time": 211.64,
+        "text": "Dijo adiós a sus amigos"
+      },
+      {
+        "time": 216.09,
+        "text": "Camaradas de aviación"
+      },
+      {
+        "time": 220.39,
+        "text": "Y después allá en el cerro"
+      },
+      {
+        "time": 224.65,
+        "text": "Se estrelló con el avión"
+      },
+      {
+        "time": 228.84,
+        "text": "En Chihuahua y Sinaloa"
+      },
+      {
+        "time": 233.11,
+        "text": "Gran recuerdo les dejo"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "El Avión De La Muerte",
+    "artist": "Los Tigres del Norte",
+    "timestamp": 1788421354733
+  },
+  "277d4e36fa8a6796": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Complacela",
+    "artist": "Gotay''El Autentiko",
+    "timestamp": 1788421364192
+  },
+  "103e82ec2b6f2975": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "A pesar de los anos",
+    "artist": "Leo Dan",
+    "timestamp": 1788421372455
+  },
+  "7e6f2ae88cad0f2b": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Donde estara",
+    "artist": "Leo Dan",
+    "timestamp": 1788421384638
+  },
+  "8b1192784ed94b63": {
+    "lyrics": "Hoy el tiempo me da un tiempo\nPara burlarme de ti\nY hasta para desquitarme\nLo que me hiciste sufrir\nLo que menos esperaba\nEs tenerte frente a mi\nDevolverte las palabras\nQue tu me dijiste a mi\nSabes bien lo que te digo\nDe tu boca las oí\nY lo hacías con desprecio\nVieras que mal me sentí\nSi yo te parto la cara\nNo calmaré mi dolor\nSi digo que voy a odiarte\nNo puedo hacerlo, no\nYo aprendí que una manzana\nSabe mejor entre dos\nCon tristeza he comprendido\nQue lo tuyo no es amor\nNo me importa tu cariño\nNo me importa tu sufrir\nNo me importa si te mueres\nTambién me dijiste a mi\nY esas mismas palabras\nLas podría decir a ti\nSi yo te parto la cara\nNo calmaré mi dolor\nSi digo que voy a odiarte\nNo puedo hacerlo, no\nNo te engañes, no me busques\nSi te marchas, es mejor\nLa soledad te castiga\nY lo mío si es amor",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El Tiempo Me da Tiempo",
+    "artist": "Los Rehenes",
+    "timestamp": 1788421385879
+  },
+  "f542cb1222be5e0e": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Secreto de Amor",
+    "artist": "Vicente Fernández Jr.",
+    "timestamp": 1788421393906
+  },
+  "97fba7b537627828": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Llévale esta carta a Esther",
+    "artist": "Ernesto German Montero Romo",
+    "timestamp": 1788421397278
+  },
+  "34d6df3f0f100f86": {
+    "lyrics": "La plaze de mexicali\nLa tenia bien contralada\nPor broncas de los carteles\nSe retiro de tijuana\nGilberto higuera guerrero\nEl 28, le apodaban\n\nContando billetes verdes\nHaci empezo su carrera\nDespues haciendo mandados\nMuy pronto paso las pruebas\nY luego de guardespaldas\nHasta controlar fronteras\n\nLo acusan de muchas cosas\nHaber cuantas le compreben\nLindo baja california\nNo vayas a darles pruebas\nPorque aunque nacio en la palma\nNo quiere quedarse en ella\n\nTodo un gallo sinaloense\nDicipulo de su hermano\nCon un comando de muerte\nSe paseaba en el estado\nVigilando diaramente\nCon cuernos de chivo en mano\n\nFrontera de mexicali\nTecate y tambien tijuana\nLos kilos de hierba y polvo\nEs cierto eran toneladas\nPero eran de los gabachos\nYo solo se los cruzaba\n\nNo se sorprendan gabachos\nPor la merca que meti\nUstedes me la compraban\nNo me hechen la bronca ami\nYo la metia por fronteras\nY ustedes por la nariz",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El 28",
+    "artist": "Los Tucanes de Tijuana",
+    "timestamp": 1788421400645
+  },
+  "88e5051b1a716636": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Carta Corazon",
+    "artist": "Los Humildes",
+    "timestamp": 1788421404149
+  },
+  "71b45b96ceb23593": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Corazon aqui te quedas",
+    "artist": "Los Rieleros del Norte",
+    "timestamp": 1788421407126
+  },
+  "18b693724e5b4c33": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Odalisca",
+    "artist": "Leo Dan",
+    "timestamp": 1788421409204
+  },
+  "9fb8ac741c88cbd0": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "La polkita duranguense",
+    "artist": "Grupo Montéz de Durango",
+    "timestamp": 1788421414756
+  },
+  "38df516335c38cc5": {
+    "lyrics": "Yo no se porque pero de ti me enamore\nyo que presumia de ser libre de querer\npero al ver tus ojos no me pude contener\ny cai en tus redes para siemrpe ya lo ves\n\nTu eres la culpable de esto que me paso a mi\ntu eres la culpable de que sea tan feliz\ntu eres la culpable y lo tengo gritar\nsin ti no hallaria un camino para andar\n\nEres la envidia de mis amigos\ndolor de mis enemigos\nel fuego de mi hogar\neres la voz que me de confianza\nla mano que me levanta\ncuando ya no puedo mas\n\nYo no se porque no lo sabria explicar\npero a ti te quiero del principio hasta el final\ncuando estoy contigo nunca pienso en escapar\ny me falta el tiempo para amarte una vez mas\n\nTu eres la culpable de esto que me pasa a mi\ntu eres la culpable de que sea tan feliz\ntu eres la culpable y lo tengo que gritar\nsin ti no hallaria un camino para andar\n\nEres la envidia de mis amigos\ndolor de mis enemigos\nel fuego de mi hogar\neres la voz que em de confianza\nla mano que me levanta\ncuando ya no puedo mas",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "La Culpable",
+    "artist": "La Arrolladora Banda el Limón de René Camacho",
+    "timestamp": 1788421416739
+  },
+  "cb8438a4c2536274": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Sin este amor",
+    "artist": "Leo Dan",
+    "timestamp": 1788421422717
+  },
+  "f635ebc76e201bfc": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El hijo del pecado",
+    "artist": "Los Tigrillos - Fiesta Privada",
+    "timestamp": 1788421430295
+  },
+  "856dd84aab8d78c3": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Yo quisiera ser",
+    "artist": "Leo Dan",
+    "timestamp": 1788421439360
+  },
+  "0eded112e34a59e3": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "BARCO PERDIDO",
+    "artist": "JAVIER LOPEZ",
+    "timestamp": 1788421441703
+  },
+  "37163735ed7588b7": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Ay Amor",
+    "artist": "EL ORIGINAL DE LA SIERRA",
+    "timestamp": 1788421445924
+  },
+  "9cc2335a1dd61dd0": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El Palomo",
+    "artist": "Los Gatos Negros",
+    "timestamp": 1788421448456
+  },
+  "32391e6decc1620b": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Me Duele Aqui",
+    "artist": "Grupo Laberinto",
+    "timestamp": 1788421454906
+  },
+  "883c501c94b48d53": {
+    "lyrics": "Vete de mí\nPara q seguir haciendonos daño\nVete de mi\nEs mejor así\nSi nuestro cariño\nYa se ha terminado\nEs lo mejor\nDe un tiempo a la vez\nLos 2 nos tratamos\nComo extraños\nNo te hablo\nNi me hablas\nY si estamos juntos\nEs para pelearnos\nVete de mí\nPor bien de los 2\nEs mejor asi\nTeniendo el amor\nGritando, peleando\nSe nos fue de aqui\nQuien fue el q fallo\nTal vez fuiste tu\nO tal vez fui yo",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Vete de Mí",
+    "artist": "Los Rehenes",
+    "timestamp": 1788421465458
+  },
+  "70640c4ce96248d3": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Morir De Amor",
+    "artist": "Desde Saltillo La Rondalla",
+    "timestamp": 1788421475460
+  },
+  "2b0cb0a8bcd7950b": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "4305 QUE SEAS DICHOSA",
+    "artist": "Miguel",
+    "timestamp": 1788421489877
+  },
+  "5efff00b765a6606": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Mujeriego",
+    "artist": "Desconocido",
+    "timestamp": 1788421492103
+  },
+  "f86336676d7cb891": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Esperando Tu Llamada",
+    "artist": "Loa Cadetes De Linares",
+    "timestamp": 1788421493410
+  },
+  "b87e5dc4055c018e": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Track 01",
+    "artist": "Siggno",
+    "timestamp": 1788421499360
+  },
+  "2ca12aab65228e0a": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Busco mi mamita",
+    "artist": "Las Muñequitas",
+    "timestamp": 1788421501292
+  },
+  "d19c8ae13b124f93": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "De Lejos Tierras",
+    "artist": "Dueto Las Palomas",
+    "timestamp": 1788421505005
+  },
+  "01bafae88f0ca99d": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Day Dakar",
+    "artist": "Semjase Musicoon",
+    "timestamp": 1788421507018
+  },
+  "ba42411772898b23": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Quiero Más (feat. José Fors)",
+    "artist": "Rostros Ocultos",
+    "timestamp": 1788421510279
+  },
+  "d1f50e0ed5dc7c63": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Soñar es Descansar",
+    "artist": "Tatiana",
+    "timestamp": 1788421512355
+  },
+  "beed77097bb4bba9": {
+    "lyrics": "Acaricia mi ensueño\n\nel suave murmullo de tu suspirar.\n\ncomo ríe la vida\n\nsi tus ojos negros me quieren mirar.\n\ny si es mío el amparo\n\nde tu risa alegre\n\nes como un cantar,\n\nella aquieta mi herida,\n\ntodo todo se olvida.\n\nEl día que me quieras\n\nla rosa que engalana,\n\nse vestirá de fiesta\n\ncon su mejor color.\n\nal viento las campanas\n\ndirán que eres mía,\n\ny locas las fontanas\n\nse contaran tu amor.\n\nLa noche que me quieras\n\ndesde el azul del cielo,\n\nlas estrellas celosas\n\nnos mirarán pasar.\n\nY un rayo misterioso\n\nhará nido en tu pelo,\n\nluciérnaga curiosa que vera\n\nque eres mi consuelo",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El Día Que Me Quieras",
+    "artist": "El Poder Del Norte",
+    "timestamp": 1788421514822
+  },
+  "9ba791bbfb87a06c": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "La PobreZa De MiPueblo",
+    "artist": "New Artist",
+    "timestamp": 1788421517710
+  },
+  "8bd3bffb0af4297b": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Escaleras de la carcel",
+    "artist": "Desconocido",
+    "timestamp": 1788421524269
+  },
+  "31f72d492e46438a": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Ahora Quieres Volver",
+    "artist": "Nigga",
+    "timestamp": 1788421528943
+  },
+  "021b901f44081717": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Si No Te Veo",
+    "artist": "Patrulla 81",
+    "timestamp": 1788421532960
+  },
+  "400d4f0df438294e": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Chainsmoker Cat | Opening Full | Cover Español",
+    "artist": "MrLopez",
+    "timestamp": 1788421539163
+  },
+  "bc770bde87877368": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "QUIEN-ESTELA NUÑEZ",
+    "artist": "MUJERES",
+    "timestamp": 1788421540443
+  },
+  "c9e0c8647975c020": {
+    "lyrics": "Brindo por ella\nque lejos se encuentra\npor ese amor que degarra mi pecho\ny aunque me dijo que se iva pa´ siempre\nno la puedo borrar de mi pensamiento\nyo por confiado le di mi cariño\npor que crei que su vida era yo\npero para ella el cariño no vale\ny a mi pobre vida trucada dejo\nyo lo que quiero es que dios la perdone\npor ese amor que un dia me entrego\n\nalzen sus copas y juntos brindemos\npor ese amor que nos quita el destino\nya que esta visto que el hombre mas hombre\ntambien llega a llorar cuando pierde un cariño\nyo la perdi quiero ahogarme en el vino\nquiero morir ya que al fin nadie soy\npero el destino matarme no quiere\ny entre mas borracho mas grande este amor\nquiero olvidarla pero es imposible\nsu amor me persigue como maldicion\nquiero olvidarla pero es imposible\nsu amor me persigue como maldicion",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Brindo Por Ella (feat. Bronco)",
+    "artist": "Los Barón de Apodaca",
+    "timestamp": 1788421542662
+  },
+  "b9e24fa6ccbe764f": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "CARNAVALITO",
+    "artist": "VALLENATO REGIO",
+    "timestamp": 1788421546334
+  },
+  "db7a3967e9386942": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Vamos Al Kuduro",
+    "artist": "Collectif Métissé",
+    "timestamp": 1788421556181
+  },
+  "cc060e0d103c16e4": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Yo Soy El Que Te Ama",
+    "artist": "Desconocido",
+    "timestamp": 1788421560808
+  },
+  "4cd5f92a14b887c3": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Track 03",
+    "artist": "Garcia Bros",
+    "timestamp": 1788421565259
+  },
+  "6d509e6746c77b68": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "ME MUERO POR ESTAR CONTIGO",
+    "artist": "GRUPO FUERZA",
+    "timestamp": 1788421570226
+  },
+  "4009bd786bc1fa8a": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Oliver Anthony Music - Hank",
+    "artist": "Oliver Anthony Music",
+    "timestamp": 1788421574854
+  },
+  "0ee049289f5b854b": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El Zafarrancho",
+    "artist": "La Cuneta Son Machín",
+    "timestamp": 1788421580724
+  },
+  "20668e1eee73415f": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Track 11",
+    "artist": "High School",
+    "timestamp": 1788421582443
+  },
+  "0d7f10071d72bfda": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "yo fui el primero",
+    "artist": "tejano boys",
+    "timestamp": 1788421584011
+  },
+  "ab70bb96e6c6c38e": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Bhebha 2.0 (feat. Bepa, Double D, Jazzy Avenue)",
+    "artist": "Tskay",
+    "timestamp": 1788421586810
+  },
+  "00842533ad838b2e": {
+    "lyrics": "Yo te voy a regalar papito un peluquín\nYo te voy a regalar papito un peluquín\nPara tapar tu cabeza y te veas de postín\nPara tapar tu cabeza y te veas de postín\n\nQue la tienes colorá, que la tienes repelá\nQue la tienes repelá y que la tienes colorá\n\nRepelá y repelá tu cabeza colorá\nColorá y colorá tu cabeza repelá.\n\nSi yo fuera peluquera te arreglara los bigotes\nSi yo fuera peluquera te arreglara los bigotes\nCon mi larga cabellera te cubriera hasta el cogote\nCon mi larga cabellera te cubriera hasta el cogote\n\nQue la tienes colorao que la tienes repelao\nQue la tienes repelao, que la tienes colorao\nColorao, colorao, repelao, repelao.\n\nPara todos los calvos con La Sonora Dinamita\nÓyeme\n\nA ti te dicen pelúo pero no por el cabello\nA ti te dicen pelúo pero no por el cabello\nPorque eres un velludo desde el talón hasta el cuello\nPorque eres un velludo desde el talón hasta el cuello\n\nQue la tienes colorao, que la tienes repelao\nQue la tienes repelao y que la tienes colorao\nY colorá y colorá, tu cabeza colorá\nY repelá, repelá, tu cabeza repelá.\n\nYo te voy a regalar papito un peluquín\nYo te voy a regalar papito un peluquín\nPara tapar tu cabeza y te veas de postín\nPara tapar tu cabeza y te veas de postín\n\nQue la tienes colorá, tu cabeza repelá\nRepelá y repelá tu cabeza colorá\nColorá y colorá tu cabeza colorá.\n\nPero así te quiero, papito, calvito",
+    "syncedLines": [
+      {
+        "time": 16.11,
+        "text": "Yo te voy a regalar papito un peluquín"
+      },
+      {
+        "time": 18.05,
+        "text": "Yo te voy a regalar papito un peluquín"
+      },
+      {
+        "time": 20.62,
+        "text": "Para tapar tu cabeza y te veas de postín"
+      },
+      {
+        "time": 23.31,
+        "text": "Para tapar tu cabeza y te veas de postín"
+      },
+      {
+        "time": 25.56,
+        "text": "Que la tienes colorá, que la tienes repelá"
+      },
+      {
+        "time": 28.06,
+        "text": "Que la tienes repelá y que la tienes colorá"
+      },
+      {
+        "time": 30.85,
+        "text": "Repelá y repelá tu cabeza colorá"
+      },
+      {
+        "time": 33.12,
+        "text": "Colorá y colorá tu cabeza repelá."
+      },
+      {
+        "time": 39.47,
+        "text": "Si yo fuera peluquera te arreglara los bigotes"
+      },
+      {
+        "time": 41.62,
+        "text": "Si yo fuera peluquera te arreglara los bigotes"
+      },
+      {
+        "time": 44.19,
+        "text": "Con mi larga cabellera te cubriera hasta el cogote"
+      },
+      {
+        "time": 46.53,
+        "text": "Con mi larga cabellera te cubriera hasta el cogote"
+      },
+      {
+        "time": 49.22,
+        "text": "Que la tienes colorao que la tienes repelao"
+      },
+      {
+        "time": 51.27,
+        "text": "Que la tienes repelao, que la tienes colorao"
+      },
+      {
+        "time": 53.69,
+        "text": "Colorao, colorao, repelao, repelao."
+      },
+      {
+        "time": 71.1,
+        "text": "Para todos los calvos con La Sonora Dinamita"
+      },
+      {
+        "time": 83.11,
+        "text": "Óyeme"
+      },
+      {
+        "time": 90.12,
+        "text": "A ti te dicen pelúo pero no por el cabello"
+      },
+      {
+        "time": 92.82,
+        "text": "A ti te dicen pelúo pero no por el cabello"
+      },
+      {
+        "time": 95.2,
+        "text": "Porque eres un velludo desde el talón hasta el cuello"
+      },
+      {
+        "time": 97.79,
+        "text": "Porque eres un velludo desde el talón hasta el cuello"
+      },
+      {
+        "time": 100.36,
+        "text": "Que la tienes colorao, que la tienes repelao"
+      },
+      {
+        "time": 102.66,
+        "text": "Que la tienes repelao y que la tienes colorao"
+      },
+      {
+        "time": 104.74,
+        "text": "Y colorá y colorá, tu cabeza colorá"
+      },
+      {
+        "time": 107.11,
+        "text": "Y repelá, repelá, tu cabeza repelá."
+      },
+      {
+        "time": 113.57,
+        "text": "Yo te voy a regalar papito un peluquín"
+      },
+      {
+        "time": 115.41,
+        "text": "Yo te voy a regalar papito un peluquín"
+      },
+      {
+        "time": 118.02,
+        "text": "Para tapar tu cabeza y te veas de postín"
+      },
+      {
+        "time": 120.34,
+        "text": "Para tapar tu cabeza y te veas de postín"
+      },
+      {
+        "time": 122.84,
+        "text": "Que la tienes colorá, tu cabeza repelá"
+      },
+      {
+        "time": 125.21,
+        "text": "Repelá y repelá tu cabeza colorá"
+      },
+      {
+        "time": 127.65,
+        "text": "Colorá y colorá tu cabeza colorá."
+      },
+      {
+        "time": 134.68,
+        "text": "Pero así te quiero, papito, calvito"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "El Peluquin",
+    "artist": "La Sonora Dinamita",
+    "timestamp": 1788421588407
+  },
+  "c7d50eb3c311d3f4": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Track 16",
+    "artist": "ninos del vallenato",
+    "timestamp": 1788421590709
+  },
+  "d1ec413ef6622de7": {
+    "lyrics": "Compadre Pedro José\nTraigame tabaco y ron\nCompadre Pedro José\nTraigame tabaco y ron\n\nPorque quiero amanecer\nEsta noche en el cumbión\nPorque quiero amanecer\nEsta noche en el cumbión\n\nQuiero bailar con mi negra\nEsta cumbia hasta mañana\nQuiero bailar con mi negra\nEsta cumbia hasta mañana\n\nY que agarre su pollera\nComo buena colombiana\nY que agarre su pollera\nComo buena colombiana\n\nY que baile al compás\nDe La Sonora Dinamita\n\nCuando bailo porro o cumbia\nSe alegra mi corazón\nCuando bailo porro o cumbia\nSe alegra mi corazón\n\nCon mi negra Saramulla\nLuciendo su pollerón\nCon mi negra Saramulla\nLuciendo su pollerón\n\nCuando cruzo la frontera\nConmigo llevo el sabor\nCuando cruzo la frontera\nConmigo llevo el sabor\n\nLlevo mi mochila llena\nDe vela, tabaco y ron\nLlevo mi mochila llena\nDe vela, tabaco y ron\n\nPa' gozar\nYeeeah\nBueno Margarita alistate tu pollera\n\nCompadre Pedro José\nTraigame tabaco y ron\nCompadre Pedro José\nTraigame tabaco y ron\n\nPorque quiero amanecer\nEsta noche en el cumbión\nPorque quiero amanecer\nEsta noche en el cumbión\n\nQuiero bailar con mi negra\nEsta cumbia hasta mañana\nQuiero bailar con mi negra\nEsta cumbia hasta mañana\n\nY que agarre su pollera\nComo buena colombiana\nY que agarre su pollera\nComo buena colombiana\n\nPara ti mexicana linda\nUn saludo para todos los sonideros\nDe parte de Margarita\nY Lucho Argaín",
+    "syncedLines": [
+      {
+        "time": 14.15,
+        "text": "Compadre Pedro José"
+      },
+      {
+        "time": 16.44,
+        "text": "Traigame tabaco y ron"
+      },
+      {
+        "time": 18.74,
+        "text": "Compadre Pedro José"
+      },
+      {
+        "time": 20.9,
+        "text": "Traigame tabaco y ron"
+      },
+      {
+        "time": 23.28,
+        "text": "Porque quiero amanecer"
+      },
+      {
+        "time": 25.34,
+        "text": "Esta noche en el cumbión"
+      },
+      {
+        "time": 27.79,
+        "text": "Porque quiero amanecer"
+      },
+      {
+        "time": 29.83,
+        "text": "Esta noche en el cumbión"
+      },
+      {
+        "time": 32.08,
+        "text": "Quiero bailar con mi negra"
+      },
+      {
+        "time": 34.41,
+        "text": "Esta cumbia hasta mañana"
+      },
+      {
+        "time": 36.77,
+        "text": "Quiero bailar con mi negra"
+      },
+      {
+        "time": 38.95,
+        "text": "Esta cumbia hasta mañana"
+      },
+      {
+        "time": 41.06,
+        "text": "Y que agarre su pollera"
+      },
+      {
+        "time": 43.52,
+        "text": "Como buena colombiana"
+      },
+      {
+        "time": 45.75,
+        "text": "Y que agarre su pollera"
+      },
+      {
+        "time": 48.03,
+        "text": "Como buena colombiana"
+      },
+      {
+        "time": 53.02,
+        "text": "Y que baile al compás"
+      },
+      {
+        "time": 56.34,
+        "text": "De La Sonora Dinamita"
+      },
+      {
+        "time": 68.2,
+        "text": "Cuando bailo porro o cumbia"
+      },
+      {
+        "time": 70.2,
+        "text": "Se alegra mi corazón"
+      },
+      {
+        "time": 72.61,
+        "text": "Cuando bailo porro o cumbia"
+      },
+      {
+        "time": 74.82,
+        "text": "Se alegra mi corazón"
+      },
+      {
+        "time": 77.13,
+        "text": "Con mi negra Saramulla"
+      },
+      {
+        "time": 79.39,
+        "text": "Luciendo su pollerón"
+      },
+      {
+        "time": 81.78,
+        "text": "Con mi negra Saramulla"
+      },
+      {
+        "time": 84.07,
+        "text": "Luciendo su pollerón"
+      },
+      {
+        "time": 86.25,
+        "text": "Cuando cruzo la frontera"
+      },
+      {
+        "time": 88.4,
+        "text": "Conmigo llevo el sabor"
+      },
+      {
+        "time": 90.73,
+        "text": "Cuando cruzo la frontera"
+      },
+      {
+        "time": 92.94,
+        "text": "Conmigo llevo el sabor"
+      },
+      {
+        "time": 95.16,
+        "text": "Llevo mi mochila llena"
+      },
+      {
+        "time": 97.39,
+        "text": "De vela, tabaco y ron"
+      },
+      {
+        "time": 99.78,
+        "text": "Llevo mi mochila llena"
+      },
+      {
+        "time": 101.8,
+        "text": "De vela, tabaco y ron"
+      },
+      {
+        "time": 103.39,
+        "text": "Pa' gozar"
+      },
+      {
+        "time": 105.06,
+        "text": "Yeeeah"
+      },
+      {
+        "time": 107.04,
+        "text": "Bueno Margarita alistate tu pollera"
+      },
+      {
+        "time": 122.19,
+        "text": "Compadre Pedro José"
+      },
+      {
+        "time": 124.19,
+        "text": "Traigame tabaco y ron"
+      },
+      {
+        "time": 126.53,
+        "text": "Compadre Pedro José"
+      },
+      {
+        "time": 128.8,
+        "text": "Traigame tabaco y ron"
+      },
+      {
+        "time": 131.16,
+        "text": "Porque quiero amanecer"
+      },
+      {
+        "time": 133.39,
+        "text": "Esta noche en el cumbión"
+      },
+      {
+        "time": 135.67,
+        "text": "Porque quiero amanecer"
+      },
+      {
+        "time": 137.89,
+        "text": "Esta noche en el cumbión"
+      },
+      {
+        "time": 139.95,
+        "text": "Quiero bailar con mi negra"
+      },
+      {
+        "time": 142.3,
+        "text": "Esta cumbia hasta mañana"
+      },
+      {
+        "time": 144.62,
+        "text": "Quiero bailar con mi negra"
+      },
+      {
+        "time": 146.79,
+        "text": "Esta cumbia hasta mañana"
+      },
+      {
+        "time": 149.01,
+        "text": "Y que agarre su pollera"
+      },
+      {
+        "time": 151.02,
+        "text": "Como buena colombiana"
+      },
+      {
+        "time": 153.5,
+        "text": "Y que agarre su pollera"
+      },
+      {
+        "time": 155.63,
+        "text": "Como buena colombiana"
+      },
+      {
+        "time": 158.86,
+        "text": "Para ti mexicana linda"
+      },
+      {
+        "time": 163.4,
+        "text": "Un saludo para todos los sonideros"
+      },
+      {
+        "time": 166.42,
+        "text": "De parte de Margarita"
+      },
+      {
+        "time": 168.32,
+        "text": "Y Lucho Argaín"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "Vela, Tabaco y Ron",
+    "artist": "La Sonora Dinamita",
+    "timestamp": 1788421594231
+  },
+  "0b83d269739887f7": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "kichi,chiki",
+    "artist": "muñequitas 2004",
+    "timestamp": 1788421597103
+  },
+  "af59e9fa714e75b4": {
+    "lyrics": "Si la belleza fuera pecado\nno tieness perdon de dios\nke cosas tan lindas tienes\ny no se ve lo mejor\n\nKien correra en tus montanas\nnomas de pensar me enojo\nyo kiero ke ya seas mia\nya no kiero tacos de ojo\n\nUna noche contigo mi amor\nseria como irme al cielo\nmataras esta gran obsesion\nke siente mi cuerpo entero\ntengo ya nuestro nido de amor\npara cuando me cumplas mi sueno\n\nKien correra en tus montanas\nnomas de pensar me enojo\nyo kiero ke ya seas mia\nya no kiero tacos de ojo\n\nUna noche contigo mi amor\nseria como irme al cielo\nmataras esta gran obsesion\nke siente mi cuerpo entero\ntengo ya nuestro nido de amor\npara cuando me cumplas mi sueno",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Eres Mi Sueño",
+    "artist": "Los Tucanes de Tijuana",
+    "timestamp": 1788421599585
+  },
+  "5268a5a37643fb22": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Comando Antrax",
+    "artist": "JJ El Padrino de La Sierra",
+    "timestamp": 1788421604968
+  },
+  "eab46cb8adb1aa27": {
+    "lyrics": "Quisiera que cuando llueva\nEn vez de agua, cayera perico\nY que corriera cerveza\nTequila por mar y ríos\nQue en los jardines hubiera\nEn vez de flores, claveles o lirios\nMatitas de marihuana\nCoca y opio, ¡qué bonito!\n\nLos carteles no existieran\nMucho menos los mafiosos\nLa madre naturaleza\nSe encargaría de nosotros\nDe tenernos bien contentos\nTodos borrachos y locos\nEstuviera a toda madre\n\nQue no existiera el perro gobierno\nViviéramos más a gusto\nSin amantes de lo ajeno\nTambién fuera una chulada\nTener las siete vidas del gato\nPara agarrarme a balazos\nCon los chotas y soldados\n\nPero Dios no cumple antojos\nNi endereza jorobados\nSolo queda conformarme\nCon todo lo que me ha dado\nSe vale soñar pariente\nNo creo que eso sea pecado",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Se Vale Soñar",
+    "artist": "El Tigrillo Palma",
+    "timestamp": 1788421607289
+  },
+  "43d9c21b42efbf14": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Adios de carrasco",
+    "artist": "David Zaizar",
+    "timestamp": 1788421611016
+  },
+  "4973d1665e4fb7df": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Rumba de San Martin",
+    "artist": "La Banda",
+    "timestamp": 1788421615902
   }
 }
