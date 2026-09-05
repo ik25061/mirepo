@@ -10438,5 +10438,1475 @@
     "title": "Rumba de San Martin",
     "artist": "La Banda",
     "timestamp": 1788421615902
+  },
+  "3383e79b49c137be": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Tu - Ana Roman",
+    "artist": "Anna Roman",
+    "timestamp": 1788425943293
+  },
+  "c167cbc4a899035c": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Enseñate a vivir",
+    "artist": "Los Tiranos del Norte",
+    "timestamp": 1788425955242
+  },
+  "8a8df08ae8e031bc": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "tamaulipas",
+    "artist": "huapangos",
+    "timestamp": 1788425957085
+  },
+  "04be75e43b201bf5": {
+    "lyrics": "Una noche me quede\nContemplando el panorama\nY a lo lejos divise un lucero\nque lloraba.\nUn lucero que lloraba por su amor\na una estrellita que se ha escapado\ndel cielo y en la tierra se he escondido.\nLucerito, por que has perdido\nTus raros encantos, en la tierra\nAlla muy lejos se escucha tu llanto\nLucerito, por que has perdido\ntus raros encantos, en la tierra\nalla muy lejos se secucha tu llanto.\nDespues yo me transforme En la\npaloma mensajera, alto muy alto vole.\nConfundiendome en la niebla, cuando\nvolvaba muy alto, la tierra me parecia\nuna nube gigantesca con mil velas\nencendidas",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Lucerito",
+    "artist": "Los Temerarios",
+    "timestamp": 1788425958608
+  },
+  "c16aa2e84d19fc55": {
+    "lyrics": "Asi que hoy te vas... que ya no me\nquieres, que poca suerte tuve contigo.\nMas es tu voluntad y no te detendre-e\nni te pedire-e ay! que te quedes.\nSiempre crei en ti... y me fallaste\ntu me fallaste, mas que le voy hacer.\nAsi es la vida pero no hay que llorar\nmejor olvidar... aquien te paga mal.\nQue poco suerte, tuve contigo.\nQue poca suerte, haberte conocido.\nJuraste amarme y yo con un suspiro\nhoy solo digo, que poca suerte tuve\ncontigo",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Que Poca Suerte (Instrumental)",
+    "artist": "Los Temerarios",
+    "timestamp": 1788425963617
+  },
+  "e3540a33690a462a": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Ladrón que roba a ladrón (feat. Halo Tex)",
+    "artist": "Los Estrambóticos",
+    "timestamp": 1788425968196
+  },
+  "5c816bfc621685e5": {
+    "lyrics": "Con un beso\nHaz logrado arrancarme,\nUna duda,\nDe mi corazon.\n\nCon un beso haz,\nHaz logrado clavarme\nEn el pecho\nUna inmensa pasion.\n\nEn verdad yo dude que te amaba,\nAunque siempre mi amor fue de ti,\nEn el fondo mi alma pricionaba,\nEsa duda que al fin ya perdi.\n\nEl dolor de un amor que asesina,\nSe alejo de mi dulce ilusion,\nAl sentir, en tu boca divina,\nLa verdad que inspiro mi pasion.\n\nCon un beso\nHaz logrado arrancarme,\nUna duda,\nDe mi corazon.\n\nCon un beso haz,\nHaz logrado clavarme,\nEn el pecho\nUna inmensa pasion.\n\nEl dolor de un amor que asesina,\nSe alejo de mi dulce ilusion,\nAl sentir, en tu boca divina,\nLa verdad que inspiro mi pasion.\n\nCon un beso\nHaz logrado arrancarme,\nUna duda,\nDe mi corazon.\n\nCon un beso haz,\nHaz logrado clavarme\nEn el pecho\nUna inmensa pasion.",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Con un Beso",
+    "artist": "La Sonora Santanera",
+    "timestamp": 1788425972566
+  },
+  "5429f659682c5546": {
+    "lyrics": "Y pensar que yo tuve aquí\nLo más bello de mi vida\nPobre tonto, no pensé\nQue de amarme, se cansaría\n\nFui tan ciego, nunca vi\nEl amor que me ofrecía\nFui tan sordo, no escuché\nDecir cuanto me quería\nNo esperé un final así\nHoy su ausencia me lastima\n\nNo la supe valorar\nMe dio amor a manos llenas\nY ahora que me encuentro solo\nRuego a Dios que aún me quiera\n\nTras tus pasos ahora voy\nY llorando como un niño\nLimosnero de tu amor\nLimosnero de cariño\n\nTras tus pasos ahora voy\nY llorando como un niño\nLimosnero de tu amor\nLimosnero de cariño\nLimosnero de tu amor\nLimosnero de cariño",
+    "syncedLines": [
+      {
+        "time": 4.04,
+        "text": "Y pensar que yo tuve aquí"
+      },
+      {
+        "time": 9.04,
+        "text": "Lo más bello de mi vida"
+      },
+      {
+        "time": 16.01,
+        "text": "Pobre tonto, no pensé"
+      },
+      {
+        "time": 22.05,
+        "text": "Que de amarme, se cansaría"
+      },
+      {
+        "time": 28.08,
+        "text": "Fui tan ciego, nunca vi"
+      },
+      {
+        "time": 34.03,
+        "text": "El amor que me ofrecía"
+      },
+      {
+        "time": 39.06,
+        "text": "Fui tan sordo, no escuché"
+      },
+      {
+        "time": 45.05,
+        "text": "Decir cuanto me quería"
+      },
+      {
+        "time": 51.09,
+        "text": "No esperé un final así"
+      },
+      {
+        "time": 56.02,
+        "text": "Hoy su ausencia me lastima"
+      },
+      {
+        "time": 64.06,
+        "text": "No la supe valorar"
+      },
+      {
+        "time": 69.07,
+        "text": "Me dio amor a manos llenas"
+      },
+      {
+        "time": 75.05,
+        "text": "Y ahora que me encuentro solo"
+      },
+      {
+        "time": 81.06,
+        "text": "Ruego a Dios que aún me quiera"
+      },
+      {
+        "time": 86,
+        "text": "Tras tus pasos ahora voy"
+      },
+      {
+        "time": 92.07,
+        "text": "Y llorando como un niño"
+      },
+      {
+        "time": 98.03,
+        "text": "Limosnero de tu amor"
+      },
+      {
+        "time": 103,
+        "text": "Limosnero de cariño"
+      },
+      {
+        "time": 130.07,
+        "text": "Tras tus pasos ahora voy"
+      },
+      {
+        "time": 135.05,
+        "text": "Y llorando como un niño"
+      },
+      {
+        "time": 141.02,
+        "text": "Limosnero de tu amor"
+      },
+      {
+        "time": 147,
+        "text": "Limosnero de cariño"
+      },
+      {
+        "time": 153.05,
+        "text": "Limosnero de tu amor"
+      },
+      {
+        "time": 158.01,
+        "text": "Limosnero de cariño"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "Limosnero De Cariño",
+    "artist": "Los Rehenes",
+    "timestamp": 1788425978277
+  },
+  "c103b002e205e64e": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Tú y la Mentira",
+    "artist": "Los Rieleros del Norte",
+    "timestamp": 1788425997771
+  },
+  "a997278c82007703": {
+    "lyrics": "Me Enamore de ti\nDe esa forma que tu tienes de besarme\nDe esos ojos que iluminan mi existir\nDe esa magia que despiertas al mirarme\n\nMe enamore de ti\nTe has convertido en el vicio de mi vida\nY necesito cada dia mas de ti\nIgual que el aire que respiro cada dia\n\nPor eso te amo, te amo\nEres tu el amor, eres tu el amor\nPor eso te amo, te amo\nEres tu el amor, eres tu el amor\n\nNo hay nadie en este mundo corazon\nQue llene de alegria mi existir\nPor eso te amo, te amo\nEres tu el amor",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Por Eso Te Amo",
+    "artist": "Los Palominos",
+    "timestamp": 1788425999308
+  },
+  "9f98ee09d7594928": {
+    "lyrics": "Cada vez que te recuerdo\nse me llenan estos ojos\nde tristeza y de dolor\n\nY me siento derrotado\ny me siento abandonado\ny no se ni a donde ir\n\nCuando miro las parejas\nque se abrazan y se besan\nyo me acuerdo mas de ti\n\nY quisiera yo tenerte\na mi lado para siempre\na mi lado junto a mí\n\nCaprichos de mujer\ncaprichos nadamas\nque me hacen padecer\nmi fragil corazon\nquisiera yo saber\nsi piensas regresar\nsi piensas tu volver\nconmigo una vez mas\n\nCada vez que te recuerdo\nsin querer mi pensamiento\nse me llena del ayer\n\nPor que va pasando el tiempo\ny deseo te arrepientas\ny me busques otra vez\n\nLe pregunto a tus amigas\nsi en el fondo de tu alma\nguardas para mi amor\ny me dicen convencidas\nque añoras las ternuras\nque una vez te daba yo\n\nCaprichos de mujer\ncaprichos nadamas\nque me hacen padecer\nmi fragil corazon\nquisiera yo saber\nsi piensas regresar\nsi piensas tu volver\nconmigo una vez mas",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Caprichos de Mujer",
+    "artist": "Los Acosta",
+    "timestamp": 1788426000730
+  },
+  "07c24c9002315fa0": {
+    "lyrics": "Si eres como te imagino\nNo tengo modo de escaparme\nTu cuerpo es como un remolino\nY no hay conjuro que me salve\nSi eres como te presiento\nEstoy perdido en este cuento\nPorque sospecho que eres\nDe miel por fuera y de fuego por dentro\n\nRoja boca, boca loca\nRoja boca manantial de besos\nDulces besos se desbocan\nY al desearte me mantienen preso\n\nRoja boca me provocas\nY de pronto siento que me muero\nMe parece que esa boca\nEsta a un paso de decir, te quiero\n\nSi eres como te he soñado\nEstoy vencido de antemano\nY sin poner condiciones\nFeliz derrotado me entrego a tus manos\n\nTan bella, tan suave\nSencillamente incomparable",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Roja Boca",
+    "artist": "Los Nocheros",
+    "timestamp": 1788426006165
+  },
+  "e2e5c2f995e2a423": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Los Buchones Ft Nuevos Elegantes - Con Las Manos Ensangretadas",
+    "artist": "Desconocido",
+    "timestamp": 1788426010356
+  },
+  "8051ebc53c929eb0": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "4 O’Clock In The Morning (Rezonance Q Mix)",
+    "artist": "Lazard",
+    "timestamp": 1788426016510
+  },
+  "0ce60c161c1386f4": {
+    "lyrics": "Me Enamorastes,\nMe Conquistastes\nMe Distes Besos ¡Apasionados!\n\nMe Ilusionastes,\nMe Apasionastes\nY Ahora Resuta Que Me Has Cambiado\n\nQue Poca Suerte, No Cabe Duda\nPero Dimodo, !Es Tú Problema¡\nNo Te Perdono, Porque No Quiero,\nNo Creo Que Hacerlo Valga La Pena...\n\nCORO\nMe Tracionastes,\nMe Despreciastes\nY Me Cambiaste Por Un Amigo\nQue Mal Quedastes,\nTe Acorrientastes\nSolo Jugaste Mala Conmigo.\n\nVive Tu Vida,\nHas Lo Que Quieras\nAl Fin Ni A Cabo ¡Ya No Te\nQuiero!\n\nNo Te Me Antojas,\nNi Para Un Rato\nNi De Tu Nombre Ya Ni Me Acuerdo\n\nNo Quiero Verte, Nunca En La Vida, Vete Muy Lejos ¡Y Nuca Vuelvas!\nNo Pierdo Nada, No Eres Gran Cosa, Precisamente Hoy Me Di Cuenta...\n\nCORO\nMe Tracionastes,\nMe Despreciastes\nY Me Cambiaste Por Un Amigo\nQue Mal Quedastes,\nTe Acorrientastes\nSolo Jugaste Mala Conmigo.\n\n(Gracias a Paul por esta letra)",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Sólo Jugaste",
+    "artist": "Los Tucanes de Tijuana",
+    "timestamp": 1788426020174
+  },
+  "2a8dfd45bc490afb": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Ayer te vi",
+    "artist": "AURORA",
+    "timestamp": 1788426030804
+  },
+  "5ae1d80adb9f71b2": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Bonita",
+    "artist": "The Cal Tjader Quintet",
+    "timestamp": 1788426037043
+  },
+  "a68d32e384d376a4": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "arrecostro",
+    "artist": "Tropicalisimo Apache",
+    "timestamp": 1788426044140
+  },
+  "a7926a5e6c2b5af6": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Track 07",
+    "artist": "Robert A.Heinlein read by Christopher Hurt",
+    "timestamp": 1788426052519
+  },
+  "5434cc193efeefd4": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Lo mejor de mi",
+    "artist": "Tush",
+    "timestamp": 1788426058831
+  },
+  "c472b355f60c73b0": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Los cañones de navarona",
+    "artist": "Musica",
+    "timestamp": 1788426064356
+  },
+  "06eb28f3dccc3330": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "5.Disculpame",
+    "artist": "K-paz de La Sierra",
+    "timestamp": 1788426075623
+  },
+  "7bfce3a7bd8fc849": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Ciega Sordomuda",
+    "artist": "Las noches de banda Vol.3 - Banda Las Poderosas",
+    "timestamp": 1788426081484
+  },
+  "48a1e366c58c3862": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Future Desire",
+    "artist": "Sen Dai",
+    "timestamp": 1788426084111
+  },
+  "3d827ab22a965d93": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El Jorongo",
+    "artist": "LOS ALEGRES DE TERAN",
+    "timestamp": 1788426092201
+  },
+  "ddb312a6f1fa5755": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "ciega",
+    "artist": "lidia avila - asi como me dez",
+    "timestamp": 1788426105083
+  },
+  "5fec3f5b1ef88d2d": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "el cachorro villareal",
+    "artist": "huapangos",
+    "timestamp": 1788426106777
+  },
+  "216b79718278a3d1": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "ALMA DE ACERO",
+    "artist": "Los Garza De Sabinas",
+    "timestamp": 1788426112760
+  },
+  "101ec2bef631dbea": {
+    "lyrics": "Pienso en ti\nCada vez que respiro y cuando camino\nPienso en ti\n\nPienso en ti\nAl mirar las estrallas y con todas ellas\nYo te miro ahí\n\nPienso en ti\nEn tus ojos, tu pelo, eres el mismo cielo\nQue está junto a mí\n\nPienso en ti\nEres parte de mi alma, que trajo la calma a tanto sufrir\n\nPienso en ti, pienso en ti\nHas cambiado mi vida que estaba perdida de tanto sufrir\nPienso en ti, pienso en ti\nUna mujer divina que con su sonria cambió mí vivir\n\nPienso en ti\nEn tus ojos, tu pelo, eres el mismo cielo que esta junto a mí\n\nPienso en ti\nEres parte de mi alma, que trajo la calma a tanto sufrir\n\nPienso en ti, pienso en ti\nHas cambiado mi vida que estaba perdida de tanto sufrir\nPienso en ti, pienso en ti\nUna mujer divina que con su sonrisa cambió mi vivir",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Pienso en Ti",
+    "artist": "Los Rehenes",
+    "timestamp": 1788426118550
+  },
+  "68b3ca3053f1da48": {
+    "lyrics": "Me llenaste de ilusiones\nAl fingirme tus amores\nY decir que me adorabas\n\nMe costo mil decepciones\nAl pagarme con traiciones\nel amor que yo te daba\n\nRecuerdas aquella tarde\nMe jurabas por tu madre\nLo que nunca me cumpliste\n\nYo creí en tus juramentos\nPero ya sabias tu cuento\nMalaya lo que dijiste\n\nPero en fin nos divertimos\nNi ganamos ni perdimos\nNi me debes ni te debo\n\nTú te vas por tu camino\nYo ya tengo otro cariño\nY de ti ya ni me acuerdo\n\nRecuerdas aquella tarde\nMe jurabas por tu madre\nLo que nunca me cumpliste\n\nYo creí en tus juramentos\nPero ya sabias tu cuento\nMalaya lo que dijiste\n\nPero en fin nos divertimos\nNi ganamos ni perdimos\nNi me debes ni te debo\n\nTú te vas por tu camino\nYo ya tengo otro cariño\nY de ti ya ni me acuerdo",
+    "syncedLines": [
+      {
+        "time": 20.36,
+        "text": "Me llenaste de ilusiones"
+      },
+      {
+        "time": 22.23,
+        "text": "Al fingirme tus amores"
+      },
+      {
+        "time": 24.86,
+        "text": "Y decir que me adorabas"
+      },
+      {
+        "time": 31.02,
+        "text": "Me costo mil decepciones"
+      },
+      {
+        "time": 33.05,
+        "text": "Al pagarme con traiciones"
+      },
+      {
+        "time": 35.15,
+        "text": "el amor que yo te daba"
+      },
+      {
+        "time": 42.08,
+        "text": "Recuerdas aquella tarde"
+      },
+      {
+        "time": 44.57,
+        "text": "Me jurabas por tu madre"
+      },
+      {
+        "time": 46.56,
+        "text": "Lo que nunca me cumpliste"
+      },
+      {
+        "time": 52.97,
+        "text": "Yo creí en tus juramentos"
+      },
+      {
+        "time": 54.66,
+        "text": "Pero ya sabias tu cuento"
+      },
+      {
+        "time": 57.32,
+        "text": "Malaya lo que dijiste"
+      },
+      {
+        "time": 63.61,
+        "text": "Pero en fin nos divertimos"
+      },
+      {
+        "time": 65.45,
+        "text": "Ni ganamos ni perdimos"
+      },
+      {
+        "time": 67.24,
+        "text": "Ni me debes ni te debo"
+      },
+      {
+        "time": 72.78,
+        "text": "Tú te vas por tu camino"
+      },
+      {
+        "time": 75.45,
+        "text": "Yo ya tengo otro cariño"
+      },
+      {
+        "time": 77.3,
+        "text": "Y de ti ya ni me acuerdo"
+      },
+      {
+        "time": 101.22,
+        "text": "Recuerdas aquella tarde"
+      },
+      {
+        "time": 103.38,
+        "text": "Me jurabas por tu madre"
+      },
+      {
+        "time": 105.33,
+        "text": "Lo que nunca me cumpliste"
+      },
+      {
+        "time": 111.68,
+        "text": "Yo creí en tus juramentos"
+      },
+      {
+        "time": 113.85,
+        "text": "Pero ya sabias tu cuento"
+      },
+      {
+        "time": 116.23,
+        "text": "Malaya lo que dijiste"
+      },
+      {
+        "time": 122.27,
+        "text": "Pero en fin nos divertimos"
+      },
+      {
+        "time": 124.37,
+        "text": "Ni ganamos ni perdimos"
+      },
+      {
+        "time": 126.15,
+        "text": "Ni me debes ni te debo"
+      },
+      {
+        "time": 131.56,
+        "text": "Tú te vas por tu camino"
+      },
+      {
+        "time": 133.96,
+        "text": "Yo ya tengo otro cariño"
+      },
+      {
+        "time": 136.05,
+        "text": "Y de ti ya ni me acuerdo"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "Ni Me Debes Ni Te Debo",
+    "artist": "Los Invasores De Nuevo Leon",
+    "timestamp": 1788426121340
+  },
+  "c12984a46ec63dee": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Tío Alberto",
+    "artist": "Nicho Hinojosa",
+    "timestamp": 1788426130288
+  },
+  "c68114cf0d13704e": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Que No Te Asombre",
+    "artist": "Ninel Conde",
+    "timestamp": 1788426132433
+  },
+  "3ac0bc20d9502a3b": {
+    "lyrics": "Préstame tus manos\nMírame a los ojos\nY seca ese llanto\nQue me hace sufrir\n\nSi tú ya lo sabes\nQue yo soy tan tuyo\nY lleno de orgullo\nMe siento de ti\n\nNo dejes que el celo\nNi que el egoísmo\nTiren al abismo\nNuestro gran amor\n\nSi amor como el nuestro\nMerece la gloria\nPorque es una historia\nPorque es una historia\nQue no tiene fin\n\nNo, no dudes de mi amor\nEs lo que pido, por favor\nMe ofendes al pensar\nQue yo pudiera traicionar\nLa fe que con cariño\nDepositas al besar\nY al acariciarme\n\nVen y arranca de tu mente\nEsa negra sensación\nSi acaso es necesario\nPartirás mi corazón\nY entonces hallarás\nQue solo tú vives en él\nTú vives en él, solo tú\n\nNo, no dudes de mi amor\nEs lo que pido, por favor\nMe ofendes al pensar\nQue yo pudiera traicionar\nLa fe que con cariño\nDepositas al besar\nY al acariciarme\n\nVen y arranca de tu mente\nEsa negra sensación\nSi acaso es necesario\nPartirás mi corazón\nY entonces hallarás\nQue solo tú vives en él\nTú vives en él, tú vives en él\nSolo tú vives en él, solo tú",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "No Dudes de Mi Amor",
+    "artist": "Los Solitarios",
+    "timestamp": 1788426134307
+  },
+  "8c354dc5c364f7c5": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Muriendo Lento",
+    "artist": "Desconocido",
+    "timestamp": 1788426142088
+  },
+  "46a9e0a48a19971e": {
+    "lyrics": "Oye, espero tu regreso\nDesde el último beso no he podido vivir\nMira tu amor me esta matando\nY el nido esta esperando\nTú tienes que volver\n\nTodo sigue igual en nuestro nido\nTodo te a esperado regresa\nTrinos de zenzontle en las mañanas\nTrae nueva esperanza al despertar\n\nVuelan las gaviotas en parvada\nY en la vieja playa llora el mar\nPasan los cocuyos cual cascada\nTodo en nuestro nido sigue igual\n\nCon toda esa belleza y tu no estas\nMi amor regresa pronto sin tardar\nQue yo me estoy muriendo\nDe ansiedad\nY el nido esta esperando, vuelve ya!!\n\nVaya,vaya,vaya!\n\nVuelan las gaviotas en parvada\nY en la vieja playa llora el mar\nPasan los cocuyos cual cascada\nTodo en nuestro nido sigue igual\n\nCon toda esa belleza y tu no estas\nMi amor regresa pronto sin tardar\nQue yo me estoy muriendo\nDe ansiedad\nY el nido esta esperando, vuelve ya",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El Nido",
+    "artist": "La Sonora Santanera",
+    "timestamp": 1788426145503
+  },
+  "88f48f49e200738c": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Viejeras (feat. Plan B)",
+    "artist": "Dj Warner",
+    "timestamp": 1788426148426
+  },
+  "92576674759765b1": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Descalzo a Laredo",
+    "artist": "Tejanos Boys",
+    "timestamp": 1788426150185
+  },
+  "3afa3516bfd017b8": {
+    "lyrics": "¿Cuándo vendrás amor mío?,\nme pregunto a diario,\nllorando en tu almohada\n\nAl ver tu campo vacío,\ndonde duermes conmigo,\nabrazado en la cama\n\nPara que acabes tu frío,\ncon todo este fuego,\nque quema mi alma\n\n(Se Repite Otra Vez)\n¿Cuándo vendrás amor mío?,\nle pregunto a diario, a tu bello retrato\n\nPorque entre más yo lo miro,\nlo beso y lo guardo, y más lo maltrato\n\nY mas suspiro y suspiro,\nal verlo en tu almohada,\nocupando tu campo.\n\n¿Cuándo vendrás amor mío?,\n¿Cuándo vendrás?, a llenar este vacío,\n¿Cuándo vendrás?\n\n¿Cuándo vendrás amor mío?,\na quitarme las penas, y a ocupar tu lugar.",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Cuando Vendras",
+    "artist": "Los Invasores de Nuevo León",
+    "timestamp": 1788440016768
+  },
+  "17947bdfb173fe86": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Anillo de Compromiso",
+    "artist": "Loa Cadetes De Linares",
+    "timestamp": 1788440021578
+  },
+  "bd9de1095860c0e9": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Lágrimas de Hombre",
+    "artist": "Raúl Sandoval",
+    "timestamp": 1788440027559
+  },
+  "0c6eb2bc9470409f": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "(30)_1784013843",
+    "artist": "COSTEL",
+    "timestamp": 1788440032828
+  },
+  "394842fd527a9f65": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Cum On Feel The Noize",
+    "artist": "Stizzle",
+    "timestamp": 1788440034436
+  },
+  "9c0394916b155019": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Ella (feat. Lydia de Presuntos implicados)",
+    "artist": "Sandoval",
+    "timestamp": 1788440038257
+  },
+  "39d604f9bf2429bc": {
+    "lyrics": "Echele mi Chuy\nPor vanidad un dia te fuiste de mi vida\nMe abandonaste cuando yo mas te queria\nMe destrozaste el corazón con tus desprecios\n\nY envenenado me dejaste con tus besos\nY no conforme con aserme tanto daño\nAhora pretendes volver, a revivir ese ayer\nQue en mi ya esta olvidado\n\nVoy a decirte la verdad aunque te duela\nTengo en la vida a quien querer y quien me quiera\nTu amor malvado se ha quedado en mi pasado\nTus besos brujos de mi boca se han borrado\n\nNi estando loco volveria contigo, mujer aunque te duela\nAunque, te duela en corazon, por la desilusion\nNo volvere contigo, aunque te duela, aunque te duela\nAunque te duela, aunque te duela,auque te duela\n\nEchele mi Chuy\n\nVoy a decirte la verdad aunque te duela\nTengo en la vida a quien querer y quien me quiera\nTu amor malvado se a quedado en mi pasado\nTus besos brujos, de mi boca se han borrado\n\nNi estando loco volveria contigo, mujer aunque te duela\nAunque, te duela en corazon, por la desilusion\nNo volvere contigo, aunque te duela, aunque te duela\nAunque te duela, aunque te duela, auque te duela\nAuque te duela",
+    "syncedLines": [
+      {
+        "time": 23.75,
+        "text": "Echele mi Chuy"
+      },
+      {
+        "time": 24.3,
+        "text": "Por vanidad un dia te fuiste de mi vida"
+      },
+      {
+        "time": 27.05,
+        "text": "Me abandonaste cuando yo mas te queria"
+      },
+      {
+        "time": 30.23,
+        "text": "Me destrozaste el corazón con tus desprecios"
+      },
+      {
+        "time": 34.88,
+        "text": "Y envenenado me dejaste con tus besos"
+      },
+      {
+        "time": 37.02,
+        "text": "Y no conforme con aserme tanto daño"
+      },
+      {
+        "time": 40.94,
+        "text": "Ahora pretendes volver, a revivir ese ayer"
+      },
+      {
+        "time": 51.63,
+        "text": "Que en mi ya esta olvidado"
+      },
+      {
+        "time": 52.44,
+        "text": "Voy a decirte la verdad aunque te duela"
+      },
+      {
+        "time": 53.52,
+        "text": "Tengo en la vida a quien querer y quien me quiera"
+      },
+      {
+        "time": 55.44,
+        "text": "Tu amor malvado se ha quedado en mi pasado"
+      },
+      {
+        "time": 61.98,
+        "text": "Tus besos brujos de mi boca se han borrado"
+      },
+      {
+        "time": 66.8,
+        "text": "Ni estando loco volveria contigo, mujer aunque te duela"
+      },
+      {
+        "time": 72.68,
+        "text": "Aunque, te duela en corazon, por la desilusion"
+      },
+      {
+        "time": 75.68,
+        "text": "No volvere contigo, aunque te duela, aunque te duela"
+      },
+      {
+        "time": 80.06,
+        "text": "Aunque te duela, aunque te duela,auque te duela"
+      },
+      {
+        "time": 90.64,
+        "text": "Echele mi Chuy"
+      },
+      {
+        "time": 92.59,
+        "text": "Voy a decirte la verdad aunque te duela"
+      },
+      {
+        "time": 109.44,
+        "text": "Tengo en la vida a quien querer y quien me quiera"
+      },
+      {
+        "time": 114.61,
+        "text": "Tu amor malvado se a quedado en mi pasado"
+      },
+      {
+        "time": 118.19,
+        "text": "Tus besos brujos, de mi boca se han borrado"
+      },
+      {
+        "time": 125.45,
+        "text": "Ni estando loco volveria contigo, mujer aunque te duela"
+      },
+      {
+        "time": 132.72,
+        "text": "Aunque, te duela en corazon, por la desilusion"
+      },
+      {
+        "time": 136.02,
+        "text": "No volvere contigo, aunque te duela, aunque te duela"
+      },
+      {
+        "time": 139.04,
+        "text": "Aunque te duela, aunque te duela, auque te duela"
+      },
+      {
+        "time": 157.29,
+        "text": "Auque te duela"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "Aunque Te Duela",
+    "artist": "Los Huracanes del Norte",
+    "timestamp": 1788440041311
+  },
+  "c4a3bf05bf3021d7": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "No puedo dejar de pensar en ti",
+    "artist": "Nicho Hinojosa",
+    "timestamp": 1788440052659
+  },
+  "ecfb109106410366": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "No te vayas corazón",
+    "artist": "Gladys",
+    "timestamp": 1788440065252
+  },
+  "bde2e133e1bb1e52": {
+    "lyrics": "Salir a la calle\nBuscando un detalle\nPara en este día que es tan importante\nPoderte decir\n\nQue Dios te bendiga\nQue te quiero mucho\nY que lo cumplas feliz\n\nHabía muchos libros\nTenían poesías\nY muchas palabras calladas y frías\nNo tenían mi voz\n\nHabía rosas rojas\nPero no tenían\nEl rojo de mi corazón\n\nBuscaba y buscaba\nY por nada me decidí\nY con las manos vacías\nAhora estoy frente a ti\n\nHay un libro aquí en mi alma\nCon tan solo dos palabras\nTe amo, te amo\nTe invito a escribir en él, en él\n\nY este pobre corazón\nQue también pongo en tus manos\nEs tu santo y tu cumpleaños\nY por siempre y para ti\nAcéptame a mí\nComo mi humilde regalo\n\nHabía muchos libros\nTenían poesías\nY muchas palabras calladas y frías\nNo tenían mi voz\n\nHabía rosas rojas\nPero no tenían\nEl rojo de mi corazón\n\nBuscaba y buscaba\nY por nada me decidí\nY con las manos vacías\nAhora estoy frente a ti\n\nHay un libro aquí en mi alma\nCon tan solo dos palabras\nTe amo, te amo\nTe invito a escribir en él, en él\n\nY esté pobre corazón\nQue también pongo en tus manos\nEs tu santo y tu cumpleaños\nY por siempre y para ti\nAcéptame a mí\nComo mi humilde regalo",
+    "syncedLines": [
+      {
+        "time": 27.06,
+        "text": "Salir a la calle"
+      },
+      {
+        "time": 28.82,
+        "text": "Buscando un detalle"
+      },
+      {
+        "time": 30.3,
+        "text": "Para en este día que es tan importante"
+      },
+      {
+        "time": 33.33,
+        "text": "Poderte decir"
+      },
+      {
+        "time": 36.25,
+        "text": "Que Dios te bendiga"
+      },
+      {
+        "time": 37.84,
+        "text": "Que te quiero mucho"
+      },
+      {
+        "time": 40.58,
+        "text": "Y que lo cumplas feliz"
+      },
+      {
+        "time": 43.93,
+        "text": "Había muchos libros"
+      },
+      {
+        "time": 45.42,
+        "text": "Tenían poesías"
+      },
+      {
+        "time": 47.24,
+        "text": "Y muchas palabras calladas y frías"
+      },
+      {
+        "time": 50.2,
+        "text": "No tenían mi voz"
+      },
+      {
+        "time": 53.18,
+        "text": "Había rosas rojas"
+      },
+      {
+        "time": 54.77,
+        "text": "Pero no tenían"
+      },
+      {
+        "time": 58.42,
+        "text": "El rojo de mi corazón"
+      },
+      {
+        "time": 62.33,
+        "text": "Buscaba y buscaba"
+      },
+      {
+        "time": 64.42,
+        "text": "Y por nada me decidí"
+      },
+      {
+        "time": 68.21,
+        "text": "Y con las manos vacías"
+      },
+      {
+        "time": 71.29,
+        "text": "Ahora estoy frente a ti"
+      },
+      {
+        "time": 74.21,
+        "text": "Hay un libro aquí en mi alma"
+      },
+      {
+        "time": 76.73,
+        "text": "Con tan solo dos palabras"
+      },
+      {
+        "time": 79.97,
+        "text": "Te amo, te amo"
+      },
+      {
+        "time": 82.85,
+        "text": "Te invito a escribir en él, en él"
+      },
+      {
+        "time": 87.82,
+        "text": "Y este pobre corazón"
+      },
+      {
+        "time": 90.22,
+        "text": "Que también pongo en tus manos"
+      },
+      {
+        "time": 94.58,
+        "text": "Es tu santo y tu cumpleaños"
+      },
+      {
+        "time": 96.69,
+        "text": "Y por siempre y para ti"
+      },
+      {
+        "time": 103.4,
+        "text": "Acéptame a mí"
+      },
+      {
+        "time": 106.23,
+        "text": "Como mi humilde regalo"
+      },
+      {
+        "time": 134.26,
+        "text": "Había muchos libros"
+      },
+      {
+        "time": 135.86,
+        "text": "Tenían poesías"
+      },
+      {
+        "time": 136.99,
+        "text": "Y muchas palabras calladas y frías"
+      },
+      {
+        "time": 140.12,
+        "text": "No tenían mi voz"
+      },
+      {
+        "time": 143.49,
+        "text": "Había rosas rojas"
+      },
+      {
+        "time": 145.08,
+        "text": "Pero no tenían"
+      },
+      {
+        "time": 148.66,
+        "text": "El rojo de mi corazón"
+      },
+      {
+        "time": 152.43,
+        "text": "Buscaba y buscaba"
+      },
+      {
+        "time": 155.03,
+        "text": "Y por nada me decidí"
+      },
+      {
+        "time": 158.24,
+        "text": "Y con las manos vacías"
+      },
+      {
+        "time": 161.77,
+        "text": "Ahora estoy frente a ti"
+      },
+      {
+        "time": 164.65,
+        "text": "Hay un libro aquí en mi alma"
+      },
+      {
+        "time": 166.8,
+        "text": "Con tan solo dos palabras"
+      },
+      {
+        "time": 169.78,
+        "text": "Te amo, te amo"
+      },
+      {
+        "time": 173.23,
+        "text": "Te invito a escribir en él, en él"
+      },
+      {
+        "time": 178.26,
+        "text": "Y esté pobre corazón"
+      },
+      {
+        "time": 180.4,
+        "text": "Que también pongo en tus manos"
+      },
+      {
+        "time": 184.47,
+        "text": "Es tu santo y tu cumpleaños"
+      },
+      {
+        "time": 186.58,
+        "text": "Y por siempre y para ti"
+      },
+      {
+        "time": 193.61,
+        "text": "Acéptame a mí"
+      },
+      {
+        "time": 196.47,
+        "text": "Como mi humilde regalo"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "Mi Humilde Regalo",
+    "artist": "Los Rehenes",
+    "timestamp": 1788440068327
+  },
+  "2a5a50bc27931d49": {
+    "lyrics": "Por tu amor que tanto quiero y tanto extraño\nQue me sirvan una copa y muchas mas\nQue me sirvan de una vez pa' todo el año\nQue me quiero seriamente emborrachar\nSi te cuentan que me vieron muy borracho\nOrgullosamente diles que es por ti\nPorque yo tendré el valor de no negarlo\nGritare que por tu amor me estoy matando\nY diré que por tus besos me perdí\nPara de hoy en adelante ya el amor no me interesa\nLlevare por todo el mundo mi dolor y mi tristeza\nPorque se que de este golpe ya no voy a levantarme\nY aunque yo no lo quisiera voy a morirme de amor\nPara de hoy en adelante ya el amor no me interesa\nLlevare por todo el mundo mi dolor y mi tristeza\nPorque se que de este golpe ya no voy a levantarme\nY aunque yo no lo quisiera voy a morirme de amor",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Pa Todo el Año",
+    "artist": "Los Pasteles Verdes",
+    "timestamp": 1788440072230
+  },
+  "b28229c86b1192ce": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Mataron Al Perro",
+    "artist": "Los Karkis",
+    "timestamp": 1788440075635
+  },
+  "d002458616806afa": {
+    "lyrics": "Ya no\nSomos\nAmantes\nAhora\nSomos\nDos extraños\nElige\nEl camino\nQue tu\nQuieres\nY yo\nElijo\nEl que\nMás\nMe conviene\nYa no\nSomos\nAmantes\nAhora\nYa todo\nSe acabó\nEl tiempo\nUn día\nNos dira\nSi fue\nLo mejor\nTerminar\n\nSi no\nMe quieres\nNi tampoco\nTe quiero\nPara que\nContinuar\nSin amar\nEs preferible\nOlvidar\nEl pasado\nY empezar\nDe nuevo\nComo dos\nExtraños\nYa no\nSomos\nAmantes\nAhora\nYa todo\nSe acabó\nEl tiempo\nUn día\nNos dira\nSi fue\nLo mejor\nTerminar\n\nSi no\nMe quieres\nNi tampoco\nTe quiero\nPara que\nContinuar\nSin amar\nEs preferible\nOlvidar\nEl pasado\nY empezar\nDe nuevo\nComo dos\nExtraños\nYa no\nSomos\nAmantes\nAhora\nYa todo\nSe acabó\nEl tiempo\nUn día\nNos dira\nSi fue\nLo mejor\nTerminar",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Ya No Somos Amantes",
+    "artist": "Salomón Robles",
+    "timestamp": 1788440080359
+  },
+  "23bb550e3cf79592": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Cumbia Comanchera",
+    "artist": "Los Chukos",
+    "timestamp": 1788590443582
+  },
+  "e8b0383c583bb52e": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Intentalo (feat. Hebert Vargas & Binomio de Oro de América)",
+    "artist": "La Combinación Vallenata",
+    "timestamp": 1788590460940
+  },
+  "ac4f977ce55dc094": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "MITAD Y MITAD",
+    "artist": "Desconocido",
+    "timestamp": 1788590463511
+  },
+  "6d02ea46145edb2c": {
+    "lyrics": "Vente morenita bailemos el tao tao\nel nuevo ritmo que a causado sensacion\n\nAy vente morenita bailemos el tao tao\nel nuevo ritmo que a causado sensacion\n\nSe baila asi de medio lao el tao tao\nbien apretao\nel tao tao de medio lao\nel tao tao tao tao\n\nEl tao tao bien apretao\nel tao tao de medio lao\nekl tao tao acurrucao\nel tao tao tao tao\nTomado de AlbumCancionYLetra.com\n(Rep. 3 veces)",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Tápame",
+    "artist": "Los Tigrillos",
+    "timestamp": 1788590467089
+  },
+  "806126efda7d440f": {
+    "lyrics": "celebrando con tiros al viento\ndespues de un negocio la banda jalando\ncorridos canciones mujeres botellas\nmi gente al pendiente todo asegurando\nse faja una escuedra y un 7\nlas cachas de oro diamantado\n\narmani dolce & gabbana\nland rover para pasear\ncon dolores en la bolsa\nbuchanna´s para tomar\nlas plebitas estan que tientan\npara el party comenzar\n\nmuchos del dicen el katch\ny el seven para su equipo\ny la gente que lo aprecia\ntambien le dice panchito\nno la anda haciendo de pancho\npor que su nombre es francisco\n\nse miran las carabanas\npaseando alla en mazatlan\nseguro ya llego el seven\ny el oyster van a cerrar\nplebada los quiero al tiro\npor que nunca hay que confiar\n\nmi gente no se acelera\npero siempre estan alerta\nasi se los enseñado\nno me gusta la violencia\npero al que se ponga al brinco\naqui conmigo se sienta\n\nlas playas me dan sus olas\nlas mujeres un relax\npero no soy exclusivo\na todas las quiero igual\ny el malecon me divierte\npero que sea en mazatlan",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El Katch",
+    "artist": "El Komander",
+    "timestamp": 1788590472237
+  },
+  "5b4d5cb316c79e62": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "El Golpe Traidor",
+    "artist": "Homero Guerrero Jr.y Los KDT's de Linares",
+    "timestamp": 1788590477032
+  },
+  "6f8be78d40f5b40b": {
+    "lyrics": "No sé qué has de pensar, no sé qué dejarás\nEn esta triste historia donde está nuestro ayer\nY si me vieran llorando este final\nYa no es posible, no te conmoveré\n\nMiro al camino sin esperanza ya\nSoy el viajero que no quiere seguir\nYa no hay motivos donde tu amor no está\nNo hay ilusiones ni ganas de vivir\n\nY volver a cantarte sería inútil\nO volver a alejarme es un error\nEs mejor comprobar que aún soy tuyo\nAunque aún me destroce el corazón\n\nY hoy dejas un silencio\nQue da un eco triste al viento\nY hoy dejas este olvido\nQue quiere acabar conmigo\n\n¿Cuál ha sido mi error? No lo puedo entender\nNo hay palabras, te vas, no quieres responder\n\nY hoy dejas un silencio\nQue da un eco triste al viento\nY hoy dejas este olvido\nQue quiere acabar conmigo\n\nLos recuerdos se van, y volverán por mí\nY habrá mucha tristeza antes de comprender\nQue en todo hay un final, que la vida es así\nY aunque un adiós nos duela, no hay que perder la fe\n\nAferrado a tu amor, yo sé que te adoré\nCon un amor profundo del que no tengo más\nSin presentir jamás que te podía perder\nTan solo habían mil sueños que quise realizar\n\n¿Con qué voy a seguir? ¿Con qué coraje?\nY la gente no entiende mi dolor\nNo hay palabras, te vas, ya no hay palabras\nNo me quieres decir cuál fue mi error\n\nY hoy dejas un silencio\nQue da un eco triste al viento\nY hoy dejas este olvido\nQue quiere acabar conmigo\n\nHa llegado el final, se ha acabado este amor\nNo quieres ni escuchar, ya no hay ni compasión\n\nY hoy dejas un silencio\nQue da un eco triste al viento\nY hoy dejas este olvido\nQue quiere acabar conmigo\n\nY hoy dejas un silencio\nQue da un eco triste al viento",
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "No Te Conmoveré",
+    "artist": "Los Diablitos",
+    "timestamp": 1788590479947
+  },
+  "5d37358218cff878": {
+    "lyrics": null,
+    "syncedLines": null,
+    "translatedLyrics": null,
+    "title": "Ansiada Llamada",
+    "artist": "Los Terrícolas",
+    "timestamp": 1788590483819
+  },
+  "7fcf7489a46cd216": {
+    "lyrics": "Y esto es\nPara todas las madres del mundo\nCon mucho amor\n¡Ombe!\n\nLos caminos de la vida\nNo son como yo pensaba\nComo los imaginaba\nNo son como yo creía\n\nLos caminos de la vida\nSon muy difícil de andarlos\nDifícil de caminarlos\nYo no encuentro la salida\n\nYo pensaba que la vida era distinta\nCuando estaba pequeñito yo creía\nQue las cosas eran fácil como ayer\n\nQue mi viejecita buena se esmeraba\nPor darme todo lo que necesitaba\nY hoy me doy cuenta que tan fácil no es\n\nPorque mi viejita ya está cansada\nDe trabajar pa mi hermano y pa mí\nY ahora con gusto me toca ayudarla\nY por mi vieja lucharé hasta el fin\n\nPor ella lucharé hasta que me muera\nY por ella no me quiero morir\nTampoco que se me muera mi vieja\nPero que va, si el destino es así\n\nLos caminos de la vida\nNo son como yo pensaba\nComo los imaginaba\nNo son como yo creía\n\nLos caminos de la vida\nSon muy difícil de andarlos\nDifícil de caminarlos\nYo no encuentro la salida\n\nY así suena\nEl sentimiento de La Tropa Ballenata\n¡Ay, mamá!\n¡Uy, ombe!\nCon todo mi amor\nPara Gema Morales\n¡Ju-ju-jupa!\n\nUno sabe que la vida\nDe repente ha de acabarse\nY uno espera que sea tarde\nQue llegue la despedida\n\nUn amigo me decía\n\"Recompensaré a mis viejos\nPor la crianza que me dieron\"\nY no le alcanzó la vida\n\nPor eso te pido a ti, mi Dios del cielo\nPara que me guíes al camino correcto\nPara mi viejita linda\nCompensar\n\nPara que olvide ese mar de sufrimientos\nY que de ella se aparte\nTodo el tormento\nQue para criarnos tuvo que pasar\n\nViejita linda, tienes que entenderme\nNo te preocupes, todo va a cambiar\nYo sufro mucho, madrecita, al verte\nNecesitada, y no te puedo dar\n\nA veces lloro al sentirme impotente\nSon tantas cosas que te quiero dar\nY voy a luchar incansablemente\nPorque tú, no mereces sufrir más\n\nLos caminos de la vida\nNo son como yo pensaba\nComo los imaginaba\nNo son como yo creía\n\nLos caminos de la vida\nSon muy difícil de andarlos\nDifícil de caminarlos\nYo no encuentro la salida\n\nLos caminos de la vida\nNo son como yo pensaba\nComo los imaginaba\nNo son como yo creía\n\nLos caminos de la vida\nSon muy difícil de andarlos\nDifícil de caminarlos\nYo no encuentro la salida",
+    "syncedLines": [
+      {
+        "time": 14.61,
+        "text": "Y esto es"
+      },
+      {
+        "time": 16.23,
+        "text": "Para todas las madres del mundo"
+      },
+      {
+        "time": 19.6,
+        "text": "Con mucho amor"
+      },
+      {
+        "time": 21.52,
+        "text": "¡Ombe!"
+      },
+      {
+        "time": 25.43,
+        "text": "Los caminos de la vida"
+      },
+      {
+        "time": 27.84,
+        "text": "No son como yo pensaba"
+      },
+      {
+        "time": 31.04,
+        "text": "Como los imaginaba"
+      },
+      {
+        "time": 34.01,
+        "text": "No son como yo creía"
+      },
+      {
+        "time": 38.06,
+        "text": "Los caminos de la vida"
+      },
+      {
+        "time": 40.29,
+        "text": "Son muy difícil de andarlos"
+      },
+      {
+        "time": 43.56,
+        "text": "Difícil de caminarlos"
+      },
+      {
+        "time": 46.79,
+        "text": "Yo no encuentro la salida"
+      },
+      {
+        "time": 50.77,
+        "text": "Yo pensaba que la vida era distinta"
+      },
+      {
+        "time": 53.75,
+        "text": "Cuando estaba pequeñito yo creía"
+      },
+      {
+        "time": 56.88,
+        "text": "Que las cosas eran fácil como ayer"
+      },
+      {
+        "time": 61.34,
+        "text": "Que mi viejecita buena se esmeraba"
+      },
+      {
+        "time": 64.62,
+        "text": "Por darme todo lo que necesitaba"
+      },
+      {
+        "time": 67.82,
+        "text": "Y hoy me doy cuenta que tan fácil no es"
+      },
+      {
+        "time": 73.28,
+        "text": "Porque mi viejita ya está cansada"
+      },
+      {
+        "time": 76.47,
+        "text": "De trabajar pa mi hermano y pa mí"
+      },
+      {
+        "time": 79.44,
+        "text": "Y ahora con gusto me toca ayudarla"
+      },
+      {
+        "time": 82.76,
+        "text": "Y por mi vieja lucharé hasta el fin"
+      },
+      {
+        "time": 85.65,
+        "text": "Por ella lucharé hasta que me muera"
+      },
+      {
+        "time": 89.04,
+        "text": "Y por ella no me quiero morir"
+      },
+      {
+        "time": 92,
+        "text": "Tampoco que se me muera mi vieja"
+      },
+      {
+        "time": 95.16,
+        "text": "Pero que va, si el destino es así"
+      },
+      {
+        "time": 99.21,
+        "text": "Los caminos de la vida"
+      },
+      {
+        "time": 101.77,
+        "text": "No son como yo pensaba"
+      },
+      {
+        "time": 104.63,
+        "text": "Como los imaginaba"
+      },
+      {
+        "time": 108.08,
+        "text": "No son como yo creía"
+      },
+      {
+        "time": 112.01,
+        "text": "Los caminos de la vida"
+      },
+      {
+        "time": 114.14,
+        "text": "Son muy difícil de andarlos"
+      },
+      {
+        "time": 117.52,
+        "text": "Difícil de caminarlos"
+      },
+      {
+        "time": 120.61,
+        "text": "Yo no encuentro la salida"
+      },
+      {
+        "time": 126.27,
+        "text": "Y así suena"
+      },
+      {
+        "time": 127.66,
+        "text": "El sentimiento de La Tropa Ballenata"
+      },
+      {
+        "time": 134.75,
+        "text": "¡Ay, mamá!"
+      },
+      {
+        "time": 137.61,
+        "text": "¡Uy, ombe!"
+      },
+      {
+        "time": 141.97,
+        "text": "Con todo mi amor"
+      },
+      {
+        "time": 144.32,
+        "text": "Para Gema Morales"
+      },
+      {
+        "time": 145.99,
+        "text": "¡Ju-ju-jupa!"
+      },
+      {
+        "time": 165.93,
+        "text": "Uno sabe que la vida"
+      },
+      {
+        "time": 168.22,
+        "text": "De repente ha de acabarse"
+      },
+      {
+        "time": 171.37,
+        "text": "Y uno espera que sea tarde"
+      },
+      {
+        "time": 174.79,
+        "text": "Que llegue la despedida"
+      },
+      {
+        "time": 178.7,
+        "text": "Un amigo me decía"
+      },
+      {
+        "time": 181.11,
+        "text": "\"Recompensaré a mis viejos"
+      },
+      {
+        "time": 184.12,
+        "text": "Por la crianza que me dieron\""
+      },
+      {
+        "time": 187.52,
+        "text": "Y no le alcanzó la vida"
+      },
+      {
+        "time": 191.4,
+        "text": "Por eso te pido a ti, mi Dios del cielo"
+      },
+      {
+        "time": 194.69,
+        "text": "Para que me guíes al camino correcto"
+      },
+      {
+        "time": 197.86,
+        "text": "Para mi viejita linda"
+      },
+      {
+        "time": 200.36,
+        "text": "Compensar"
+      },
+      {
+        "time": 202.84,
+        "text": "Para que olvide ese mar de sufrimientos"
+      },
+      {
+        "time": 206.01,
+        "text": "Y que de ella se aparte"
+      },
+      {
+        "time": 208.18,
+        "text": "Todo el tormento"
+      },
+      {
+        "time": 209.21,
+        "text": "Que para criarnos tuvo que pasar"
+      },
+      {
+        "time": 214.42,
+        "text": "Viejita linda, tienes que entenderme"
+      },
+      {
+        "time": 217.74,
+        "text": "No te preocupes, todo va a cambiar"
+      },
+      {
+        "time": 220.84,
+        "text": "Yo sufro mucho, madrecita, al verte"
+      },
+      {
+        "time": 224.11,
+        "text": "Necesitada, y no te puedo dar"
+      },
+      {
+        "time": 227.15,
+        "text": "A veces lloro al sentirme impotente"
+      },
+      {
+        "time": 230.38,
+        "text": "Son tantas cosas que te quiero dar"
+      },
+      {
+        "time": 233.63,
+        "text": "Y voy a luchar incansablemente"
+      },
+      {
+        "time": 236.76,
+        "text": "Porque tú, no mereces sufrir más"
+      },
+      {
+        "time": 240.85,
+        "text": "Los caminos de la vida"
+      },
+      {
+        "time": 243.19,
+        "text": "No son como yo pensaba"
+      },
+      {
+        "time": 246.32,
+        "text": "Como los imaginaba"
+      },
+      {
+        "time": 249.66,
+        "text": "No son como yo creía"
+      },
+      {
+        "time": 253.57,
+        "text": "Los caminos de la vida"
+      },
+      {
+        "time": 255.95,
+        "text": "Son muy difícil de andarlos"
+      },
+      {
+        "time": 259.07,
+        "text": "Difícil de caminarlos"
+      },
+      {
+        "time": 262.21,
+        "text": "Yo no encuentro la salida"
+      },
+      {
+        "time": 266.27,
+        "text": "Los caminos de la vida"
+      },
+      {
+        "time": 268.64,
+        "text": "No son como yo pensaba"
+      },
+      {
+        "time": 271.81,
+        "text": "Como los imaginaba"
+      },
+      {
+        "time": 275.07,
+        "text": "No son como yo creía"
+      },
+      {
+        "time": 279.06,
+        "text": "Los caminos de la vida"
+      },
+      {
+        "time": 281.43,
+        "text": "Son muy difícil de andarlos"
+      },
+      {
+        "time": 284.8,
+        "text": "Difícil de caminarlos"
+      },
+      {
+        "time": 287.76,
+        "text": "Yo no encuentro la salida"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "Los caminos de la vida",
+    "artist": "La Tropa Vallenata",
+    "timestamp": 1788590489928
+  },
+  "7048c3bc5d562102": {
+    "lyrics": "En un cañón de la sierra\nHay un rancho en el olvido\nSe declararon la guerra\nHombres que vivían tranquilos\nNomás las mujeres quedan\nEllos murieron a tiros\n\nDel lado norte los Pérez\nDel lado sur los García\nPor culpa de las mujeres\nQue unos y otros pretendían\nPoco a poco se acabaron\nAquellas dos dinastías\n\nLas mujeres muy hermosas\nLlegaban al matrimonio\nPero ahora andan enlutadas\nY es el triste testimonio\nQue por esos andurreales\nAnduvo suelto el demonio\n\nYa ni la milpa florece\nEl campo está abandonado\nNi la hierba mala crece\nY ha muerto todo el ganado\nY el rio según parece\nTambién ya se está secando\n\nNomás las mujeres quedan\nY el odio las va matando\nEn el rostro siempre llevan\nLa huella que deja el llanto\nDe sus maridos se acuerdan\nLlorando en el camposanto\n\nLas mujeres muy hermosas\nLlegaban al matrimonio\nPero ahora andan enlutadas\nY es el triste testimonio\nQue por esos andurreales\nAnduvo suelto el demonio",
+    "syncedLines": [
+      {
+        "time": 14.15,
+        "text": "En un cañón de la sierra"
+      },
+      {
+        "time": 17.23,
+        "text": "Hay un rancho en el olvido"
+      },
+      {
+        "time": 24.52,
+        "text": "Se declararon la guerra"
+      },
+      {
+        "time": 27.64,
+        "text": "Hombres que vivían tranquilos"
+      },
+      {
+        "time": 30.3,
+        "text": "Nomás las mujeres quedan"
+      },
+      {
+        "time": 31.8,
+        "text": "Ellos murieron a tiros"
+      },
+      {
+        "time": 41.11,
+        "text": "Del lado norte los Pérez"
+      },
+      {
+        "time": 44.22,
+        "text": "Del lado sur los García"
+      },
+      {
+        "time": 51.83,
+        "text": "Por culpa de las mujeres"
+      },
+      {
+        "time": 54.69,
+        "text": "Que unos y otros pretendían"
+      },
+      {
+        "time": 55.58,
+        "text": "Poco a poco se acabaron"
+      },
+      {
+        "time": 59.77,
+        "text": "Aquellas dos dinastías"
+      },
+      {
+        "time": 71.75,
+        "text": "Las mujeres muy hermosas"
+      },
+      {
+        "time": 73,
+        "text": "Llegaban al matrimonio"
+      },
+      {
+        "time": 78.54,
+        "text": "Pero ahora andan enlutadas"
+      },
+      {
+        "time": 81.14,
+        "text": "Y es el triste testimonio"
+      },
+      {
+        "time": 84.06,
+        "text": "Que por esos andurreales"
+      },
+      {
+        "time": 89.49,
+        "text": "Anduvo suelto el demonio"
+      },
+      {
+        "time": 104.48,
+        "text": "Ya ni la milpa florece"
+      },
+      {
+        "time": 107.5,
+        "text": "El campo está abandonado"
+      },
+      {
+        "time": 114.79,
+        "text": "Ni la hierba mala crece"
+      },
+      {
+        "time": 118.06,
+        "text": "Y ha muerto todo el ganado"
+      },
+      {
+        "time": 121.34,
+        "text": "Y el rio según parece"
+      },
+      {
+        "time": 123.99,
+        "text": "También ya se está secando"
+      },
+      {
+        "time": 125.99,
+        "text": "Nomás las mujeres quedan"
+      },
+      {
+        "time": 133.83,
+        "text": "Y el odio las va matando"
+      },
+      {
+        "time": 141.7,
+        "text": "En el rostro siempre llevan"
+      },
+      {
+        "time": 144.86,
+        "text": "La huella que deja el llanto"
+      },
+      {
+        "time": 148.19,
+        "text": "De sus maridos se acuerdan"
+      },
+      {
+        "time": 151.98,
+        "text": "Llorando en el camposanto"
+      },
+      {
+        "time": 161.99,
+        "text": "Las mujeres muy hermosas"
+      },
+      {
+        "time": 163.25,
+        "text": "Llegaban al matrimonio"
+      },
+      {
+        "time": 168.6,
+        "text": "Pero ahora andan enlutadas"
+      },
+      {
+        "time": 169.51,
+        "text": "Y es el triste testimonio"
+      },
+      {
+        "time": 174.19,
+        "text": "Que por esos andurreales"
+      },
+      {
+        "time": 179.41,
+        "text": "Anduvo suelto el demonio"
+      }
+    ],
+    "translatedLyrics": null,
+    "title": "Nomas Las Mujeres Quedan",
+    "artist": "Los Cadetes De Linares",
+    "timestamp": 1788590494370
   }
 }
