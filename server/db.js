@@ -1303,21 +1303,24 @@ export async function getAllUsers() {
 // FUNCIONES PARA PLAYLISTS
 // ============================================================
 
-export async function createPlayList(name, description, userId) {
+export async function createPlayList(name, description, userId, isPublic = false) {
   const database = await getDb();
   
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   
   await database.run(
-    `INSERT INTO playlists (id, name, description, user_id, created_at, updated_at)
-     VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`,
-    [id, name.trim(), description?.trim() || '', userId]
+    `INSERT INTO playlists (id, name, description, user_id, is_public, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+    [id, name.trim(), description?.trim() || '', userId, isPublic ? 1 : 0]
   );
   
   const playlist = await database.get(
     'SELECT * FROM playlists WHERE id = ?',
     [id]
   );
+  if (playlist) {
+    playlist.is_public = !!playlist.is_public;
+  }
   
   return playlist;
 }
@@ -1329,7 +1332,7 @@ export async function getPlayLists(userId) {
   const params = [];
   
   if (userId) {
-    sql += ' WHERE user_id = ? OR user_id IS NULL';
+    sql += ' WHERE user_id = ? OR is_public = 1';
     params.push(userId);
   }
   
@@ -1355,6 +1358,9 @@ export async function getPlayList(id) {
     'SELECT * FROM playlists WHERE id = ?',
     [id]
   );
+  if (playlist) {
+    playlist.is_public = !!playlist.is_public;
+  }
   
   if (playlist) {
     const songs = await database.all(
@@ -1728,9 +1734,19 @@ async function initSchema(database) {
       name TEXT NOT NULL,
       description TEXT,
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      is_public INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS playlist_visibility_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      playlist_id TEXT NOT NULL,
+      user_id INTEGER NOT NULL,
+      is_public INTEGER NOT NULL,
+      changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
 
     CREATE TABLE IF NOT EXISTS playlist_songs (
       playlist_id TEXT REFERENCES playlists(id) ON DELETE CASCADE,

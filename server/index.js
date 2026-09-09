@@ -1323,7 +1323,7 @@ app.get('/api/playlists', async (req, res) => {
   try {
     const userId = req.query.userId || null;
     const playlists = await db.getPlayLists(userId);
-    res.json({ playlists });
+    res.json({ playlists: (playlists || []).map(pl => ({ ...pl, is_public: !!pl.is_public })) });
   } catch (err) {
     console.error('[api/playlists] Error:', err);
     res.status(500).json({ error: 'Error al obtener listas de reproducción' });
@@ -1334,7 +1334,7 @@ app.get('/api/playlists/:id', async (req, res) => {
   try {
     const playlist = await db.getPlayList(req.params.id);
     if (!playlist) return res.status(404).json({ error: 'Lista no encontrada' });
-    res.json({ playlist });
+    res.json({ playlist: { ...playlist, is_public: !!playlist.is_public } });
   } catch (err) {
     console.error('[api/playlists/:id] Error:', err);
     res.status(500).json({ error: 'Error al obtener la lista' });
@@ -1343,9 +1343,9 @@ app.get('/api/playlists/:id', async (req, res) => {
 
 app.post('/api/playlists', async (req, res) => {
   try {
-    const { name, description, userId } = req.body;
+    const { name, description, userId, isPublic } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
-    const playlist = await db.createPlayList(name, description, userId);
+    const playlist = await db.createPlayList(name, description, userId, Boolean(isPublic));
     res.json({ playlist });
   } catch (err) {
     console.error('[api/playlists POST] Error:', err);
