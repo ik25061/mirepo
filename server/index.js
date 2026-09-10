@@ -1343,9 +1343,10 @@ app.get('/api/playlists/:id', async (req, res) => {
 
 app.post('/api/playlists', async (req, res) => {
   try {
-    const { name, description, userId, isPublic } = req.body;
+    const { name, description, userId, isPublic, is_public } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'El nombre es requerido' });
-    const playlist = await db.createPlayList(name, description, userId, Boolean(isPublic));
+    const isPublicFlag = Boolean(isPublic ?? is_public ?? false);
+    const playlist = await db.createPlayList(name, description, userId, isPublicFlag);
     res.json({ playlist });
   } catch (err) {
     console.error('[api/playlists POST] Error:', err);

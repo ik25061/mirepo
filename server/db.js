@@ -1774,6 +1774,15 @@ async function initSchema(database) {
     await database.exec('ALTER TABLE songs ADD COLUMN key_name TEXT');
   } catch (e) { /* Ya existe */ }
 
+  // Compatibilidad con bases de datos antiguas: añadir la columna
+  // is_public si la tabla de playlists ya existía sin ella.
+  try {
+    await database.exec('ALTER TABLE playlists ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0');
+    console.log('[db] ✅ Columna playlists.is_public añadida');
+  } catch (e) {
+    // La columna ya existe o no se puede alterar; ignorar y continuar.
+  }
+
   // Índices para las consultas/joins más frecuentes. Se crean con IF NOT
   // EXISTS, así que no rompen un esquema ya existente (solo aceleran).
   await database.exec(`
