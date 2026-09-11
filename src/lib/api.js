@@ -308,10 +308,10 @@ export const api = {
 
   getPlayLists: (userId) => request(`/api/playlists${userId ? `?userId=${userId}` : ''}`),
   getPlayList: (id) => request(`/api/playlists/${id}`),
-  createPlayList: (name, description, userId) => 
+  createPlayList: (name, description, userId, isPublic = false) =>
     request('/api/playlists', {
       method: 'POST',
-      body: JSON.stringify({ name, description, userId }),
+      body: JSON.stringify({ name, description, userId, isPublic }),
     }),
   addSongToPlayList: (playlistId, songId) => 
     request(`/api/playlists/${playlistId}/songs`, {
@@ -324,6 +324,30 @@ export const api = {
       body: JSON.stringify({ songId }),
     }),
   deletePlayList: (id) => request(`/api/playlists/${id}`, { method: 'DELETE' }),
+  updatePlayList: (id, patch) => request(`/api/playlists/${id}`, { method: 'PATCH', body: JSON.stringify(patch || {}) }),
+
+  updateSong: (id, fields) => request(`/api/songs/${id}`, { method: 'PUT', body: JSON.stringify(fields || {}) }),
+  setSongGenres: (id, genres) => request(`/api/songs/${id}/genres`, { method: 'PUT', body: JSON.stringify({ genres }) }),
+  setSongMoods: (id, moods) => request(`/api/songs/${id}/moods`, { method: 'PUT', body: JSON.stringify({ moods }) }),
+
+  createGenre: (name) => request('/api/genres', { method: 'POST', body: JSON.stringify({ name }) }),
+  renameGenre: (id, name) => request(`/api/genres/${id}`, { method: 'PUT', body: JSON.stringify({ name }) }),
+  deleteGenre: (id) => request(`/api/genres/${id}`, { method: 'DELETE' }),
+
+  getMoods: () => request('/api/moods'),
+  createMood: (name, color) => request('/api/moods', { method: 'POST', body: JSON.stringify({ name, color }) }),
+  renameMood: (id, name, color) => request(`/api/moods/${id}`, { method: 'PUT', body: JSON.stringify({ name, color }) }),
+  deleteMood: (id) => request(`/api/moods/${id}`, { method: 'DELETE' }),
+  getMoodSongs: (moodId, params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (params.userId) qs.set('userId', params.userId);
+    return request(`/api/moods/${moodId}/songs${qs.toString() ? `?${qs.toString()}` : ''}`);
+  },
+
+  getUserSettings: (userId) => request(`/api/users/${userId}/settings`),
+  updateUserSettings: (userId, patch) => request(`/api/users/${userId}/settings`, { method: 'PUT', body: JSON.stringify(patch || {}) }),
 
   scanDuplicates: (folderPath) => request('/api/scan', {
     method: 'POST',
@@ -337,9 +361,24 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ filePath }),
   }),
+
+  getPodcasts: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    if (params.search) qs.set('search', params.search);
+    const url = `/api/podcasts${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return request(url);
+  },
+  getPodcast: (id) => request(`/api/podcasts/${id}`),
+  getPodcastTx: (id, lang = 'es') => request(`/api/podcasts/${id}/transcript?lang=${lang}`),
+  rescanPodcasts: () => request('/api/podcasts/rescan', { method: 'POST' }),
 };
 
 export const audioUrl = (id) => `${getApiUrl() || ''}/audio/${id}`;
 export const coverUrl = (id) => `${getApiUrl() || ''}/cover/${id}`;
 export const artistCoverUrl = (artist) => `${getApiUrl() || ''}/artist-cover/${encodeURIComponent(artist)}`;
+export const podcastAudioUrl = (id) => `${getApiUrl() || ''}/podcast-audio/${id}`;
+export const podcastCoverUrl = (id) => `${getApiUrl() || ''}/podcast-cover/${id}`;
+export const podcastImageUrl = (id, idx) => `${getApiUrl() || ''}/podcast-image/${id}/${idx}`;
 export const serverUrl = getApiUrl();

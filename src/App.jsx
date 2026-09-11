@@ -24,6 +24,7 @@
  */
 
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext.jsx';
 import { OfflineProvider, useOffline } from './context/OfflineContext.jsx';
 import { DownloadProvider, useDownload } from './context/DownloadContext.jsx';
 import { PlayerProvider, usePlayer } from './context/PlayerContext.jsx';
@@ -46,6 +47,7 @@ import DownloadsView from './components/DownloadsView.jsx';
 import OfflineMode from './components/OfflineMode.jsx';
 import AIRecommendations from './components/AIRecommendations.jsx';
 import SyncNotification from './components/SyncNotification.jsx';
+import ThemeSettings from './components/ThemeSettings.jsx';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 
@@ -88,6 +90,9 @@ function Shell() {
   } = useDownload();
 
   const { current, isPlaying, togglePlay, next, prev, stop, removeFromQueue } = usePlayer();
+
+  const { theme, css, bgImageUrl } = useTheme();
+  const appBgStyle = bgImageUrl ? { backgroundColor: theme.bgColor } : { background: css.background };
 
   const { allSongs: serverAllSongs, loading: allSongsLoading, toggleLiked, removeSong: removeSongFromAllSongs } = useAllSongs({ enabled: !offlineMode });
 
@@ -328,7 +333,7 @@ function Shell() {
 
   if (shouldShowFullScreenLoader) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background" style={{ background: '#121212' }}>
+      <div className="flex h-screen items-center justify-center bg-background" style={appBgStyle}>
         <Loader2 className="animate-spin text-primary" size={32} />
       </div>
     );
@@ -347,7 +352,7 @@ function Shell() {
   // 8.4 Pantalla de error
   if (library.error) {
     return (
-      <div className="flex h-screen flex-col bg-background" style={{ background: '#121212' }}>
+      <div className="flex h-screen flex-col bg-background" style={appBgStyle}>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-400 mb-4">Error: {library.error}</p>
@@ -412,7 +417,13 @@ function Shell() {
   // ============================================================
   if (isMobile) {
     return (
-      <div className="flex flex-col h-full bg-background text-foreground overflow-hidden" style={{ background: '#121212' }}>
+      <div className="flex flex-col h-full bg-background text-foreground overflow-hidden" style={appBgStyle}>
+        {bgImageUrl && (
+          <div aria-hidden className="pointer-events-none absolute inset-0" style={{ backgroundImage: `url(${bgImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: `blur(${theme.bgBlur || 0}px)`, transform: 'scale(1.05)' }} />
+        )}
+        {bgImageUrl && (
+          <div aria-hidden className="pointer-events-none absolute inset-0" style={{ backgroundColor: theme.bgOverlayColor, opacity: theme.bgOverlayOpacity }} />
+        )}
         {/* ===== NOTIFICACIÓN DE SINCRONIZACIÓN ===== */}
         <SyncNotification
           isOnline={isOnline}
@@ -561,7 +572,13 @@ function Shell() {
   // 11. VISTA ESCRITORIO
   // ============================================================
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground relative" style={{ background: '#121212', color: '#fff' }}>
+    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground relative" style={{ ...appBgStyle, color: '#fff' }}>
+      {bgImageUrl && (
+        <div aria-hidden className="pointer-events-none absolute inset-0" style={{ backgroundImage: `url(${bgImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: `blur(${theme.bgBlur || 0}px)`, transform: 'scale(1.05)' }} />
+      )}
+      {bgImageUrl && (
+        <div aria-hidden className="pointer-events-none absolute inset-0" style={{ backgroundColor: theme.bgOverlayColor, opacity: theme.bgOverlayOpacity }} />
+      )}
       {/* ===== NOTIFICACIÓN DE SINCRONIZACIÓN ===== */}
       <SyncNotification
         isOnline={isOnline}
@@ -671,6 +688,8 @@ function Shell() {
               likedIds={likedIds}
               history={[]}
             />
+          ) : view.type === 'theme' ? (
+            <ThemeSettings userId={user?.id} onBack={() => setView({ type: 'home' })} />
           ) : null}
         </main>
         <PlayerBar
@@ -690,6 +709,15 @@ function Shell() {
 export default function App() {
   return (
     <AuthProvider>
+      <ThemeWrapper />
+    </AuthProvider>
+  );
+}
+
+function ThemeWrapper() {
+  const { user } = useAuth();
+  return (
+    <ThemeProvider userId={user?.id}>
       <OfflineProvider>
         <DownloadProvider>
           <PlayerProvider>
@@ -697,6 +725,6 @@ export default function App() {
           </PlayerProvider>
         </DownloadProvider>
       </OfflineProvider>
-    </AuthProvider>
+    </ThemeProvider>
   );
 }

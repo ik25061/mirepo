@@ -28,6 +28,7 @@ export default function PlayListsManager({
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [newPublic, setNewPublic] = useState(false);
   const [selectedPlayList, setSelectedPlayList] = useState(null);
   const [playListSongs, setPlayListSongs] = useState([]);
 
@@ -52,14 +53,26 @@ export default function PlayListsManager({
   const handleCreate = async () => {
     if (!newName.trim()) return;
     try {
-      await api.createPlayList(newName, newDescription, userId);
+      await api.createPlayList(newName, newDescription, userId, newPublic);
       setNewName('');
       setNewDescription('');
+      setNewPublic(false);
       setShowCreateForm(false);
       await loadPlayLists();
     } catch (err) {
       console.error('Error creando playlist:', err);
     }
+  };
+
+  const toggleVisibility = async (pl) => {
+    try {
+      await api.updatePlayList(pl.id, { isPublic: !pl.is_public });
+      await loadPlayLists();
+      if (selectedPlayList?.id === pl.id) {
+        const data = await api.getPlayList(pl.id);
+        setSelectedPlayList(data.playlist);
+      }
+    } catch (err) { console.error('Error cambiando visibilidad:', err); }
   };
 
   // Eliminar lista
@@ -127,7 +140,11 @@ export default function PlayListsManager({
             )}
             <p className="mt-2 text-sm text-muted-foreground">
               {playListSongs.length} {playListSongs.length === 1 ? 'canción' : 'canciones'}
+              {' · '}{selectedPlayList.is_public ? '🌍 Pública' : '🔒 Privada'}
             </p>
+            <button onClick={() => toggleVisibility(selectedPlayList)} className="mt-2 rounded-full bg-surface-2 px-3 py-1 text-xs">
+              Hacer {selectedPlayList.is_public ? 'privada' : 'pública'}
+            </button>
             {playListSongs.length > 0 && (
               <button
                 onClick={() => play(playListSongs[0], playListSongs)}
@@ -215,6 +232,10 @@ export default function PlayListsManager({
             className="mt-2 w-full rounded-lg bg-surface-2 px-3 py-2 text-sm text-foreground placeholder-muted-foreground outline-none focus:ring-1 focus:ring-primary"
             onKeyDown={e => e.key === 'Enter' && handleCreate()}
           />
+          <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <input type="checkbox" checked={newPublic} onChange={e => setNewPublic(e.target.checked)} />
+            🌍 Lista pública (visible para otros usuarios)
+          </label>
           <div className="mt-3 flex gap-2">
             <button
               onClick={handleCreate}
@@ -254,12 +275,19 @@ export default function PlayListsManager({
                 <ListMusic size={20} className="text-blue-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">{pl.name}</p>
+                <p className="truncate text-sm font-medium text-foreground">{pl.name} {pl.is_public ? '🌍' : '🔒'}</p>
                 <p className="truncate text-xs text-muted-foreground">
                   {pl.songIds?.length || 0} {(pl.songIds?.length || 0) === 1 ? 'canción' : 'canciones'}
                   {pl.description && ` · ${pl.description}`}
                 </p>
               </div>
+              <button
+                onClick={e => { e.stopPropagation(); toggleVisibility(pl); }}
+                className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:text-foreground"
+                title={pl.is_public ? 'Hacer privada' : 'Hacer pública'}
+              >
+                {pl.is_public ? '🌍' : '🔒'}
+              </button>
               <button
                 onClick={e => {
                   e.stopPropagation();

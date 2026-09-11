@@ -81,6 +81,21 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/podcast-audio': {
+        target: PROXY_TARGET,
+        changeOrigin: true,
+        secure: false,
+      },
+      '/podcast-cover': {
+        target: PROXY_TARGET,
+        changeOrigin: true,
+        secure: false,
+      },
+      '/podcast-image': {
+        target: PROXY_TARGET,
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 });

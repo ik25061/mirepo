@@ -43,12 +43,12 @@ function normalizeText(text) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-// Rellena song.genre para TODAS las canciones de la lista con UNA sola
-// consulta SQL (evita el problema N+1: una query de géneros por canción).
+// Rellena song.genre y song.moods para TODAS las canciones con 2 queries
 async function attachGenres(database, songs) {
   if (!songs || songs.length === 0) return;
   const bySong = new Map();
-  const CHUNK = 500; // mantenerse bajo el límite de variables de SQLite (~999)
+  const byMood = new Map();
+  const CHUNK = 500;
   for (let i = 0; i < songs.length; i += CHUNK) {
     const chunk = songs.slice(i, i + CHUNK);
     const ids = chunk.map(s => s.id);
@@ -65,10 +65,50 @@ async function attachGenres(database, songs) {
       if (!bySong.has(row.song_id)) bySong.set(row.song_id, []);
       bySong.get(row.song_id).push(row.name);
     }
+    let moodRows = [];
+    try {
+      moodRows = await database.all(
+        `SELECT sm.song_id, m.id, m.name, m.color
+         FROM song_moods sm
+         JOIN moods m ON m.id = sm.mood_id
+         WHERE sm.song_id IN (${placeholders})
+         ORDER BY m.name`,
+        ids
+      );
+    } catch (e) { moodRows = []; }
+    for (const row of moodRows) {
+      if (!byMood.has(row.song_id)) byMood.set(row.song_id, []);
+      byMood.get(row.song_id).push({ id: row.id, name: row.name, color: row.color });
+    }
   }
   for (const song of songs) {
     song.genre = bySong.get(song.id) || [];
+    song.moods = byMood.get(song.id) || [];
   }
+}
+
+// Rellena song.moods (solo moods, para queries que ya traen genre)
+async function attachMoods(database, songs) {
+  if (!songs || songs.length === 0) return;
+  const byMood = new Map();
+  const CHUNK = 500;
+  for (let i = 0; i < songs.length; i += CHUNK) {
+    const chunk = songs.slice(i, i + CHUNK);
+    const ids = chunk.map(s => s.id);
+    const placeholders = ids.map(() => '?').join(',');
+    let rows = [];
+    try {
+      rows = await database.all(
+        `SELECT sm.song_id, m.id, m.name, m.color
+         FROM song_moods sm JOIN moods m ON m.id = sm.mood_id
+         WHERE sm.song_id IN (${placeholders}) ORDER BY m.name`, ids);
+    } catch (e) { rows = []; }
+    for (const r of rows) {
+      if (!byMood.has(r.song_id)) byMood.set(r.song_id, []);
+      byMood.get(r.song_id).push({ id: r.id, name: r.name, color: r.color });
+    }
+  }
+  for (const s of songs) s.moods = byMood.get(s.id) || [];
 }
 
 export async function getDb() {
@@ -1486,6 +1526,175 @@ export async function updateSongPath(songId, newPath, newTitle) {
     [newPath, newTitle, songId]
   );
 }
+export async function setSongGenres(songId, genres) {
+  const database = await getDb();
+  await database.run('DELETE FROM song_genres WHERE song_id = ?', [songId]);
+  const out = [];
+  for (const g of (genres || [])) {
+    const name = String(g || '').trim();
+    if (!name) continue;
+    const gid = await getOrCreateGenre(database, name);
+    if (gid) { await database.run('INSERT OR IGNORE INTO song_genres (song_id, genre_id) VALUES (?, ?)', [songId, gid]); out.push(name); }
+  }
+  return out;
+}
+export async function setSongMoods(songId, moods) {
+  const database = await getDb();
+  await database.run('DELETE FROM song_moods WHERE song_id = ?', [songId]);
+  const out = [];
+  for (const m of (moods || [])) {
+    const name = String(m || '').trim();
+    if (!name) continue;
+    let row = await database.get('SELECT id FROM moods WHERE name = ?', [name]);
+    if (!row) {
+      try { const rr = await database.run('INSERT INTO moods (name) VALUES (?)', [name]); row = { id: rr.lastID }; }
+      catch (ee) { row = await database.get('SELECT id FROM moods WHERE name = ?', [name]); }
+    }
+    if (row) { await database.run('INSERT OR IGNORE INTO song_moods (song_id, mood_id) VALUES (?, ?)', [songId, row.id]); out.push(name); }
+  }
+  return out;
+}
+export async function updateSongMetadata(songId, f = {}) {
+  const database = await getDb();
+  const song = await database.get('SELECT * FROM songs WHERE id = ?', [songId]);
+  if (!song) throw new Error('Cancion no encontrada');
+  if (f.title !== undefined && String(f.title).trim()) {
+    await database.run('UPDATE songs SET title = ? WHERE id = ?', [String(f.title).trim(), songId]);
+  }
+  if (f.track !== undefined && f.track !== null && f.track !== '') {
+    const t = parseInt(f.track, 10);
+    if (!Number.isNaN(t)) await database.run('UPDATE songs SET track = ? WHERE id = ?', [t, songId]);
+  }
+  const yearVal = (f.year !== undefined && f.year !== null && f.year !== '') ? (parseInt(f.year, 10) || null) : undefined;
+  if (f.artist !== undefined && String(f.artist).trim()) {
+    const aid = await getOrCreateArtist(database, String(f.artist).trim());
+    if (aid) {
+      await database.run('DELETE FROM song_artists WHERE song_id = ?', [songId]);
+      await database.run('INSERT OR IGNORE INTO song_artists (song_id, artist_id, is_main) VALUES (?, ?, 1)', [songId, aid]);
+      if (song.album_id) await database.run('UPDATE albums SET main_artist_id = ? WHERE id = ?', [aid, song.album_id]);
+    }
+  }
+  if (f.album !== undefined) {
+    const an = String(f.album || '').trim();
+    if (!an) { await database.run('UPDATE songs SET album_id = NULL WHERE id = ?', [songId]); }
+    else {
+      const cur = song.album_id ? await database.get('SELECT * FROM albums WHERE id = ?', [song.album_id]) : null;
+      const main = await database.get('SELECT artist_id FROM song_artists WHERE song_id = ? AND is_main = 1', [songId]);
+      const yEff = yearVal !== undefined ? yearVal : (cur ? cur.year : null);
+      const albumId = await getOrCreateAlbum(database, an, main?.artist_id || null, yEff ?? null, cur?.cover_path || null);
+      if (albumId) await database.run('UPDATE songs SET album_id = ? WHERE id = ?', [albumId, songId]);
+    }
+  } else if (yearVal !== undefined && song.album_id) {
+    await database.run('UPDATE albums SET year = ? WHERE id = ?', [yearVal, song.album_id]);
+  }
+  if (Array.isArray(f.genres)) await setSongGenres(songId, f.genres);
+  if (Array.isArray(f.moods)) await setSongMoods(songId, f.moods);
+  return await database.get('SELECT * FROM songs WHERE id = ?', [songId]);
+}
+export async function createGenre(name) {
+  const database = await getDb();
+  const n = String(name || '').trim();
+  if (!n) throw new Error('Nombre requerido');
+  try { const r = await database.run('INSERT INTO genres (name) VALUES (?)', [n]); return { id: r.lastID, name: n }; }
+  catch (e) { const row = await database.get('SELECT id, name FROM genres WHERE name = ?', [n]); if (row) return row; throw e; }
+}
+export async function renameGenre(id, name) {
+  const database = await getDb();
+  const n = String(name || '').trim();
+  if (!n) throw new Error('Nombre requerido');
+  await database.run('UPDATE genres SET name = ? WHERE id = ?', [n, id]);
+  return await database.get('SELECT id, name FROM genres WHERE id = ?', [id]);
+}
+export async function deleteGenre(id) {
+  const database = await getDb();
+  await database.run('DELETE FROM genres WHERE id = ?', [id]);
+  return { success: true };
+}
+export async function listMoods() {
+  const database = await getDb();
+  try {
+    return await database.all('SELECT m.id, m.name, m.color, (SELECT COUNT(*) FROM song_moods sm WHERE sm.mood_id = m.id) AS song_count FROM moods m ORDER BY m.name');
+  } catch (e) { return []; }
+}
+export async function createMood(name, color) {
+  const database = await getDb();
+  const n = String(name || '').trim();
+  if (!n) throw new Error('Nombre requerido');
+  const c = String(color || '#8b5cf6').trim() || '#8b5cf6';
+  try { const r = await database.run('INSERT INTO moods (name, color) VALUES (?, ?)', [n, c]); return { id: r.lastID, name: n, color: c }; }
+  catch (e) {
+    const row = await database.get('SELECT id, name, color FROM moods WHERE name = ?', [n]);
+    if (row) { await database.run('UPDATE moods SET color = ? WHERE id = ?', [c, row.id]); row.color = c; return row; }
+    throw e;
+  }
+}
+export async function renameMood(id, name, color) {
+  const database = await getDb();
+  const cur = await database.get('SELECT * FROM moods WHERE id = ?', [id]);
+  if (!cur) throw new Error('Mood no encontrado');
+  const nn = String(name ?? cur.name).trim() || cur.name;
+  const cc = String(color ?? cur.color).trim() || cur.color;
+  await database.run('UPDATE moods SET name = ?, color = ? WHERE id = ?', [nn, cc, id]);
+  return await database.get('SELECT id, name, color FROM moods WHERE id = ?', [id]);
+}
+export async function getSongsByMood(o = {}) {
+  const database = await getDb();
+  const moodId = parseInt(o.moodId, 10);
+  const userId = o.userId || null, limit = o.limit || 100, offset = o.offset || 0;
+  const hide = userId ? "AND v.song_id NOT IN (SELECT song_id FROM user_song_interactions WHERE user_id = ? AND interaction_type = 'HIDE')" : '';
+  const sql = "SELECT v.song_id AS id, v.song_title AS title, v.relative_path AS relPath, v.duration, v.track, v.bpm, v.key_name, v.hasLyrics, v.main_artist_name AS artist, v.main_artist_id AS artist_id, v.album_id AS album_id, v.album_name AS album, v.album_year AS year, v.cover_path FROM v_complete_songs v JOIN song_moods sm ON sm.song_id = v.song_id WHERE sm.mood_id = ? " + hide + " ORDER BY v.song_title LIMIT ? OFFSET ?";
+  const params = userId ? [moodId, userId, limit, offset] : [moodId, limit, offset];
+  const songs = await database.all(sql, params);
+  await attachGenres(database, songs);
+  for (const s of songs) { s.hasCover = !!s.cover_path; }
+  const c = await database.get('SELECT COUNT(*) as total FROM song_moods WHERE mood_id = ?', [moodId]);
+  return { songs, pagination: { offset, limit, total: c.total, hasMore: offset + limit < c.total } };
+}
+export async function updatePlayList(id, f = {}) {
+  const database = await getDb();
+  const cur = await database.get('SELECT * FROM playlists WHERE id = ?', [id]);
+  if (!cur) throw new Error('Playlist no encontrada');
+  const n = f.name !== undefined ? String(f.name).trim() || cur.name : cur.name;
+  const d = f.description !== undefined ? String(f.description ?? '') : cur.description;
+  const pub = f.isPublic !== undefined ? (f.isPublic ? 1 : 0) : cur.is_public;
+  await database.run("UPDATE playlists SET name = ?, description = ?, is_public = ?, updated_at = datetime('now') WHERE id = ?", [n, d, pub, id]);
+  const pl = await database.get('SELECT * FROM playlists WHERE id = ?', [id]);
+  if (pl) pl.is_public = !!pl.is_public;
+  return pl;
+}
+export function defaultTheme() {
+  return { bgMode: 'solid', bgColor: '#121212', gradientPreset: 'midnight', gradientCustom: { from: '#1db954', to: '#121212', angle: 135 }, bgImage: null, bgOverlayColor: '#000000', bgOverlayOpacity: 0.55, bgBlur: 8, fontFamily: 'system', fontScale: 1 };
+}
+export function sanitizeTheme(input) {
+  const d = defaultTheme();
+  const t = { ...d, ...(input || {}) };
+  if (!['solid', 'gradient-preset', 'gradient-custom', 'image'].includes(t.bgMode)) t.bgMode = 'solid';
+  if (typeof t.bgColor !== 'string' || !/^#[0-9a-fA-F]{3,8}$/.test(t.bgColor)) t.bgColor = '#121212';
+  if (!['midnight', 'sunset', 'ocean', 'forest', 'neon', 'grape'].includes(t.gradientPreset)) t.gradientPreset = 'midnight';
+  t.gradientCustom = t.gradientCustom && typeof t.gradientCustom === 'object' ? t.gradientCustom : d.gradientCustom;
+  for (const k of ['from', 'to']) if (typeof t.gradientCustom[k] !== 'string' || !/^#[0-9a-fA-F]{3,8}$/.test(t.gradientCustom[k])) t.gradientCustom[k] = d.gradientCustom[k];
+  t.gradientCustom.angle = Math.max(0, Math.min(360, parseInt(t.gradientCustom.angle, 10) || 135));
+  if (t.bgImage !== null && typeof t.bgImage !== 'string') t.bgImage = null;
+  if (typeof t.bgOverlayColor !== 'string' || !/^#[0-9a-fA-F]{3,8}$/.test(t.bgOverlayColor)) t.bgOverlayColor = '#000000';
+  t.bgOverlayOpacity = Math.max(0, Math.min(1, Number(t.bgOverlayOpacity ?? 0.55) || 0));
+  t.bgBlur = Math.max(0, Math.min(30, parseInt(t.bgBlur ?? 8, 10) || 0));
+  if (!['system', 'inter', 'roboto', 'poppins', 'space-grotesk', 'serif'].includes(t.fontFamily)) t.fontFamily = 'system';
+  t.fontScale = Math.max(0.85, Math.min(1.3, Number(t.fontScale ?? 1) || 1));
+  return t;
+}
+export async function getUserSettings(userId) {
+  const database = await getDb();
+  const row = await database.get('SELECT theme_json FROM user_settings WHERE user_id = ?', [userId]);
+  if (!row) return defaultTheme();
+  try { return sanitizeTheme(JSON.parse(row.theme_json)); } catch (e) { return defaultTheme(); }
+}
+export async function updateUserSettings(userId, patch) {
+  const database = await getDb();
+  const cur = await getUserSettings(userId);
+  const merged = sanitizeTheme({ ...cur, ...(patch || {}) });
+  await database.run("INSERT INTO user_settings (user_id, theme_json, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(user_id) DO UPDATE SET theme_json = excluded.theme_json, updated_at = datetime('now')", [userId, JSON.stringify(merged)]);
+  return merged;
+}
 
 // ============================================================
 // FUNCIONES AUXILIARES PARA SCANNER
@@ -1764,6 +1973,25 @@ async function initSchema(database) {
       language TEXT DEFAULT 'es',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS moods (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      color TEXT DEFAULT '#8b5cf6',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS song_moods (
+      song_id TEXT REFERENCES songs(id) ON DELETE CASCADE,
+      mood_id INTEGER REFERENCES moods(id) ON DELETE CASCADE,
+      PRIMARY KEY (song_id, mood_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS user_settings (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      theme_json TEXT NOT NULL DEFAULT '{}',
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   // Asegurar que las columnas bpm y key_name existen (migración para bases de datos existentes)
@@ -1796,6 +2024,8 @@ async function initSchema(database) {
     CREATE INDEX IF NOT EXISTS idx_ps_playlist ON playlist_songs(playlist_id, position);
     CREATE INDEX IF NOT EXISTS idx_song_album ON songs(album_id);
     CREATE INDEX IF NOT EXISTS idx_playlist_user ON playlists(user_id);
+    CREATE INDEX IF NOT EXISTS idx_sm_song ON song_moods(song_id);
+    CREATE INDEX IF NOT EXISTS idx_sm_mood ON song_moods(mood_id);
   `);
 
   // Crear vistas

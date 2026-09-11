@@ -1,4 +1,4 @@
-import { Home, Library, Disc3, Trash2, Search, Heart, ListMusic, Download } from 'lucide-react';
+import { Home, Library, Disc3, Trash2, Search, Heart, ListMusic, Download, Palette } from 'lucide-react';
 
 export default function Sidebar({ view, onNavigate, trashCount = 0 }) {
   const items = [
@@ -9,6 +9,7 @@ export default function Sidebar({ view, onNavigate, trashCount = 0 }) {
     { id: 'ai', label: 'Asistente IA', icon: () => '🤖' },
     { id: 'likedSongs', label: 'Me gusta', icon: Heart },
     { id: 'playlists', label: 'Listas', icon: ListMusic },
+    { id: 'theme', label: 'Apariencia', icon: Palette },
   ];
 
   return (

@@ -14,6 +14,7 @@ import 'dotenv/config';
 import * as db from './db.js';
 import { Meilisearch } from 'meilisearch';
 import { MUSIC_DIR, TRASH_DIR, absolutePath } from './scanner.js';
+import * as pods from './podcasts.js';
 import { getLyrics as getLyricsFromService } from './lyrics.js';
 import { runBuildDbPython } from './rescan-python.js';
 
@@ -196,6 +197,8 @@ async function loadLibrary() {
   }
 }
 
+pods.scanPods().then(c => console.log(`✅ ${c.length} podcasts en memoria`)).catch(e => console.error('[podcasts] scan:', e.message));
+
 loadLibrary();
 
 // ============================================================
@@ -290,7 +293,9 @@ app.get('/api/test', (req, res) => {
     success: true, 
     libraryReady,
     songCount: songCache.length,
+    podcastCount: pods.getCache().length,
     musicDir: MUSIC_DIR,
+    podcastDir: pods.PODCAST_DIR,
     dbReady: true
   });
 });
@@ -1390,6 +1395,100 @@ app.delete('/api/playlists/:id', async (req, res) => {
   }
 });
 
+app.patch('/api/playlists/:id', async (req, res) => {
+  try {
+    const { name, description, isPublic, is_public } = req.body || {};
+    const flag = (isPublic ?? is_public);
+    const pl = await db.updatePlayList(req.params.id, { name, description, isPublic: flag === undefined ? undefined : Boolean(flag) });
+    res.json({ playlist: pl });
+  } catch (err) {
+    console.error('[api/playlists PATCH] Error:', err);
+    res.status(500).json({ error: String(err.message || 'Error') });
+  }
+});
+
+app.put('/api/songs/:id', async (req, res) => {
+  try {
+    const { title, artist, album, year, track, genres, moods, writeId3 } = req.body || {};
+    await db.updateSongMetadata(req.params.id, { title, artist, album, year, track, genres, moods });
+    if (writeId3) {
+      try {
+        const { default: NodeID3 } = await import('node-id3');
+        const row = await db.getDb().then(d => d.get('SELECT relPath FROM songs WHERE id = ?', [req.params.id]));
+        if (row) {
+          const full = absolutePath(row.relPath);
+          const tags = {};
+          if (title) tags.title = String(title);
+          if (artist) tags.artist = String(artist);
+          if (album) tags.album = String(album);
+          if (year) tags.year = String(year);
+          if (track) tags.trackNumber = String(track);
+          if (Array.isArray(genres) && genres.length) tags.genre = genres.join('; ');
+          if (Object.keys(tags).length) NodeID3.update(tags, full);
+        }
+      } catch (e) { console.warn('[api/songs PUT id3]', e.message); }
+    }
+    const songs = await db.getSongsByIds([req.params.id], req.query.userId || req.body?.userId || null);
+    res.json({ success: true, song: songs[0] || null });
+  } catch (err) {
+    console.error('[api/songs PUT] Error:', err);
+    res.status(500).json({ error: String(err.message || 'Error') });
+  }
+});
+
+app.post('/api/genres', async (req, res) => {
+  try { res.json({ genre: await db.createGenre(req.body?.name) }); }
+  catch (err) { res.status(400).json({ error: String(err.message || 'Error') }); }
+});
+app.put('/api/genres/:id', async (req, res) => {
+  try { res.json({ genre: await db.renameGenre(req.params.id, req.body?.name) }); }
+  catch (err) { res.status(400).json({ error: String(err.message || 'Error') }); }
+});
+app.delete('/api/genres/:id', async (req, res) => {
+  try { res.json(await db.deleteGenre(req.params.id)); }
+  catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+app.put('/api/songs/:id/genres', async (req, res) => {
+  try { res.json({ success: true, genres: await db.setSongGenres(req.params.id, req.body?.genres || []) }); }
+  catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+
+app.get('/api/moods', async (_req, res) => {
+  try { res.json({ moods: await db.listMoods() }); }
+  catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+app.post('/api/moods', async (req, res) => {
+  try { res.json({ mood: await db.createMood(req.body?.name, req.body?.color) }); }
+  catch (err) { res.status(400).json({ error: String(err.message || 'Error') }); }
+});
+app.put('/api/moods/:id', async (req, res) => {
+  try { res.json({ mood: await db.renameMood(req.params.id, req.body?.name, req.body?.color) }); }
+  catch (err) { res.status(400).json({ error: String(err.message || 'Error') }); }
+});
+app.delete('/api/moods/:id', async (req, res) => {
+  try { res.json(await db.deleteMood(req.params.id)); }
+  catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+app.get('/api/moods/:id/songs', async (req, res) => {
+  try {
+    const r = await db.getSongsByMood({ moodId: req.params.id, userId: req.query.userId || null, limit: +req.query.limit || 100, offset: +req.query.offset || 0 });
+    res.json({ songs: r.songs, pagination: r.pagination });
+  } catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+app.put('/api/songs/:id/moods', async (req, res) => {
+  try { res.json({ success: true, moods: await db.setSongMoods(req.params.id, req.body?.moods || []) }); }
+  catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+
+app.get('/api/users/:id/settings', async (req, res) => {
+  try { res.json({ settings: await db.getUserSettings(req.params.id) }); }
+  catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+app.put('/api/users/:id/settings', async (req, res) => {
+  try { res.json({ settings: await db.updateUserSettings(req.params.id, req.body || {}) }); }
+  catch (err) { res.status(400).json({ error: String(err.message || 'Error') }); }
+});
+
 // Resuelve un lote de IDs de canción a sus datos completos (título, artista,
 // duración, etc.), en el mismo orden en que se piden. Pensado para clientes
 // (como la app Android) que guardan playlists como listas de songIds y no
@@ -1595,6 +1694,79 @@ app.post('/api/lyrics/:id/refresh', async (req, res) => {
   }
 });
 
+// PODCASTS (biblioteca separada E:/podcast, sin SQLite)
+app.get('/api/podcasts', (req, res) => {
+  const r = pods.listPods({ limit: req.query.limit, offset: req.query.offset, search: req.query.search || '' });
+  res.json({ success: true, total: r.total, podcasts: r.items });
+});
+app.get('/api/podcasts/:id', (req, res) => {
+  const d = pods.detailPod(req.params.id);
+  if (!d) return res.status(404).json({ error: 'Podcast no encontrado' });
+  res.json({ success: true, podcast: d });
+});
+app.get('/api/podcasts/:id/transcript', (req, res) => {
+  const lang = (req.query.lang || 'es').toLowerCase() === 'en' ? 'en' : 'es';
+  const t = pods.readTx(req.params.id, lang);
+  if (!t.found) return res.status(404).json({ error: 'Sin transcripcion' });
+  res.json({ success: true, file: t.file, lang, content: t.content });
+});
+app.post('/api/podcasts/rescan', async (_q, res) => {
+  try { const c = await pods.scanPods(); res.json({ success: true, count: c.length }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.get('/podcast-audio/:id', (req, res) => {
+  const ep = pods.getPod(req.params.id);
+  if (!ep) return res.status(404).send('No encontrado');
+  const f = pods.absPod(ep.fileName);
+  if (!fs.existsSync(f)) return res.status(404).send('Falta archivo');
+  const st = fs.statSync(f);
+  res.set('Content-Type', 'audio/mpeg');
+  res.set('Accept-Ranges', 'bytes');
+  const range = req.headers.range;
+  if (range) {
+    const p = range.replace(/bytes=/, '').split('-');
+    const s = parseInt(p[0], 10), e = p[1] ? parseInt(p[1], 10) : st.size - 1;
+    if (isNaN(s) || isNaN(e) || s > e || e >= st.size) return res.status(416).send('Rango no valido');
+    res.status(206);
+    res.set('Content-Range', `bytes ${s}-${e}/${st.size}`);
+    res.set('Content-Length', e - s + 1);
+    fs.createReadStream(f, { start: s, end: e }).pipe(res);
+  } else { res.set('Content-Length', st.size); fs.createReadStream(f).pipe(res); }
+});
+app.get('/podcast-cover/:id', async (req, res) => {
+  const ep = pods.getPod(req.params.id);
+  if (!ep) return res.status(404).send('No encontrado');
+  const base = path.basename(ep.fileName, path.extname(ep.fileName));
+  const rel = pods.relatedFiles(base);
+  if (rel.cover) {
+    const f = path.join(pods.PODCAST_DIR, rel.cover);
+    const ext = path.extname(f).toLowerCase();
+    res.set('Content-Type', ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=86400');
+    return res.sendFile(f);
+  }
+  try {
+    const { parseFile } = await import('music-metadata');
+    const m = await parseFile(pods.absPod(ep.fileName));
+    const pic = m.common?.picture?.[0];
+    if (pic) { res.set('Content-Type', pic.format || 'image/jpeg'); return res.send(pic.data); }
+  } catch { /* sin portada */ }
+  res.status(404).send('Sin portada');
+});
+app.get('/podcast-image/:id/:idx', (req, res) => {
+  const ep = pods.getPod(req.params.id);
+  if (!ep) return res.status(404).send('No encontrado');
+  const base = path.basename(ep.fileName, path.extname(ep.fileName));
+  const rel = pods.relatedFiles(base);
+  const it = rel.images.find(x => String(x.index) === String(req.params.idx));
+  if (!it) return res.status(404).send('Imagen no existe');
+  const f = path.join(pods.PODCAST_DIR, it.file);
+  const ext = path.extname(f).toLowerCase();
+  res.set('Content-Type', ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg');
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.sendFile(f);
+});
+
 // ============================================================
 // CIERRE GRACEFUL
 // ============================================================
@@ -1623,7 +1795,8 @@ app.listen(PORT, '0.0.0.0', () => {
   LOCAL_IPS.forEach(ip => {
     console.log(`   📡 Red:      http://${ip}:${PORT}`);
   });
-  console.log(`   📂 Música:   ${MUSIC_DIR}`);
+  console.log(`   📂 Musica:   ${MUSIC_DIR}`);
+  console.log(`   📂 Podcasts: ${pods.PODCAST_DIR}`);
   console.log(`   ==========================================`);
   console.log(`   ✅ Servidor listo`);
   console.log(`   ==========================================\n`);
