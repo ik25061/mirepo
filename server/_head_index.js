@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // server/index.js - SERVIDOR PRINCIPAL (VERSIÓN COMPLETA)
 // ============================================================
 
@@ -293,8 +293,7 @@ app.get('/api/test', (req, res) => {
     success: true, 
     libraryReady,
     songCount: songCache.length,
-    podcastCount: pods.getCache().podcastCache?.length || 0,
-    episodeCount: pods.getCache().episodeCache?.length || 0,
+    podcastCount: pods.getCache().length,
     musicDir: MUSIC_DIR,
     podcastDir: pods.PODCAST_DIR,
     dbReady: true
@@ -1271,26 +1270,7 @@ app.get('/artist-cover/:artistName', async (req, res) => {
 
 app.get('/cover/:id', async (req, res) => {
   const song = songMap.get(req.params.id);
-
-  // La app Android usa /cover/:id también para episodios de podcast
-  // (pantalla de inicio). Si el id no es una canción, probamos la portada
-  // embebida del episodio antes de dar 404.
-  if (!song) {
-    try {
-      const ep = pods.getEpisode(req.params.id);
-      if (ep) {
-        const { parseFile } = await import('music-metadata');
-        const meta = await parseFile(path.join(pods.PODCAST_DIR, ep.relPath));
-        const pic = meta.common?.picture?.[0];
-        if (pic) {
-          res.set('Content-Type', pic.format || 'image/jpeg');
-          res.set('Cache-Control', 'public, max-age=86400');
-          return res.send(Buffer.from(pic.data));
-        }
-      }
-    } catch (err) { /* sin portada */ }
-    return res.status(404).end();
-  }
+  if (!song) return res.status(404).end();
 
   // 1. Intentar con cover_path de la BD (nueva estructura)
   if (song.cover_path) {
@@ -1370,11 +1350,7 @@ app.get('/audio/:id', (req, res) => {
   const stat = fs.statSync(filePath);
   const range = req.headers.range;
   const ext = path.extname(filePath).toLowerCase();
-  const mime = ext === '.mp3' ? 'audio/mpeg'
-    : ext === '.flac' ? 'audio/flac'
-    : ext === '.ogg' || ext === '.opus' ? 'audio/ogg'
-    : ext === '.wav' ? 'audio/wav'
-    : 'audio/mp4';
+  const mime = ext === '.mp3' ? 'audio/mpeg' : 'audio/mp4';
 
   if (range) {
     const [startStr, endStr] = range.replace(/bytes=/, '').split('-');
@@ -1469,31 +1445,9 @@ app.post('/api/playlists/:id/songs/bulk', async (req, res) => {
       return res.status(400).json({ error: 'songIds requerido (array no vacío)' });
     }
     let playlist = null;
-    // Filtramos los IDs que ya no existen en la tabla songs: la FK de
-    // playlist_songs hace que insertar un id inexistente rompa la
-    // sincronización entera (SQLITE_CONSTRAINT: FOREIGN KEY) y deje listas
-    // desincronizadas en la app. Los ids desconocidos se ignoran.
-    try {
-      const database = await db.getDb();
-      const idsValidos = ids.filter(Boolean);
-      const rows = idsValidos.length
-        ? await database.all(
-            `SELECT id FROM songs WHERE id IN (${idsValidos.map(() => '?').join(',')})`,
-            idsValidos
-          )
-        : [];
-      const existing = new Set(rows.map(r => r.id));
-      for (const songId of ids) {
-        if (!songId || !existing.has(songId)) continue;
-        playlist = await db.addSongToPlayList(req.params.id, songId);
-      }
-    } catch (filterErr) {
-      console.warn('[api/playlists/:id/songs/bulk] No se pudo filtrar por existencia:', filterErr.message);
-      for (const songId of ids) {
-        if (!songId) continue;
-        try { playlist = await db.addSongToPlayList(req.params.id, songId); }
-        catch (e) { /* saltar canciones problemáticas */ }
-      }
+    for (const songId of ids) {
+      if (!songId) continue;
+      playlist = await db.addSongToPlayList(req.params.id, songId);
     }
     if (!playlist) playlist = await db.getPlayList(req.params.id);
     if (!playlist) return res.status(404).json({ error: 'Lista no encontrada' });
@@ -1828,77 +1782,52 @@ app.post('/api/lyrics/:id/refresh', async (req, res) => {
 
 // PODCASTS (biblioteca separada E:/podcast, sin SQLite)
 //
-// Modelo por SERIES: cada subcarpeta de la biblioteca es un podcast con N
-// episodios (podcasts.js agrupa el escaneo por carpeta). La app Android
-// muestra una fila de tarjetas (podcasts) y, al entrar, la lista de
-// episodios. Se mantienen rutas retrocompatibles por episodio
-// (/podcast-cover, /podcast-image, transcript) para el frontend web.
-function serializePodcastSeries(series) {
+// Cada audio de la carpeta de podcasts se sirve a la app Android como un
+// "podcast" con un único episodio, porque la UI nativa no tiene el modelo de
+// "serie con N episodios": muestra una fila de tarjetas (podcasts) y, al
+// entrar, una lista de episodios. Aquí adaptamos la respuesta al modelo
+// móvil sin romper la web (que solo usa los campos base que ya enviamos).
+function serializePodcastItem(episode, userIdOrNull) {
+  const base = episode.id || '';
   return {
-    id: series.id,
-    title: series.title || 'Podcast',
-    author: series.author || 'Podcast',
+    id: episode.id,
+    title: episode.title || 'Episodio',
+    author: episode.artist || 'Podcast',
     description: '',
-    episode_count: series.episode_count || 0,
-    cover_url: `/podcast-series-cover/${series.id}`,
+    episode_count: 1,
+    cover_url: (episode.hasPicture || episode.coverFile)
+      ? `/podcast-cover/${base}`
+      : null,
   };
 }
 
-app.get('/api/podcasts', async (req, res) => {
-  try {
-    const search = (req.query.search || '').toString().toLowerCase();
-    const limit = parseInt(req.query.limit, 10);
-    const offset = parseInt(req.query.offset, 10) || 0;
-    let series = pods.getCache().podcastCache || [];
-    if (search) {
-      series = series.filter(s =>
-        (s.title || '').toLowerCase().includes(search) ||
-        (s.author || '').toLowerCase().includes(search));
-    }
-    const total = series.length;
-    if (!isNaN(limit)) series = series.slice(offset, offset + limit);
-    else if (offset) series = series.slice(offset);
-    res.json({ success: true, total, podcasts: series.map(serializePodcastSeries) });
-  } catch (err) {
-    console.error('[api/podcasts] Error:', err);
-    res.status(500).json({ error: 'Error al listar podcasts' });
-  }
+app.get('/api/podcasts', (req, res) => {
+  const r = pods.listPods({ limit: req.query.limit, offset: req.query.offset, search: req.query.search || '' });
+  res.json({ success: true, total: r.total, podcasts: r.items.map(e => serializePodcastItem(e, null)) });
 });
 
 app.get('/api/podcasts/:id', async (req, res) => {
-  try {
-    const d = pods.getPodcastDetail(req.params.id);
-    if (!d || !d.podcast) return res.status(404).json({ error: 'Podcast no encontrado' });
+  const d = pods.detailPod(req.params.id);
+  if (!d) return res.status(404).json({ error: 'Podcast no encontrado' });
 
-    const userId = req.query.userId || null;
-    const eps = d.episodes || [];
-    const episodes = await Promise.all(eps.map(async (ep, i) => {
-      const positionMs = await db.getEpisodeProgress(userId, ep.id);
-      return {
-        id: ep.id,
-        podcastId: d.podcast.id,
-        title: ep.title || 'Episodio',
-        description: '',
-        duration: ep.duration || 0,
-        audio_url: `/podcast-audio/${ep.id}`,
-        subtitle_url: null,
-        last_position_ms: positionMs,
-        order_index: i,
-        published_at: null,
-        size: ep.size || 0,
-        hasPicture: !!ep.hasPicture,
-      };
-    }));
+  const userId = req.query.userId || null;
+  const positionMs = await db.getEpisodeProgress(userId, d.id);
 
-    const podcast = {
-      ...serializePodcastSeries(d.podcast),
-      episode_count: episodes.length,
-    };
-    res.json({ success: true, podcast, episodes });
-  } catch (err) {
-    console.error('[api/podcasts/:id] Error:', err);
-    res.status(500).json({ error: 'Error al obtener podcast' });
-  }
+  const episode = {
+    id: d.id,
+    podcastId: d.id,
+    title: d.title || 'Episodio',
+    description: '',
+    duration: d.duration || 0,
+    audio_url: `/podcast-audio/${d.id}`,
+    subtitle_url: null,
+    last_position_ms: positionMs,
+    order_index: 0,
+    published_at: null,
+  };
+
+  const podcast = serializePodcastItem(d, userId);
+  res.json({ success: true, podcast, episodes: [episode] });
 });
 
 // Guarda el progreso de reproducción de un episodio (llamado por la app Android).
@@ -1914,67 +1843,23 @@ app.post('/api/podcasts/progress', async (req, res) => {
   }
 });
 
-// Transcripción lateral del episodio: <base>.<lang>.lrc / <base>.<lang>.vtt
 app.get('/api/podcasts/:id/transcript', (req, res) => {
   const lang = (req.query.lang || 'es').toLowerCase() === 'en' ? 'en' : 'es';
-  const ep = pods.getEpisode(req.params.id);
-  if (!ep) return res.status(404).json({ error: 'Sin transcripcion' });
-  const dir = path.join(pods.PODCAST_DIR, path.dirname(ep.relPath));
-  const base = path.basename(ep.relPath, path.extname(ep.relPath));
-  const exts = [`.${lang}.lrc`, `.${lang}.vtt`, '.lrc', '.vtt'];
-  for (const ext of exts) {
-    const f = path.join(dir, base + ext);
-    try {
-      if (fs.existsSync(f)) {
-        const readLang = ext.startsWith('.en') ? 'en' : ext.startsWith('.es') ? 'es' : lang;
-        return res.json({ success: true, file: f, lang: readLang, content: fs.readFileSync(f, 'utf8') });
-      }
-    } catch (err) { /* seguimos */ }
-  }
-  return res.status(404).json({ error: 'Sin transcripcion' });
+  const t = pods.readTx(req.params.id, lang);
+  if (!t.found) return res.status(404).json({ error: 'Sin transcripcion' });
+  res.json({ success: true, file: t.file, lang, content: t.content });
 });
 app.post('/api/podcasts/rescan', async (_q, res) => {
-  try {
-    const c = await pods.scanPods();
-    res.json({
-      success: true,
-      count: c.length,
-      series: (pods.getCache().podcastCache || []).length,
-      episodes: (pods.getCache().episodeCache || []).length
-    });
-  }
+  try { const c = await pods.scanPods(); res.json({ success: true, count: c.length }); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
-function podcastAudioMime(ext) {
-  const e = (ext || '').toLowerCase();
-  if (e === '.m4a' || e === '.mp4' || e === '.aac') return 'audio/mp4';
-  if (e === '.flac') return 'audio/flac';
-  if (e === '.ogg' || e === '.opus') return 'audio/ogg';
-  if (e === '.wav') return 'audio/wav';
-  if (e === '.webm') return 'audio/webm';
-  return 'audio/mpeg';
-}
-
-// Imágenes laterales del episodio: <base>.<num>.<ext> junto al audio.
-function podcastEpisodeImages(ep) {
-  const dir = path.join(pods.PODCAST_DIR, path.dirname(ep.relPath));
-  const base = path.basename(ep.relPath, path.extname(ep.relPath));
-  try {
-    return fs.readdirSync(dir)
-      .map(name => ({ name, m: name.match(new RegExp('^' + escapeRegExp(base) + '\\.(\\d+)\\.(jpe?g|png|webp)$', 'i')) }))
-      .filter(x => x.m)
-      .map(x => ({ index: parseInt(x.m[1], 10), file: path.join(dir, x.name) }))
-      .sort((a, b) => a.index - b.index);
-  } catch (err) { return []; }
-}
-
 app.get('/podcast-audio/:id', (req, res) => {
-  const ep = pods.getEpisode(req.params.id);
+  const ep = pods.getPod(req.params.id);
   if (!ep) return res.status(404).send('No encontrado');
-  const f = path.join(pods.PODCAST_DIR, ep.relPath);
+  const f = pods.absPod(ep.fileName);
   if (!fs.existsSync(f)) return res.status(404).send('Falta archivo');
   const st = fs.statSync(f);
-  res.set('Content-Type', podcastAudioMime(path.extname(f)));
+  res.set('Content-Type', 'audio/mpeg');
   res.set('Accept-Ranges', 'bytes');
   const range = req.headers.range;
   if (range) {
@@ -1987,79 +1872,38 @@ app.get('/podcast-audio/:id', (req, res) => {
     fs.createReadStream(f, { start: s, end: e }).pipe(res);
   } else { res.set('Content-Length', st.size); fs.createReadStream(f).pipe(res); }
 });
-
 app.get('/podcast-cover/:id', async (req, res) => {
-  const ep = pods.getEpisode(req.params.id);
+  const ep = pods.getPod(req.params.id);
   if (!ep) return res.status(404).send('No encontrado');
-  // 1. Portada lateral junto al audio (<base>.jpg / .png / .webp)
-  const dir = path.join(pods.PODCAST_DIR, path.dirname(ep.relPath));
-  const base = path.basename(ep.relPath, path.extname(ep.relPath));
-  try {
-    const side = fs.readdirSync(dir).find(name => {
-      const n = path.basename(name, path.extname(name)).toLowerCase();
-      return n === base.toLowerCase() && ['.jpg', '.jpeg', '.png', '.webp'].includes(path.extname(name).toLowerCase());
-    });
-    if (side) {
-      const f = path.join(dir, side);
-      const ext = path.extname(f).toLowerCase();
-      res.set('Content-Type', ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg');
-      res.set('Cache-Control', 'public, max-age=86400');
-      return res.sendFile(f);
-    }
-  } catch (err) { /* seguimos */ }
-  // 2. Portada embebida del audio
+  const base = path.basename(ep.fileName, path.extname(ep.fileName));
+  const rel = pods.relatedFiles(base);
+  if (rel.cover) {
+    const f = path.join(pods.PODCAST_DIR, rel.cover);
+    const ext = path.extname(f).toLowerCase();
+    res.set('Content-Type', ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=86400');
+    return res.sendFile(f);
+  }
   try {
     const { parseFile } = await import('music-metadata');
-    const m = await parseFile(path.join(pods.PODCAST_DIR, ep.relPath));
+    const m = await parseFile(pods.absPod(ep.fileName));
     const pic = m.common?.picture?.[0];
     if (pic) { res.set('Content-Type', pic.format || 'image/jpeg'); return res.send(pic.data); }
   } catch { /* sin portada */ }
   res.status(404).send('Sin portada');
 });
-
-app.get('/podcast-series-cover/:id', async (req, res) => {
-  const d = pods.getPodcastDetail(req.params.id);
-  if (!d || !d.podcast) return res.status(404).send('No encontrado');
-  const eps = d.episodes || [];
-  // 1. Portada de serie en la carpeta de la serie (cover.jpg / <serie>.jpg...)
-  const seriesDir = eps.length ? path.join(pods.PODCAST_DIR, path.dirname(eps[0].relPath)) : pods.PODCAST_DIR;
-  const dirName = path.basename(seriesDir).toLowerCase();
-  try {
-    const candidates = fs.readdirSync(seriesDir).filter(name =>
-      ['.jpg', '.jpeg', '.png', '.webp'].includes(path.extname(name).toLowerCase()));
-    const preferred =
-      candidates.find(name => /^(cover|folder|poster)\b/i.test(name)) ||
-      candidates.find(name => path.basename(name, path.extname(name)).toLowerCase().includes(dirName));
-    if (preferred) {
-      const f = path.join(seriesDir, preferred);
-      const ext = path.extname(f).toLowerCase();
-      res.set('Content-Type', ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg');
-      res.set('Cache-Control', 'public, max-age=86400');
-      return res.sendFile(f);
-    }
-  } catch (err) { /* seguimos */ }
-  // 2. Portada embebida del primer episodio que la tenga
-  for (const ep of eps) {
-    try {
-      const { parseFile } = await import('music-metadata');
-      const m = await parseFile(path.join(pods.PODCAST_DIR, ep.relPath));
-      const pic = m.common?.picture?.[0];
-      if (pic) { res.set('Content-Type', pic.format || 'image/jpeg'); return res.send(pic.data); }
-    } catch { /* siguiente episodio */ }
-  }
-  res.status(404).send('Sin portada');
-});
-
 app.get('/podcast-image/:id/:idx', (req, res) => {
-  const ep = pods.getEpisode(req.params.id);
+  const ep = pods.getPod(req.params.id);
   if (!ep) return res.status(404).send('No encontrado');
-  const images = podcastEpisodeImages(ep);
-  const it = images.find(x => String(x.index) === String(req.params.idx)) || images[Number(req.params.idx)];
+  const base = path.basename(ep.fileName, path.extname(ep.fileName));
+  const rel = pods.relatedFiles(base);
+  const it = rel.images.find(x => String(x.index) === String(req.params.idx));
   if (!it) return res.status(404).send('Imagen no existe');
-  const ext = path.extname(it.file).toLowerCase();
+  const f = path.join(pods.PODCAST_DIR, it.file);
+  const ext = path.extname(f).toLowerCase();
   res.set('Content-Type', ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg');
   res.set('Cache-Control', 'public, max-age=86400');
-  res.sendFile(it.file);
+  res.sendFile(f);
 });
 
 // ============================================================

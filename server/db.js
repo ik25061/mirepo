@@ -1663,6 +1663,11 @@ export async function renameMood(id, name, color) {
   await database.run('UPDATE moods SET name = ?, color = ? WHERE id = ?', [nn, cc, id]);
   return await database.get('SELECT id, name, color FROM moods WHERE id = ?', [id]);
 }
+export async function deleteMood(id) {
+  const database = await getDb();
+  await database.run('DELETE FROM moods WHERE id = ?', [id]);
+  return { success: true };
+}
 export async function getSongsByMood(o = {}) {
   const database = await getDb();
   const moodId = parseInt(o.moodId, 10);

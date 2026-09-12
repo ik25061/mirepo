@@ -1,0 +1,57 @@
+[scanner] 📂 MUSIC_DIR: E:/musica
+🚀 Iniciando servidor...
+🔧 Puerto configurado: 5099
+📂 MUSIC_DIR: E:/musica
+[rescan] 🧹 Estado de progreso reseteado correctamente.
+[podcasts] Escaneando...
+🔍 Cargando biblioteca desde SQLite...
+
+🎵 ==========================================
+   🎵 MIREPO - SERVIDOR COMPLETO
+   ==========================================
+   📡 Local:    http://localhost:5099
+   📡 Red:      http://192.168.1.152:5099
+   📂 Musica:   E:/musica
+   📂 Podcasts: E:/podcast
+   ==========================================
+   ✅ Servidor listo
+   ==========================================
+
+[db] ✅ Esquema verificado/creado
+[db] ✅ Conectado a localfy.db
+✅ 30231 canciones cargadas en memoria
+🔍 Intentando sincronizar 30231 canciones con Meilisearch...
+[podcasts] OK: 1 series, 184 episodios
+✅ 1 podcasts en memoria
+[api/library] 📥 Solicitud recibida
+[api/library] 🔍 Parámetros: {
+  userId: null,
+  limit: 3,
+  offset: 0,
+  likedOnly: false,
+  shuffleSeed: null
+}
+[buildLibrary] 🏗️ Construyendo... { limit: 3, offset: 0, userId: null, likedOnly: false }
+[buildLibrary] ✅ 3 canciones devueltas (total: 30231)
+[api/library] ✅ Éxito
+[api/liked-songs] 📥 userId=1, limit=3, offset=0
+[api/liked-songs] ✅ Encontradas 3 canciones, total 207
+[api/library] 📥 Solicitud recibida
+[api/library] 🔍 Parámetros: {
+  userId: null,
+  limit: 1,
+  offset: 0,
+  likedOnly: false,
+  shuffleSeed: null
+}
+[buildLibrary] 🏗️ Construyendo... { limit: 1, offset: 0, userId: null, likedOnly: false }
+[buildLibrary] ✅ 1 canciones devueltas (total: 30231)
+[api/library] ✅ Éxito
+[api/artists] 📥 userId=null, limit=100, offset=0, search="", minSongs=0
+[api/artists] ✅ 100 artistas devueltos, total 5881
+[api/albums] 📥 userId=null, limit=100, offset=0, search="", minSongs=0
+[api/albums] ✅ 98 álbumes devueltos, total 14165
+[api/genres] 📥 userId=null, limit=100, offset=0, search="", minSongs=0
+[api/genres] ✅ 100 géneros devueltos, total 212
+[api/years] 📥 userId=null, limit=100, offset=0, search=""
+[api/years] ✅ 88 años devueltos, total 88
