@@ -1,0 +1,64 @@
+[scanner] 📂 MUSIC_DIR: E:/musica
+[podcasts] PODCAST_DIR: E:/podcast
+🚀 Iniciando servidor...
+🔧 Puerto configurado: 5002
+📂 MUSIC_DIR: E:/musica
+[rescan] 🧹 Estado de progreso reseteado correctamente.
+[podcasts] 184 audios
+🔍 Cargando biblioteca desde SQLite...
+
+🎵 ==========================================
+   🎵 MIREPO - SERVIDOR COMPLETO
+   ==========================================
+   📡 Local:    http://localhost:5002
+   📡 Red:      http://192.168.1.152:5002
+   📂 Musica:   E:/musica
+   📂 Podcasts: E:/podcast
+   ==========================================
+   ✅ Servidor listo
+   ==========================================
+
+[db] ✅ Esquema verificado/creado
+[db] ✅ Conectado a localfy.db
+✅ 30231 canciones cargadas en memoria
+🔍 Intentando sincronizar 30231 canciones con Meilisearch...
+[podcasts] 25/184
+[podcasts] 50/184
+[podcasts] 75/184
+[podcasts] 100/184
+[podcasts] 125/184
+[podcasts] 150/184
+[podcasts] 175/184
+[podcasts] 184/184
+[podcasts] OK 184 episodios
+✅ 184 podcasts en memoria
+[api/library] 📥 Solicitud recibida
+[api/library] 🔍 Parámetros: {
+  userId: null,
+  limit: 1,
+  offset: 0,
+  likedOnly: false,
+  shuffleSeed: null
+}
+[buildLibrary] 🏗️ Construyendo... { limit: 1, offset: 0, userId: null, likedOnly: false }
+[buildLibrary] ✅ 1 canciones devueltas (total: 30231)
+[api/library] ✅ Éxito
+[api/albums] 📥 userId=null, limit=1, offset=0, search="", minSongs=0
+[api/albums] ✅ 1 álbumes devueltos, total 14165
+[api/library] 📥 Solicitud recibida
+[api/library] 🔍 Parámetros: {
+  userId: null,
+  limit: 100,
+  offset: 0,
+  likedOnly: false,
+  shuffleSeed: null
+}
+[buildLibrary] 🏗️ Construyendo... { limit: 100, offset: 0, userId: null, likedOnly: false }
+[buildLibrary] ✅ 100 canciones devueltas (total: 30231)
+[api/library] ✅ Éxito
+[api/years] 📥 userId=null, limit=100, offset=0, search=""
+[api/years] ✅ 88 años devueltos, total 88
+[api/genres] 📥 userId=null, limit=100, offset=0, search="", minSongs=0
+[api/genres] ✅ 100 géneros devueltos, total 212
+[api/liked-songs] 📥 userId=1, limit=5, offset=0
+[api/liked-songs] ✅ Encontradas 5 canciones, total 205

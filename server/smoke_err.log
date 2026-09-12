@@ -1,0 +1,5 @@
+⚠️ Meilisearch: no se pudo sincronizar (¿está el servicio encendido en el puerto 7700?)
+[api/playlists/:id/songs/bulk POST] Error: [Error: SQLITE_CONSTRAINT: FOREIGN KEY constraint failed] {
+  errno: 19,
+  code: 'SQLITE_CONSTRAINT'
+}

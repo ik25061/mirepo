@@ -1460,6 +1460,32 @@ export async function deletePlayList(id) {
 }
 
 // ============================================================
+// FUNCIONES PARA PROGRESO DE EPISODIOS (PODCASTS)
+// ============================================================
+
+export async function getEpisodeProgress(userId, episodeId) {
+  if (!userId) return 0;
+  const database = await getDb();
+  const row = await database.get(
+    'SELECT position_ms FROM episode_progress WHERE user_id = ? AND episode_id = ?',
+    [userId, episodeId]
+  );
+  return row ? Number(row.position_ms) || 0 : 0;
+}
+
+export async function setEpisodeProgress(userId, episodeId, positionMs) {
+  if (!userId || !episodeId) return;
+  const database = await getDb();
+  await database.run(
+    `INSERT INTO episode_progress (user_id, episode_id, position_ms, updated_at)
+     VALUES (?, ?, ?, datetime("now"))
+     ON CONFLICT(user_id, episode_id)
+     DO UPDATE SET position_ms = excluded.position_ms, updated_at = datetime("now")`,
+    [userId, episodeId, Math.max(0, Math.round(positionMs || 0))]
+  );
+}
+
+// ============================================================
 // FUNCIONES PARA LETRAS
 // ============================================================
 
@@ -1991,6 +2017,14 @@ async function initSchema(database) {
       user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
       theme_json TEXT NOT NULL DEFAULT '{}',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS episode_progress (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      episode_id TEXT NOT NULL,
+      position_ms INTEGER NOT NULL DEFAULT 0,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, episode_id)
     );
   `);
 

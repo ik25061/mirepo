@@ -30,7 +30,7 @@ console.log(`📂 MUSIC_DIR: ${MUSIC_DIR}`);
 // ============================================================
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Range', 'Origin', 'Accept'],
   exposedHeaders: ['Content-Range', 'Accept-Ranges'],
   credentials: true
@@ -369,8 +369,8 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-app.post('/api/auth/verify', async (req, res) => {
-  const { token } = req.body;
+app.get('/api/auth/verify', async (req, res) => {
+  const token = req.query.token || req.query.userId || null;
   if (!token) {
     return res.status(401).json({ error: 'No hay token' });
   }
@@ -385,7 +385,30 @@ app.post('/api/auth/verify', async (req, res) => {
       user: { id: user.id, username: user.username }
     });
   } catch (err) {
-    console.error('[verify]', err);
+    console.error('[verify GET]', err);
+    res.status(500).json({ error: 'Error al verificar sesión' });
+  }
+});
+
+app.post('/api/auth/verify', async (req, res) => {
+  const bodyToken = req.body && req.body.token;
+  const queryToken = req.query && req.query.token;
+  const token = bodyToken || queryToken;
+  if (!token) {
+    return res.status(401).json({ error: 'No hay token' });
+  }
+
+  try {
+    const user = await db.getUserByToken(token);
+    if (!user) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+    res.json({ 
+      success: true, 
+      user: { id: user.id, username: user.username }
+    });
+  } catch (err) {
+    console.error('[verify POST]', err);
     res.status(500).json({ error: 'Error al verificar sesión' });
   }
 });
@@ -748,17 +771,29 @@ app.get('/api/favorite-artists', async (req, res) => {
 
 app.post('/api/favorite-artists/toggle', async (req, res) => {
   try {
-    const { artist, userId } = req.body;
-    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
-    
-    const artistId = await db.getArtistIdByName(artist);
-    if (!artistId) {
+    const { artist, artistId, userId, liked } = req.body || {};
+    let targetArtistId = null;
+
+    if (artistId !== undefined && artistId !== null && artistId !== '') {
+      targetArtistId = Number(artistId);
+    } else if (artist) {
+      targetArtistId = await db.getArtistIdByName(artist);
+    }
+
+    if (!targetArtistId) {
       return res.status(404).json({ error: 'Artista no encontrado' });
     }
-    
-    const isFavorite = await db.toggleFavoriteArtist(artistId, userId);
+
+    const currentFavorites = await db.getFavoriteArtists(userId);
+    const isCurrentlyFavorite = currentFavorites.some(item => Number(item.id) === Number(targetArtistId) || Number(item.artist_id) === Number(targetArtistId));
+    const desiredFavorite = liked === undefined ? !isCurrentlyFavorite : Boolean(liked);
+
+    if (desiredFavorite !== isCurrentlyFavorite) {
+      await db.toggleFavoriteArtist(Number(targetArtistId), userId);
+    }
+
     const artists = await db.getFavoriteArtists(userId);
-    res.json({ artists, isFavorite });
+    res.json({ artists, isFavorite: desiredFavorite, artistId: Number(targetArtistId) });
   } catch (err) {
     console.error('[api/favorite-artists/toggle]', err);
     res.status(500).json({ error: 'Error al cambiar artista favorito' });
@@ -771,36 +806,54 @@ app.post('/api/favorite-artists/toggle', async (req, res) => {
 
 app.post('/api/artists/hide', async (req, res) => {
   try {
-    const { artist, userId } = req.body;
-    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
-    
-    const artistId = await db.getArtistIdByName(artist);
-    if (!artistId) {
-      return res.status(404).json({ error: 'Artista no encontrado' });
-    }
-    
-    await db.setArtistHidden(artistId, true, userId);
-    res.json({ ok: true });
+    const { artist, userId, artistId } = req.body || {};
+    const targetArtistId = artistId ? Number(artistId) : await db.getArtistIdByName(artist);
+    if (!targetArtistId) return res.status(404).json({ error: 'Artista no encontrado' });
+
+    await db.setArtistHidden(targetArtistId, true, userId);
+    res.json({ ok: true, artistId: targetArtistId });
   } catch (err) {
     console.error('[api/artists/hide] Error:', err);
     res.status(500).json({ error: 'Error al ocultar artista' });
   }
 });
 
+app.post('/api/artists/:id/hide', async (req, res) => {
+  try {
+    const artistId = Number(req.params.id);
+    const { userId } = req.body || {};
+    if (!artistId) return res.status(400).json({ error: 'Falta el id del artista' });
+    await db.setArtistHidden(artistId, true, userId);
+    res.json({ ok: true, artistId });
+  } catch (err) {
+    console.error('[api/artists/:id/hide] Error:', err);
+    res.status(500).json({ error: 'Error al ocultar artista' });
+  }
+});
+
 app.post('/api/artists/unhide', async (req, res) => {
   try {
-    const { artist, userId } = req.body;
-    if (!artist) return res.status(400).json({ error: 'Falta el artista' });
-    
-    const artistId = await db.getArtistIdByName(artist);
-    if (!artistId) {
-      return res.status(404).json({ error: 'Artista no encontrado' });
-    }
-    
-    await db.setArtistHidden(artistId, false, userId);
-    res.json({ ok: true });
+    const { artist, userId, artistId } = req.body || {};
+    const targetArtistId = artistId ? Number(artistId) : await db.getArtistIdByName(artist);
+    if (!targetArtistId) return res.status(404).json({ error: 'Artista no encontrado' });
+
+    await db.setArtistHidden(targetArtistId, false, userId);
+    res.json({ ok: true, artistId: targetArtistId });
   } catch (err) {
     console.error('[api/artists/unhide] Error:', err);
+    res.status(500).json({ error: 'Error al mostrar artista' });
+  }
+});
+
+app.post('/api/artists/:id/unhide', async (req, res) => {
+  try {
+    const artistId = Number(req.params.id);
+    const { userId } = req.body || {};
+    if (!artistId) return res.status(400).json({ error: 'Falta el id del artista' });
+    await db.setArtistHidden(artistId, false, userId);
+    res.json({ ok: true, artistId });
+  } catch (err) {
+    console.error('[api/artists/:id/unhide] Error:', err);
     res.status(500).json({ error: 'Error al mostrar artista' });
   }
 });
@@ -1335,6 +1388,17 @@ app.get('/api/playlists', async (req, res) => {
   }
 });
 
+app.get('/api/playlists/public', async (_req, res) => {
+  try {
+    const playlists = await db.getPlayLists(null);
+    const publicPlaylists = (playlists || []).filter(pl => !!pl.is_public).map(pl => ({ ...pl, is_public: !!pl.is_public }));
+    res.json({ playlists: publicPlaylists });
+  } catch (err) {
+    console.error('[api/playlists/public] Error:', err);
+    res.status(500).json({ error: 'Error al obtener listas públicas' });
+  }
+});
+
 app.get('/api/playlists/:id', async (req, res) => {
   try {
     const playlist = await db.getPlayList(req.params.id);
@@ -1361,7 +1425,7 @@ app.post('/api/playlists', async (req, res) => {
 
 app.post('/api/playlists/:id/songs', async (req, res) => {
   try {
-    const { songId } = req.body;
+    const { songId } = req.body || {};
     if (!songId) return res.status(400).json({ error: 'songId requerido' });
     const playlist = await db.addSongToPlayList(req.params.id, songId);
     if (!playlist) return res.status(404).json({ error: 'Lista no encontrada' });
@@ -1372,9 +1436,31 @@ app.post('/api/playlists/:id/songs', async (req, res) => {
   }
 });
 
+// Alta masiva de canciones a una lista (la app Android la usa al crear
+// listas offline y sincronizarlas después). Acepta { songIds: [...] }.
+app.post('/api/playlists/:id/songs/bulk', async (req, res) => {
+  try {
+    const ids = req.body?.songIds;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'songIds requerido (array no vacío)' });
+    }
+    let playlist = null;
+    for (const songId of ids) {
+      if (!songId) continue;
+      playlist = await db.addSongToPlayList(req.params.id, songId);
+    }
+    if (!playlist) playlist = await db.getPlayList(req.params.id);
+    if (!playlist) return res.status(404).json({ error: 'Lista no encontrada' });
+    res.json({ playlist });
+  } catch (err) {
+    console.error('[api/playlists/:id/songs/bulk POST] Error:', err);
+    res.status(500).json({ error: 'Error al agregar canciones' });
+  }
+});
+
 app.delete('/api/playlists/:id/songs', async (req, res) => {
   try {
-    const { songId } = req.body;
+    const { songId } = req.body || {};
     if (!songId) return res.status(400).json({ error: 'songId requerido' });
     const playlist = await db.removeSongFromPlayList(req.params.id, songId);
     if (!playlist) return res.status(404).json({ error: 'Lista no encontrada' });
@@ -1695,15 +1781,68 @@ app.post('/api/lyrics/:id/refresh', async (req, res) => {
 });
 
 // PODCASTS (biblioteca separada E:/podcast, sin SQLite)
+//
+// Cada audio de la carpeta de podcasts se sirve a la app Android como un
+// "podcast" con un único episodio, porque la UI nativa no tiene el modelo de
+// "serie con N episodios": muestra una fila de tarjetas (podcasts) y, al
+// entrar, una lista de episodios. Aquí adaptamos la respuesta al modelo
+// móvil sin romper la web (que solo usa los campos base que ya enviamos).
+function serializePodcastItem(episode, userIdOrNull) {
+  const base = episode.id || '';
+  return {
+    id: episode.id,
+    title: episode.title || 'Episodio',
+    author: episode.artist || 'Podcast',
+    description: '',
+    episode_count: 1,
+    cover_url: (episode.hasPicture || episode.coverFile)
+      ? `/podcast-cover/${base}`
+      : null,
+  };
+}
+
 app.get('/api/podcasts', (req, res) => {
   const r = pods.listPods({ limit: req.query.limit, offset: req.query.offset, search: req.query.search || '' });
-  res.json({ success: true, total: r.total, podcasts: r.items });
+  res.json({ success: true, total: r.total, podcasts: r.items.map(e => serializePodcastItem(e, null)) });
 });
-app.get('/api/podcasts/:id', (req, res) => {
+
+app.get('/api/podcasts/:id', async (req, res) => {
   const d = pods.detailPod(req.params.id);
   if (!d) return res.status(404).json({ error: 'Podcast no encontrado' });
-  res.json({ success: true, podcast: d });
+
+  const userId = req.query.userId || null;
+  const positionMs = await db.getEpisodeProgress(userId, d.id);
+
+  const episode = {
+    id: d.id,
+    podcastId: d.id,
+    title: d.title || 'Episodio',
+    description: '',
+    duration: d.duration || 0,
+    audio_url: `/podcast-audio/${d.id}`,
+    subtitle_url: null,
+    last_position_ms: positionMs,
+    order_index: 0,
+    published_at: null,
+  };
+
+  const podcast = serializePodcastItem(d, userId);
+  res.json({ success: true, podcast, episodes: [episode] });
 });
+
+// Guarda el progreso de reproducción de un episodio (llamado por la app Android).
+app.post('/api/podcasts/progress', async (req, res) => {
+  try {
+    const { episodeId, userId, positionMs } = req.body || {};
+    if (!episodeId) return res.status(400).json({ error: 'episodeId requerido' });
+    await db.setEpisodeProgress(userId, episodeId, positionMs);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[api/podcasts/progress] Error:', err);
+    res.status(500).json({ error: 'Error al guardar progreso' });
+  }
+});
+
 app.get('/api/podcasts/:id/transcript', (req, res) => {
   const lang = (req.query.lang || 'es').toLowerCase() === 'en' ? 'en' : 'es';
   const t = pods.readTx(req.params.id, lang);
