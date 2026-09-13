@@ -1092,6 +1092,63 @@ export async function getLikedSongsCount(userId) {
   }
 }
 
+export async function getHiddenSongs(userId, limit = 100, offset = 0) {
+  const database = await getDb();
+
+  try {
+    const songs = await database.all(`
+      SELECT
+        s.id,
+        s.title,
+        s.relPath,
+        s.duration,
+        s.track,
+        s.bpm,
+        s.key_name,
+        s.hasLyrics,
+        a.name AS artist,
+        al.name AS album,
+        al.year AS year,
+        al.cover_path,
+        1 AS hidden
+      FROM songs s
+      JOIN user_song_interactions usi ON s.id = usi.song_id
+      LEFT JOIN song_artists sa ON s.id = sa.song_id AND sa.is_main = 1
+      LEFT JOIN artists a ON sa.artist_id = a.id
+      LEFT JOIN albums al ON s.album_id = al.id
+      WHERE usi.user_id = ? AND usi.interaction_type = 'HIDE'
+      ORDER BY usi.created_at DESC
+      LIMIT ? OFFSET ?
+    `, [userId, limit, offset]);
+
+    await attachGenres(database, songs);
+    for (const song of songs) {
+      song.hidden = true;
+      song.hasCover = !!song.cover_path;
+    }
+
+    return songs;
+  } catch (error) {
+    console.error('[db] Error en getHiddenSongs:', error);
+    throw error;
+  }
+}
+
+export async function getHiddenSongsCount(userId) {
+  const database = await getDb();
+
+  try {
+    const result = await database.get(
+      'SELECT COUNT(*) as total FROM user_song_interactions WHERE user_id = ? AND interaction_type = "HIDE"',
+      [userId]
+    );
+    return result.total;
+  } catch (error) {
+    console.error('[db] Error en getHiddenSongsCount:', error);
+    throw error;
+  }
+}
+
 // ============================================================
 // FUNCIONES PARA CANCIONES OCULTAS (DISLIKE)
 // ============================================================

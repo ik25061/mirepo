@@ -55,6 +55,13 @@ export default defineConfig({
     host: '0.0.0.0',
     port: parseInt(FRONTEND_PORT, 10),
     https: false,
+    watch: {
+      // Punto 1: Ignorar la carpeta server y archivos de base de datos/backups.
+      // Vite (el cliente) no necesita vigilar cambios en el backend, y en Windows
+      // intentar vigilar un archivo que el script de rescan está escribiendo/bloqueando
+      // lanza un error EBUSY que tumba todo el servicio.
+      ignored: ['**/server/**', '**/*.db*', '**/node_modules/**']
+    },
     proxy: {
       '/api': {
         target: PROXY_TARGET,

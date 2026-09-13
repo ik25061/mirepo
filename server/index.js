@@ -734,6 +734,45 @@ app.get('/api/liked-songs', async (req, res) => {
 });
 
 // ============================================================
+// RUTA - CANCIONES OCULTAS ("NO ME GUSTA") DEL USUARIO
+// ============================================================
+app.get('/api/hidden-songs', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Se requiere userId' });
+    }
+
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+
+    console.log(`[api/hidden-songs] 📥 userId=${userId}, limit=${limit}, offset=${offset}`);
+
+    const songs = await db.getHiddenSongs(parseInt(userId), limit, offset);
+    const total = await db.getHiddenSongsCount(parseInt(userId));
+
+    console.log(`[api/hidden-songs] ✅ Encontradas ${songs.length} canciones, total ${total}`);
+
+    res.json({
+      songs: songs || [],
+      pagination: {
+        offset,
+        limit,
+        total: total || 0,
+        hasMore: (offset + limit) < (total || 0)
+      }
+    });
+  } catch (err) {
+    console.error('[api/hidden-songs] ❌ Error:', err);
+    res.status(500).json({
+      error: 'Error al obtener canciones ocultas',
+      details: err.message
+    });
+  }
+});
+
+// ============================================================
 // RUTA - CANCIONES SIN ALBUM NI ARTISTA
 // ============================================================
 
