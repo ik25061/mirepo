@@ -893,6 +893,7 @@ export async function getSongsByYear({ year, userId = null, limit = 100, offset 
       s.hasLyrics,
       a.name AS artist,
       al.name AS album,
+      al.year AS year,
       (SELECT CASE WHEN EXISTS (
         SELECT 1 FROM user_song_interactions usi 
         WHERE usi.song_id = s.id 
@@ -1578,6 +1579,52 @@ export async function deleteLyrics(songId) {
 }
 
 // ============================================================
+// FUNCIONES PARA COMENTARIOS
+// ============================================================
+
+export async function getCommentsBySong(songId) {
+  const database = await getDb();
+  const rows = await database.all(`
+    SELECT c.*, u.username
+    FROM comments c
+    JOIN users u ON c.user_id = u.id
+    WHERE c.song_id = ?
+    ORDER BY c.created_at DESC
+  `, [songId]);
+
+  const stats = await database.get(`
+    SELECT AVG(rating) as avgRating, COUNT(*) as total
+    FROM comments
+    WHERE song_id = ?
+  `, [songId]);
+
+  return {
+    comments: rows,
+    averageRating: stats.avgRating || 0,
+    totalCount: stats.total || 0
+  };
+}
+
+export async function addComment(userId, songId, text, rating) {
+  const database = await getDb();
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+  await database.run(`
+    INSERT INTO comments (id, user_id, song_id, text, rating)
+    VALUES (?, ?, ?, ?, ?)
+  `, [id, userId, songId, text, rating]);
+
+  const comment = await database.get(`
+    SELECT c.*, u.username
+    FROM comments c
+    JOIN users u ON c.user_id = u.id
+    WHERE c.id = ?
+  `, [id]);
+
+  return comment;
+}
+
+// ============================================================
 // FUNCIONES PARA PORTADAS Y METADATOS
 // ============================================================
 
@@ -1991,6 +2038,7 @@ async function initSchema(database) {
       salt TEXT NOT NULL,
       password_hash TEXT NOT NULL,
       session_token TEXT,
+      role TEXT DEFAULT 'USER', -- 'ADMIN', 'DJ', 'USER'
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -2087,6 +2135,15 @@ async function initSchema(database) {
       position_ms INTEGER NOT NULL DEFAULT 0,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (user_id, episode_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS comments (
+      id TEXT PRIMARY KEY,
+      song_id TEXT NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      text TEXT NOT NULL,
+      rating INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
 

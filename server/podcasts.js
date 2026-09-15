@@ -42,11 +42,13 @@ async function scanDir(dir, seriesName = null) {
       let author = seriesName || 'Podcast';
       let dur = 0;
       let pic = false;
+      let series = seriesName || 'Independientes';
 
       try {
         const m = await parseFile(fullPath, { duration: true });
         if (m.common?.title) title = m.common.title;
         if (m.common?.artist) author = m.common.artist || author;
+        if (m.common?.album) series = m.common.album;
         if (m.common?.picture?.length) pic = true;
         if (m.format?.duration) dur = Math.round(m.format.duration);
       } catch (e) {}
@@ -54,7 +56,7 @@ async function scanDir(dir, seriesName = null) {
       results.push({
         id: podId(relPath),
         type: 'podcast',
-        series: seriesName || 'Independientes',
+        series,
         title,
         author,
         duration: dur,
