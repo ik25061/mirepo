@@ -248,6 +248,16 @@ app.get('/api/auth/verify', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error verify' }); }
 });
 
+app.post('/api/auth/verify', async (req, res) => {
+  const token = (req.body && req.body.token) || req.query.token;
+  if (!token) return res.status(401).json({ error: 'No hay token' });
+  try {
+    const user = await db.getUserByToken(token);
+    if (!user) return res.status(401).json({ error: 'Token invalido' });
+    res.json({ success: true, user: { id: user.id, username: user.username } });
+  } catch (err) { res.status(500).json({ error: 'Error verify' }); }
+});
+
 app.post('/api/auth/logout', async (req, res) => {
   if (req.body.token) await db.clearUserSession(req.body.token);
   res.json({ success: true });
@@ -305,6 +315,138 @@ app.post('/api/songs/:id/hide', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ============================================================
+// RUTAS - ELIMINAR CANCION (mueve el archivo a la papelera)
+// ============================================================
+
+app.delete('/api/songs', async (req, res) => {
+  try {
+    const { id, userId } = req.body;
+    if (!id) return res.status(400).json({ error: 'Se requiere id' });
+
+    let song = songMap.get(id);
+    if (!song) {
+      const songs = await db.getSongsByIds(id, userId);
+      song = songs[0];
+    }
+    if (!song) return res.status(404).json({ error: 'Cancion no encontrada en el catalogo' });
+
+    const fullPath = absolutePath(song.relPath);
+    if (fs.existsSync(fullPath)) {
+      try {
+        if (!fs.existsSync(TRASH_DIR)) fs.mkdirSync(TRASH_DIR, { recursive: true });
+        const now = new Date();
+        const trashSubDir = path.join(TRASH_DIR, `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+        if (!fs.existsSync(trashSubDir)) fs.mkdirSync(trashSubDir, { recursive: true });
+        const trashPath = path.join(trashSubDir, `${Date.now()}_${path.basename(fullPath)}`);
+        fs.copyFileSync(fullPath, trashPath);
+        fs.unlinkSync(fullPath);
+      } catch (err) {
+        return res.status(500).json({ error: 'Error fisico al eliminar el archivo', details: err.message });
+      }
+    }
+
+    if (userId) await db.setSongHidden(song.id, true, userId);
+    songMap.delete(id);
+    songCache = songCache.filter(s => s.id !== id);
+    res.json({ message: 'Cancion eliminada correctamente' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno al procesar eliminacion', details: error.message });
+  }
+});
+
+// ============================================================
+// RUTA - ACTUALIZAR METADATOS DE CANCION
+// ============================================================
+
+app.put('/api/songs/:id', async (req, res) => {
+  try {
+    const { title, artist, album, year, track, genres, moods, writeId3 } = req.body || {};
+    await db.updateSongMetadata(req.params.id, { title, artist, album, year, track, genres, moods });
+    if (writeId3) {
+      try {
+        const { default: NodeID3 } = await import('node-id3');
+        const row = await db.getDb().then(d => d.get('SELECT relPath FROM songs WHERE id = ?', [req.params.id]));
+        if (row) {
+          const full = absolutePath(row.relPath);
+          const tags = {};
+          if (title) tags.title = String(title);
+          if (artist) tags.artist = String(artist);
+          if (album) tags.album = String(album);
+          if (year) tags.year = String(year);
+          if (track) tags.trackNumber = String(track);
+          if (Array.isArray(genres) && genres.length) tags.genre = genres.join('; ');
+          if (Object.keys(tags).length) NodeID3.update(tags, full);
+        }
+      } catch (e) { console.warn('[api/songs PUT id3]', e.message); }
+    }
+    const songs = await db.getSongsByIds([req.params.id], req.query.userId || req.body?.userId || null);
+    res.json({ success: true, song: songs[0] || null });
+  } catch (err) {
+    res.status(500).json({ error: String(err.message || 'Error') });
+  }
+});
+
+// ============================================================
+// RUTA - CANCIONES SIN ALBUM NI ARTISTA
+// ============================================================
+
+app.get('/api/songs/no-album-no-artist', async (req, res) => {
+  try {
+    const userId = req.query.userId || null;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const result = await db.getSongsWithoutAlbumOrArtist({ userId, limit, offset });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener canciones sin album ni artista' });
+  }
+});
+
+// ============================================================
+// RUTAS - OCULTAR / MOSTRAR ARTISTAS
+// ============================================================
+
+app.post('/api/artists/hide', async (req, res) => {
+  try {
+    const { artist, userId, artistId } = req.body || {};
+    const targetArtistId = artistId ? Number(artistId) : await db.getArtistIdByName(artist);
+    if (!targetArtistId) return res.status(404).json({ error: 'Artista no encontrado' });
+    await db.setArtistHidden(targetArtistId, true, userId);
+    res.json({ ok: true, artistId: targetArtistId });
+  } catch (err) { res.status(500).json({ error: 'Error al ocultar artista' }); }
+});
+
+app.post('/api/artists/:id/hide', async (req, res) => {
+  try {
+    const artistId = Number(req.params.id);
+    const { userId } = req.body || {};
+    if (!artistId) return res.status(400).json({ error: 'Falta el id del artista' });
+    await db.setArtistHidden(artistId, true, userId);
+    res.json({ ok: true, artistId });
+  } catch (err) { res.status(500).json({ error: 'Error al ocultar artista' }); }
+});
+
+app.post('/api/artists/unhide', async (req, res) => {
+  try {
+    const { artist, userId, artistId } = req.body || {};
+    const targetArtistId = artistId ? Number(artistId) : await db.getArtistIdByName(artist);
+    if (!targetArtistId) return res.status(404).json({ error: 'Artista no encontrado' });
+    await db.setArtistHidden(targetArtistId, false, userId);
+    res.json({ ok: true, artistId: targetArtistId });
+  } catch (err) { res.status(500).json({ error: 'Error al mostrar artista' }); }
+});
+
+app.post('/api/artists/:id/unhide', async (req, res) => {
+  try {
+    const artistId = Number(req.params.id);
+    const { userId } = req.body || {};
+    if (!artistId) return res.status(400).json({ error: 'Falta el id del artista' });
+    await db.setArtistHidden(artistId, false, userId);
+    res.json({ ok: true, artistId });
+  } catch (err) { res.status(500).json({ error: 'Error al mostrar artista' }); }
+});
+
 app.get('/api/songs/by-ids', async (req, res) => {
   try {
     const ids = (req.query.ids || '').split(',').filter(Boolean);
@@ -355,6 +497,67 @@ app.get('/api/years', async (req, res) => {
 app.get('/api/years/:year/songs', async (req, res) => {
   const r = await db.getSongsByYear({ year: req.params.year, userId: req.query.userId, limit: parseInt(req.query.limit) || 100, offset: parseInt(req.query.offset) || 0 });
   res.json(r);
+});
+
+// ============================================================
+// RUTAS - CRUD DE GENEROS Y GENEROS POR CANCION
+// ============================================================
+
+app.post('/api/genres', async (req, res) => {
+  try { res.json({ genre: await db.createGenre(req.body?.name) }); }
+  catch (err) { res.status(400).json({ error: String(err.message || 'Error') }); }
+});
+app.put('/api/genres/:id', async (req, res) => {
+  try { res.json({ genre: await db.renameGenre(req.params.id, req.body?.name) }); }
+  catch (err) { res.status(400).json({ error: String(err.message || 'Error') }); }
+});
+app.delete('/api/genres/:id', async (req, res) => {
+  try { res.json(await db.deleteGenre(req.params.id)); }
+  catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+app.put('/api/songs/:id/genres', async (req, res) => {
+  try { res.json({ success: true, genres: await db.setSongGenres(req.params.id, req.body?.genres || []) }); }
+  catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+
+// ============================================================
+// RUTAS - CRUD DE MOODS Y MOODS POR CANCION
+// ============================================================
+
+app.post('/api/moods', async (req, res) => {
+  try { res.json({ mood: await db.createMood(req.body?.name, req.body?.color) }); }
+  catch (err) { res.status(400).json({ error: String(err.message || 'Error') }); }
+});
+app.put('/api/moods/:id', async (req, res) => {
+  try { res.json({ mood: await db.renameMood(req.params.id, req.body?.name, req.body?.color) }); }
+  catch (err) { res.status(400).json({ error: String(err.message || 'Error') }); }
+});
+app.delete('/api/moods/:id', async (req, res) => {
+  try { res.json(await db.deleteMood(req.params.id)); }
+  catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+app.get('/api/moods/:id/songs', async (req, res) => {
+  try {
+    const r = await db.getSongsByMood({ moodId: req.params.id, userId: req.query.userId || null, limit: +req.query.limit || 100, offset: +req.query.offset || 0 });
+    res.json({ songs: r.songs, pagination: r.pagination });
+  } catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+app.put('/api/songs/:id/moods', async (req, res) => {
+  try { res.json({ success: true, moods: await db.setSongMoods(req.params.id, req.body?.moods || []) }); }
+  catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+
+// ============================================================
+// RUTAS - AJUSTES DE USUARIO (TEMA Y PREFERENCIAS)
+// ============================================================
+
+app.get('/api/users/:id/settings', async (req, res) => {
+  try { res.json({ settings: await db.getUserSettings(req.params.id) }); }
+  catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
+});
+app.put('/api/users/:id/settings', async (req, res) => {
+  try { res.json({ settings: await db.updateUserSettings(req.params.id, req.body || {}) }); }
+  catch (err) { res.status(400).json({ error: String(err.message || 'Error') }); }
 });
 
 // ============================================================
@@ -631,6 +834,37 @@ app.post('/api/lyrics/:id/save-file', async (req, res) => {
   fs.writeFileSync(lrcPath, req.body.content, 'utf8');
   await db.setSongHasLyrics(song.id);
   res.json({ ok: true });
+});
+
+app.post('/api/lyrics/:id/refresh', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const song = songMap.get(id);
+    if (!song) return res.status(404).json({ error: 'Cancion no encontrada' });
+
+    await db.deleteLyrics(id);
+    const songPath = absolutePath(song.relPath);
+    const result = await getLyricsFromService(id, song.title, song.artist, songPath);
+
+    if (result.lyrics) {
+      await db.saveLyrics(id, {
+        text: result.lyrics,
+        syncedText: result.syncedLines ? result.syncedLines.map(l => `[${l.time}] ${l.text}`).join('\n') : null,
+        translatedText: result.translatedLyrics || null
+      });
+    }
+
+    res.json({
+      success: true,
+      hasLyrics: !!result.lyrics,
+      lyrics: result.lyrics || null,
+      syncedLines: result.syncedLines || null,
+      translatedLyrics: result.translatedLyrics || null
+    });
+  } catch (err) {
+    console.error('[api/lyrics/refresh] Error:', err);
+    res.status(500).json({ error: 'Error al refrescar la letra' });
+  }
 });
 
 // ============================================================
