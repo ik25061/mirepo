@@ -658,10 +658,17 @@ app.get('/api/podcasts/:id', async (req, res) => {
   const d = pods.getPodcastDetail(req.params.id);
   if (!d) return res.status(404).json({ error: 'Podcast no encontrado' });
   const userId = req.query.userId;
-  const episodes = await Promise.all(d.episodes.map(async (e, idx) => ({
-    id: e.id, podcastId: d.podcast.id, title: e.title, duration: e.duration, audio_url: `/podcast-audio/${e.id}`,
-    last_position_ms: await db.getEpisodeProgress(userId, e.id), order_index: idx, is_episode: true, hasPicture: !!e.hasPicture
-  })));
+  const episodes = await Promise.all(d.episodes.map(async (e, idx) => {
+    // Subtítulos/transcripción: el cliente usa la ruta transcript; aquí
+    // solo indicamos si existe un .lrc junto al audio (para la UI).
+    const base = absolutePath(path.join(pods.PODCAST_DIR, e.relPath)).replace(/\.[^/.]+$/, '');
+    const hasSubtitle = fs.existsSync(`${base}.lrc`) || fs.existsSync(`${base}.es.lrc`);
+    return {
+      id: e.id, podcastId: d.podcast.id, title: e.title, duration: e.duration, audio_url: `/podcast-audio/${e.id}`,
+      subtitle_url: hasSubtitle ? `/api/podcasts/${e.id}/transcript` : null,
+      last_position_ms: await db.getEpisodeProgress(userId, e.id), order_index: idx, is_episode: true, hasPicture: !!e.hasPicture
+    };
+  }));
   res.json({ success: true, podcast: { ...d.podcast, cover_url: `/podcast-series-cover/${d.podcast.id}` }, episodes });
 });
 
@@ -673,14 +680,32 @@ app.post('/api/podcasts/progress', async (req, res) => {
 app.get('/api/songs/:id/comments', async (req, res) => {
   try {
     const data = await db.getCommentsBySong(req.params.id);
-    res.json(data);
+    // La app Android usa camelCase (songId, userId, createdAt): añadimos
+    // aliases manteniendo los campos originales para el cliente web.
+    const comments = (data.comments || []).map(c => ({
+      ...c,
+      songId: c.song_id,
+      userId: c.user_id,
+      createdAt: c.created_at
+    }));
+    res.json({ comments, averageRating: data.averageRating, totalCount: data.totalCount });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/comments', async (req, res) => {
   try {
     const { userId, songId, text, rating } = req.body;
-    const comment = await db.addComment(userId, songId, text, rating);
+    if (!songId || !userId) return res.status(400).json({ error: 'Se requieren songId y userId' });
+    // UPSERT: si el usuario ya había comentado/puntuado esta canción, se
+    // actualiza su comentario/rating en lugar de crear un duplicado.
+    const existing = await db.getCommentsBySong(songId);
+    const mine = (existing.comments || []).find(c => String(c.user_id) === String(userId));
+    let comment;
+    if (mine) {
+      comment = await db.updateComment(mine.id, { text, rating });
+    } else {
+      comment = await db.addComment(userId, songId, text, rating);
+    }
     res.json(comment);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -788,8 +813,25 @@ app.get('/podcast-audio/:id', (req, res) => {
   if (!ep) return res.status(404).end();
   const f = path.join(pods.PODCAST_DIR, ep.relPath);
   if (!fs.existsSync(f)) return res.status(404).end();
-  res.writeHead(200, { 'Content-Length': fs.statSync(f).size, 'Content-Type': 'audio/mpeg', 'Accept-Ranges': 'bytes' });
-  fs.createReadStream(f).pipe(res);
+  const st = fs.statSync(f);
+  // Soporte de Range: imprescindible para Chromecast (seek/buffering) y
+  // ExoPlayer en episodios largos.
+  const range = req.headers.range;
+  if (range) {
+    const [start, end] = range.replace(/bytes=/, '').split('-').map(Number);
+    const s = Number.isFinite(start) ? start : 0;
+    const e = (Number.isFinite(end) && end > 0) ? Math.min(end, st.size - 1) : st.size - 1;
+    res.writeHead(206, {
+      'Content-Range': `bytes ${s}-${e}/${st.size}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': e - s + 1,
+      'Content-Type': 'audio/mpeg'
+    });
+    fs.createReadStream(f, { start: s, end: e }).pipe(res);
+  } else {
+    res.writeHead(200, { 'Content-Length': st.size, 'Content-Type': 'audio/mpeg', 'Accept-Ranges': 'bytes' });
+    fs.createReadStream(f).pipe(res);
+  }
 });
 
 app.get('/podcast-series-cover/:id', async (req, res) => {
@@ -830,9 +872,19 @@ app.get('/api/lyrics/:id', async (req, res) => {
 app.post('/api/lyrics/:id/save-file', async (req, res) => {
   const song = songMap.get(req.params.id);
   if (!song) return res.status(404).end();
-  const lrcPath = absolutePath(song.relPath).replace(/\.[^/.]+$/, ".lrc");
-  fs.writeFileSync(lrcPath, req.body.content, 'utf8');
+  const content = String(req.body?.content ?? '');
+  const lrcPath = absolutePath(song.relPath).replace(/\.[^/.]+$/, '.lrc');
+  fs.writeFileSync(lrcPath, content, 'utf8');
   await db.setSongHasLyrics(song.id);
+  // Refrescar también la caché de la DB: GET /api/lyrics/:id lee primero de
+  // ahí, así que sin esto el editor parecería no guardar los cambios.
+  try {
+    const syncedLines = parseSyncedLines(content);
+    await db.saveLyrics(song.id, {
+      text: syncedLines ? syncedLines.map(l => l.text).join('\n') : content,
+      syncedText: syncedLines ? content : null
+    });
+  } catch (e) { console.warn('[api/lyrics/save-file] db cache:', e.message); }
   res.json({ ok: true });
 });
 
@@ -916,9 +968,300 @@ app.post('/api/favorite-artists/toggle', async (req, res) => {
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
+// ============================================================
+// RUTAS RESTAURADAS — se perdieron en el commit de comentarios/
+// calificaciones. Las sigue usando la app (borrar del disco,
+// ocultar/mostrar artista desde el panel de administración).
+// ============================================================
+
+app.delete('/api/songs', async (req, res) => {
+  try {
+    const { id, userId } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: 'Se requiere id' });
+    }
+
+    let song = songMap.get(id);
+    if (!song) {
+      const songs = await db.getSongsByIds(id, userId);
+      song = songs[0];
+    }
+
+    if (!song) {
+      console.log(`[api/songs DELETE] ❌ Canción ${id} no encontrada`);
+      return res.status(404).json({ error: 'Canción no encontrada en el catálogo' });
+    }
+
+    const fullPath = absolutePath(song.relPath);
+    console.log(`[api/songs DELETE] 🗑️ Intentando eliminar: ${fullPath}`);
+
+    if (fs.existsSync(fullPath)) {
+      try {
+        if (!fs.existsSync(TRASH_DIR)) fs.mkdirSync(TRASH_DIR, { recursive: true });
+
+        const now = new Date();
+        const trashSubDir = path.join(TRASH_DIR,
+          `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+        );
+        if (!fs.existsSync(trashSubDir)) fs.mkdirSync(trashSubDir, { recursive: true });
+
+        const trashName = `${Date.now()}_${path.basename(fullPath)}`;
+        const trashPath = path.join(trashSubDir, trashName);
+
+        fs.copyFileSync(fullPath, trashPath);
+        fs.unlinkSync(fullPath);
+        console.log(`[api/songs DELETE] ✅ Archivo movido a papelera: ${trashPath}`);
+      } catch (err) {
+        console.error('[api/songs DELETE] ❌ Error moviendo archivo:', err.message);
+        return res.status(500).json({ error: 'Error físico al eliminar el archivo', details: err.message });
+      }
+    } else {
+      console.warn(`[api/songs DELETE] ⚠️ El archivo no existe en disco: ${fullPath}`);
+    }
+
+    if (userId) {
+      await db.setSongHidden(song.id, true, userId);
+    }
+
+    songMap.delete(id);
+    songCache = songCache.filter(s => s.id !== id);
+
+    res.json({ message: 'Canción eliminada correctamente' });
+  } catch (error) {
+    console.error('[api/songs DELETE] ❌ Error general:', error);
+    res.status(500).json({ error: 'Error interno al procesar eliminación', details: error.message });
+  }
+});
+
+app.post('/api/artists/:id/hide', async (req, res) => {
+  try {
+    const artistId = Number(req.params.id);
+    const { userId } = req.body || {};
+    if (!artistId) return res.status(400).json({ error: 'Falta el id del artista' });
+    await db.setArtistHidden(artistId, true, userId);
+    res.json({ ok: true, artistId });
+  } catch (err) {
+    console.error('[api/artists/:id/hide] Error:', err);
+    res.status(500).json({ error: 'Error al ocultar artista' });
+  }
+});
+
+app.post('/api/artists/:id/unhide', async (req, res) => {
+  try {
+    const artistId = Number(req.params.id);
+    const { userId } = req.body || {};
+    if (!artistId) return res.status(400).json({ error: 'Falta el id del artista' });
+    await db.setArtistHidden(artistId, false, userId);
+    res.json({ ok: true, artistId });
+  } catch (err) {
+    console.error('[api/artists/:id/unhide] Error:', err);
+    res.status(500).json({ error: 'Error al mostrar artista' });
+  }
+});
+
 app.get('/api/moods', async (_req, res) => {
   try { res.json({ moods: await db.listMoods() }); }
   catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ============================================================
+// RUTA AUX - PARSEAR LÍNEAS SINCRONIZADAS (LRC)
+// Formato: [mm:ss.xx] texto — una línea por cada estrofa.
+// La app Android espera [{ time: Double (segundos), text: String }]
+// ============================================================
+
+function parseSyncedLines(syncedText) {
+  if (!syncedText) return null;
+  const lines = [];
+  const regex = /\[(\d+):(\d+(?:[.:]\d+)?)\]\s*(.*)/;
+  for (const raw of String(syncedText).split(/\r?\n/)) {
+    const m = raw.match(regex);
+    if (!m) continue;
+    const minutes = parseInt(m[1], 10);
+    const seconds = parseFloat(m[2].replace(':', '.'));
+    if (Number.isNaN(minutes) || Number.isNaN(seconds)) continue;
+    lines.push({ time: minutes * 60 + seconds, text: (m[3] || '').trim() });
+  }
+  return lines.length ? lines : null;
+}
+
+// ============================================================
+// RADIO EN VIVO — un usuario (host) emite lo que está escuchando
+// y otros usuarios (oyentes) se conectan para escuchar lo mismo,
+// sincronizados con la posición de reproducción del host.
+//
+// Endpoints que consume la app Android (RadioManager):
+//   POST /api/radio/publish   — el host publica qué suena y por dónde va
+//   GET  /api/radio/stations  — lista de radios activas para unirse
+//   GET  /api/radio/status    — estado actual de la radio de un host
+//   POST /api/radio/join      — registrar al usuario como oyente
+//   POST /api/radio/leave     — dejar de emitir (host) o de escuchar
+//
+// Persistencia en memoria: suficiente para transmisión en vivo.
+// Una radio se considera muerta si el host no publica en 15 s.
+// ============================================================
+
+const RADIO_HOST_TTL_MS = 15000;
+
+/** hostId (String) -> { hostId, hostName, songId, title, artist, positionMs,
+ *  isPlaying, updatedAt, listeners: Set<userId> } */
+const radioHosts = new Map();
+
+function radioSnapshot(host) {
+  return {
+    hostId: host.hostId,
+    hostName: host.hostName || null,
+    songId: host.songId,
+    title: host.title || null,
+    artist: host.artist || null,
+    positionMs: host.positionMs || 0,
+    isPlaying: !!host.isPlaying,
+    updatedAt: host.updatedAt,
+    listeners: host.listeners.size
+  };
+}
+
+function pruneRadioHosts() {
+  const now = Date.now();
+  for (const [hostId, host] of radioHosts) {
+    if (now - host.updatedAt > RADIO_HOST_TTL_MS) radioHosts.delete(hostId);
+  }
+}
+
+// El host publica su estado (canción, posición, play/pausa). Llega cada ~5 s
+// desde RadioManager, lo que mantiene la radio "viva" (renueva el TTL).
+app.post('/api/radio/publish', (req, res) => {
+  const { hostId, hostName, songId, title, artist, positionMs, isPlaying } = req.body || {};
+  if (!hostId || !songId) {
+    return res.status(400).json({ error: 'Se requieren hostId y songId' });
+  }
+  let host = radioHosts.get(String(hostId));
+  if (!host) {
+    host = { hostId: String(hostId), listeners: new Set() };
+    radioHosts.set(String(hostId), host);
+  }
+  host.hostName = hostName || host.hostName || null;
+  host.songId = String(songId);
+  host.title = title || null;
+  host.artist = artist || null;
+  host.positionMs = Number(positionMs) || 0;
+  host.isPlaying = !!isPlaying;
+  host.updatedAt = Date.now();
+  res.json({ success: true });
+});
+
+// Lista de radios activas (excluye las sin publicar recientemente).
+app.get('/api/radio/stations', (req, res) => {
+  pruneRadioHosts();
+  const stations = Array.from(radioHosts.values())
+    .filter(h => h.songId)
+    .sort((a, b) => b.listeners.size - a.listeners.size)
+    .map(radioSnapshot);
+  res.json({ success: true, stations });
+});
+
+// Estado actual de una radio concreta (lo consulta cada oyente cada ~4 s).
+// `updatedAt` permite al oyente compensar el tiempo transcurrido desde la
+// publicación y estimar la posición esperada.
+app.get('/api/radio/status', (req, res) => {
+  pruneRadioHosts();
+  const hostId = String(req.query.hostId || '');
+  const host = radioHosts.get(hostId);
+  if (!host) return res.status(404).json({ error: 'Radio no encontrada o inactiva' });
+  res.json(radioSnapshot(host));
+});
+
+// Eliminar un comentario (el usuario borra el suyo desde la app).
+app.delete('/api/comments/:id', async (req, res) => {
+  try {
+    await db.deleteComment(req.params.id);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Registrar al usuario como oyente de una radio.
+app.post('/api/radio/join', (req, res) => {
+  const { userId, hostId } = req.body || {};
+  const host = radioHosts.get(String(hostId || ''));
+  if (!host) return res.status(404).json({ error: 'Radio no encontrada o inactiva' });
+  if (userId) host.listeners.add(String(userId));
+  res.json({ success: true, listeners: host.listeners.size });
+});
+
+// Dejar de emitir (hostId == userId: borra la radio) o dejar de escuchar
+// (hostId == radio del host: elimina al usuario de sus oyentes).
+app.post('/api/radio/leave', (req, res) => {
+  const { userId, hostId } = req.body || {};
+  const key = String(hostId || '');
+  if (!key) return res.status(400).json({ error: 'Se requiere hostId' });
+
+  const host = radioHosts.get(key);
+  if (host && userId && String(userId) !== key) {
+    // Oyente dejando una radio ajena
+    host.listeners.delete(String(userId));
+    return res.json({ success: true, listeners: host.listeners.size });
+  }
+
+  // Host dejando su propia radio: borrarla (aunque ya haya expirado)
+  radioHosts.delete(key);
+  res.json({ success: true });
+});
+
+// ============================================================
+// METADATOS ONLINE/OFFLINE — SINCRONIZACIÓN AL RECONECTAR
+//
+// La app guarda las ediciones del administrador localmente
+// (SongAdminStore) cuando no hay conexión. Al reconectar, envía el lote
+// aquí con POST /api/metadata/sync y el servidor aplica lo que pueda,
+// informando de los conflictos (el metadato del servidor cambió desde
+// que la app lo leyó).
+// ============================================================
+
+app.post('/api/metadata/sync', async (req, res) => {
+  try {
+    const { userId, edits = [], removals = [] } = req.body || {};
+    if (!Array.isArray(edits)) return res.status(400).json({ error: 'edits debe ser un array' });
+
+    const applied = [];
+    const conflicts = [];
+
+    for (const edit of edits) {
+      const { songId, title, artist, album, year, genres, moods } = edit || {};
+      if (!songId) continue;
+      try {
+        const song = songMap.get(String(songId));
+        if (!song) {
+          conflicts.push({ songId: String(songId), reason: 'song_not_found' });
+          continue;
+        }
+        // Conflicto: el servidor tiene un título distinto al original que vio
+        // la app cuando editó (alguien lo cambió en medio).
+        if (edit.originalTitle && song.title && song.title !== edit.originalTitle) {
+          conflicts.push({ songId: String(songId), reason: 'server_changed', serverTitle: song.title });
+          continue;
+        }
+        await db.updateSongMetadata(String(songId), {
+          title, artist, album, year,
+          genres: Array.isArray(genres) ? genres : undefined,
+          moods: Array.isArray(moods) ? moods : undefined
+        });
+        // Actualizar la caché en memoria con los datos nuevos
+        const updated = await db.getSongsByIds([String(songId)], userId || null);
+        if (updated[0]) {
+          const idx = songCache.findIndex(s => s.id === String(songId));
+          if (idx >= 0) songCache[idx] = { ...songCache[idx], ...updated[0] };
+        }
+        applied.push(String(songId));
+      } catch (e) {
+        conflicts.push({ songId: String(songId), reason: 'error', details: String(e.message || e) });
+      }
+    }
+
+    res.json({ success: true, applied, conflicts });
+  } catch (err) {
+    res.status(500).json({ error: String(err.message || 'Error') });
+  }
 });
 
 // ============================================================

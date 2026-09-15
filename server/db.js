@@ -1624,6 +1624,34 @@ export async function addComment(userId, songId, text, rating) {
   return comment;
 }
 
+/** Elimina un comentario por id. */
+export async function deleteComment(commentId) {
+  const database = await getDb();
+  await database.run('DELETE FROM comments WHERE id = ?', [commentId]);
+}
+
+/** Actualiza el texto/rating de un comentario existente (UPSERT del
+ *  editor de puntuación de la app Android). */
+export async function updateComment(commentId, { text, rating } = {}) {
+  const database = await getDb();
+  if (text !== undefined && text !== null) {
+    await database.run('UPDATE comments SET text = ? WHERE id = ?', [String(text), commentId]);
+  }
+  if (rating !== undefined && rating !== null) {
+    const r = parseInt(rating, 10);
+    if (!Number.isNaN(r)) {
+      await database.run('UPDATE comments SET rating = ? WHERE id = ?', [r, commentId]);
+    }
+  }
+  const comment = await database.get(`
+    SELECT c.*, u.username
+    FROM comments c
+    JOIN users u ON c.user_id = u.id
+    WHERE c.id = ?
+  `, [commentId]);
+  return comment;
+}
+
 // ============================================================
 // FUNCIONES PARA PORTADAS Y METADATOS
 // ============================================================

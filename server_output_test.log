@@ -1,0 +1,30 @@
+[scanner] 📂 MUSIC_DIR: E:/musica
+🚀 Iniciando servidor...
+🔧 Puerto configurado: 5002
+📂 MUSIC_DIR: E:/musica
+[podcasts] Escaneando...
+🔍 Cargando biblioteca desde SQLite...
+
+🎵 Servidor completo restaurado en http://192.168.1.152:5002
+
+[db] ✅ Esquema verificado/creado
+[db] ✅ Conectado a localfy.db
+✅ 30231 canciones cargadas
+[podcasts] OK: 4 series, 185 episodios
+[lyrics] 🔍 Buscando: El Poder Del Norte - Llueve Sobre Mojado
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\E\Llueve Sobre Mojado.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: El Poder Del Norte - Morir Sin Ti
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\E\Morir Sin Ti.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Mier - MI SENTIR POR TI
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - El Vengador Del 30-06
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\El Vengador Del 30-06.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
