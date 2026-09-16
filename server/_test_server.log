@@ -1,0 +1,14 @@
+[scanner] 📂 MUSIC_DIR: E:/musica
+🚀 Iniciando servidor...
+🔧 Puerto configurado: 5099
+📂 MUSIC_DIR: E:/musica
+[podcasts] Escaneando...
+🔍 Cargando biblioteca desde SQLite...
+
+🎵 Servidor completo restaurado en http://192.168.1.152:5099
+
+[db] ✅ Esquema verificado/creado
+[db] ✅ Conectado a localfy.db
+✅ 30231 canciones cargadas
+⚠️ Meilisearch: no se pudo sincronizar
+[podcasts] OK: 4 series, 185 episodios

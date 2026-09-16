@@ -677,25 +677,47 @@ app.post('/api/podcasts/progress', async (req, res) => {
   res.json({ success: true });
 });
 
+// Convierte un comentario (fila de BD, posiblemente con respuestas anidadas)
+// al formato camelCase que usa la app Android, manteniendo los campos
+// originales para el cliente web.
+const toClientComment = (c) => ({
+  ...c,
+  songId: c.song_id,
+  userId: c.user_id,
+  createdAt: c.created_at,
+  parentId: c.parent_id ?? null,
+  likesCount: c.likes_count ?? 0,
+  likedByMe: !!c.liked_by_me,
+  replies: (c.replies || []).map(toClientComment)
+});
+
 app.get('/api/songs/:id/comments', async (req, res) => {
   try {
-    const data = await db.getCommentsBySong(req.params.id);
-    // La app Android usa camelCase (songId, userId, createdAt): añadimos
-    // aliases manteniendo los campos originales para el cliente web.
-    const comments = (data.comments || []).map(c => ({
-      ...c,
-      songId: c.song_id,
-      userId: c.user_id,
-      createdAt: c.created_at
-    }));
+    // userId opcional (query): permite devolver liked_by_me por comentario.
+    const data = await db.getCommentsBySong(req.params.id, req.query.userId || null);
+    const comments = (data.comments || []).map(toClientComment);
     res.json({ comments, averageRating: data.averageRating, totalCount: data.totalCount });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/comments', async (req, res) => {
   try {
-    const { userId, songId, text, rating } = req.body;
+    const { userId, songId, text, rating, parentId } = req.body;
     if (!songId || !userId) return res.status(400).json({ error: 'Se requieren songId y userId' });
+
+    // Respuesta a otro comentario: se inserta siempre como comentario hijo
+    // (sin UPSERT) y sin rating, porque las respuestas no puntúan la canción.
+    if (parentId) {
+      const parent = await db.getCommentById(parentId);
+      if (!parent) return res.status(404).json({ error: 'Comentario padre no encontrado' });
+      if (!text || !String(text).trim()) return res.status(400).json({ error: 'El texto de la respuesta es obligatorio' });
+      if (String(parent.song_id) !== String(songId)) {
+        return res.status(400).json({ error: 'La respuesta debe pertenecer a la misma canción' });
+      }
+      const reply = await db.addReply(userId, songId, parentId, String(text).trim());
+      return res.json(toClientComment(reply));
+    }
+
     // UPSERT: si el usuario ya había comentado/puntuado esta canción, se
     // actualiza su comentario/rating en lugar de crear un duplicado.
     const existing = await db.getCommentsBySong(songId);
@@ -706,7 +728,17 @@ app.post('/api/comments', async (req, res) => {
     } else {
       comment = await db.addComment(userId, songId, text, rating);
     }
-    res.json(comment);
+    res.json(toClientComment(comment));
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// "Me gusta" en un comentario o respuesta (toggle por usuario).
+app.post('/api/comments/:id/like', async (req, res) => {
+  try {
+    const { userId } = req.body || {};
+    if (!userId) return res.status(400).json({ error: 'Se requiere userId' });
+    const result = await db.toggleCommentLike(req.params.id, userId);
+    res.json(result);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -1105,7 +1137,7 @@ function parseSyncedLines(syncedText) {
 const RADIO_HOST_TTL_MS = 15000;
 
 /** hostId (String) -> { hostId, hostName, songId, title, artist, positionMs,
- *  isPlaying, updatedAt, listeners: Set<userId> } */
+ *  isPlaying, isVoiceActive, updatedAt, listeners: Set<userId> } */
 const radioHosts = new Map();
 
 function radioSnapshot(host) {
@@ -1117,6 +1149,7 @@ function radioSnapshot(host) {
     artist: host.artist || null,
     positionMs: host.positionMs || 0,
     isPlaying: !!host.isPlaying,
+    isVoiceActive: !!host.isVoiceActive,
     updatedAt: host.updatedAt,
     listeners: host.listeners.size
   };
@@ -1132,7 +1165,7 @@ function pruneRadioHosts() {
 // El host publica su estado (canción, posición, play/pausa). Llega cada ~5 s
 // desde RadioManager, lo que mantiene la radio "viva" (renueva el TTL).
 app.post('/api/radio/publish', (req, res) => {
-  const { hostId, hostName, songId, title, artist, positionMs, isPlaying } = req.body || {};
+  const { hostId, hostName, songId, title, artist, positionMs, isPlaying, isVoiceActive } = req.body || {};
   if (!hostId || !songId) {
     return res.status(400).json({ error: 'Se requieren hostId y songId' });
   }
@@ -1147,6 +1180,7 @@ app.post('/api/radio/publish', (req, res) => {
   host.artist = artist || null;
   host.positionMs = Number(positionMs) || 0;
   host.isPlaying = !!isPlaying;
+  host.isVoiceActive = !!isVoiceActive;
   host.updatedAt = Date.now();
   res.json({ success: true });
 });

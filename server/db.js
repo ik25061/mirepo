@@ -1582,24 +1582,53 @@ export async function deleteLyrics(songId) {
 // FUNCIONES PARA COMENTARIOS
 // ============================================================
 
-export async function getCommentsBySong(songId) {
-  const database = await getDb();
-  const rows = await database.all(`
-    SELECT c.*, u.username
+// SELECT base de comentarios con contador de "me gusta" y, si se pasa
+// currentUserId, una marca liked_by_me con si al usuario actual le gusta.
+function commentSelect(currentUserId) {
+  const likedSql = currentUserId != null
+    ? 'EXISTS(SELECT 1 FROM comment_likes cl WHERE cl.comment_id = c.id AND cl.user_id = ?) AS liked_by_me'
+    : '0 AS liked_by_me';
+  return `
+    SELECT c.*, u.username,
+      (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id) AS likes_count,
+      ${likedSql}
     FROM comments c
     JOIN users u ON c.user_id = u.id
-    WHERE c.song_id = ?
-    ORDER BY c.created_at DESC
-  `, [songId]);
+  `;
+}
 
+export async function getCommentsBySong(songId, currentUserId = null) {
+  const database = await getDb();
+
+  // Comentarios principales (sin padre), del más reciente al más antiguo.
+  // Las respuestas se agrupan dentro de su comentario padre.
+  const baseParams = currentUserId != null ? [currentUserId, songId] : [songId];
+  const topRows = await database.all(
+    `${commentSelect(currentUserId)} WHERE c.song_id = ? AND c.parent_id IS NULL ORDER BY c.created_at DESC`,
+    baseParams
+  );
+
+  const replyRows = await database.all(
+    `${commentSelect(currentUserId)} WHERE c.song_id = ? AND c.parent_id IS NOT NULL ORDER BY c.created_at ASC`,
+    baseParams
+  );
+
+  const repliesByParent = new Map();
+  for (const reply of replyRows) {
+    if (!repliesByParent.has(reply.parent_id)) repliesByParent.set(reply.parent_id, []);
+    repliesByParent.get(reply.parent_id).push(reply);
+  }
+
+  // El promedio se calcula solo sobre comentarios principales: las
+  // respuestas no puntúan la canción (se insertan con rating 0).
   const stats = await database.get(`
     SELECT AVG(rating) as avgRating, COUNT(*) as total
     FROM comments
-    WHERE song_id = ?
+    WHERE song_id = ? AND parent_id IS NULL
   `, [songId]);
 
   return {
-    comments: rows,
+    comments: topRows.map(c => ({ ...c, replies: repliesByParent.get(c.id) || [] })),
     averageRating: stats.avgRating || 0,
     totalCount: stats.total || 0
   };
@@ -1614,19 +1643,72 @@ export async function addComment(userId, songId, text, rating) {
     VALUES (?, ?, ?, ?, ?)
   `, [id, userId, songId, text, rating]);
 
-  const comment = await database.get(`
-    SELECT c.*, u.username
-    FROM comments c
-    JOIN users u ON c.user_id = u.id
-    WHERE c.id = ?
-  `, [id]);
-
-  return comment;
+  return getCommentById(id);
 }
 
-/** Elimina un comentario por id. */
+/** Devuelve un comentario por id (con username y datos de likes). */
+export async function getCommentById(commentId, currentUserId = null) {
+  const database = await getDb();
+  const params = currentUserId != null ? [currentUserId, commentId] : [commentId];
+  return database.get(
+    `${commentSelect(currentUserId)} WHERE c.id = ?`,
+    params
+  );
+}
+
+/** Inserta una respuesta (comentario hijo) a otro comentario. */
+export async function addReply(userId, songId, parentId, text) {
+  const database = await getDb();
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+  await database.run(`
+    INSERT INTO comments (id, user_id, song_id, text, rating, parent_id)
+    VALUES (?, ?, ?, ?, 0, ?)
+  `, [id, userId, songId, String(text), parentId]);
+
+  return getCommentById(id);
+}
+
+/** Añade o quita el "me gusta" de un usuario sobre un comentario.
+ *  Devuelve { liked, likesCount } con el estado tras el cambio. */
+export async function toggleCommentLike(commentId, userId) {
+  const database = await getDb();
+
+  const existing = await database.get(
+    'SELECT 1 AS one FROM comment_likes WHERE comment_id = ? AND user_id = ?',
+    [commentId, userId]
+  );
+
+  if (existing) {
+    await database.run(
+      'DELETE FROM comment_likes WHERE comment_id = ? AND user_id = ?',
+      [commentId, userId]
+    );
+  } else {
+    await database.run(
+      'INSERT INTO comment_likes (comment_id, user_id) VALUES (?, ?)',
+      [commentId, userId]
+    );
+  }
+
+  const count = await database.get(
+    'SELECT COUNT(*) AS count FROM comment_likes WHERE comment_id = ?',
+    [commentId]
+  );
+
+  return { liked: !existing, likesCount: count.count || 0 };
+}
+
+/** Elimina un comentario por id (y sus respuestas y likes asociados). */
 export async function deleteComment(commentId) {
   const database = await getDb();
+  // Likes del comentario y de sus respuestas.
+  await database.run(
+    'DELETE FROM comment_likes WHERE comment_id IN (SELECT id FROM comments WHERE id = ? OR parent_id = ?)',
+    [commentId, commentId]
+  );
+  // Respuestas y, por último, el comentario.
+  await database.run('DELETE FROM comments WHERE parent_id = ?', [commentId]);
   await database.run('DELETE FROM comments WHERE id = ?', [commentId]);
 }
 
@@ -1643,13 +1725,7 @@ export async function updateComment(commentId, { text, rating } = {}) {
       await database.run('UPDATE comments SET rating = ? WHERE id = ?', [r, commentId]);
     }
   }
-  const comment = await database.get(`
-    SELECT c.*, u.username
-    FROM comments c
-    JOIN users u ON c.user_id = u.id
-    WHERE c.id = ?
-  `, [commentId]);
-  return comment;
+  return getCommentById(commentId);
 }
 
 // ============================================================
@@ -2171,7 +2247,15 @@ async function initSchema(database) {
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       text TEXT NOT NULL,
       rating INTEGER DEFAULT 0,
+      parent_id TEXT REFERENCES comments(id) ON DELETE CASCADE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS comment_likes (
+      comment_id TEXT NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (comment_id, user_id)
     );
   `);
 
@@ -2181,6 +2265,12 @@ async function initSchema(database) {
   } catch (e) { /* Ya existe */ }
   try {
     await database.exec('ALTER TABLE songs ADD COLUMN key_name TEXT');
+  } catch (e) { /* Ya existe */ }
+
+  // Migración: respuestas a comentarios (parent_id) para BDs ya existentes.
+  try {
+    await database.exec('ALTER TABLE comments ADD COLUMN parent_id TEXT REFERENCES comments(id) ON DELETE CASCADE');
+    console.log('[db] ✅ Columna comments.parent_id añadida');
   } catch (e) { /* Ya existe */ }
 
   // Compatibilidad con bases de datos antiguas: añadir la columna
@@ -2207,6 +2297,8 @@ async function initSchema(database) {
     CREATE INDEX IF NOT EXISTS idx_playlist_user ON playlists(user_id);
     CREATE INDEX IF NOT EXISTS idx_sm_song ON song_moods(song_id);
     CREATE INDEX IF NOT EXISTS idx_sm_mood ON song_moods(mood_id);
+    CREATE INDEX IF NOT EXISTS idx_comments_song ON comments(song_id);
+    CREATE INDEX IF NOT EXISTS idx_comments_parent ON comments(parent_id);
   `);
 
   // Crear vistas
