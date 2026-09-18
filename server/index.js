@@ -37,6 +37,41 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use('/songs', express.static(MUSIC_DIR));
+
+// ============================================================
+// KARAOKE - instrumentales (sin voz) generados con Demucs
+// ============================================================
+// karaoke.py genera un espejo de la biblioteca: por cada
+// E:/musica/<carpeta>/<cancion>.mp3 puede existir un
+// E:/karaoke/<carpeta>/<cancion>.mp3 con la voz eliminada.
+const KARAOKE_DIR = process.env.VITE_KARAOKE_PATH || path.join(path.dirname(MUSIC_DIR), 'karaoke');
+console.log('[karaoke] KARAOKE_DIR:', KARAOKE_DIR);
+
+function karaokeFilePath(song) {
+  try {
+    if (!song || !song.relPath) return null;
+    return path.join(KARAOKE_DIR, song.relPath);
+  } catch (err) {
+    return null;
+  }
+}
+
+// Inyecta `hasKaraoke` en TODA respuesta JSON que traiga un array `songs`
+// (biblioteca, busqueda, por artista/album/genero/anio, me gusta, por ids...).
+app.use((req, res, next) => {
+  const originalJson = res.json.bind(res);
+  res.json = (data) => {
+    try {
+      if (data && Array.isArray(data.songs)) {
+        for (const s of data.songs) {
+          try { s.hasKaraoke = fs.existsSync(karaokeFilePath(s)); } catch (err) { s.hasKaraoke = false; }
+        }
+      }
+    } catch (err) {}
+    return originalJson(data);
+  };
+  next();
+});
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 if (fs.existsSync(PUBLIC_DIR)) {
@@ -831,6 +866,27 @@ app.get('/audio/:id', (req, res) => {
   const mime = path.extname(f).toLowerCase() === '.mp3' ? 'audio/mpeg' : 'audio/mp4';
   if (range) {
     const [start, end] = range.replace(/bytes=/, "").split("-").map(Number);
+    const realEnd = end || st.size - 1;
+    res.writeHead(206, { 'Content-Range': `bytes ${start}-${realEnd}/${st.size}`, 'Accept-Ranges': 'bytes', 'Content-Length': realEnd - start + 1, 'Content-Type': mime });
+    fs.createReadStream(f, { start, end: realEnd }).pipe(res);
+  } else {
+    res.writeHead(200, { 'Content-Length': st.size, 'Content-Type': mime, 'Accept-Ranges': 'bytes' });
+    fs.createReadStream(f).pipe(res);
+  }
+});
+
+// Audio instrumental (karaoke) de una cancion. Espejo exacto de /audio/:id
+// pero leyendo de KARAOKE_DIR; 404 si todavia no hay instrumental generado.
+app.get('/karaoke/:id', (req, res) => {
+  const song = songMap.get(req.params.id);
+  if (!song) return res.status(404).end();
+  const f = karaokeFilePath(song);
+  if (!f || !fs.existsSync(f)) return res.status(404).end();
+  const st = fs.statSync(f);
+  const mime = path.extname(f).toLowerCase() === '.mp3' ? 'audio/mpeg' : 'audio/mp4';
+  const range = req.headers.range;
+  if (range) {
+    const [start, end] = range.replace(/bytes=/, '').split('-').map(Number);
     const realEnd = end || st.size - 1;
     res.writeHead(206, { 'Content-Range': `bytes ${start}-${realEnd}/${st.size}`, 'Accept-Ranges': 'bytes', 'Content-Length': realEnd - start + 1, 'Content-Type': mime });
     fs.createReadStream(f, { start, end: realEnd }).pipe(res);
