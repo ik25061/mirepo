@@ -1,0 +1,30 @@
+
+> mirepo-mejorado@2.0.0 dev
+> concurrently -k -n SERVER,CLIENT -c blue,magenta "node server/index.js" "vite"
+
+[SERVER] [scanner] 📂 MUSIC_DIR: E:/musica
+[SERVER] 🚀 Iniciando servidor...
+[SERVER] 🔧 Puerto configurado: 5002
+[SERVER] 📂 MUSIC_DIR: E:/musica
+[SERVER] [karaoke] KARAOKE_DIR: E:\karaoke
+[SERVER] [podcasts] Escaneando...
+[SERVER] 🔍 Cargando biblioteca desde SQLite...
+[SERVER] 
+[SERVER] 🎵 Servidor completo restaurado en http://192.168.1.152:5002
+[SERVER] 
+[SERVER] [db] ✅ Esquema verificado/creado
+[SERVER] [db] ✅ Conectado a localfy.db
+[CLIENT] 🌐 IP de red local detectada: 192.168.1.152
+[CLIENT] 🔧 Puerto del servidor: 5002
+[CLIENT] 🔧 Puerto del cliente: 5172
+[CLIENT] 🔁 Proxy de Vite → http://localhost:5002
+[CLIENT] 📱 Para conectar desde móvil usa IP: 192.168.1.152
+[CLIENT]    (configurable en .env con VITE_SERVER_HOST)
+[CLIENT] 
+[CLIENT]   [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m726[22m[2m[0m ms[22m
+[CLIENT] 
+[CLIENT]   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5172[22m/[39m
+[CLIENT]   [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.152:[1m5172[22m/[39m
+[SERVER] ✅ 30231 canciones cargadas
+[SERVER] ⚠️ Meilisearch: no se pudo sincronizar
+[SERVER] [podcasts] OK: 4 series, 185 episodios
