@@ -1,0 +1,21 @@
+// types.js
+export interface Track {
+  id: string;
+  title: string;
+  artist: string;
+  album: string;
+  duration: number;
+  url: string;
+  cover?: string;
+  liked?: boolean;
+  file?: File;
+  filename?: string;
+  genre?: string | string[];
+  imageUrl?: string | null;
+}
+
+export interface Playlist {
+  id: string;
+  name: string;
+  trackIds: string[];
+}
