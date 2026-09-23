@@ -352,7 +352,54 @@ app.post('/api/songs/:id/hide', async (req, res) => {
 
 // ============================================================
 // RUTAS - ELIMINAR CANCION (mueve el archivo a la papelera)
+// Al borrar una canción también se mueven a la papelera:
+//  - el .lrc con el mismo nombre junto al audio (E:/musica/...)
+//  - el instrumental espejo en KARAOKE_DIR (E:/karaoke/...)
 // ============================================================
+
+/** Mueve un archivo a la papelera mensual; si no existe, no hace nada. */
+function moveToTrash(filePath) {
+  if (!filePath || !fs.existsSync(filePath)) return null;
+  if (!fs.existsSync(TRASH_DIR)) fs.mkdirSync(TRASH_DIR, { recursive: true });
+  const now = new Date();
+  const trashSubDir = path.join(TRASH_DIR, `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+  if (!fs.existsSync(trashSubDir)) fs.mkdirSync(trashSubDir, { recursive: true });
+  const trashPath = path.join(trashSubDir, `${Date.now()}_${path.basename(filePath)}`);
+  fs.copyFileSync(filePath, trashPath);
+  fs.unlinkSync(filePath);
+  return trashPath;
+}
+
+/**
+ * Archivos asociados a una canción que deben acompañarla a la papelera:
+ * el .lrc con el mismo nombre (misma carpeta) y el instrumental espejo
+ * (misma ruta relativa dentro de KARAOKE_DIR, con cualquier extensión).
+ */
+function companionPaths(song) {
+  const out = [];
+  try {
+    if (!song || !song.relPath) return out;
+    const lrcPath = absolutePath(song.relPath).replace(/\.[^/.]+$/, '.lrc');
+    if (lrcPath) out.push(lrcPath);
+    const karaokePath = karaokeFilePath(song);
+    if (karaokePath && fs.existsSync(karaokePath)) {
+      out.push(karaokePath);
+    } else if (song.relPath) {
+      // El instrumental puede tener otra extensión que el original:
+      // buscar por nombre base dentro de la carpeta espejo.
+      const mirrorDir = path.dirname(path.join(KARAOKE_DIR, song.relPath));
+      const base = path.basename(song.relPath).replace(/\.[^/.]+$/, '').toLowerCase();
+      try {
+        for (const entry of fs.readdirSync(mirrorDir)) {
+          if (path.basename(entry).replace(/\.[^/.]+$/, '').toLowerCase() === base) {
+            out.push(path.join(mirrorDir, entry));
+          }
+        }
+      } catch (err) {}
+    }
+  } catch (err) {}
+  return [...new Set(out)];
+}
 
 app.delete('/api/songs', async (req, res) => {
   try {
@@ -369,19 +416,24 @@ app.delete('/api/songs', async (req, res) => {
     const fullPath = absolutePath(song.relPath);
     if (fs.existsSync(fullPath)) {
       try {
-        if (!fs.existsSync(TRASH_DIR)) fs.mkdirSync(TRASH_DIR, { recursive: true });
-        const now = new Date();
-        const trashSubDir = path.join(TRASH_DIR, `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
-        if (!fs.existsSync(trashSubDir)) fs.mkdirSync(trashSubDir, { recursive: true });
-        const trashPath = path.join(trashSubDir, `${Date.now()}_${path.basename(fullPath)}`);
-        fs.copyFileSync(fullPath, trashPath);
-        fs.unlinkSync(fullPath);
+        const trashed = moveToTrash(fullPath);
+        const extraTrashed = [];
+        for (const companion of companionPaths(song)) {
+          try {
+            const t = moveToTrash(companion);
+            if (t) extraTrashed.push(t);
+          } catch (err) {
+            console.warn(`[api/songs DELETE] ⚠️ No se pudo mover acompañante ${companion}: ${err.message}`);
+          }
+        }
+        console.log(`[api/songs DELETE] ✅ Papelera: ${trashed} (+${extraTrashed.length} asociados)`);
       } catch (err) {
         return res.status(500).json({ error: 'Error fisico al eliminar el archivo', details: err.message });
       }
     }
 
     if (userId) await db.setSongHidden(song.id, true, userId);
+    try { await db.deleteLyrics(song.id); } catch (err) {}
     songMap.delete(id);
     songCache = songCache.filter(s => s.id !== id);
     res.json({ message: 'Cancion eliminada correctamente' });
@@ -1061,66 +1113,9 @@ app.post('/api/favorite-artists/toggle', async (req, res) => {
 // RUTAS RESTAURADAS — se perdieron en el commit de comentarios/
 // calificaciones. Las sigue usando la app (borrar del disco,
 // ocultar/mostrar artista desde el panel de administración).
+// NOTA: DELETE /api/songs está definido una sola vez (más arriba,
+// con borrado de .lrc + karaoke + papelera); no duplicarlo aquí.
 // ============================================================
-
-app.delete('/api/songs', async (req, res) => {
-  try {
-    const { id, userId } = req.body;
-    if (!id) {
-      return res.status(400).json({ error: 'Se requiere id' });
-    }
-
-    let song = songMap.get(id);
-    if (!song) {
-      const songs = await db.getSongsByIds(id, userId);
-      song = songs[0];
-    }
-
-    if (!song) {
-      console.log(`[api/songs DELETE] ❌ Canción ${id} no encontrada`);
-      return res.status(404).json({ error: 'Canción no encontrada en el catálogo' });
-    }
-
-    const fullPath = absolutePath(song.relPath);
-    console.log(`[api/songs DELETE] 🗑️ Intentando eliminar: ${fullPath}`);
-
-    if (fs.existsSync(fullPath)) {
-      try {
-        if (!fs.existsSync(TRASH_DIR)) fs.mkdirSync(TRASH_DIR, { recursive: true });
-
-        const now = new Date();
-        const trashSubDir = path.join(TRASH_DIR,
-          `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-        );
-        if (!fs.existsSync(trashSubDir)) fs.mkdirSync(trashSubDir, { recursive: true });
-
-        const trashName = `${Date.now()}_${path.basename(fullPath)}`;
-        const trashPath = path.join(trashSubDir, trashName);
-
-        fs.copyFileSync(fullPath, trashPath);
-        fs.unlinkSync(fullPath);
-        console.log(`[api/songs DELETE] ✅ Archivo movido a papelera: ${trashPath}`);
-      } catch (err) {
-        console.error('[api/songs DELETE] ❌ Error moviendo archivo:', err.message);
-        return res.status(500).json({ error: 'Error físico al eliminar el archivo', details: err.message });
-      }
-    } else {
-      console.warn(`[api/songs DELETE] ⚠️ El archivo no existe en disco: ${fullPath}`);
-    }
-
-    if (userId) {
-      await db.setSongHidden(song.id, true, userId);
-    }
-
-    songMap.delete(id);
-    songCache = songCache.filter(s => s.id !== id);
-
-    res.json({ message: 'Canción eliminada correctamente' });
-  } catch (error) {
-    console.error('[api/songs DELETE] ❌ Error general:', error);
-    res.status(500).json({ error: 'Error interno al procesar eliminación', details: error.message });
-  }
-});
 
 app.post('/api/artists/:id/hide', async (req, res) => {
   try {
