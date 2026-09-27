@@ -1,0 +1,428 @@
+[scanner] 📂 MUSIC_DIR: E:/musica
+🚀 Iniciando servidor...
+🔧 Puerto configurado: 5002
+📂 MUSIC_DIR: E:/musica
+[karaoke] KARAOKE_DIR: E:\karaoke
+[podcasts] Escaneando...
+🔍 Cargando biblioteca desde SQLite...
+
+🎵 Servidor completo restaurado en http://192.168.1.152:5002
+
+[db] ✅ Esquema verificado/creado
+[db] ✅ Conectado a localfy.db
+✅ 30541 canciones cargadas
+[podcasts] OK: 4 series, 185 episodios
+[lyrics] 🔍 Buscando: Reggaetones - Cierra Los Ojos Bien
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Marco Antonio Muñiz - A Donde Irán las Almas
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Alfredo Gutierrez - A las Tres
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Ram Herrera - Adios
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Art Tatum - Among My Souvenirs
+[lyrics] 🔍 Buscando: Manantial CR - Hoy Vamos a Salir
+[lyrics] ✅ Letra guardada
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Led Zeppelin - Answers Only (Robert Plant)
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Así Naciste
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Así Naciste.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Los Kjarkas - Ave De Cristal
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Ave De Cristal.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Jesús Amado
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Jesús Amado.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Grupo Zaaz De Victor Hugo Ruiz - Busca Otro Amor
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Tres en Uno Vol.2 - Cariño
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Yaki - Cenizas
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Cenizas.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Si Me Vas A Dejar
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\Si Me Vas A Dejar.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Tigres del Norte - No Diet
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\No Diet.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Diablitos - Como Le Pago a Mi Dios
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Como Le Pago a Mi Dios.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Los Acosta - Como Me Gusta
+[lyrics] 🔍 Buscando: Los Tigres del Norte - No Llores por El
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\No Llores por El.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Georg Friedrich Händel - Concerto Grosso, Op. 3, No. 1: Allegro
+[lyrics] 📦 Letra desde caché
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Las Jilguerillas - Concha la Mojada
+[lyrics] 🔍 Buscando: Los Rieleros del Norte - Pensando en ti
+[lyrics] ✅ Letra guardada
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Libros De Recuerdos
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Libros De Recuerdos.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: El Poder Del Norte - Amor De Estudiante
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\E\Amor De Estudiante.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Mi Soldado
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Mi Soldado.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: La Guardia - Cuando Brille el Sol
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Cuando Brille el Sol.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: La Sonora Dinamita de Lucho Argaín - Cumbia iluminada
+[lyrics] 🔍 Buscando: La Arrolladora Banda el Limón de René Camacho - Evítame la Pena
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Evítame la Pena.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Rieleros del Norte - Agoviado y solo
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: El Último de la Fila - Del templo a la taberna
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\E\Del templo a la taberna.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Grupo Pegasso - Demasiado Romántico
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Marco Antonio Muñiz - Desprecio
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Montones de buena suerte
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\Montones de buena suerte.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Temerarios - Di Que Volverás
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Di Que Volverás.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Spacemen 3 - Drive (Demo)
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - Sigue Siendo Mi Niña
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\Sigue Siendo Mi Niña.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Los Rieleros del Norte - Yo Quería A Las Dos
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Yo Quería A Las Dos.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Los Tigres del Norte - En Qué Fallé
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\En Qué Fallé.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: La Arrolladora Banda el Limón de René Camacho - El Árbol de la Horca
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\El Árbol de la Horca.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Los Rieleros del Norte - Através de los años
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\Através de los años.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Adiós Amigo
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Adiós Amigo.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Los Tigres del Norte - No Me Amenaces
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Los Tigres del Norte - El Zacatecas
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\El Zacatecas.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - Necio, Necio Moriré
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Necio, Necio Moriré.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Romance Oculto
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Desconocido - ASEREJE
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: La Arrolladora Banda el Limón de René Camacho - Como Quema el Frío
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Como Quema el Frío.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: La Arrolladora Banda el Limón de René Camacho - Si Tu Amor No Vuelve
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Si Tu Amor No Vuelve.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Qué ganarías
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Qué ganarías.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: La Arrolladora Banda el Limón de René Camacho - Primer Tiempo
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Primer Tiempo.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Rieleros del Norte - El 3 Dedos
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Golpes en el corazón
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Golpes en el corazón.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Rehenes - Déjame Soñar Contigo
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\Déjame Soñar Contigo.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Sala De Espera
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Sala De Espera.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Tigres del Norte - Perdonen Mi Canto
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Perdonen Mi Canto.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: La Arrolladora Banda el Limón de René Camacho - Aunque Me Duela
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Aunque Me Duela.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Rieleros del Norte - El pasito sabrosito
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 📦 Letra desde caché
+[lyrics] 📦 Letra desde caché
+[lyrics] 📂 Letra desde .lrc local
+[lyrics] 🔍 Buscando: Los Rieleros del Norte - Tenías que ser tan cruel
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - Mis padres perdí
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Mis padres perdí.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Los Rieleros del Norte - Destino traidor
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Desconocido - Grab Da Wall / Rock It
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: El Poder Del Norte - Vestido Blanco
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\E\Vestido Blanco.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Bukis - A Aquella
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\A Aquella.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Rieleros del Norte - El amor no se ve
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\El amor no se ve.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Desconocido - Y ES POR TI
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Los Rieleros del Norte - No me busques
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: La Arrolladora Banda el Limón de René Camacho - Se Me Cansó el Corazón
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Se Me Cansó el Corazón.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Los Rehenes - Pregúntame A Mi
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Pregúntame A Mi.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Desconocido - Pista de audio 08
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Desconocido - Pista de audio 16
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Desconocido - No Me Olvides (1)_1783332967_1784162446
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - La Venganza De Rosita
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\La Venganza De Rosita.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Desconocido - Roberto Tapia - Las Calaveras Del Chino
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Desconocido - Mesita De Noche (1)_1783580998_1784160948
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Desconocido - Cuenta de amor
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - La reyna y el polvo_1784159083
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - No vuelvo a amar
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\No vuelvo a amar.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Desconocido - No Soy De Aqui (1)_1783333621_1784162651
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Bukis - Qúe Lástima
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Qúe Lástima.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - Duda
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - Ven A Buscarme
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\Ven A Buscarme.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Bukis - Triste Imaginar
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Triste Imaginar.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Bukis - No Me Arrepiento
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\No Me Arrepiento.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Los Bukis - Con Amor
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Con Amor.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - Mi morenita
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - El Leon De La Sierra
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\El Leon De La Sierra.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: El Poder Del Norte - _1784116731
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - Total Ya Se Fue
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Total Ya Se Fue.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - Lucero Negro
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\Lucero Negro.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - El Adiós A Mi Madre
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\El Adiós A Mi Madre.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: Alfredo Gutierrez - AQUEL INMENSO QUERER
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Cadetes De Linares - Raices De Odio
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\Raices De Odio.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: El Poder Del Norte - LOCO DE MAOR
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Bukis - Si Te Sientes Tan Solo
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\Si Te Sientes Tan Solo.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Bukis - Te Voy A Amar
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Te Voy A Amar.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: 3 de Copas - 3 de Copas Edicion Especial - Sigue (version acustica)
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Alonso del Río - Josefa
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Caminantes - Aquella Joven
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\Aquella Joven.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: La Mafia - No Lo Haré
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\No Lo Haré.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Pasteles Verdes - Payaso
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\Payaso.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los inquietos del vallenato - No Te Olvides De Mí
+[lyrics] ✅ Letra encontrada en LRCLib.net (con timestamps)
+[lyrics] 💾 .lrc guardado: E:\musica\L\No Te Olvides De Mí.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT SYLT
+[lyrics] ✅ Letra guardada (con timestamps karaoke)
+[lyrics] 🔍 Buscando: Herman Melville read by Anthony Heald - Track 04
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Guaraguao - No Basta Rezar
+[lyrics] ✅ Letra encontrada en LRCLib.net
+[lyrics] 💾 .lrc guardado: E:\musica\L\No Basta Rezar.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Tucanes de Tijuana - Necesito Tu Amor
+[lyrics] ✅ Letra encontrada en Lyrics.ovh
+[lyrics] 💾 .lrc guardado: E:\musica\L\Necesito Tu Amor.lrc
+[lyrics] 🏷️ Etiquetas ID3 inyectadas en MP3: USLT
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Kenny G - Summertime (feat. George Benson)
+[lyrics] ✅ Letra guardada
+[lyrics] 📦 Letra desde caché
+[lyrics] 🔍 Buscando: To Relaxing - Super Perreo
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Las Noches de Banda - Mi plegaria - Banda La Parranda
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Cressida - 6am (Kyau & Albert Remix)
+[lyrics] ✅ Letra guardada
+[lyrics] 🔍 Buscando: Los Buitres - Corazon Rebelde
+[lyrics] ✅ Letra guardada

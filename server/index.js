@@ -17,6 +17,7 @@ import { MUSIC_DIR, TRASH_DIR, absolutePath } from './scanner.js';
 import * as pods from './podcasts.js';
 import { getLyrics as getLyricsFromService } from './lyrics.js';
 import { runBuildDbPython } from './rescan-python.js';
+import { getAiQualityStatus, runAiQualityPlaylists } from './ai_quality_playlists.js';
 
 const app = express();
 const PORT = process.env.VITE_SERVER_PORT || process.env.PORT || 5002;
@@ -692,6 +693,37 @@ app.delete('/api/playlists/:id/songs', async (req, res) => {
 app.delete('/api/playlists/:id', async (req, res) => {
   await db.deletePlayList(req.params.id);
   res.json({ ok: true });
+});
+
+// ============================================================
+// RUTAS - LISTAS AUTOMATICAS IA (genero + BPM + tonalidad)
+// ------------------------------------------------------------
+// Port del script build_quality_playlists.py: genera listas
+// incrementales a partir del analisis de audio real (bpm/key_name)
+// y NUNCA duplica: una cancion ya clasificada (playlist_log.json)
+// no se vuelve a tocar, cada nombre de lista se reutiliza en la BD
+// y solo se insertan las canciones que falten.
+// ============================================================
+app.get('/api/playlists/ai-quality/status', async (_req, res) => {
+  try {
+    res.json(await getAiQualityStatus());
+  } catch (err) { res.status(500).json({ error: String(err.message || err) }); }
+});
+app.post('/api/playlists/ai-quality/generate', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const result = await runAiQualityPlaylists({
+      userId: body.userId ?? req.query.userId ?? null,
+      bandWidth: Number(body.bandWidth) || 10,
+      minBandSize: Number(body.minBandSize) || 6,
+      isPublic: body.isPublic ?? true,
+      dryRun: body.dryRun === true,
+    });
+    res.json(result);
+  } catch (err) {
+    if (err && err.code === 'AI_BUSY') return res.status(409).json({ error: err.message });
+    res.status(500).json({ error: String((err && err.message) || err) });
+  }
 });
 
 // ============================================================
