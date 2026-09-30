@@ -11,7 +11,7 @@ export default function OfflineMode() {
     loading,
     reload,
     updateLiked,
-    markSongForDeletion,
+    markSongDisliked,
   } = useDownload();
   const { current, isPlaying, togglePlay, next, prev, removeFromQueue } = usePlayer();
   const [showNowPlaying, setShowNowPlaying] = useState(false);
@@ -41,21 +41,19 @@ export default function OfflineMode() {
     }
   }, [updateLiked, likedIds]);
 
-  // "No me gusta": quitar de la cola actual, desmarcar el like y marcar la
-  // canción para eliminación diferida. markSongForDeletion elimina la descarga
-  // local y encola la eliminación pendiente que se aplicará en el servidor al
-  // recuperar la conexión (mismo comportamiento que en modo online).
+  // "No me gusta": quitar de la cola actual y sincronizar el dislike al volver
+  // la conexión. La papelera tiene su acción independiente en cada fila.
   const handleDislike = useCallback(async (songOrId) => {
     const songId = typeof songOrId === 'string' ? songOrId : songOrId?.id;
     if (!songId) return;
     removeFromQueue(songId);
     try {
       await updateLiked(songId, false);
-      await markSongForDeletion(songId);
+      markSongDisliked(songId);
     } catch (e) {
       console.error('[OfflineMode] Error al marcar no me gusta:', e);
     }
-  }, [removeFromQueue, updateLiked, markSongForDeletion]);
+  }, [removeFromQueue, updateLiked, markSongDisliked]);
 
   if (loading) {
     return (

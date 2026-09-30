@@ -207,8 +207,12 @@ export async function getSongsWithDetails({ limit = 100, offset = 0, userId = nu
     sql += ` AND v.song_id NOT IN (
       SELECT song_id FROM user_song_interactions 
       WHERE user_id = ? AND interaction_type = 'HIDE'
-    )`;
+    ) AND v.song_id NOT IN (SELECT song_id FROM trashed_songs)
+      AND v.song_id NOT IN (SELECT song_id FROM user_song_deferred_deletions WHERE user_id = ?)`;
     params.push(userId);
+    params.push(userId);
+  } else {
+    sql += ` AND v.song_id NOT IN (SELECT song_id FROM trashed_songs)`;
   }
 
   sql += ` ORDER BY v.song_title LIMIT ? OFFSET ?`;
@@ -236,8 +240,12 @@ export async function getTotalSongsCount(userId = null) {
     sql += ` WHERE id NOT IN (
       SELECT song_id FROM user_song_interactions 
       WHERE user_id = ? AND interaction_type = 'HIDE'
-    )`;
+    ) AND id NOT IN (SELECT song_id FROM trashed_songs)
+      AND id NOT IN (SELECT song_id FROM user_song_deferred_deletions WHERE user_id = ?)`;
     params.push(userId);
+    params.push(userId);
+  } else {
+    sql += ' WHERE id NOT IN (SELECT song_id FROM trashed_songs)';
   }
 
   const result = await database.get(sql, params);
@@ -246,16 +254,56 @@ export async function getTotalSongsCount(userId = null) {
 
 export async function getTrashCount(userId = null) {
   const database = await getDb();
-  
-  let sql = 'SELECT COUNT(*) as total FROM user_song_interactions WHERE interaction_type = "HIDE"';
-  const params = [];
+  const result = await database.get('SELECT COUNT(*) as total FROM trashed_songs');
+  return result.total;
+}
 
-  if (userId) {
-    sql += ' AND user_id = ?';
-    params.push(userId);
+export async function markSongTrashed(songId) {
+  const database = await getDb();
+  await database.run(
+    'INSERT OR IGNORE INTO trashed_songs (song_id) VALUES (?)',
+    [songId]
+  );
+}
+
+export async function setSongDeferredDeletion(songId, userId, marked = true) {
+  if (!userId) throw new Error('userId requerido');
+  const database = await getDb();
+  if (marked) {
+    await database.run(
+      'INSERT OR IGNORE INTO user_song_deferred_deletions (user_id, song_id) VALUES (?, ?)',
+      [userId, songId]
+    );
+  } else {
+    await database.run(
+      'DELETE FROM user_song_deferred_deletions WHERE user_id = ? AND song_id = ?',
+      [userId, songId]
+    );
   }
+}
 
-  const result = await database.get(sql, params);
+export async function getDeferredDeletionSongs(userId, limit = 100, offset = 0) {
+  const database = await getDb();
+  return database.all(`
+    SELECT s.id, s.title, s.relPath, s.duration, s.track, s.bpm, s.key_name,
+      s.hasLyrics, a.name AS artist, al.name AS album, al.year AS year,
+      al.cover_path, 1 AS deferredDeletion
+    FROM user_song_deferred_deletions d
+    JOIN songs s ON s.id = d.song_id
+    LEFT JOIN song_artists sa ON s.id = sa.song_id AND sa.is_main = 1
+    LEFT JOIN artists a ON sa.artist_id = a.id
+    LEFT JOIN albums al ON s.album_id = al.id
+    WHERE d.user_id = ? AND d.song_id NOT IN (SELECT song_id FROM trashed_songs)
+    ORDER BY d.created_at DESC LIMIT ? OFFSET ?
+  `, [userId, limit, offset]);
+}
+
+export async function getDeferredDeletionCount(userId) {
+  const database = await getDb();
+  const result = await database.get(`
+    SELECT COUNT(*) AS total FROM user_song_deferred_deletions d
+    WHERE d.user_id = ? AND d.song_id NOT IN (SELECT song_id FROM trashed_songs)
+  `, [userId]);
   return result.total;
 }
 
@@ -1118,9 +1166,11 @@ export async function getHiddenSongs(userId, limit = 100, offset = 0) {
       LEFT JOIN artists a ON sa.artist_id = a.id
       LEFT JOIN albums al ON s.album_id = al.id
       WHERE usi.user_id = ? AND usi.interaction_type = 'HIDE'
+        AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+        AND s.id NOT IN (SELECT song_id FROM user_song_deferred_deletions WHERE user_id = ?)
       ORDER BY usi.created_at DESC
       LIMIT ? OFFSET ?
-    `, [userId, limit, offset]);
+    `, [userId, userId, limit, offset]);
 
     await attachGenres(database, songs);
     for (const song of songs) {
@@ -1140,8 +1190,11 @@ export async function getHiddenSongsCount(userId) {
 
   try {
     const result = await database.get(
-      'SELECT COUNT(*) as total FROM user_song_interactions WHERE user_id = ? AND interaction_type = "HIDE"',
-      [userId]
+      `SELECT COUNT(*) as total FROM user_song_interactions
+       WHERE user_id = ? AND interaction_type = 'HIDE'
+        AND song_id NOT IN (SELECT song_id FROM trashed_songs)
+        AND song_id NOT IN (SELECT song_id FROM user_song_deferred_deletions WHERE user_id = ?)`,
+      [userId, userId]
     );
     return result.total;
   } catch (error) {
@@ -1157,8 +1210,10 @@ export async function getHiddenSongsCount(userId) {
 export async function getHiddenSongIds(userId) {
   const database = await getDb();
   const rows = await database.all(
-    'SELECT song_id FROM user_song_interactions WHERE user_id = ? AND interaction_type = "HIDE"',
-    [userId]
+    `SELECT song_id FROM user_song_interactions WHERE user_id = ? AND interaction_type = 'HIDE'
+     UNION SELECT song_id FROM user_song_deferred_deletions WHERE user_id = ?
+     UNION SELECT song_id FROM trashed_songs`,
+    [userId, userId]
   );
   return new Set(rows.map(r => r.song_id));
 }
@@ -2154,6 +2209,18 @@ async function initSchema(database) {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (user_id, song_id, interaction_type)
+    );
+
+    CREATE TABLE IF NOT EXISTS trashed_songs (
+      song_id TEXT PRIMARY KEY REFERENCES songs(id) ON DELETE CASCADE,
+      trashed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS user_song_deferred_deletions (
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      song_id TEXT REFERENCES songs(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, song_id)
     );
 
     CREATE TABLE IF NOT EXISTS user_artist_interactions (

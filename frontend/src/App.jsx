@@ -233,7 +233,7 @@ export default function App() {
       const response = await fetch(`${API_URL}/api/songs`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: track.filename || track.id })
+        body: JSON.stringify({ id: track.id })
       });
       if (response.ok) {
         // Obtener índice antes de eliminar para saber si era la canción actual

@@ -190,10 +190,16 @@ def procesar_directorio(db_path, raiz_musica, calcular_hash=False, progress_path
 
     # 1. Copiar base de datos actual para actualizarla sin perder likes/usuarios
     if os.path.exists(db_path):
-        # Backup en la carpeta del servidor para visibilidad
         backup_name = f"localfy.db.bak-{time.strftime('%Y%m%d-%H%M%S')}"
-        shutil.copy2(db_path, os.path.join(os.path.dirname(db_path), backup_name))
-        shutil.copy2(db_path, build_db)
+        backup_path = os.path.join(os.path.dirname(db_path), backup_name)
+        source = sqlite3.connect(db_path, timeout=30)
+        snapshot = sqlite3.connect(build_db)
+        try:
+            source.backup(snapshot)
+        finally:
+            snapshot.close()
+            source.close()
+        shutil.copy2(build_db, backup_path)
         print(f"📂 Usando base de datos existente. Backup: {backup_name}")
 
     conn = sqlite3.connect(build_db)

@@ -42,6 +42,7 @@ import GridView from './components/GridView.jsx';
 import DuplicateFinder from './components/DuplicateFinder.jsx';
 import NowPlayingScreen from './components/NowPlayingScreen.jsx';
 import LikedSongsView from './components/LikedSongsView.jsx';
+import DislikedSongsView from './components/DislikedSongsView.jsx';
 import PlayListsManager from './components/PlayListsManager.jsx';
 import DownloadsView from './components/DownloadsView.jsx';
 import OfflineMode from './components/OfflineMode.jsx';
@@ -80,12 +81,15 @@ function Shell() {
     updateLiked,
     removeDownload,
     markSongForDeletion,
+    markSongDisliked,
     syncLikes,
     syncDeletions,
     isDownloaded,
     syncingSongs,
     currentlySyncingSong,
     pendingLikeChanges,
+    pendingDeletions,
+    pendingDislikes,
     deletingSongs,
   } = useDownload();
 
@@ -161,7 +165,7 @@ function Shell() {
       syncLikes(user.id);
       syncDeletions(user.id);
     }
-  }, [isOnline, isAuthenticated, user, syncLikes, syncDeletions]);
+  }, [isOnline, isAuthenticated, user, syncLikes, syncDeletions, pendingLikeChanges, pendingDeletions, pendingDislikes]);
 
   // ============================================================
   // 5. FUNCIONES (useCallback) - Siempre en el mismo orden
@@ -287,13 +291,13 @@ function Shell() {
       } catch (e) {
         console.error('[App] Error updateLiked(false):', e);
       }
-      // Marcar para eliminación diferida (se elimina del servidor al conectar)
-      try { await markSongForDeletion(songId); } catch (e) { }
+      // Guardar el dislike para sincronizarlo cuando vuelva la conexión.
+      try { markSongDisliked(songId); } catch (e) { }
       try { toggleLiked?.(songId, false); } catch (e) { }
     } else if (typeof song !== 'string') {
       lib.dislikeSong(song);
     }
-  }, [isDownloaded, updateLiked, markSongForDeletion, removeFromQueue, lib, toggleLiked]);
+  }, [isDownloaded, updateLiked, markSongDisliked, removeFromQueue, lib, toggleLiked]);
 
   // ============================================================
   // 7. CONSTANTES LOCALES
@@ -519,6 +523,8 @@ function Shell() {
               onDislikeArtist={library.dislikeArtist}
               onDelete={library.removeSong}
             />
+          ) : view.type === 'dislikedSongs' ? (
+            <DislikedSongsView userId={user?.id} onRefresh={lib.reload} />
           ) : view.type === 'playlists' ? (
             <PlayListsManager
               userId={user?.id}
@@ -672,6 +678,8 @@ function Shell() {
               onDislikeArtist={library.dislikeArtist}
               onDelete={library.removeSong}
             />
+          ) : view.type === 'dislikedSongs' ? (
+            <DislikedSongsView userId={user?.id} onRefresh={lib.reload} />
           ) : view.type === 'playlists' ? (
             <PlayListsManager
               userId={user?.id}

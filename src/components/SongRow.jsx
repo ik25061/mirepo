@@ -212,15 +212,18 @@ export default function SongRow({
         </button>
 
         {/* Me gusta */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onLike?.(song);
-          }}
-          className={iconBtn + ' ' + (isLiked ? 'text-primary hover:text-primary' : 'sm:opacity-0 sm:group-hover:opacity-100')}
-        >
-          <Heart size={12} fill={isLiked ? 'currentColor' : 'none'} className="sm:size-4" />
-        </button>
+        {onLike && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onLike(song);
+            }}
+            className={iconBtn + ' ' + (isLiked ? 'text-primary hover:text-primary' : 'sm:opacity-0 sm:group-hover:opacity-100')}
+            title={isLiked ? 'Quitar me gusta' : 'Me gusta'}
+          >
+            <Heart size={12} fill={isLiked ? 'currentColor' : 'none'} className="sm:size-4" />
+          </button>
+        )}
 
         {/* No me gusta canción */}
         {onDislike && (

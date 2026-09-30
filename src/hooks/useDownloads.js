@@ -21,9 +21,7 @@ const DB_VERSION = 1;
 const STORE_NAME = 'songs';
 const PENDING_LIKE_CHANGES_KEY = 'mirepo_downloads_pending_likes';
 const PENDING_DELETIONS_KEY = 'mirepo_downloads_pending_deletions';
-// Cola de eliminaciones REALES (mover a papelera en el servidor) hechas offline.
-// Es distinta de PENDING_DELETIONS_KEY, que solo desmarca el "me gusta".
-const PENDING_TRASH_KEY = 'mirepo_downloads_pending_trash';
+const PENDING_DISLIKES_KEY = 'mirepo_downloads_pending_dislikes';
 
 // ============================================================
 // GESTIÓN DE INDEXEDDB
@@ -229,11 +227,13 @@ export function useDownloads() {
   const [currentlySyncingSong, setCurrentlySyncingSong] = useState(null);
   const [syncingSongs, setSyncingSongs] = useState([]);
   const [pendingDeletions, setPendingDeletions] = useState([]);
+  const [pendingDislikes, setPendingDislikes] = useState([]);
   const [deletingSongs, setDeletingSongs] = useState([]);
   const isDownloadingRef = useRef(false);
   const pendingLikeChangesRef = useRef([]);
   const downloadedSongsRef = useRef([]);
   const pendingDeletionsRef = useRef([]);
+  const pendingDislikesRef = useRef([]);
   const isDeletingRef = useRef(false);
 
   // ============================================================
@@ -276,6 +276,19 @@ export function useDownloads() {
       }
     } catch (error) {
       console.warn('[useDownloads] No se pudo cargar cambios pendientes de likes:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(PENDING_DISLIKES_KEY) || '[]');
+      if (Array.isArray(stored)) {
+        setPendingDislikes(stored);
+        pendingDislikesRef.current = stored;
+      }
+    } catch (error) {
+      console.warn('[useDownloads] No se pudieron cargar dislikes pendientes:', error);
     }
   }, []);
 
@@ -431,6 +444,14 @@ export function useDownloads() {
     }
   }, []);
 
+  const savePendingDislikes = useCallback((dislikes) => {
+    setPendingDislikes(dislikes);
+    pendingDislikesRef.current = dislikes;
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(PENDING_DISLIKES_KEY, JSON.stringify(dislikes));
+    }
+  }, []);
+
   const markSongForDeletion = useCallback(async (songId) => {
     // Si la canción está descargada, marcarla para eliminación diferida
     const songEntry = downloadedSongsRef.current.find(s => s.id === songId);
@@ -441,12 +462,22 @@ export function useDownloads() {
       { songId, songName },
     ];
     savePendingDeletions(next);
+    savePendingDislikes(pendingDislikesRef.current.filter((entry) => entry.songId !== songId));
 
     // Eliminar de IndexedDB inmediatamente (la descarga local)
     await removeDownload(songId);
 
     return true;
-  }, [savePendingDeletions, removeDownload]);
+  }, [savePendingDeletions, savePendingDislikes, removeDownload]);
+
+  const markSongDisliked = useCallback((songId) => {
+    const next = [
+      ...pendingDislikesRef.current.filter((entry) => entry.songId !== songId),
+      { songId },
+    ];
+    savePendingDislikes(next);
+    savePendingDeletions(pendingDeletionsRef.current.filter((entry) => entry.songId !== songId));
+  }, [savePendingDeletions, savePendingDislikes]);
 
   // ============================================================
   // SINCRONIZAR ELIMINACIONES PENDIENTES CON EL SERVIDOR
@@ -466,11 +497,18 @@ export function useDownloads() {
       // Sincronizar una por una para mostrar progreso
       for (let i = 0; i < pending.length; i++) {
         const { songId } = pending[i];
-        await fetch('/api/songs/' + songId + '/like', {
+        const likeResponse = await fetch('/api/songs/' + songId + '/like', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ liked: false, userId })
         });
+        if (!likeResponse.ok) throw new Error(`No se pudo quitar el like de ${songId}`);
+        const deletionResponse = await fetch('/api/songs/' + songId + '/deferred-deletion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, marked: true })
+        });
+        if (!deletionResponse.ok) throw new Error(`No se pudo marcar ${songId} para eliminar`);
       }
 
       savePendingDeletions([]);
@@ -483,6 +521,20 @@ export function useDownloads() {
       isDeletingRef.current = false;
     }
   }, [savePendingDeletions]);
+
+  const syncDislikes = useCallback(async (userId) => {
+    if (!userId || pendingDislikesRef.current.length === 0) return;
+    const pending = pendingDislikesRef.current;
+    for (const { songId } of pending) {
+      const response = await fetch('/api/songs/' + songId + '/hide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, hidden: true })
+      });
+      if (!response.ok) throw new Error(`No se pudo guardar el dislike de ${songId}`);
+    }
+    savePendingDislikes([]);
+  }, [savePendingDislikes]);
 
   // ============================================================
   // ACTUALIZAR ESTADO DE "ME GUSTA" EN CANCIONES DESCARGADAS
@@ -569,8 +621,13 @@ export function useDownloads() {
     // 2) Sincronizar eliminaciones pendientes SIEMPRE, aunque no haya likes.
     //    (Antes esto quedaba dentro del bloque de likes y no se ejecutaba
     //     cuando solo se habían eliminado canciones offline.)
-    await syncDeletions(userId);
-  }, [savePendingLikeChanges, syncDeletions]);
+    try {
+      await syncDislikes(userId);
+      await syncDeletions(userId);
+    } catch (error) {
+      console.error('[useDownloads] Error sincronizando dislikes/eliminaciones:', error);
+    }
+  }, [savePendingLikeChanges, syncDeletions, syncDislikes]);
 
   // ============================================================
   // VERIFICAR SI UNA CANCIÓN ESTÁ DESCARGADA
@@ -594,12 +651,14 @@ export function useDownloads() {
     currentlySyncingSong,
     syncingSongs,
     pendingDeletions,
+    pendingDislikes,
     deletingSongs,
     isDownloading: isDownloadingRef.current,
     downloadSong,
     downloadSongs,
     removeDownload,
     markSongForDeletion,
+    markSongDisliked,
     updateLiked,
     syncLikes,
     syncDeletions,

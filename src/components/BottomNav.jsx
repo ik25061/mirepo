@@ -1,4 +1,4 @@
-import { Home, Library, Download, Sparkles } from 'lucide-react';
+import { Home, Library, Download, Sparkles, ThumbsDown } from 'lucide-react';
 
 export default function BottomNav({ activeView, onViewChange, hasCurrentTrack }) {
   const tabs = [
@@ -6,6 +6,7 @@ export default function BottomNav({ activeView, onViewChange, hasCurrentTrack })
     { id: 'library', label: 'Biblioteca', icon: Library },
     { id: 'downloads', label: 'Descargas', icon: Download },
     { id: 'ai', label: 'Asistente', icon: Sparkles },
+    { id: 'dislikedSongs', label: 'No me gusta', icon: ThumbsDown },
   ];
 
   return (

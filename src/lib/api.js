@@ -187,10 +187,30 @@ export const api = {
       body: JSON.stringify({ liked, userId }),
     }),
 
-  hideSong: (id, userId) => 
+  hideSong: (id, userId, hidden = true) =>
     request(`/api/songs/${id}/hide`, {
       method: 'POST',
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({ userId, hidden }),
+    }),
+
+  getHiddenSongs: (userId, params = {}) => {
+    const qs = new URLSearchParams({ userId: String(userId) });
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    return request(`/api/hidden-songs?${qs.toString()}`);
+  },
+
+  getDeferredDeletions: (userId, params = {}) => {
+    const qs = new URLSearchParams({ userId: String(userId) });
+    if (params.limit) qs.set('limit', params.limit);
+    if (params.offset) qs.set('offset', params.offset);
+    return request(`/api/deferred-deletions?${qs.toString()}`);
+  },
+
+  setDeferredDeletion: (id, userId, marked = true) =>
+    request(`/api/songs/${id}/deferred-deletion`, {
+      method: 'POST',
+      body: JSON.stringify({ userId, marked }),
     }),
 
   deleteSong: (id, userId) => 

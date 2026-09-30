@@ -336,6 +336,25 @@ app.get('/api/hidden-songs', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.get('/api/deferred-deletions', async (req, res) => {
+  const userId = Number(req.query.userId);
+  if (!userId) return res.status(400).json({ error: 'userId requerido' });
+  try {
+    const limit = Number(req.query.limit) || 100;
+    const offset = Number(req.query.offset) || 0;
+    const songs = await db.getDeferredDeletionSongs(userId, limit, offset);
+    const total = await db.getDeferredDeletionCount(userId);
+    res.json({ songs, pagination: { total } });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/songs/:id/deferred-deletion', async (req, res) => {
+  try {
+    await db.setSongDeferredDeletion(req.params.id, req.body.userId, req.body.marked !== false);
+    res.json({ ok: true });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
 app.post('/api/songs/:id/like', async (req, res) => {
   try {
     await db.setSongLiked(req.params.id, req.body.liked, req.body.userId);
@@ -346,7 +365,7 @@ app.post('/api/songs/:id/like', async (req, res) => {
 
 app.post('/api/songs/:id/hide', async (req, res) => {
   try {
-    await db.setSongHidden(req.params.id, true, req.body.userId);
+    await db.setSongHidden(req.params.id, req.body.hidden !== false, req.body.userId);
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -365,7 +384,10 @@ function moveToTrash(filePath) {
   const now = new Date();
   const trashSubDir = path.join(TRASH_DIR, `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
   if (!fs.existsSync(trashSubDir)) fs.mkdirSync(trashSubDir, { recursive: true });
-  const trashPath = path.join(trashSubDir, `${Date.now()}_${path.basename(filePath)}`);
+  const trashPath = path.join(
+    trashSubDir,
+    `${Date.now()}_${crypto.randomBytes(4).toString('hex')}_${path.basename(filePath)}`
+  );
   fs.copyFileSync(filePath, trashPath);
   fs.unlinkSync(filePath);
   return trashPath;
@@ -383,21 +405,29 @@ function companionPaths(song) {
     const lrcPath = absolutePath(song.relPath).replace(/\.[^/.]+$/, '.lrc');
     if (lrcPath) out.push(lrcPath);
     const karaokePath = karaokeFilePath(song);
-    if (karaokePath && fs.existsSync(karaokePath)) {
-      out.push(karaokePath);
-    } else if (song.relPath) {
-      // El instrumental puede tener otra extensión que el original:
-      // buscar por nombre base dentro de la carpeta espejo.
-      const mirrorDir = path.dirname(path.join(KARAOKE_DIR, song.relPath));
-      const base = path.basename(song.relPath).replace(/\.[^/.]+$/, '').toLowerCase();
-      try {
-        for (const entry of fs.readdirSync(mirrorDir)) {
-          if (path.basename(entry).replace(/\.[^/.]+$/, '').toLowerCase() === base) {
-            out.push(path.join(mirrorDir, entry));
-          }
+    const mirrorDir = path.dirname(path.join(KARAOKE_DIR, song.relPath));
+    const base = path.basename(song.relPath).replace(/\.[^/.]+$/, '').toLowerCase();
+    try {
+      for (const entry of fs.readdirSync(mirrorDir)) {
+        if (path.basename(entry).replace(/\.[^/.]+$/, '').toLowerCase() === base) {
+          out.push(path.join(mirrorDir, entry));
         }
-      } catch (err) {}
+      }
+    } catch (err) {}
+    if (karaokePath) {
+      out.push(karaokePath);
     }
+    try {
+      const sourceDir = path.dirname(absolutePath(song.relPath));
+      const sourceBase = path.basename(song.relPath).replace(/\.[^/.]+$/, '').toLowerCase();
+      for (const entry of fs.readdirSync(sourceDir)) {
+        const entryName = path.basename(entry);
+        if (entryName.replace(/\.[^/.]+$/, '').toLowerCase() === sourceBase
+          && path.extname(entryName).toLowerCase() === '.lrc') {
+          out.push(path.join(sourceDir, entry));
+        }
+      }
+    } catch (err) {}
   } catch (err) {}
   return [...new Set(out)];
 }
@@ -415,25 +445,28 @@ app.delete('/api/songs', async (req, res) => {
     if (!song) return res.status(404).json({ error: 'Cancion no encontrada en el catalogo' });
 
     const fullPath = absolutePath(song.relPath);
-    if (fs.existsSync(fullPath)) {
-      try {
-        const trashed = moveToTrash(fullPath);
-        const extraTrashed = [];
-        for (const companion of companionPaths(song)) {
-          try {
-            const t = moveToTrash(companion);
-            if (t) extraTrashed.push(t);
-          } catch (err) {
-            console.warn(`[api/songs DELETE] ⚠️ No se pudo mover acompañante ${companion}: ${err.message}`);
-          }
+    try {
+      const trashed = moveToTrash(fullPath);
+      const extraTrashed = [];
+      for (const companion of companionPaths(song)) {
+        try {
+          const t = moveToTrash(companion);
+          if (t) extraTrashed.push(t);
+        } catch (err) {
+          console.warn(`[api/songs DELETE] ⚠️ No se pudo mover acompañante ${companion}: ${err.message}`);
         }
-        console.log(`[api/songs DELETE] ✅ Papelera: ${trashed} (+${extraTrashed.length} asociados)`);
-      } catch (err) {
-        return res.status(500).json({ error: 'Error fisico al eliminar el archivo', details: err.message });
       }
+      console.log(`[api/songs DELETE] ✅ Papelera: ${trashed || '(audio ausente)'} (+${extraTrashed.length} asociados)`);
+    } catch (err) {
+      return res.status(500).json({ error: 'Error fisico al eliminar el archivo', details: err.message });
     }
 
-    if (userId) await db.setSongHidden(song.id, true, userId);
+    if (userId) {
+      await db.setSongLiked(song.id, false, userId);
+      await db.setSongHidden(song.id, false, userId);
+      await db.setSongDeferredDeletion(song.id, userId, false);
+    }
+    await db.markSongTrashed(song.id);
     try { await db.deleteLyrics(song.id); } catch (err) {}
     songMap.delete(id);
     songCache = songCache.filter(s => s.id !== id);
