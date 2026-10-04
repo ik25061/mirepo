@@ -324,10 +324,14 @@ export async function getArtistsWithPagination({ userId = null, limit = 20, offs
       SELECT
         a.id,
         a.name,
-        (SELECT COUNT(*) FROM song_artists sa WHERE sa.artist_id = a.id) AS song_count,
+        (SELECT COUNT(*) FROM song_artists sa
+          WHERE sa.artist_id = a.id
+            AND sa.song_id NOT IN (SELECT song_id FROM trashed_songs)) AS song_count,
         (SELECT s.id FROM songs s
          JOIN song_artists sa2 ON s.id = sa2.song_id
-         WHERE sa2.artist_id = a.id LIMIT 1) AS coverId
+         WHERE sa2.artist_id = a.id
+           AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+         LIMIT 1) AS coverId
       FROM artists a
       WHERE 1=1
     `;
@@ -342,7 +346,9 @@ export async function getArtistsWithPagination({ userId = null, limit = 20, offs
     }
 
     if (minSongs > 0) {
-      sql += ` AND (SELECT COUNT(*) FROM song_artists sa WHERE sa.artist_id = a.id) >= ?`;
+      sql += ` AND (SELECT COUNT(*) FROM song_artists sa
+                 WHERE sa.artist_id = a.id
+                   AND sa.song_id NOT IN (SELECT song_id FROM trashed_songs)) >= ?`;
       params.push(minSongs);
     }
 
@@ -359,7 +365,9 @@ export async function getArtistsWithPagination({ userId = null, limit = 20, offs
       countParams.push(userId);
     }
     if (minSongs > 0) {
-      countSql += ` AND (SELECT COUNT(*) FROM song_artists sa WHERE sa.artist_id = a.id) >= ?`;
+      countSql += ` AND (SELECT COUNT(*) FROM song_artists sa
+                     WHERE sa.artist_id = a.id
+                       AND sa.song_id NOT IN (SELECT song_id FROM trashed_songs)) >= ?`;
       countParams.push(minSongs);
     }
     const totalResult = await database.get(countSql, countParams);
@@ -392,10 +400,14 @@ export async function getArtistsWithPagination({ userId = null, limit = 20, offs
         SELECT
           a.id,
           a.name,
-          (SELECT COUNT(*) FROM song_artists sa WHERE sa.artist_id = a.id) AS song_count,
+          (SELECT COUNT(*) FROM song_artists sa
+            WHERE sa.artist_id = a.id
+              AND sa.song_id NOT IN (SELECT song_id FROM trashed_songs)) AS song_count,
           (SELECT s.id FROM songs s
            JOIN song_artists sa2 ON s.id = sa2.song_id
-           WHERE sa2.artist_id = a.id LIMIT 1) AS coverId
+           WHERE sa2.artist_id = a.id
+             AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+           LIMIT 1) AS coverId
         FROM artists a
         WHERE a.id IN (${placeholders})
         ORDER BY a.name
@@ -470,6 +482,7 @@ export async function getSongsByArtist({ artistId, userId = null, limit = 100, o
     WHERE sa.artist_id = ?
   `;
   const countParams = [artistId];
+  countSql += ` AND s.id NOT IN (SELECT song_id FROM trashed_songs)`;
   if (userId) {
     countSql += ` AND s.id NOT IN (
       SELECT song_id FROM user_song_interactions 
@@ -576,8 +589,13 @@ export async function getAlbumsWithPagination({ userId = null, limit = 100, offs
         a.name AS artist,
         al.year,
         al.cover_path,
-        (SELECT COUNT(*) FROM songs s WHERE s.album_id = al.id) AS song_count,
-        (SELECT s.id FROM songs s WHERE s.album_id = al.id LIMIT 1) AS coverId
+        (SELECT COUNT(*) FROM songs s
+          WHERE s.album_id = al.id
+            AND s.id NOT IN (SELECT song_id FROM trashed_songs)) AS song_count,
+        (SELECT s.id FROM songs s
+         WHERE s.album_id = al.id
+           AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+         LIMIT 1) AS coverId
       FROM albums al
       LEFT JOIN artists a ON al.main_artist_id = a.id
       WHERE 1=1
@@ -585,7 +603,9 @@ export async function getAlbumsWithPagination({ userId = null, limit = 100, offs
     const params = [];
 
     if (minSongs > 0) {
-      sql += ` AND (SELECT COUNT(*) FROM songs s WHERE s.album_id = al.id) >= ?`;
+      sql += ` AND (SELECT COUNT(*) FROM songs s
+                 WHERE s.album_id = al.id
+                   AND s.id NOT IN (SELECT song_id FROM trashed_songs)) >= ?`;
       params.push(minSongs);
     }
 
@@ -598,7 +618,9 @@ export async function getAlbumsWithPagination({ userId = null, limit = 100, offs
     let countSql = `SELECT COUNT(*) as total FROM albums al WHERE 1=1`;
     const countParams = [];
     if (minSongs > 0) {
-      countSql += ` AND (SELECT COUNT(*) FROM songs s WHERE s.album_id = al.id) >= ?`;
+      countSql += ` AND (SELECT COUNT(*) FROM songs s
+                     WHERE s.album_id = al.id
+                       AND s.id NOT IN (SELECT song_id FROM trashed_songs)) >= ?`;
       countParams.push(minSongs);
     }
     const totalResult = await database.get(countSql, countParams);
@@ -628,8 +650,13 @@ export async function getAlbumsWithPagination({ userId = null, limit = 100, offs
       const placeholders = ids.map(() => '?').join(',');
       const detailedSql = `
         SELECT al.id AS id,
-                (SELECT COUNT(*) FROM songs s WHERE s.album_id = al.id) AS song_count,
-                (SELECT s.id FROM songs s WHERE s.album_id = al.id LIMIT 1) AS coverId
+                (SELECT COUNT(*) FROM songs s
+                 WHERE s.album_id = al.id
+                   AND s.id NOT IN (SELECT song_id FROM trashed_songs)) AS song_count,
+                (SELECT s.id FROM songs s
+                 WHERE s.album_id = al.id
+                   AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+                 LIMIT 1) AS coverId
          FROM albums al WHERE al.id IN (${placeholders})
       `;
       const extra = await database.all(detailedSql, ids);
@@ -669,6 +696,7 @@ export async function getSongsByAlbum({ albumId, userId = null, limit = 100, off
     LEFT JOIN song_artists sa ON s.id = sa.song_id AND sa.is_main = 1
     LEFT JOIN artists a ON sa.artist_id = a.id
     WHERE s.album_id = ?
+      AND s.id NOT IN (SELECT song_id FROM trashed_songs)
   `;
   const params = [userId || null, albumId];
 
@@ -690,7 +718,7 @@ export async function getSongsByAlbum({ albumId, userId = null, limit = 100, off
     song.liked = !!song.liked;
   }
 
-  let countSql = `SELECT COUNT(*) as total FROM songs s WHERE s.album_id = ?`;
+  let countSql = `SELECT COUNT(*) as total FROM songs s WHERE s.album_id = ? AND s.id NOT IN (SELECT song_id FROM trashed_songs)`;
   const countParams = [albumId];
   if (userId) {
     countSql += ` AND s.id NOT IN (
@@ -729,27 +757,35 @@ export async function getGenresWithPagination({ userId = null, limit = 100, offs
       SELECT
         g.id,
         g.name,
-        (SELECT COUNT(*) FROM song_genres sg WHERE sg.genre_id = g.id) AS song_count,
+        (SELECT COUNT(*) FROM song_genres sg
+          WHERE sg.genre_id = g.id
+            AND sg.song_id NOT IN (SELECT song_id FROM trashed_songs)) AS song_count,
         (SELECT s.id FROM songs s
          JOIN song_genres sg2 ON s.id = sg2.song_id
-         WHERE sg2.genre_id = g.id LIMIT 1) AS coverId
+         WHERE sg2.genre_id = g.id
+           AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+         LIMIT 1) AS coverId
       FROM genres g
       WHERE 1=1
     `;
     const params = [];
 
     if (minSongs > 0) {
-      sql += ` AND (SELECT COUNT(*) FROM song_genres sg WHERE sg.genre_id = g.id) >= ?`;
+      sql += ` AND (SELECT COUNT(*) FROM song_genres sg
+                 WHERE sg.genre_id = g.id
+                   AND sg.song_id NOT IN (SELECT song_id FROM trashed_songs)) >= ?`;
       params.push(minSongs);
     }
 
     sql += ` ORDER BY g.name LIMIT ? OFFSET ?`;
     items = await database.all(sql, [...params, limit, offset]);
 
-    let countSql = `SELECT COUNT(*) as total FROM genres WHERE 1=1`;
+    let countSql = `SELECT COUNT(*) as total FROM genres g WHERE 1=1`;
     const countParams = [];
     if (minSongs > 0) {
-      countSql += ` AND (SELECT COUNT(*) FROM song_genres sg WHERE sg.genre_id = g.id) >= ?`;
+      countSql += ` AND (SELECT COUNT(*) FROM song_genres sg
+                     WHERE sg.genre_id = g.id
+                       AND sg.song_id NOT IN (SELECT song_id FROM trashed_songs)) >= ?`;
       countParams.push(minSongs);
     }
     const totalResult = await database.get(countSql, countParams);
@@ -770,10 +806,14 @@ export async function getGenresWithPagination({ userId = null, limit = 100, offs
         SELECT
           g.id,
           g.name,
-          (SELECT COUNT(*) FROM song_genres sg WHERE sg.genre_id = g.id) AS song_count,
+          (SELECT COUNT(*) FROM song_genres sg
+            WHERE sg.genre_id = g.id
+              AND sg.song_id NOT IN (SELECT song_id FROM trashed_songs)) AS song_count,
           (SELECT s.id FROM songs s
            JOIN song_genres sg2 ON s.id = sg2.song_id
-           WHERE sg2.genre_id = g.id LIMIT 1) AS coverId
+           WHERE sg2.genre_id = g.id
+             AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+           LIMIT 1) AS coverId
         FROM genres g
         WHERE g.id IN (${placeholders})
         ORDER BY g.name
@@ -821,6 +861,7 @@ export async function getSongsByGenre({ genreId, userId = null, limit = 100, off
     LEFT JOIN albums al ON s.album_id = al.id
     JOIN song_genres sg ON s.id = sg.song_id
     WHERE sg.genre_id = ?
+      AND s.id NOT IN (SELECT song_id FROM trashed_songs)
   `;
   const params = [userId || null, genreId];
 
@@ -847,6 +888,7 @@ export async function getSongsByGenre({ genreId, userId = null, limit = 100, off
     FROM songs s
     JOIN song_genres sg ON s.id = sg.song_id
     WHERE sg.genre_id = ?
+      AND s.id NOT IN (SELECT song_id FROM trashed_songs)
   `;
   const countParams = [genreId];
   if (userId) {
@@ -884,6 +926,7 @@ export async function getYearsWithPagination({ userId = null, limit = 100, offse
       MAX(s.id) AS coverId
     FROM albums al
     LEFT JOIN songs s ON s.album_id = al.id
+      AND s.id NOT IN (SELECT song_id FROM trashed_songs)
     WHERE al.year IS NOT NULL
   `;
   const params = [];
@@ -953,6 +996,7 @@ export async function getSongsByYear({ year, userId = null, limit = 100, offset 
     LEFT JOIN artists a ON sa.artist_id = a.id
     LEFT JOIN albums al ON s.album_id = al.id
     WHERE al.year = ?
+      AND s.id NOT IN (SELECT song_id FROM trashed_songs)
   `;
   const params = [userId || null, year];
 
@@ -979,6 +1023,7 @@ export async function getSongsByYear({ year, userId = null, limit = 100, offset 
     FROM songs s
     LEFT JOIN albums al ON s.album_id = al.id
     WHERE al.year = ?
+      AND s.id NOT IN (SELECT song_id FROM trashed_songs)
   `;
   const countParams = [year];
   if (userId) {
@@ -1025,6 +1070,7 @@ export async function getSongsWithoutAlbumOrArtist({ userId = null, limit = 100,
       ) THEN 1 ELSE 0 END) AS liked
     FROM songs s
     WHERE s.album_id IS NULL
+      AND s.id NOT IN (SELECT song_id FROM trashed_songs)
       AND NOT EXISTS (
         SELECT 1 FROM song_artists sa WHERE sa.song_id = s.id
       )
@@ -1053,6 +1099,7 @@ export async function getSongsWithoutAlbumOrArtist({ userId = null, limit = 100,
     SELECT COUNT(*) as total
     FROM songs s
     WHERE s.album_id IS NULL
+      AND s.id NOT IN (SELECT song_id FROM trashed_songs)
       AND NOT EXISTS (
         SELECT 1 FROM song_artists sa WHERE sa.song_id = s.id
       )
@@ -1108,6 +1155,7 @@ export async function getLikedSongs(userId, limit = 100, offset = 0) {
       LEFT JOIN artists a ON sa.artist_id = a.id
       LEFT JOIN albums al ON s.album_id = al.id
       WHERE usi.user_id = ? AND usi.interaction_type = 'LIKE'
+        AND s.id NOT IN (SELECT song_id FROM trashed_songs)
       ORDER BY usi.created_at DESC
       LIMIT ? OFFSET ?
     `, [userId, limit, offset]);
@@ -1131,7 +1179,10 @@ export async function getLikedSongsCount(userId) {
   
   try {
     const result = await database.get(
-      'SELECT COUNT(*) as total FROM user_song_interactions WHERE user_id = ? AND interaction_type = "LIKE"',
+      `SELECT COUNT(*) as total FROM user_song_interactions usi
+       JOIN songs s ON s.id = usi.song_id
+       WHERE usi.user_id = ? AND usi.interaction_type = 'LIKE'
+         AND s.id NOT IN (SELECT song_id FROM trashed_songs)`,
       [userId]
     );
     return result.total;
@@ -1221,7 +1272,9 @@ export async function getHiddenSongIds(userId) {
 export async function getLikedSongIds(userId) {
   const database = await getDb();
   const rows = await database.all(
-    'SELECT song_id FROM user_song_interactions WHERE user_id = ? AND interaction_type = "LIKE"',
+    `SELECT song_id FROM user_song_interactions
+     WHERE user_id = ? AND interaction_type = 'LIKE'
+       AND song_id NOT IN (SELECT song_id FROM trashed_songs)`,
     [userId]
   );
   return new Set(rows.map(r => r.song_id));
@@ -1494,8 +1547,14 @@ export async function getPlayLists(userId) {
   const playlists = await database.all(sql, params);
   
   for (const pl of playlists) {
+    // Las canciones borradas (papelera) o que ya no existen en disco no deben
+    // aparecer en la lista, aunque sigan referenciadas en playlist_songs.
     const songs = await database.all(
-      'SELECT song_id FROM playlist_songs WHERE playlist_id = ? ORDER BY position',
+      `SELECT ps.song_id FROM playlist_songs ps
+       JOIN songs s ON s.id = ps.song_id
+       WHERE ps.playlist_id = ?
+         AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+       ORDER BY ps.position`,
       [pl.id]
     );
     pl.songIds = songs.map(s => s.song_id);
@@ -1517,7 +1576,11 @@ export async function getPlayList(id) {
   
   if (playlist) {
     const songs = await database.all(
-      'SELECT song_id FROM playlist_songs WHERE playlist_id = ? ORDER BY position',
+      `SELECT ps.song_id FROM playlist_songs ps
+       JOIN songs s ON s.id = ps.song_id
+       WHERE ps.playlist_id = ?
+         AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+       ORDER BY ps.position`,
       [id]
     );
     playlist.songIds = songs.map(s => s.song_id);
@@ -1941,7 +2004,12 @@ export async function getSongsByMood(o = {}) {
   const songs = await database.all(sql, params);
   await attachGenres(database, songs);
   for (const s of songs) { s.hasCover = !!s.cover_path; }
-  const c = await database.get('SELECT COUNT(*) as total FROM song_moods WHERE mood_id = ?', [moodId]);
+  const c = await database.get(
+    `SELECT COUNT(*) as total FROM song_moods sm
+     JOIN songs s ON s.id = sm.song_id
+     WHERE sm.mood_id = ? AND s.id NOT IN (SELECT song_id FROM trashed_songs)`,
+    [moodId]
+  );
   return { songs, pagination: { offset, limit, total: c.total, hasMore: offset + limit < c.total } };
 }
 export async function updatePlayList(id, f = {}) {
@@ -2379,8 +2447,14 @@ async function initSchema(database) {
       const cols = await database.all(
         `SELECT name FROM pragma_table_info('v_complete_songs') WHERE name IN ('bpm','key_name')`
       );
-      if (cols.length < 2) {
-        console.log('[db] 🔧 v_complete_songs sin bpm/key_name; reconstruyendo vistas...');
+      // Guarda adicional: si la vista no excluye las canciones de la papelera,
+      // se reconstruye para que ninguna consulta las muestre por error.
+      const viewRow = await database.get(
+        `SELECT sql FROM sqlite_master WHERE type='view' AND name='v_complete_songs'`
+      );
+      const needsTrashFilter = !viewRow || !/trashed_songs/.test(viewRow.sql || '');
+      if (cols.length < 2 || needsTrashFilter) {
+        console.log('[db] 🔧 Reconstruyendo vistas (bpm/key_name o filtro de papelera)...');
         await database.exec('DROP VIEW IF EXISTS v_playlist_details');
         await database.exec('DROP VIEW IF EXISTS v_complete_songs');
       }
@@ -2408,6 +2482,7 @@ async function initSchema(database) {
       LEFT JOIN albums al ON s.album_id = al.id
       LEFT JOIN song_artists sa ON s.id = sa.song_id
       LEFT JOIN artists art ON sa.artist_id = art.id
+      WHERE s.id NOT IN (SELECT song_id FROM trashed_songs)
       GROUP BY s.id
     `);
 

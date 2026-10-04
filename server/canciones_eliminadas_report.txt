@@ -1,0 +1,76 @@
+Canciones eliminadas de la BD (75) el 2026-10-04T13:23:15.421Z
+1e41610e57d2778d	4/Spaceman.mp3	Spaceman
+460d857530dbd28f	A/9 P.M. (Till I Come).mp3	9 P.M. (Till I Come)
+5e29ed93a65c10d5	A/Como Quien Pierde una Estrella.mp3	Como Quien Pierde una Estrella
+9aa52c4a04aa5a89	A/Der Kommissar (Live at Salford University).mp3	Der Kommissar
+02fef672d6810d8c	A/Enrique Iglesias - EL BAÑO (Letra-Lyrics) ft. Bad Bunny.mp3	Enrique Iglesias - EL BAÑO (Letra/Lyrics) ft. Bad Bunny
+c86e70fcac3fde0f	A/Una Canción De Amor.mp3	Una Canción De Amor
+bb546198b840bce2	A/Vuelves Con Él.mp3	Vuelves Con Él
+451e3642dfa62518	B/Alone.mp3	Alone
+c2880cfc740b4a63	B/Basta De Violencia.mp3	Basta De Violencia
+45ce2721b1db812f	C/Golondrina de ojos negros.mp3	Golondrina de ojos negros
+a50ce78a90069c0e	D/Desconocido - Mi Ultimo Deseo (1)_1783498890_1784160997.mp3	Mi Ultimo Deseo
+1afcc80684ac0cb8	D/Ni me viene ni me va.mp3	Ni me viene ni me va
+4c9c2f84ef95fe2c	E/Canto a la Humanidad.mp3	Canto a la Humanidad
+bc5c23c6d023a689	E/¿Porque Te Vas-.mp3	¿Porque Te Vas?
+b8a5ee0503995580	G/Canción de Amor.mp3	Canción de Amor
+594e95b996e876e7	G/Como Yo Nadie Te Ha Amado.mp3	Como Yo Nadie Te Ha Amado
+3fa14b70e3292868	H/El Ataque de las Chicas Cocodrilo.mp3	El Ataque de las Chicas Cocodrilo
+f487e8d6957fd30a	J/33 Años.mp3	33 Años
+53af8bb1608218e3	J/A Flor de Piel.mp3	A Flor de Piel
+992377f74e723fb5	J/A Mi Padre.mp3	A Mi Padre
+6b79f8be1222d70e	J/Ae, Ao.mp3	Ae, Ao
+d47e94d6d1074259	J/Agua Dulce, Agua Salá.mp3	Agua Dulce, Agua Salá
+c0164fb4a7977133	J/All of You.mp3	All of You
+d3c13e8fbb795168	J/Amanecí en Tus Brazos.mp3	Amanecí en Tus Brazos
+bde178d39e6f8fb0	J/Amantes (Lovers).mp3	Amantes (Lovers)
+50cd7198fce6b406	J/Asi Nacemos.mp3	Asi Nacemos
+285fab102586a6c5	J/Bamboleo.mp3	Bamboleo
+e7722467ae31775a	J/Caminito.mp3	Caminito
+bb405ad3e4acc47d	J/Can't Help Falling In Love.mp3	Can't Help Falling In Love
+d5ffe00fb48aa0f3	J/Caruso.mp3	Caruso
+f5678e7725ee2695	J/Celos de mi guitarra.mp3	Celos de mi guitarra
+7226b0d14fb3e049	J\Chiquilla.mp3	Chiquilla
+26f6c795cec72f9d	J/Cómo Llenar Mi Tiempo.mp3	Cómo Llenar Mi Tiempo
+9d7357bde8e826e1	J/De Un Mundo Raro.mp3	De Un Mundo Raro
+42e8e012b4f00e32	J/Después de ti.mp3	Después de ti
+49086416b5b3e39a	J/Donde Hay Celos.mp3	Donde Hay Celos
+cae010ddc70165d0	J/Guantanamera.mp3	Guantanamera
+1aa2135769feafe7	J/Las Cosas Que Tiene la Vida (The Things Life Has).mp3	Las Cosas Que Tiene la Vida (The Things Life Has)
+8e340069cd961572	J/Momentos.mp3	Momentos
+d72a9c7174bd62f9	J/O Me Quieres O Me Dejas.mp3	O Me Quieres O Me Dejas
+243ef6e1074e2a45	J/Obsesion.mp3	Obsesion
+004fd2b5c611b77a	J/Por Ella (Because of Her).mp3	Por Ella (Because of Her)
+55f44f27d48b843d	J/Por el Amor de una Mujer.mp3	Por el Amor de una Mujer
+c7291783b390a9e6	J/Por un Poco de Tu Amor.mp3	Por un Poco de Tu Amor
+edfdc81c0dfb6e8c	J/Que Nadie Sepa Mi Sufrir.mp3	Que Nadie Sepa Mi Sufrir
+23ad81fce62f4510	J/Ron y Coca Cola (Rum and Coca Cola).mp3	Ron y Coca Cola (Rum and Coca Cola)
+ea01c075c54ca717	J/Santo Domingo.mp3	Santo Domingo
+83d28f5a9549cffc	J/Seguire Mi Camino.mp3	Seguire Mi Camino
+c4148344e17b04c0	J/Si, Madame.mp3	Si, Madame
+3df996611ecb5734	J/Un Canto a Galicia.mp3	Un Canto a Galicia
+7e4cb3d86c457dbf	J/Y Pensar.mp3	Y Pensar...
+724d706bdf58e148	K/Do You Wanna Go Party.mp3	Do You Wanna Go Party
+21662ec064d7e84a	L/Al Rumor Del Viento.mp3	Al Rumor Del Viento
+7f62698d3aa31a92	L/Muchachas modernas.mp3	Muchachas modernas
+668e7cc29ebdda35	L/Muerte Anunciada.mp3	Muerte Anunciada
+0ccc2de8838a041a	M/Dawn Patrol.mp3	Dawn Patrol
+0dd59c19a0bb3315	M/El Espejo.mp3	El Espejo
+3ca099de44a94e03	M/No Te Rindas.mp3	No Te Rindas
+fd66d1423664c478	P/(46)_1784013907.mp3	(46)_1784013907
+8005366f062bc888	R/1 2 3 Detente.mp3	1 2 3 Detente
+c905926b11c7cf22	R/No Te Olivídes de Mi (Não Se Esqueca de Mi).mp3	No Te Olivídes de Mi (Não Se Esqueca de Mi)
+40f0a88c7471e755	R/Prá ser só minha mulher.mp3	Prá ser só minha mulher
+70822334953e58e8	R/Ternura (Somehow It Got to Be Tomorrow).mp3	Ternura (Somehow It Got to Be Tomorrow)
+c994ad399f9bbf26	S/Cuando Pase el Temblor (En Vivo).mp3	Cuando Pase el Temblor
+1ea04ec15e14c135	T/Club-A-Go-Go.mp3	Club-A-Go-Go
+56a6fa58decbf9da	T/Cuando enseñes los anos.mp3	Cuando enseñes los anos
+7ee22e071fb9565d	T/Somewhere in America '89.mp3	Somewhere in America '89
+adbdf44d5420ea0a	T/Track 21.mp3	Track 21
+f83d6c21cbb416d2	T/Tristes recuerdos.mp3	Tristes recuerdos
+d66d81645d967cc3	V/Alma De Acero.mp3	Alma De Acero
+6369274c4886f53c	V/Dueño del mundo.mp3	Dueño del mundo
+786760bfb3192819	V/Estado Civil.mp3	Estado Civil
+0693bad84089e4bb	V/Tengo una Amante.mp3	Tengo una Amante
+ad895d88b190dfc8	V/Una Noche Como Esta.mp3	Una Noche Como Esta
+eea06fc1932bdb19	Y/Quiero Hacerte el Amor.mp3	Quiero Hacerte el Amor
