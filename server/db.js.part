@@ -1,0 +1,600 @@
+// ============================================================
+// db.js - CAPA DE DATOS PARA ESQUEMA OPTIMIZADO
+// ============================================================
+
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import crypto from 'node:crypto';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DB_PATH = path.join(__dirname, 'localfy.db');
+
+// ============================================================
+// CONEXIÓN PERSISTENTE
+// ============================================================
+
+let db = null;
+let dbReady = false;
+let dbPromise = null;
+let isRescanning = false;
+
+export function setRescanning(value) {
+  isRescanning = value;
+  if (value) {
+    console.log('[db] 🛠️ Modo mantenimiento activado (Rescan en curso)');
+  } else {
+    console.log('[db] 🛠️ Modo mantenimiento desactivado');
+  }
+}
+
+
+// Caché de artistas normalizados para getOrCreateArtist (se invalida al
+// cerrar/reabrir la BD, p. ej. tras un rescan con build_music_db.py).
+let artistCache = null;
+
+// Función helper para normalizar texto (quitar acentos, lowercase)
+function normalizeText(text) {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+// Rellena song.genre y song.moods para TODAS las canciones con 2 queries
+async function attachGenres(database, songs) {
+  if (!songs || songs.length === 0) return;
+  const bySong = new Map();
+  const byMood = new Map();
+  const CHUNK = 500;
+  for (let i = 0; i < songs.length; i += CHUNK) {
+    const chunk = songs.slice(i, i + CHUNK);
+    const ids = chunk.map(s => s.id);
+    const placeholders = ids.map(() => '?').join(',');
+    const rows = await database.all(
+      `SELECT sg.song_id, g.name
+       FROM song_genres sg
+       JOIN genres g ON g.id = sg.genre_id
+       WHERE sg.song_id IN (${placeholders})
+       ORDER BY g.name`,
+      ids
+    );
+    for (const row of rows) {
+      if (!bySong.has(row.song_id)) bySong.set(row.song_id, []);
+      bySong.get(row.song_id).push(row.name);
+    }
+    let moodRows = [];
+    try {
+      moodRows = await database.all(
+        `SELECT sm.song_id, m.id, m.name, m.color
+         FROM song_moods sm
+         JOIN moods m ON m.id = sm.mood_id
+         WHERE sm.song_id IN (${placeholders})
+         ORDER BY m.name`,
+        ids
+      );
+    } catch (e) { moodRows = []; }
+    for (const row of moodRows) {
+      if (!byMood.has(row.song_id)) byMood.set(row.song_id, []);
+      byMood.get(row.song_id).push({ id: row.id, name: row.name, color: row.color });
+    }
+  }
+  for (const song of songs) {
+    song.genre = bySong.get(song.id) || [];
+    song.moods = byMood.get(song.id) || [];
+  }
+}
+
+// Rellena song.moods (solo moods, para queries que ya traen genre)
+async function attachMoods(database, songs) {
+  if (!songs || songs.length === 0) return;
+  const byMood = new Map();
+  const CHUNK = 500;
+  for (let i = 0; i < songs.length; i += CHUNK) {
+    const chunk = songs.slice(i, i + CHUNK);
+    const ids = chunk.map(s => s.id);
+    const placeholders = ids.map(() => '?').join(',');
+    let rows = [];
+    try {
+      rows = await database.all(
+        `SELECT sm.song_id, m.id, m.name, m.color
+         FROM song_moods sm JOIN moods m ON m.id = sm.mood_id
+         WHERE sm.song_id IN (${placeholders}) ORDER BY m.name`, ids);
+    } catch (e) { rows = []; }
+    for (const r of rows) {
+      if (!byMood.has(r.song_id)) byMood.set(r.song_id, []);
+      byMood.get(r.song_id).push({ id: r.id, name: r.name, color: r.color });
+    }
+  }
+  for (const s of songs) s.moods = byMood.get(s.id) || [];
+}
+
+export async function getDb() {
+  if (isRescanning) {
+    throw new Error('Base de datos bloqueada por reescaneo en curso');
+  }
+  if (db && dbReady) return db;
+  if (dbPromise) return dbPromise;
+  
+  dbPromise = (async () => {
+    try {
+      db = await open({
+        filename: DB_PATH,
+        driver: sqlite3.Database,
+      });
+      
+      // La BD se abrió (posiblemente tras un rescan que la reconstruyó):
+      // descartar cachés que apunten al esquema/datos anteriores.
+      artistCache = null;
+
+      await db.exec('PRAGMA foreign_keys = ON');
+      await db.exec('PRAGMA journal_mode = WAL');
+      await db.exec('PRAGMA synchronous = NORMAL');
+      await db.exec('PRAGMA busy_timeout = 5000');
+      await db.exec('PRAGMA cache_size = -20000'); // ~20 MB de caché
+      await db.exec('PRAGMA temp_store = MEMORY');
+      
+      // Crear esquema si no existe
+      await initSchema(db);
+
+      dbReady = true;
+      console.log('[db] ✅ Conectado a localfy.db');
+      return db;
+    } catch (err) {
+      console.error('[db] ❌ Error conectando:', err);
+      throw err;
+    }
+  })();
+  
+  return dbPromise;
+}
+
+export async function closeDb() {
+  if (db) {
+    await db.close();
+    db = null;
+    dbReady = false;
+    dbPromise = null;
+    artistCache = null;
+    console.log('[db] 🔒 Conexión cerrada');
+  }
+}
+
+// ============================================================
+// FUNCIONES PARA OBTENER DATOS (usando la vista v_complete_songs)
+// ============================================================
+
+export async function getSongsWithDetails({ limit = 100, offset = 0, userId = null } = {}) {
+  const database = await getDb();
+
+  let sql = `
+    SELECT
+      v.song_id AS id,
+      v.song_title AS title,
+      v.relative_path AS relPath,
+      v.duration,
+      v.track,
+      v.bpm,
+      v.key_name,
+      v.hasLyrics,
+      v.main_artist_name AS artist,
+      v.main_artist_id AS artist_id,
+      v.album_id AS album_id,
+      v.album_name AS album,
+      v.album_year AS year,
+      v.cover_path,
+      (SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM user_song_interactions usi 
+        WHERE usi.song_id = v.song_id 
+        AND usi.user_id = ? 
+        AND usi.interaction_type = 'LIKE'
+      ) THEN 1 ELSE 0 END) AS liked,
+      (SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM user_song_interactions usi 
+        WHERE usi.song_id = v.song_id 
+        AND usi.user_id = ? 
+        AND usi.interaction_type = 'HIDE'
+      ) THEN 1 ELSE 0 END) AS hidden
+    FROM v_complete_songs v
+    WHERE 1=1
+  `;
+
+  const params = [userId || null, userId || null];
+
+  if (userId) {
+    sql += ` AND v.song_id NOT IN (
+      SELECT song_id FROM user_song_interactions 
+      WHERE user_id = ? AND interaction_type = 'HIDE'
+    ) AND v.song_id NOT IN (SELECT song_id FROM trashed_songs)
+      AND v.song_id NOT IN (SELECT song_id FROM user_song_deferred_deletions WHERE user_id = ?)`;
+    params.push(userId);
+    params.push(userId);
+  } else {
+    sql += ` AND v.song_id NOT IN (SELECT song_id FROM trashed_songs)`;
+  }
+
+  sql += ` ORDER BY v.song_title LIMIT ? OFFSET ?`;
+  params.push(limit, offset);
+
+  const songs = await database.all(sql, params);
+
+  await attachGenres(database, songs);
+  for (const song of songs) {
+    song.liked = !!song.liked;
+    song.hidden = !!song.hidden;
+    song.hasCover = !!song.cover_path;
+  }
+
+  return songs;
+}
+
+export async function getTotalSongsCount(userId = null) {
+  const database = await getDb();
+  
+  let sql = 'SELECT COUNT(*) as total FROM songs';
+  const params = [];
+
+  if (userId) {
+    sql += ` WHERE id NOT IN (
+      SELECT song_id FROM user_song_interactions 
+      WHERE user_id = ? AND interaction_type = 'HIDE'
+    ) AND id NOT IN (SELECT song_id FROM trashed_songs)
+      AND id NOT IN (SELECT song_id FROM user_song_deferred_deletions WHERE user_id = ?)`;
+    params.push(userId);
+    params.push(userId);
+  } else {
+    sql += ' WHERE id NOT IN (SELECT song_id FROM trashed_songs)';
+  }
+
+  const result = await database.get(sql, params);
+  return result.total;
+}
+
+export async function getTrashCount(userId = null) {
+  const database = await getDb();
+  const result = await database.get('SELECT COUNT(*) as total FROM trashed_songs');
+  return result.total;
+}
+
+export async function markSongTrashed(songId) {
+  const database = await getDb();
+  await database.run(
+    'INSERT OR IGNORE INTO trashed_songs (song_id) VALUES (?)',
+    [songId]
+  );
+}
+
+export async function setSongDeferredDeletion(songId, userId, marked = true) {
+  if (!userId) throw new Error('userId requerido');
+  const database = await getDb();
+  if (marked) {
+    await database.run(
+      'INSERT OR IGNORE INTO user_song_deferred_deletions (user_id, song_id) VALUES (?, ?)',
+      [userId, songId]
+    );
+  } else {
+    await database.run(
+      'DELETE FROM user_song_deferred_deletions WHERE user_id = ? AND song_id = ?',
+      [userId, songId]
+    );
+  }
+}
+
+export async function getDeferredDeletionSongs(userId, limit = 100, offset = 0) {
+  const database = await getDb();
+  return database.all(`
+    SELECT s.id, s.title, s.relPath, s.duration, s.track, s.bpm, s.key_name,
+      s.hasLyrics, a.name AS artist, al.name AS album, al.year AS year,
+      al.cover_path, 1 AS deferredDeletion
+    FROM user_song_deferred_deletions d
+    JOIN songs s ON s.id = d.song_id
+    LEFT JOIN song_artists sa ON s.id = sa.song_id AND sa.is_main = 1
+    LEFT JOIN artists a ON sa.artist_id = a.id
+    LEFT JOIN albums al ON s.album_id = al.id
+    WHERE d.user_id = ? AND d.song_id NOT IN (SELECT song_id FROM trashed_songs)
+    ORDER BY d.created_at DESC LIMIT ? OFFSET ?
+  `, [userId, limit, offset]);
+}
+
+export async function getDeferredDeletionCount(userId) {
+  const database = await getDb();
+  const result = await database.get(`
+    SELECT COUNT(*) AS total FROM user_song_deferred_deletions d
+    WHERE d.user_id = ? AND d.song_id NOT IN (SELECT song_id FROM trashed_songs)
+  `, [userId]);
+  return result.total;
+}
+
+// ============================================================
+// FUNCIONES PARA ARTISTAS CON PAGINACIÓN
+// ============================================================
+
+// En server/db.js
+export async function getArtistsWithPagination({ userId = null, limit = 20, offset = 0, search = '', minSongs = 0 } = {}) {
+  const database = await getDb();
+
+  let total;
+  let items;
+
+  if (!search) {
+    // Sin búsqueda: paginación en SQL (rápido)
+    let sql = `
+      SELECT
+        a.id,
+        a.name,
+        (SELECT COUNT(*) FROM song_artists sa
+          WHERE sa.artist_id = a.id
+            AND sa.song_id NOT IN (SELECT song_id FROM trashed_songs)) AS song_count,
+        (SELECT s.id FROM songs s
+         JOIN song_artists sa2 ON s.id = sa2.song_id
+         WHERE sa2.artist_id = a.id
+           AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+         LIMIT 1) AS coverId
+      FROM artists a
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (userId) {
+      sql += ` AND a.id NOT IN (
+        SELECT artist_id FROM user_artist_interactions
+        WHERE user_id = ? AND interaction_type = 'HIDE'
+      )`;
+      params.push(userId);
+    }
+
+    if (minSongs > 0) {
+      sql += ` AND (SELECT COUNT(*) FROM song_artists sa
+                 WHERE sa.artist_id = a.id
+                   AND sa.song_id NOT IN (SELECT song_id FROM trashed_songs)) >= ?`;
+      params.push(minSongs);
+    }
+
+    sql += ` ORDER BY a.name LIMIT ? OFFSET ?`;
+    items = await database.all(sql, [...params, limit, offset]);
+
+    let countSql = `SELECT COUNT(*) as total FROM artists a WHERE 1=1`;
+    const countParams = [];
+    if (userId) {
+      countSql += ` AND a.id NOT IN (
+        SELECT artist_id FROM user_artist_interactions 
+        WHERE user_id = ? AND interaction_type = 'HIDE'
+      )`;
+      countParams.push(userId);
+    }
+    if (minSongs > 0) {
+      countSql += ` AND (SELECT COUNT(*) FROM song_artists sa
+                     WHERE sa.artist_id = a.id
+                       AND sa.song_id NOT IN (SELECT song_id FROM trashed_songs)) >= ?`;
+      countParams.push(minSongs);
+    }
+    const totalResult = await database.get(countSql, countParams);
+    total = totalResult.total;
+  } else {
+    // Con búsqueda: filtrado tolerante a mayúsculas/minúsculas y acentos.
+    // OPTIMIZACIÓN: Fetch "ligero" de nombres e IDs primero.
+    let lightSql = `SELECT id, name FROM artists a WHERE 1=1`;
+    const lightParams = [];
+    if (userId) {
+      lightSql += ` AND a.id NOT IN (
+        SELECT artist_id FROM user_artist_interactions
+        WHERE user_id = ? AND interaction_type = 'HIDE'
+      )`;
+      lightParams.push(userId);
+    }
+
+    const allArtists = await database.all(lightSql, lightParams);
+    const normalizedSearch = normalizeText(search);
+    const filtered = allArtists.filter(a => normalizeText(a.name).includes(normalizedSearch));
+
+    total = filtered.length;
+    const page = filtered.slice(offset, offset + limit);
+
+    // Rellenar detalles (conteo y portada) solo para los elementos de esta página
+    if (page.length > 0) {
+      const ids = page.map(p => p.id);
+      const placeholders = ids.map(() => '?').join(',');
+      const detailedSql = `
+        SELECT
+          a.id,
+          a.name,
+          (SELECT COUNT(*) FROM song_artists sa
+            WHERE sa.artist_id = a.id
+              AND sa.song_id NOT IN (SELECT song_id FROM trashed_songs)) AS song_count,
+          (SELECT s.id FROM songs s
+           JOIN song_artists sa2 ON s.id = sa2.song_id
+           WHERE sa2.artist_id = a.id
+             AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+           LIMIT 1) AS coverId
+        FROM artists a
+        WHERE a.id IN (${placeholders})
+        ORDER BY a.name
+      `;
+      items = await database.all(detailedSql, ids);
+    } else {
+      items = [];
+    }
+  }
+
+  return {
+    items,
+    pagination: {
+      offset,
+      limit,
+      total,
+      hasMore: offset + limit < total
+    }
+  };
+}
+
+export async function getSongsByArtist({ artistId, userId = null, limit = 100, offset = 0 } = {}) {
+  const database = await getDb();
+
+  let sql = `
+    SELECT
+      v.song_id AS id,
+      v.song_title AS title,
+      v.relative_path AS relPath,
+      v.duration,
+      v.track,
+      v.hasLyrics,
+      v.album_id,
+      v.album_name AS album,
+      v.album_year AS year,
+      v.cover_path,
+      v.main_artist_name AS artist,
+      (SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM user_song_interactions usi
+        WHERE usi.song_id = v.song_id
+        AND usi.user_id = ?
+        AND usi.interaction_type = 'LIKE'
+      ) THEN 1 ELSE 0 END) AS liked
+    FROM v_complete_songs v
+    JOIN song_artists sa ON v.song_id = sa.song_id
+    WHERE sa.artist_id = ?
+  `;
+  const params = [userId || null, artistId];
+
+  if (userId) {
+    sql += ` AND v.song_id NOT IN (
+      SELECT song_id FROM user_song_interactions 
+      WHERE user_id = ? AND interaction_type = 'HIDE'
+    )`;
+    params.push(userId);
+  }
+
+  sql += ` ORDER BY v.song_title LIMIT ? OFFSET ?`;
+  params.push(limit, offset);
+
+  const songs = await database.all(sql, params);
+
+  await attachGenres(database, songs);
+  for (const song of songs) {
+    song.liked = !!song.liked;
+  }
+
+  let countSql = `
+    SELECT COUNT(*) as total
+    FROM songs s
+    JOIN song_artists sa ON s.id = sa.song_id
+    WHERE sa.artist_id = ?
+  `;
+  const countParams = [artistId];
+  countSql += ` AND s.id NOT IN (SELECT song_id FROM trashed_songs)`;
+  if (userId) {
+    countSql += ` AND s.id NOT IN (
+      SELECT song_id FROM user_song_interactions 
+      WHERE user_id = ? AND interaction_type = 'HIDE'
+    )`;
+    countParams.push(userId);
+  }
+  const totalResult = await database.get(countSql, countParams);
+  const total = totalResult.total;
+
+  return {
+    songs,
+    pagination: {
+      offset,
+      limit,
+      total,
+      hasMore: offset + limit < total
+    }
+  };
+}
+
+export async function getSongsByIds(ids, userId = null) {
+  const database = await getDb();
+  const idArray = Array.isArray(ids) ? ids : ids.split(',').map(id => id.trim());
+  if (idArray.length === 0) return [];
+
+  const placeholders = idArray.map(() => '?').join(',');
+  const sql = `
+    SELECT
+      v.song_id AS id,
+      v.song_title AS title,
+      v.relative_path AS relPath,
+      v.duration,
+      v.track,
+      v.bpm,
+      v.key_name,
+      v.hasLyrics,
+      v.main_artist_name AS artist,
+      v.album_id,
+      v.album_name AS album,
+      v.album_year AS year,
+      v.cover_path,
+      (SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM user_song_interactions usi
+        WHERE usi.song_id = v.song_id
+        AND usi.user_id = ?
+        AND usi.interaction_type = 'LIKE'
+      ) THEN 1 ELSE 0 END) AS liked
+    FROM v_complete_songs v
+    WHERE v.song_id IN (${placeholders})
+  `;
+
+  const songs = await database.all(sql, [userId, ...idArray]);
+  await attachGenres(database, songs);
+  for (const song of songs) {
+    song.liked = !!song.liked;
+    song.hasCover = !!song.cover_path;
+  }
+  return songs;
+}
+
+export async function getArtistIdByName(name) {
+  const database = await getDb();
+  const result = await database.get('SELECT id FROM artists WHERE name = ?', [name]);
+  return result?.id || null;
+}
+
+// ============================================================
+// FUNCIONES PARA ÁLBUMES CON PAGINACIÓN
+// ============================================================
+
+// Agrupa álbumes del mismo artista con nombres similares (helper)
+function mergeAlbums(items) {
+  const grouped = new Map();
+  for (const item of items) {
+    const baseName = normalizeText(item.name).split(/[:-–()]/)[0].trim();
+    const key = `${item.artist}|${baseName}|${item.year || 'null'}`;
+
+    if (!grouped.has(key)) {
+      grouped.set(key, item);
+    } else {
+      const existing = grouped.get(key);
+      // Fusionar: mantener el que tenga más canciones o portada
+      if (item.song_count > existing.song_count || (!existing.cover_path && item.cover_path)) {
+        grouped.set(key, item);
+      }
+    }
+  }
+  return Array.from(grouped.values());
+}
+
+export async function getAlbumsWithPagination({ userId = null, limit = 100, offset = 0, search = '', minSongs = 0 } = {}) {
+  const database = await getDb();
+
+  let total;
+  let items;
+
+  if (!search) {
+    // Sin búsqueda: paginación directa en SQL (rápido).
+    let sql = `
+      SELECT
+        al.id,
+        al.name,
+        a.name AS artist,
+        al.year,
+        al.cover_path,
+        (SELECT COUNT(*) FROM songs s
+          WHERE s.album_id = al.id
+            AND s.id NOT IN (SELECT song_id FROM trashed_songs)) AS song_count,
+        (SELECT s.id FROM songs s
+         WHERE s.album_id = al.id
+           AND s.id NOT IN (SELECT song_id FROM trashed_songs)
+         LIMIT 1) AS coverId
+      FROM albums al
+      LEFT JOIN artists a ON al.main_artist_id = a.id
