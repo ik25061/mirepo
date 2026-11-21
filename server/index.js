@@ -300,6 +300,57 @@ app.post('/api/auth/logout', async (req, res) => {
 });
 
 // ============================================================
+// AUTENTICACIÓN DE API
+// Login/registro/verificación y sondas de disponibilidad son públicas.
+// El resto de /api requiere un token Bearer válido. EventSource no permite
+// enviar cabeceras personalizadas, por eso el endpoint SSE admite token en query.
+// Cuando una petición incluye userId, debe coincidir con el propietario del token.
+// ============================================================
+const PUBLIC_API_PATHS = new Set([
+  '/test',
+  '/config/ip',
+  '/auth/register',
+  '/auth/login',
+  '/auth/verify',
+  '/auth/logout',
+  '/playlists/public'
+]);
+
+app.use('/api', async (req, res, next) => {
+  const apiPath = (req.path || '/').replace(/\/+$/, '') || '/';
+  if (PUBLIC_API_PATHS.has(apiPath)) return next();
+
+  const authorization = req.get('authorization') || '';
+  const bearerToken = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
+  const token = bearerToken || (apiPath === '/rescan-stream' ? req.query.token : null);
+  if (!token || typeof token !== 'string') {
+    return res.status(401).json({ error: 'Autenticación requerida' });
+  }
+
+  try {
+    const user = await db.getUserByToken(token);
+    if (!user) return res.status(401).json({ error: 'Sesión no válida o caducada' });
+
+    const suppliedUserId = req.query.userId ?? req.body?.userId;
+    if (suppliedUserId != null && String(suppliedUserId) !== String(user.id)) {
+      return res.status(403).json({ error: 'No puedes operar sobre otra cuenta' });
+    }
+
+    const settingsUser = apiPath.match(/^\/users\/([^/]+)\/settings$/);
+    if (settingsUser && String(settingsUser[1]) !== String(user.id)) {
+      return res.status(403).json({ error: 'No puedes acceder a los ajustes de otra cuenta' });
+    }
+
+    req.authUser = { id: user.id, username: user.username, role: user.role || 'USER' };
+    req.authUserId = String(user.id);
+    return next();
+  } catch (error) {
+    console.error('[auth] Error validando token:', error.message);
+    return res.status(500).json({ error: 'No se pudo validar la sesión' });
+  }
+});
+
+// ============================================================
 // RUTAS - BIBLIOTECA
 // ============================================================
 
