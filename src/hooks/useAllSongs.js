@@ -139,9 +139,6 @@ export function useAllSongs({ enabled = true } = {}) {
           console.warn('[useAllSongs] Error leyendo caché offline:', cacheError);
           setError(err.message);
         }
-        } catch (e) {
-          setError(err.message);
-        }
       }
     } finally {
       if (mountedRef.current) {
