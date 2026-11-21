@@ -10,12 +10,14 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api.js';
+import { useDownload } from '../context/DownloadContext.jsx';
 
 const libraryCacheKey = (userId) => userId ? `mirepo_lastLibrary_page:${encodeURIComponent(userId)}` : null;
 
 // HOOK PRINCIPAL
 export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {}) {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { updateLiked, markSongDisliked } = useDownload();
   const userId = user?.id;
 
   // ============================================================
@@ -360,14 +362,21 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
     });
     
     onToggleLiked?.(songId, newLiked);
-    
+
+    // Las interacciones offline se guardan en la cola persistente y se envían
+    // al servidor al recuperar conexión, aunque la canción no esté descargada.
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      await updateLiked(songId, newLiked);
+      return;
+    }
+
     try {
       await api.like(songId, newLiked, userId);
     } catch {
       setSongs((prev) => prev.map((s) => (s.id === songId ? { ...s, liked: !newLiked } : s)));
       onToggleLiked?.(songId, !newLiked);
     }
-  }, [songs, userId, onToggleLiked]);
+  }, [songs, userId, onToggleLiked, updateLiked]);
 
   // ============================================================
   // DISLIKE CANCIÓN
@@ -375,8 +384,12 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
   const dislikeSong = useCallback(async (song) => {
     setSongs((prev) => prev.filter((s) => s.id !== song.id));
     onRemoveSong?.(song.id);
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      markSongDisliked(song.id);
+      return;
+    }
     await api.hideSong(song.id, userId);
-  }, [userId, onRemoveSong]);
+  }, [userId, onRemoveSong, markSongDisliked]);
 
   // ============================================================
   // DISLIKE ARTISTA
