@@ -35,7 +35,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Range', 'Origin', 'Accept'],
   exposedHeaders: ['Content-Range', 'Accept-Ranges'],
-  credentials: true
+  credentials: false
 }));
 app.use(express.json());
 app.use('/songs', express.static(MUSIC_DIR));
