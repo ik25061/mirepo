@@ -11,12 +11,15 @@ async function probeServer(baseUrl) {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 1500);
-    const response = await fetch(`${baseUrl}/api/test`, {
-      method: 'GET',
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    return response.ok;
+    try {
+      const response = await fetch(`${baseUrl}/api/test`, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      return response.ok;
+    } finally {
+      clearTimeout(timeout);
+    }
   } catch {
     return false;
   }
@@ -27,22 +30,31 @@ export async function detectServerIP() {
     return '';
   }
 
-  const storedUrl = window.localStorage.getItem(API_URL_STORAGE_KEY);
+  let storedUrl = window.localStorage.getItem(API_URL_STORAGE_KEY);
   if (storedUrl) {
     try {
       const storedPort = new URL(storedUrl).port;
       if (storedPort && storedPort !== DEFAULT_PORT) {
         console.warn(`⚠️ Puerto guardado (${storedPort}) obsoleto. Se re-detectará el servidor en el puerto ${DEFAULT_PORT}.`);
         window.localStorage.removeItem(API_URL_STORAGE_KEY);
-      } else {
+        storedUrl = null;
+      } else if (!navigator.onLine || await probeServer(storedUrl)) {
         API_URL = storedUrl.replace(/\/$/, '');
         return API_URL;
+      } else {
+        console.warn('[API] El servidor guardado no responde; se intentará detectar de nuevo.');
+        window.localStorage.removeItem(API_URL_STORAGE_KEY);
+        storedUrl = null;
       }
     } catch {
       window.localStorage.removeItem(API_URL_STORAGE_KEY);
+      storedUrl = null;
     }
   }
 
+  // No abrir un prompt de configuración cuando el dispositivo está sin conexión.
+  // La detección se reintentará al recibir el evento online.
+  if (!navigator.onLine) return '';
   const isCapacitor = window.location.protocol === 'capacitor:' || window.Capacitor?.isNativePlatform?.();
   if (!isCapacitor) {
     API_URL = '';
@@ -79,12 +91,24 @@ export function getApiUrl() {
 async function ensureApiUrl() {
   if (API_URL) return API_URL;
   if (!apiUrlPromise) {
-    apiUrlPromise = detectServerIP().catch((err) => {
-      console.warn('No se pudo inicializar la URL del servidor:', err);
-      return '';
-    });
+    apiUrlPromise = detectServerIP()
+      .catch((err) => {
+        console.warn('No se pudo inicializar la URL del servidor:', err);
+        return '';
+      })
+      .finally(() => {
+        // Si el inicio ocurrió offline, permitir un nuevo intento al reconectar.
+        if (!API_URL) apiUrlPromise = null;
+      });
   }
   return apiUrlPromise;
+}
+// Si la conexión vuelve, descartar una URL fallida o una detección vacía.
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    API_URL = '';
+    apiUrlPromise = null;
+  });
 }
 
 // ====== FUNCIONES DE API ======
