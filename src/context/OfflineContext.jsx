@@ -93,10 +93,12 @@ export function OfflineProvider({ children }) {
   const [localLikes, setLocalLikes] = useState(() => loadLocalLikes());
   const [supported, setSupported] = useState(false);
   const localUrlCacheRef = useRef(new Map());
+  const localObjectUrlsRef = useRef(new Set());
 
   useEffect(() => {
     return () => {
-      localUrlCacheRef.current.forEach((url) => URL.revokeObjectURL(url));
+      localObjectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      localObjectUrlsRef.current.clear();
       localUrlCacheRef.current.clear();
     };
   }, []);
@@ -122,6 +124,7 @@ export function OfflineProvider({ children }) {
     const file = await song.fileHandle.getFile();
     const objectUrl = URL.createObjectURL(file);
     localUrlCacheRef.current.set(song.id, objectUrl);
+    localObjectUrlsRef.current.add(objectUrl);
     return objectUrl;
   }, []);
 
