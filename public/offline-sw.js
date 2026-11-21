@@ -5,7 +5,19 @@ const APP_SHELL = ['/', '/index.html'];
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
+      .then(async (cache) => {
+        const response = await fetch('/index.html');
+        if (!response.ok) throw new Error('No se pudo descargar index.html');
+        const html = await response.clone().text();
+        await cache.put('/index.html', response.clone());
+        await cache.put('/', response.clone());
+
+        // Precargar los bundles JS/CSS que Vite referencia desde index.html.
+        const assetPaths = [...html.matchAll(/(?:src|href)=["']([^"']+)["']/g)]
+          .map((match) => match[1])
+          .filter((path) => path.startsWith('/') && /\.(js|css|woff2?|svg)$/i.test(path));
+        await Promise.allSettled(assetPaths.map((path) => cache.add(path)));
+      })
       .catch((error) => console.warn('[Mirepo SW] No se pudo precargar la app:', error))
   );
   self.skipWaiting();
