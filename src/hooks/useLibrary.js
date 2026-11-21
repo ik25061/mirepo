@@ -11,6 +11,8 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api.js';
 
+const libraryCacheKey = (userId) => userId ? `mirepo_lastLibrary:${encodeURIComponent(userId)}` : null;
+
 // HOOK PRINCIPAL
 export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {}) {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -99,6 +101,16 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
       const paging = data.pagination || { offset: 0, limit: incoming.length, total };
 
       setSongs(incoming);
+      try {
+        const cacheKey = libraryCacheKey(userId);
+        if (cacheKey) window.localStorage.setItem(cacheKey, JSON.stringify({
+          songs: incoming,
+          counts: { total, trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 },
+          savedAt: Date.now(),
+        }));
+      } catch (cacheError) {
+        console.warn('[useLibrary] No se pudo guardar la caché offline:', cacheError);
+      }
       setCounts({ 
         total, 
         trash: typeof data.counts?.trash === 'number' ? data.counts.trash : 0 
@@ -113,8 +125,35 @@ export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {})
       
     } catch (err) {
       console.error('[useLibrary] ❌ Error cargando:', err);
-      setError(err.message);
-      setHasMore(false);
+      let restored = false;
+      try {
+        const cacheKey = libraryCacheKey(userId);
+        const cachedRaw = cacheKey ? window.localStorage.getItem(cacheKey) : null;
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw);
+          if (Array.isArray(cached)) {
+            // Compatibilidad con una caché anterior que guardaba directamente el array.
+            setSongs(cached);
+            setCounts({ total: cached.length, trash: 0 });
+          } else if (Array.isArray(cached.songs)) {
+            setSongs(cached.songs);
+            setCounts(cached.counts || { total: cached.songs.length, trash: 0 });
+          } else {
+            throw new Error('Formato de caché de biblioteca no válido');
+          }
+          setHasMore(false);
+          setError(null);
+          initialLoadDoneRef.current = true;
+          restored = true;
+          console.info('[useLibrary] Biblioteca restaurada desde caché local');
+        }
+      } catch (cacheError) {
+        console.warn('[useLibrary] No se pudo restaurar la caché offline:', cacheError);
+      }
+      if (!restored) {
+        setError(err.message);
+        setHasMore(false);
+      }
     } finally {
       setLoading(false);
     }
