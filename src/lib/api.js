@@ -52,36 +52,22 @@ export async function detectServerIP() {
     }
   }
 
-  // No abrir un prompt de configuración cuando el dispositivo está sin conexión.
-  // La detección se reintentará al recibir el evento online.
-  if (!navigator.onLine) return '';
-  const isCapacitor = window.location.protocol === 'capacitor:' || window.Capacitor?.isNativePlatform?.();
-  if (!isCapacitor) {
-    API_URL = '';
+  // La web utiliza rutas relativas (mismo origen o proxy de Vite).
+  // Solo se usa una URL absoluta cuando se configura VITE_SERVER_HOST.
+  // No se sondea localhost ni se muestran prompts al usuario.
+  if (!navigator.onLine || !DEFAULT_HOST.trim()) return '';
+
+  const configuredUrl = /^https?:\\/\\//i.test(DEFAULT_HOST)
+    ? DEFAULT_HOST.replace(/\\/$/, '')
+    : `http://${DEFAULT_HOST.replace(/\\/$/, '')}:${DEFAULT_PORT}`;
+
+  if (await probeServer(configuredUrl)) {
+    API_URL = configuredUrl;
+    window.localStorage.setItem(API_URL_STORAGE_KEY, API_URL);
     return API_URL;
   }
 
-  const candidates = [
-    `http://localhost:${DEFAULT_PORT}`,
-    `http://127.0.0.1:${DEFAULT_PORT}`,
-    `http://10.0.2.2:${DEFAULT_PORT}`,
-    `http://${window.location.hostname}:${DEFAULT_PORT}`,
-  ];
-
-  for (const candidate of candidates) {
-    if (await probeServer(candidate)) {
-      API_URL = candidate;
-      window.localStorage.setItem(API_URL_STORAGE_KEY, API_URL);
-      return API_URL;
-    }
-  }
-
-  const defaultHost = import.meta.env.VITE_SERVER_HOST || DEFAULT_HOST || 'localhost';
-  const enteredIp = window.prompt('Ingresa la IP de tu computadora (WiFi):', defaultHost);
-  const normalizedIp = enteredIp ? enteredIp.replace(/^https?:\/\//, '').replace(/\/$/, '') : defaultHost;
-  API_URL = `http://${normalizedIp}:${DEFAULT_PORT}`;
-  window.localStorage.setItem(API_URL_STORAGE_KEY, API_URL);
-  return API_URL;
+  return '';
 }
 
 export function getApiUrl() {
