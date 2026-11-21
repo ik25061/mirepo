@@ -7,6 +7,47 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api.js';
+const LIBRARY_CACHE_DB = 'mirepo-library-cache';
+const LIBRARY_CACHE_STORE = 'libraries';
+
+function openLibraryCacheDb() {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') return reject(new Error('IndexedDB no disponible'));
+    const request = indexedDB.open(LIBRARY_CACHE_DB, 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(LIBRARY_CACHE_STORE)) {
+        request.result.createObjectStore(LIBRARY_CACHE_STORE);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveLibraryCache(userId, songs) {
+  if (!userId) return;
+  const db = await openLibraryCacheDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(LIBRARY_CACHE_STORE, 'readwrite');
+    tx.objectStore(LIBRARY_CACHE_STORE).put({ songs, savedAt: Date.now() }, String(userId));
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error); };
+    tx.onabort = () => { db.close(); reject(tx.error || new Error('Caché cancelada')); };
+  });
+}
+
+async function readLibraryCache(userId) {
+  if (!userId) return null;
+  const db = await openLibraryCacheDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(LIBRARY_CACHE_STORE, 'readonly');
+    const request = tx.objectStore(LIBRARY_CACHE_STORE).get(String(userId));
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+    tx.oncomplete = () => db.close();
+    tx.onerror = () => { db.close(); reject(tx.error); };
+  });
+}
 
 export function useAllSongs({ enabled = true } = {}) {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -52,13 +93,19 @@ export function useAllSongs({ enabled = true } = {}) {
           liked: s.liked || false
         }));
         setAllSongs(songs);
-        // Guardar caché local para fallback offline
+        // Guardar biblioteca completa en IndexedDB (sin el límite pequeño de localStorage).
         try {
-          if (typeof window !== 'undefined' && songs) {
-            if (cacheKey) window.localStorage.setItem(cacheKey, JSON.stringify({ songs, savedAt: Date.now() }));
+          await saveLibraryCache(userId, songs);
+        } catch (cacheError) {
+          console.warn('[useAllSongs] No se pudo guardar caché IndexedDB:', cacheError);
+        }
+        // Mantener una copia secundaria pequeña/rápida en localStorage.
+        try {
+          if (typeof window !== 'undefined' && songs && cacheKey) {
+            window.localStorage.setItem(cacheKey, JSON.stringify({ songs, savedAt: Date.now() }));
           }
-        } catch (err) {
-          console.warn('[useAllSongs] No se pudo guardar caché:', err);
+        } catch (cacheError) {
+          console.warn('[useAllSongs] No se pudo guardar caché localStorage:', cacheError);
         }
         setError(null);
         loadedRef.current = true;
@@ -69,17 +116,29 @@ export function useAllSongs({ enabled = true } = {}) {
       // Intentar cargar versión almacenada localmente
       if (mountedRef.current) {
         try {
-          const cached = typeof window !== 'undefined' && cacheKey ? window.localStorage.getItem(cacheKey) : null;
-          if (cached) {
-            const parsed = JSON.parse(cached || 'null');
-            const songs = Array.isArray(parsed) ? parsed : (parsed?.songs || []);
-            setAllSongs(songs);
+          const indexedCache = await readLibraryCache(userId);
+          if (indexedCache && Array.isArray(indexedCache.songs)) {
+            setAllSongs(indexedCache.songs);
             setError(null);
             loadedRef.current = true;
-            console.log('[useAllSongs] ⚠️ Usando caché local, canciones:', songs.length);
+            console.log('[useAllSongs] Usando biblioteca IndexedDB offline:', indexedCache.songs.length);
           } else {
-            setError(err.message);
+            const cached = typeof window !== 'undefined' && cacheKey ? window.localStorage.getItem(cacheKey) : null;
+            if (cached) {
+              const parsed = JSON.parse(cached || 'null');
+              const songs = Array.isArray(parsed) ? parsed : (parsed?.songs || []);
+              setAllSongs(songs);
+              setError(null);
+              loadedRef.current = true;
+              console.log('[useAllSongs] Usando caché local, canciones:', songs.length);
+            } else {
+              setError(err.message);
+            }
           }
+        } catch (cacheError) {
+          console.warn('[useAllSongs] Error leyendo caché offline:', cacheError);
+          setError(err.message);
+        }
         } catch (e) {
           setError(err.message);
         }
