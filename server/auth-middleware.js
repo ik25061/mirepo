@@ -19,11 +19,11 @@ export function createRequireApiAuth({ getUserByToken }) {
   }
 
   return async function requireApiAuth(req, res, next) {
-    const apiPath = (req.path || '/').replace(/\\/+$/, '') || '/';
+    const apiPath = (req.path || '/').replace(/\/+$/, '') || '/';
     if (PUBLIC_API_PATHS.has(apiPath)) return next();
 
     const authorization = req.get?.('authorization') || req.headers?.authorization || '';
-    const bearerToken = authorization.match(/^Bearer\\s+(.+)$/i)?.[1];
+    const bearerToken = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
     // EventSource no permite establecer cabeceras personalizadas.
     const token = bearerToken || (apiPath === '/rescan-stream' ? req.query?.token : null);
 
@@ -40,7 +40,7 @@ export function createRequireApiAuth({ getUserByToken }) {
         return res.status(403).json({ error: 'No puedes operar sobre otra cuenta' });
       }
 
-      const settingsUser = apiPath.match(/^\\/users\\/([^/]+)\\/settings$/);
+      const settingsUser = apiPath.match(/^\/users\/([^/]+)\/settings$/);
       if (settingsUser && String(settingsUser[1]) !== String(user.id)) {
         return res.status(403).json({ error: 'No puedes acceder a los ajustes de otra cuenta' });
       }
