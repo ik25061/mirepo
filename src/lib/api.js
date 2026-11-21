@@ -204,7 +204,15 @@ export const api = {
 
   rescan: () => request('/api/rescan', { method: 'POST' }),
   getLyrics: (songId) => request(`/api/lyrics/${encodeURIComponent(songId)}`),
-  rescanStreamUrl: () => `${getApiUrl() || ''}/api/rescan-stream`,
+  // EventSource no admite cabeceras Authorization; el token se pasa solo
+  // para este flujo SSE y el servidor lo valida antes de abrir la conexión.
+  rescanStreamUrl: () => {
+    const token = typeof window !== 'undefined'
+      ? window.localStorage.getItem('mirepo_token')
+      : null;
+    const query = token ? `?token=${encodeURIComponent(token)}` : '';
+    return `${getApiUrl() || ''}/api/rescan-stream${query}`;
+  },
 
   like: (id, liked, userId) => 
     request(`/api/songs/${id}/like`, {
