@@ -31,8 +31,7 @@ export default function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOp
 
   return (
     <div
-      onClick={onOpen}
-      className="flex items-center gap-3 cursor-pointer flex-shrink-0"
+      className="flex items-center gap-3 flex-shrink-0"
       style={{
         height: 48,
         minHeight: 48,
@@ -43,28 +42,36 @@ export default function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOp
         flexShrink: 0,
       }}
     >
-      <div
-        className="flex-shrink-0 flex items-center justify-center rounded-lg overflow-hidden"
-        style={{ width: 36, height: 36, background: '#383838' }}
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={`Abrir reproductor: ${track.title} — ${track.artist}`}
+        className="flex min-w-0 flex-1 items-center gap-3 border-0 bg-transparent p-0 text-left"
       >
-        {track.cover ? (
-          <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
-        ) : (
-          <Music2 size={14} style={{ color: '#a7a7a7' }} />
-        )}
-      </div>
+        <div
+          className="flex-shrink-0 flex items-center justify-center rounded-lg overflow-hidden"
+          style={{ width: 36, height: 36, background: '#383838' }}
+        >
+          {track.cover ? (
+            <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
+          ) : (
+            <Music2 size={14} style={{ color: '#a7a7a7' }} />
+          )}
+        </div>
+  
+        <div className="flex-1 min-w-0">
+          <p className="text-white truncate text-xs font-medium">{track.title}</p>
+          <p className="truncate text-[10px] text-muted-foreground">{track.artist}</p>
+        </div>
+  
+        </button>
 
-      <div className="flex-1 min-w-0">
-        <p className="text-white truncate text-xs font-medium">{track.title}</p>
-        <p className="truncate text-[10px] text-muted-foreground">{track.artist}</p>
-      </div>
-
-      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-1 flex-shrink-0">
         {/* Botón Like */}
         {onLike && (
           <button
             onClick={() => onLike(track)}
-            className="flex items-center justify-center w-6 h-6 rounded-full"
+            className="flex items-center justify-center w-10 h-10 rounded-full" aria-label={`Me gusta ${track.title}`} title="Me gusta"
           >
             <Heart size={12} fill={likedIds?.has(track.id) ? 'currentColor' : 'none'} className={likedIds?.has(track.id) ? 'text-red-500' : 'text-white'} />
           </button>
@@ -74,7 +81,7 @@ export default function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOp
         {onDislike && (
           <button
             onClick={() => onDislike(track)}
-            className="flex items-center justify-center w-6 h-6 rounded-full"
+            className="flex items-center justify-center w-10 h-10 rounded-full" aria-label={`No me gusta ${track.title}`} title="No me gusta"
           >
             <ThumbsDown size={12} className="text-white" />
           </button>
@@ -82,7 +89,7 @@ export default function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOp
 
         <button
           onClick={onPlayPause}
-          className="flex items-center justify-center w-7 h-7 rounded-full"
+          className="flex items-center justify-center w-10 h-10 rounded-full" aria-label={isPlaying ? "Pausar" : "Reproducir"} title={isPlaying ? "Pausar" : "Reproducir"}
         >
           {isPlaying ? (
             <Pause size={16} fill="white" className="text-white" />
@@ -90,7 +97,7 @@ export default function MiniPlayer({ track, isPlaying, onPlayPause, onNext, onOp
             <Play size={16} fill="white" className="text-white ml-0.5" />
           )}
         </button>
-        <button onClick={onNext} className="flex items-center justify-center w-7 h-7">
+        <button onClick={onNext} className="flex items-center justify-center w-10 h-10" aria-label="Siguiente canción" title="Siguiente canción">
           <SkipForward size={16} className="text-white" />
         </button>
       </div>
