@@ -692,33 +692,54 @@ app.put('/api/users/:id/settings', async (req, res) => {
 // ============================================================
 
 app.get('/api/playlists', async (req, res) => {
-  const playlists = await db.getPlayLists(req.query.userId);
+  const playlists = await db.getPlayLists(req.authUserId);
   res.json({ playlists: playlists.map(p => ({ ...p, is_public: !!p.is_public })) });
 });
 app.get('/api/playlists/public', async (_req, res) => {
   const playlists = await db.getPlayLists(null);
   res.json({ playlists: playlists.filter(p => !!p.is_public) });
 });
+
+async function getOwnedPlaylist(req, res, allowPublicRead = false) {
+  const playlist = await db.getPlayList(req.params.id);
+  if (!playlist) {
+    res.status(404).json({ error: 'Lista no encontrada' });
+    return null;
+  }
+  const isOwner = String(playlist.user_id) === String(req.authUserId);
+  if (!isOwner && !(allowPublicRead && playlist.is_public)) {
+    res.status(403).json({ error: 'No tienes permiso para acceder a esta lista' });
+    return null;
+  }
+  return playlist;
+}
+
 app.get('/api/playlists/:id', async (req, res) => {
-  const pl = await db.getPlayList(req.params.id);
-  if (!pl) return res.status(404).json({ error: 'Lista no encontrada' });
+  const pl = await getOwnedPlaylist(req, res, true);
+  if (!pl) return;
   res.json({ playlist: pl });
 });
 app.post('/api/playlists', async (req, res) => {
-  const pl = await db.createPlayList(req.body.name, req.body.description, req.body.userId, req.body.isPublic);
+  const pl = await db.createPlayList(req.body.name, req.body.description, req.authUserId, req.body.isPublic);
   res.json({ playlist: pl });
 });
 app.patch('/api/playlists/:id', async (req, res) => {
+  const owned = await getOwnedPlaylist(req, res);
+  if (!owned) return;
   const pl = await db.updatePlayList(req.params.id, req.body);
   res.json({ playlist: pl });
 });
 app.post('/api/playlists/:id/songs', async (req, res) => {
+  const owned = await getOwnedPlaylist(req, res);
+  if (!owned) return;
   const pl = await db.addSongToPlayList(req.params.id, req.body.songId);
   res.json({ playlist: pl });
 });
 app.post('/api/playlists/:id/songs/bulk', async (req, res) => {
-  const ids = req.body.songIds || [];
-  let pl = null;
+  const owned = await getOwnedPlaylist(req, res);
+  if (!owned) return;
+  const ids = Array.isArray(req.body.songIds) ? req.body.songIds : [];
+  let pl = owned;
   for (const sid of ids) {
     try { pl = await db.addSongToPlayList(req.params.id, sid); } catch (e) {}
   }
@@ -726,10 +747,14 @@ app.post('/api/playlists/:id/songs/bulk', async (req, res) => {
   res.json({ playlist: pl });
 });
 app.delete('/api/playlists/:id/songs', async (req, res) => {
+  const owned = await getOwnedPlaylist(req, res);
+  if (!owned) return;
   const pl = await db.removeSongFromPlayList(req.params.id, req.body.songId);
   res.json({ playlist: pl });
 });
 app.delete('/api/playlists/:id', async (req, res) => {
+  const owned = await getOwnedPlaylist(req, res);
+  if (!owned) return;
   await db.deletePlayList(req.params.id);
   res.json({ ok: true });
 });
