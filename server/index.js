@@ -738,13 +738,21 @@ app.post('/api/playlists/:id/songs', async (req, res) => {
 app.post('/api/playlists/:id/songs/bulk', async (req, res) => {
   const owned = await getOwnedPlaylist(req, res);
   if (!owned) return;
-  const ids = Array.isArray(req.body.songIds) ? req.body.songIds : [];
-  let pl = owned;
-  for (const sid of ids) {
-    try { pl = await db.addSongToPlayList(req.params.id, sid); } catch (e) {}
+  const ids = req.body.songIds;
+  if (!Array.isArray(ids) || ids.some(id => typeof id !== 'string' || !id.trim())) {
+    return res.status(400).json({ error: 'songIds debe ser una lista de identificadores válidos' });
   }
-  if (!pl) pl = await db.getPlayList(req.params.id);
-  res.json({ playlist: pl });
+  let playlist = owned;
+  for (const songId of ids) {
+    try {
+      // La inserción es idempotente (INSERT OR IGNORE): reintentar el lote
+      // después de una caída de red no duplica canciones ya añadidas.
+      playlist = await db.addSongToPlayList(req.params.id, songId);
+    } catch (error) {
+      return res.status(400).json({ error: 'No se pudo añadir una canción a la lista' });
+    }
+  }
+  res.json({ playlist });
 });
 app.delete('/api/playlists/:id/songs', async (req, res) => {
   const owned = await getOwnedPlaylist(req, res);
