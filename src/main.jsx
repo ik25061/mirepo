@@ -12,7 +12,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/src/offline-sw.js')
+    navigator.serviceWorker.register('/offline-sw.js', { scope: '/' })
       .then((registration) => {
         console.log('Service Worker registrado con scope:', registration.scope);
       })
