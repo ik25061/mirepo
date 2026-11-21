@@ -28,6 +28,8 @@ export default function Sidebar({ view, onNavigate, trashCount = 0 }) {
             <button
               key={id}
               onClick={() => onNavigate({ type: id })}
+              aria-label={label}
+              title={label}
               className={`flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm font-medium transition sm:px-3 ${
                 active
                   ? 'bg-surface-2 text-foreground'
