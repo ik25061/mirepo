@@ -57,9 +57,16 @@ export async function detectServerIP() {
   // No se sondea localhost ni se muestran prompts al usuario.
   if (!navigator.onLine || !DEFAULT_HOST.trim()) return '';
 
-  const configuredUrl = /^https?:\\/\\//i.test(DEFAULT_HOST)
-    ? DEFAULT_HOST.replace(/\\/$/, '')
-    : `http://${DEFAULT_HOST.replace(/\\/$/, '')}:${DEFAULT_PORT}`;
+  let configuredUrl;
+  try {
+    const host = DEFAULT_HOST.includes('://') ? DEFAULT_HOST : `http://${DEFAULT_HOST}`;
+    const parsedUrl = new URL(host);
+    if (!parsedUrl.port) parsedUrl.port = DEFAULT_PORT;
+    configuredUrl = parsedUrl.origin;
+  } catch {
+    console.warn('[API] VITE_SERVER_HOST no contiene una dirección válida.');
+    return '';
+  }
 
   if (await probeServer(configuredUrl)) {
     API_URL = configuredUrl;
