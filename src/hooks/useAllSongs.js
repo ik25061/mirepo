@@ -17,6 +17,7 @@ export function useAllSongs({ enabled = true } = {}) {
   const mountedRef = useRef(true);
   const loadedRef = useRef(false);
   const prevUserIdRef = useRef(userId);
+  const cacheKey = userId ? `mirepo_lastLibrary:${encodeURIComponent(userId)}` : null;
 
   const loadAllSongs = useCallback(async (force = false) => {
     if (!enabled) {
@@ -54,7 +55,7 @@ export function useAllSongs({ enabled = true } = {}) {
         // Guardar caché local para fallback offline
         try {
           if (typeof window !== 'undefined' && songs) {
-            window.localStorage.setItem('mirepo_lastLibrary', JSON.stringify(songs));
+            if (cacheKey) window.localStorage.setItem(cacheKey, JSON.stringify({ songs, savedAt: Date.now() }));
           }
         } catch (err) {
           console.warn('[useAllSongs] No se pudo guardar caché:', err);
@@ -68,10 +69,11 @@ export function useAllSongs({ enabled = true } = {}) {
       // Intentar cargar versión almacenada localmente
       if (mountedRef.current) {
         try {
-          const cached = typeof window !== 'undefined' ? window.localStorage.getItem('mirepo_lastLibrary') : null;
+          const cached = typeof window !== 'undefined' && cacheKey ? window.localStorage.getItem(cacheKey) : null;
           if (cached) {
-            const songs = JSON.parse(cached || '[]');
-            setAllSongs(songs || []);
+            const parsed = JSON.parse(cached || 'null');
+            const songs = Array.isArray(parsed) ? parsed : (parsed?.songs || []);
+            setAllSongs(songs);
             setError(null);
             loadedRef.current = true;
             console.log('[useAllSongs] ⚠️ Usando caché local, canciones:', songs.length);
@@ -87,7 +89,7 @@ export function useAllSongs({ enabled = true } = {}) {
         setLoading(false);
       }
     }
-  }, [userId, enabled]);
+  }, [userId, enabled, cacheKey]);
 
   useEffect(() => {
     mountedRef.current = true;
