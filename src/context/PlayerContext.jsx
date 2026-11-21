@@ -166,7 +166,6 @@ export function PlayerProvider({ children }) {
       try {
         const downloaded = await getDownloadedSong(song.id);
         if (downloaded?.audioBlob instanceof Blob) {
-          if (downloadedObjectUrlRef.current) { URL.revokeObjectURL(downloadedObjectUrlRef.current); downloadedObjectUrlRef.current = null; }
           const blobUrl = URL.createObjectURL(downloaded.audioBlob);
           downloadedObjectUrlRef.current = blobUrl;
           sourceUrl = blobUrl;
