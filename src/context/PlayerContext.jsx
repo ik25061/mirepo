@@ -497,8 +497,21 @@ export function PlayerProvider({ children }) {
     if (!('mediaSession' in navigator)) return;
     const session = navigator.mediaSession;
     const handlers = {
-      play: () => togglePlay(),
-      pause: () => togglePlay(),
+      play: () => {
+        const audio = getActive();
+        if (audio?.paused && audio.src) {
+          const playPromise = audio.play();
+          if (playPromise) playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          else setIsPlaying(true);
+        }
+      },
+      pause: () => {
+        const audio = getActive();
+        if (audio && !audio.paused) {
+          audio.pause();
+          setIsPlaying(false);
+        }
+      },
       previoustrack: () => prev(),
       nexttrack: () => next(),
       seekto: (details) => {
