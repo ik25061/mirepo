@@ -112,10 +112,17 @@ async function request(url, options = {}) {
   console.log('📡 Petición a:', fullUrl || url);
   
   try {
+    // El token se lee en cada petición para reflejar inmediatamente login/logout
+    // sin reconstruir el cliente ni mantener una copia obsoleta en memoria.
+    const token = typeof window !== 'undefined'
+      ? window.localStorage.getItem('mirepo_token')
+      : null;
+
     const response = await fetch(fullUrl, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
     });
