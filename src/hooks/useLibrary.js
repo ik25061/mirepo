@@ -11,7 +11,7 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api.js';
 
-const libraryCacheKey = (userId) => userId ? `mirepo_lastLibrary:${encodeURIComponent(userId)}` : null;
+const libraryCacheKey = (userId) => userId ? `mirepo_lastLibrary_page:${encodeURIComponent(userId)}` : null;
 
 // HOOK PRINCIPAL
 export function useLibrary(onToggleLiked, onRemoveSong, { enabled = true } = {}) {
