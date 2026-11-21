@@ -1,6 +1,5 @@
 const CACHE_PREFIX = 'mirepo-';
 const CACHE_NAME = 'mirepo-shell-v2';
-const APP_SHELL = ['/', '/index.html'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
