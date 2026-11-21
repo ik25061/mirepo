@@ -1,39 +1,42 @@
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import express from 'express';
-import { registerKaraokeRoute, resolveKaraokePath } from './karaoke.js';
+import os from 'node:os';
+import path from 'node:path';
 
-const root = 'E:/karaoke';
-const examples = [
-  '0/03 Dame un Beso y Dime Adiós.mp3',
-  '2/2 Of Amerikaz Most Wanted (feat. Snoop Dogg).mp3'
-];
-const relPath = examples[0];
-const app = express();
-registerKaraokeRoute(app, id => ({ real: { relPath }, second: { relPath: examples[1] }, missing: { relPath: 'A/not-processed.mp3' } })[id], root);
-const server = app.listen(0, '127.0.0.1');
-await new Promise(resolve => server.once('listening', resolve));
-try {
-  const base = `http://127.0.0.1:${server.address().port}/karaoke`;
-  const file = resolveKaraokePath(root, relPath);
-  assert.ok(file);
-  const head = await fetch(`${base}/real`, { method: 'HEAD' });
-  assert.equal(head.status, 200);
-  assert.equal(Number(head.headers.get('content-length')), fs.statSync(file).size);
-  const range = await fetch(`${base}/real`, { headers: { Range: 'bytes=0-31' } });
-  assert.equal(range.status, 206);
-  assert.deepEqual(Buffer.from(await range.arrayBuffer()), fs.readFileSync(file).subarray(0, 32));
-  assert.equal((await fetch(`${base}/missing`)).status, 404);
-  assert.equal((await fetch(`${base}/unknown`)).status, 404);
-  assert.equal(resolveKaraokePath(root, '../musica/0/03 Dame un Beso y Dime Adiós.mp3'), null);
-  for (const [index, id] of ['real', 'second'].entries()) {
-    const filePath = resolveKaraokePath(root, examples[index]);
-    assert.ok(filePath);
-    const response = await fetch(`${base}/${id}`);
-    assert.equal(response.status, 200);
-    assert.match(response.headers.get('content-type'), /audio/);
-    assert.deepEqual(Buffer.from(await response.arrayBuffer()), fs.readFileSync(filePath));
-    console.log(`PASS: HTTP full file matches ${examples[index]}`);
-  }
-  console.log('PASS: real MP3, HEAD, Range bytes match, missing/unknown 404, path containment');
-} finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mirepo-karaoke-'));
+process.env.VITE_KARAOKE_PATH = root;
+
+// Importación dinámica necesaria: karaoke.js lee la carpeta desde el entorno
+// durante la inicialización del módulo.
+const karaoke = await import('./karaoke.js');
+const songPath = path.join(root, 'Artist', 'Album', 'Song.mp3');
+fs.mkdirSync(path.dirname(songPath), { recursive: true });
+fs.writeFileSync(songPath, Buffer.from([0x49, 0x44, 0x33]));
+fs.writeFileSync(path.join(root, 'Other.mp3'), Buffer.from([0x49, 0x44, 0x33]));
+fs.writeFileSync(path.join(root, 'not-audio.txt'), 'ignore');
+
+test.after(() => {
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('indexa instrumentales y resuelve la ruta relativa', () => {
+  karaoke.ensureIndex(true);
+  assert.equal(
+    karaoke.resolveInstrumental('Artist/Album/Song.mp3'),
+    songPath
+  );
+  assert.equal(karaoke.hasInstrumental('Artist/Album/Song.mp3'), true);
+  assert.equal(karaoke.hasInstrumental('Artist/Album/Missing.mp3'), false);
+  assert.equal(karaoke.resolveInstrumental('../outside.mp3'), null);
+});
+
+test('lista solo los ids con instrumental disponible', () => {
+  karaoke.ensureIndex(true);
+  const songs = new Map([
+    ['song-1', { relPath: 'Artist/Album/Song.mp3' }],
+    ['song-2', { relPath: 'Artist/Album/Missing.mp3' }]
+  ]);
+  assert.deepEqual(karaoke.listInstrumentalIds(songs), ['song-1']);
+  assert.equal(karaoke.stats().count, 2);
+});
