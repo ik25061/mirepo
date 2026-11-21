@@ -31,6 +31,8 @@ export default function BottomNav({ activeView, onViewChange, hasCurrentTrack })
             <button
               key={id}
               onClick={() => onViewChange(id)}
+              aria-label={label}
+              title={label}
               className="flex flex-col items-center justify-center flex-1 min-w-0"
               style={{ 
                 color: isActive ? '#fff' : '#a7a7a7',

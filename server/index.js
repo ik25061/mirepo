@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
 
 import * as db from './db.js';
+import { createRequireApiAuth } from './auth-middleware.js';
 import { Meilisearch } from 'meilisearch';
 import { MUSIC_DIR, TRASH_DIR, absolutePath } from './scanner.js';
 import * as pods from './podcasts.js';
@@ -34,7 +35,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Range', 'Origin', 'Accept'],
   exposedHeaders: ['Content-Range', 'Accept-Ranges'],
-  credentials: true
+  credentials: false
 }));
 app.use(express.json());
 app.use('/songs', express.static(MUSIC_DIR));
@@ -300,13 +301,18 @@ app.post('/api/auth/logout', async (req, res) => {
 });
 
 // ============================================================
+// AUTENTICACIÓN DE API
+// ============================================================
+app.use('/api', createRequireApiAuth({ getUserByToken: db.getUserByToken }));
+
+// ============================================================
 // RUTAS - BIBLIOTECA
 // ============================================================
 
 app.get('/api/library', async (req, res) => {
   try {
     const result = await buildLibrary({
-      userId: req.query.userId,
+      userId: req.authUserId,
       limit: parseInt(req.query.limit) || 100,
       offset: parseInt(req.query.offset) || 0,
       likedOnly: req.query.liked === 'true',
@@ -317,7 +323,7 @@ app.get('/api/library', async (req, res) => {
 });
 
 app.get('/api/liked-songs', async (req, res) => {
-  const userId = req.query.userId;
+  const userId = req.authUserId;
   if (!userId) return res.status(400).json({ error: 'userId requerido' });
   try {
     const songs = await db.getLikedSongs(parseInt(userId), parseInt(req.query.limit) || 100, parseInt(req.query.offset) || 0);
@@ -327,7 +333,7 @@ app.get('/api/liked-songs', async (req, res) => {
 });
 
 app.get('/api/hidden-songs', async (req, res) => {
-  const userId = req.query.userId;
+  const userId = req.authUserId;
   if (!userId) return res.status(400).json({ error: 'userId requerido' });
   try {
     const songs = await db.getHiddenSongs(parseInt(userId), parseInt(req.query.limit) || 100, parseInt(req.query.offset) || 0);
@@ -337,7 +343,7 @@ app.get('/api/hidden-songs', async (req, res) => {
 });
 
 app.get('/api/deferred-deletions', async (req, res) => {
-  const userId = Number(req.query.userId);
+  const userId = Number(req.authUserId);
   if (!userId) return res.status(400).json({ error: 'userId requerido' });
   try {
     const limit = Number(req.query.limit) || 100;
@@ -350,14 +356,14 @@ app.get('/api/deferred-deletions', async (req, res) => {
 
 app.post('/api/songs/:id/deferred-deletion', async (req, res) => {
   try {
-    await db.setSongDeferredDeletion(req.params.id, req.body.userId, req.body.marked !== false);
+    await db.setSongDeferredDeletion(req.params.id, req.authUserId, req.body.marked !== false);
     res.json({ ok: true });
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 app.post('/api/songs/:id/like', async (req, res) => {
   try {
-    await db.setSongLiked(req.params.id, req.body.liked, req.body.userId);
+    await db.setSongLiked(req.params.id, req.body.liked, req.authUserId);
     if (songMap.has(req.params.id)) songMap.get(req.params.id).liked = !!req.body.liked;
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -365,7 +371,7 @@ app.post('/api/songs/:id/like', async (req, res) => {
 
 app.post('/api/songs/:id/hide', async (req, res) => {
   try {
-    await db.setSongHidden(req.params.id, req.body.hidden !== false, req.body.userId);
+    await db.setSongHidden(req.params.id, req.body.hidden !== false, req.authUserId);
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -501,7 +507,7 @@ app.put('/api/songs/:id', async (req, res) => {
         }
       } catch (e) { console.warn('[api/songs PUT id3]', e.message); }
     }
-    const songs = await db.getSongsByIds([req.params.id], req.query.userId || req.body?.userId || null);
+    const songs = await db.getSongsByIds([req.params.id], req.authUserId || req.authUserId || null);
     res.json({ success: true, song: songs[0] || null });
   } catch (err) {
     res.status(500).json({ error: String(err.message || 'Error') });
@@ -514,7 +520,7 @@ app.put('/api/songs/:id', async (req, res) => {
 
 app.get('/api/songs/no-album-no-artist', async (req, res) => {
   try {
-    const userId = req.query.userId || null;
+    const userId = req.authUserId || null;
     const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
     const offset = parseInt(req.query.offset, 10) || 0;
     const result = await db.getSongsWithoutAlbumOrArtist({ userId, limit, offset });
@@ -571,7 +577,7 @@ app.post('/api/artists/:id/unhide', async (req, res) => {
 app.get('/api/songs/by-ids', async (req, res) => {
   try {
     const ids = (req.query.ids || '').split(',').filter(Boolean);
-    const userId = req.query.userId;
+    const userId = req.authUserId;
     let likedIds = new Set();
     if (userId) likedIds = await db.getLikedSongIds(userId);
     if (!libraryReady) await loadLibrary();
@@ -588,35 +594,35 @@ app.get('/api/songs/by-ids', async (req, res) => {
 // ============================================================
 
 app.get('/api/artists', async (req, res) => {
-  const r = await db.getArtistsWithPagination({ userId: req.query.userId, limit: parseInt(req.query.limit) || 20, offset: parseInt(req.query.offset) || 0, search: req.query.search, minSongs: parseInt(req.query.minSongs) || 0 });
+  const r = await db.getArtistsWithPagination({ userId: req.authUserId, limit: parseInt(req.query.limit) || 20, offset: parseInt(req.query.offset) || 0, search: req.query.search, minSongs: parseInt(req.query.minSongs) || 0 });
   res.json(r);
 });
 app.get('/api/artists/:id/songs', async (req, res) => {
-  const r = await db.getSongsByArtist({ artistId: req.params.id, userId: req.query.userId, limit: parseInt(req.query.limit) || 100, offset: parseInt(req.query.offset) || 0 });
+  const r = await db.getSongsByArtist({ artistId: req.params.id, userId: req.authUserId, limit: parseInt(req.query.limit) || 100, offset: parseInt(req.query.offset) || 0 });
   res.json(r);
 });
 app.get('/api/albums', async (req, res) => {
-  const r = await db.getAlbumsWithPagination({ userId: req.query.userId, limit: parseInt(req.query.limit) || 20, offset: parseInt(req.query.offset) || 0, search: req.query.search });
+  const r = await db.getAlbumsWithPagination({ userId: req.authUserId, limit: parseInt(req.query.limit) || 20, offset: parseInt(req.query.offset) || 0, search: req.query.search });
   res.json(r);
 });
 app.get('/api/albums/:id/songs', async (req, res) => {
-  const r = await db.getSongsByAlbum({ albumId: req.params.id, userId: req.query.userId, limit: parseInt(req.query.limit) || 100, offset: parseInt(req.query.offset) || 0 });
+  const r = await db.getSongsByAlbum({ albumId: req.params.id, userId: req.authUserId, limit: parseInt(req.query.limit) || 100, offset: parseInt(req.query.offset) || 0 });
   res.json(r);
 });
 app.get('/api/genres', async (req, res) => {
-  const r = await db.getGenresWithPagination({ userId: req.query.userId, limit: parseInt(req.query.limit) || 20, offset: parseInt(req.query.offset) || 0, search: req.query.search });
+  const r = await db.getGenresWithPagination({ userId: req.authUserId, limit: parseInt(req.query.limit) || 20, offset: parseInt(req.query.offset) || 0, search: req.query.search });
   res.json(r);
 });
 app.get('/api/genres/:id/songs', async (req, res) => {
-  const r = await db.getSongsByGenre({ genreId: req.params.id, userId: req.query.userId, limit: parseInt(req.query.limit) || 100, offset: parseInt(req.query.offset) || 0 });
+  const r = await db.getSongsByGenre({ genreId: req.params.id, userId: req.authUserId, limit: parseInt(req.query.limit) || 100, offset: parseInt(req.query.offset) || 0 });
   res.json(r);
 });
 app.get('/api/years', async (req, res) => {
-  const r = await db.getYearsWithPagination({ userId: req.query.userId, limit: parseInt(req.query.limit) || 20, offset: parseInt(req.query.offset) || 0, search: req.query.search });
+  const r = await db.getYearsWithPagination({ userId: req.authUserId, limit: parseInt(req.query.limit) || 20, offset: parseInt(req.query.offset) || 0, search: req.query.search });
   res.json(r);
 });
 app.get('/api/years/:year/songs', async (req, res) => {
-  const r = await db.getSongsByYear({ year: req.params.year, userId: req.query.userId, limit: parseInt(req.query.limit) || 100, offset: parseInt(req.query.offset) || 0 });
+  const r = await db.getSongsByYear({ year: req.params.year, userId: req.authUserId, limit: parseInt(req.query.limit) || 100, offset: parseInt(req.query.offset) || 0 });
   res.json(r);
 });
 
@@ -659,7 +665,7 @@ app.delete('/api/moods/:id', async (req, res) => {
 });
 app.get('/api/moods/:id/songs', async (req, res) => {
   try {
-    const r = await db.getSongsByMood({ moodId: req.params.id, userId: req.query.userId || null, limit: +req.query.limit || 100, offset: +req.query.offset || 0 });
+    const r = await db.getSongsByMood({ moodId: req.params.id, userId: req.authUserId || null, limit: +req.query.limit || 100, offset: +req.query.offset || 0 });
     res.json({ songs: r.songs, pagination: r.pagination });
   } catch (err) { res.status(500).json({ error: String(err.message || 'Error') }); }
 });
@@ -686,44 +692,77 @@ app.put('/api/users/:id/settings', async (req, res) => {
 // ============================================================
 
 app.get('/api/playlists', async (req, res) => {
-  const playlists = await db.getPlayLists(req.query.userId);
+  const playlists = await db.getPlayLists(req.authUserId);
   res.json({ playlists: playlists.map(p => ({ ...p, is_public: !!p.is_public })) });
 });
 app.get('/api/playlists/public', async (_req, res) => {
   const playlists = await db.getPlayLists(null);
   res.json({ playlists: playlists.filter(p => !!p.is_public) });
 });
+
+async function getOwnedPlaylist(req, res, allowPublicRead = false) {
+  const playlist = await db.getPlayList(req.params.id);
+  if (!playlist) {
+    res.status(404).json({ error: 'Lista no encontrada' });
+    return null;
+  }
+  const isOwner = String(playlist.user_id) === String(req.authUserId);
+  if (!isOwner && !(allowPublicRead && playlist.is_public)) {
+    res.status(403).json({ error: 'No tienes permiso para acceder a esta lista' });
+    return null;
+  }
+  return playlist;
+}
+
 app.get('/api/playlists/:id', async (req, res) => {
-  const pl = await db.getPlayList(req.params.id);
-  if (!pl) return res.status(404).json({ error: 'Lista no encontrada' });
+  const pl = await getOwnedPlaylist(req, res, true);
+  if (!pl) return;
   res.json({ playlist: pl });
 });
 app.post('/api/playlists', async (req, res) => {
-  const pl = await db.createPlayList(req.body.name, req.body.description, req.body.userId, req.body.isPublic);
+  const pl = await db.createPlayList(req.body.name, req.body.description, req.authUserId, req.body.isPublic);
   res.json({ playlist: pl });
 });
 app.patch('/api/playlists/:id', async (req, res) => {
+  const owned = await getOwnedPlaylist(req, res);
+  if (!owned) return;
   const pl = await db.updatePlayList(req.params.id, req.body);
   res.json({ playlist: pl });
 });
 app.post('/api/playlists/:id/songs', async (req, res) => {
+  const owned = await getOwnedPlaylist(req, res);
+  if (!owned) return;
   const pl = await db.addSongToPlayList(req.params.id, req.body.songId);
   res.json({ playlist: pl });
 });
 app.post('/api/playlists/:id/songs/bulk', async (req, res) => {
-  const ids = req.body.songIds || [];
-  let pl = null;
-  for (const sid of ids) {
-    try { pl = await db.addSongToPlayList(req.params.id, sid); } catch (e) {}
+  const owned = await getOwnedPlaylist(req, res);
+  if (!owned) return;
+  const ids = req.body.songIds;
+  if (!Array.isArray(ids) || ids.some(id => typeof id !== 'string' || !id.trim())) {
+    return res.status(400).json({ error: 'songIds debe ser una lista de identificadores válidos' });
   }
-  if (!pl) pl = await db.getPlayList(req.params.id);
-  res.json({ playlist: pl });
+  let playlist = owned;
+  for (const songId of ids) {
+    try {
+      // La inserción es idempotente (INSERT OR IGNORE): reintentar el lote
+      // después de una caída de red no duplica canciones ya añadidas.
+      playlist = await db.addSongToPlayList(req.params.id, songId);
+    } catch (error) {
+      return res.status(400).json({ error: 'No se pudo añadir una canción a la lista' });
+    }
+  }
+  res.json({ playlist });
 });
 app.delete('/api/playlists/:id/songs', async (req, res) => {
+  const owned = await getOwnedPlaylist(req, res);
+  if (!owned) return;
   const pl = await db.removeSongFromPlayList(req.params.id, req.body.songId);
   res.json({ playlist: pl });
 });
 app.delete('/api/playlists/:id', async (req, res) => {
+  const owned = await getOwnedPlaylist(req, res);
+  if (!owned) return;
   await db.deletePlayList(req.params.id);
   res.json({ ok: true });
 });
@@ -746,7 +785,7 @@ app.post('/api/playlists/ai-quality/generate', async (req, res) => {
   try {
     const body = req.body || {};
     const result = await runAiQualityPlaylists({
-      userId: body.userId ?? req.query.userId ?? null,
+      userId: body.userId ?? req.authUserId ?? null,
       bandWidth: Number(body.bandWidth) || 10,
       minBandSize: Number(body.minBandSize) || 6,
       isPublic: body.isPublic ?? true,
@@ -809,7 +848,7 @@ app.get('/api/podcasts', (req, res) => {
 app.get('/api/podcasts/:id', async (req, res) => {
   const d = pods.getPodcastDetail(req.params.id);
   if (!d) return res.status(404).json({ error: 'Podcast no encontrado' });
-  const userId = req.query.userId;
+  const userId = req.authUserId;
   const episodes = await Promise.all(d.episodes.map(async (e, idx) => {
     // Subtítulos/transcripción: el cliente usa la ruta transcript; aquí
     // solo indicamos si existe un .lrc junto al audio (para la UI).
@@ -825,7 +864,7 @@ app.get('/api/podcasts/:id', async (req, res) => {
 });
 
 app.post('/api/podcasts/progress', async (req, res) => {
-  await db.setEpisodeProgress(req.body.userId, req.body.episodeId, req.body.positionMs);
+  await db.setEpisodeProgress(req.authUserId, req.body.episodeId, req.body.positionMs);
   res.json({ success: true });
 });
 
@@ -846,7 +885,7 @@ const toClientComment = (c) => ({
 app.get('/api/songs/:id/comments', async (req, res) => {
   try {
     // userId opcional (query): permite devolver liked_by_me por comentario.
-    const data = await db.getCommentsBySong(req.params.id, req.query.userId || null);
+    const data = await db.getCommentsBySong(req.params.id, req.authUserId || null);
     const comments = (data.comments || []).map(toClientComment);
     res.json({ comments, averageRating: data.averageRating, totalCount: data.totalCount });
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -902,7 +941,7 @@ let activeDJRoom = null; // Simplificado: solo una sala global por ahora
 
 app.post('/api/dj/broadcast', (req, res) => {
   activeDJRoom = {
-    djId: req.body.userId,
+    djId: req.authUserId,
     djName: req.body.username,
     songId: req.body.songId,
     positionMs: req.body.positionMs,
@@ -1163,7 +1202,7 @@ app.post('/api/rescan', async (req, res) => {
 // ============================================================
 
 app.get('/api/favorite-artists', async (req, res) => {
-  try { res.json({ items: (await db.getFavoriteArtists(req.query.userId)).map(n => ({ name: n })) }); }
+  try { res.json({ items: (await db.getFavoriteArtists(req.authUserId)).map(n => ({ name: n })) }); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 app.post('/api/favorite-artists/toggle', async (req, res) => {

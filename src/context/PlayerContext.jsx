@@ -12,7 +12,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { audioUrl } from '../lib/api.js';
+import { audioUrl, coverUrl } from '../lib/api.js';
 import { useOffline } from './OfflineContext.jsx';
 import { getDownloadedSong, removeDownloadedSong } from '../hooks/useDownloads.js';
 import { useAutoDeleteDownload } from '../hooks/useAutoDeleteDownload.js';
@@ -166,7 +166,6 @@ export function PlayerProvider({ children }) {
       try {
         const downloaded = await getDownloadedSong(song.id);
         if (downloaded?.audioBlob instanceof Blob) {
-          if (downloadedObjectUrlRef.current) { URL.revokeObjectURL(downloadedObjectUrlRef.current); downloadedObjectUrlRef.current = null; }
           const blobUrl = URL.createObjectURL(downloaded.audioBlob);
           downloadedObjectUrlRef.current = blobUrl;
           sourceUrl = blobUrl;
@@ -462,23 +461,83 @@ export function PlayerProvider({ children }) {
     if (current) { const a = getActive(); if (a && a.duration) setDuration(a.duration); }
   }, [current]);
 
-  // Media Session API
+  // Media Session API: metadatos y controles compatibles con el sistema.
+  // En Android WebView esto mejora la integración web; la notificación nativa
+  // requiere además el servicio multimedia Android.
   useEffect(() => {
-    const a = getActive();
-    if (!a || !current) return;
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-      navigator.mediaSession.metadata = new MediaMetadata({
+    if (!('mediaSession' in navigator)) return;
+
+    const session = navigator.mediaSession;
+    if (!current) {
+      session.metadata = null;
+      session.playbackState = 'none';
+      return;
+    }
+
+    session.playbackState = isPlaying ? 'playing' : 'paused';
+    if (typeof MediaMetadata !== 'undefined') {
+      const artworkUrl = current.artwork || current.coverUrl ||
+        (current.local ? null : coverUrl(current.id));
+      session.metadata = new MediaMetadata({
         title: current.title || 'Desconocido',
         artist: current.artist || 'Artista desconocido',
         album: current.album || '',
+        artwork: artworkUrl ? [
+          { src: artworkUrl, sizes: '96x96' },
+          { src: artworkUrl, sizes: '256x256' },
+          { src: artworkUrl, sizes: '512x512' },
+        ] : [],
       });
-      navigator.mediaSession.setActionHandler('play', togglePlay);
-      navigator.mediaSession.setActionHandler('pause', togglePlay);
-      navigator.mediaSession.setActionHandler('previoustrack', prev);
-      navigator.mediaSession.setActionHandler('nexttrack', next);
     }
-  }, [current, isPlaying, togglePlay, prev, next]);
+  }, [current, isPlaying]);
+
+  // Registrar las acciones una sola vez y retirarlas al desmontar el reproductor.
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    const session = navigator.mediaSession;
+    const handlers = {
+      play: () => {
+        const audio = getActive();
+        if (audio?.paused && audio.src) {
+          const playPromise = audio.play();
+          if (playPromise) playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          else setIsPlaying(true);
+        }
+      },
+      pause: () => {
+        const audio = getActive();
+        if (audio && !audio.paused) {
+          audio.pause();
+          setIsPlaying(false);
+        }
+      },
+      previoustrack: () => prev(),
+      nexttrack: () => next(),
+      seekto: (details) => {
+        if (Number.isFinite(details?.seekTime)) seek(details.seekTime);
+      },
+      seekbackward: (details) => {
+        const audio = getActive();
+        if (audio) seek(Math.max(0, audio.currentTime - (details?.seekOffset || 10)));
+      },
+      seekforward: (details) => {
+        const audio = getActive();
+        if (audio) seek(Math.min(audio.duration || Infinity, audio.currentTime + (details?.seekOffset || 10)));
+      },
+    };
+
+    Object.entries(handlers).forEach(([action, handler]) => {
+      try { session.setActionHandler(action, handler); } catch { /* Acción no soportada por este WebView */ }
+    });
+
+    return () => {
+      Object.keys(handlers).forEach((action) => {
+        try { session.setActionHandler(action, null); } catch { /* Acción no soportada */ }
+      });
+      session.metadata = null;
+      session.playbackState = 'none';
+    };
+  }, [togglePlay, prev, next, seek]);
 
   const getActiveAudio = useCallback(() => getActive(), []);
 

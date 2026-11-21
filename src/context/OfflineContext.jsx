@@ -93,6 +93,15 @@ export function OfflineProvider({ children }) {
   const [localLikes, setLocalLikes] = useState(() => loadLocalLikes());
   const [supported, setSupported] = useState(false);
   const localUrlCacheRef = useRef(new Map());
+  const localObjectUrlsRef = useRef(new Set());
+
+  useEffect(() => {
+    return () => {
+      localObjectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      localObjectUrlsRef.current.clear();
+      localUrlCacheRef.current.clear();
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -115,6 +124,7 @@ export function OfflineProvider({ children }) {
     const file = await song.fileHandle.getFile();
     const objectUrl = URL.createObjectURL(file);
     localUrlCacheRef.current.set(song.id, objectUrl);
+    localObjectUrlsRef.current.add(objectUrl);
     return objectUrl;
   }, []);
 
@@ -122,15 +132,23 @@ export function OfflineProvider({ children }) {
     setLocalLoading(true);
     setLocalError(null);
 
-    const songs = await scanDirectoryEntries(directoryHandle);
-    const songsWithLikes = applyLikes(songs, localLikes);
+    try {
+      const songs = await scanDirectoryEntries(directoryHandle);
+      const songsWithLikes = applyLikes(songs, localLikes);
 
-    setLocalSongs(songsWithLikes);
-    setLocalFolderName(directoryHandle.name || 'Música local');
-    setOfflineMode(true);
-    setLocalLoading(false);
-
-    return songsWithLikes;
+      localUrlCacheRef.current.forEach((url) => URL.revokeObjectURL(url));
+      localUrlCacheRef.current.clear();
+      setLocalSongs(songsWithLikes);
+      setLocalFolderName(directoryHandle.name || 'Música local');
+      setOfflineMode(true);
+      return songsWithLikes;
+    } catch (error) {
+      setLocalError(error?.message || 'No se pudo leer la carpeta de música.');
+      setOfflineMode(false);
+      throw error;
+    } finally {
+      setLocalLoading(false);
+    }
   }, [applyLikes, localLikes]);
 
   const openLocalFolder = useCallback(async () => {

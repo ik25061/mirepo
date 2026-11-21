@@ -38,8 +38,8 @@ const BACKEND_PORT = process.env.VITE_SERVER_PORT || 5002;
 const FRONTEND_PORT = process.env.VITE_CLIENT_PORT || 5172;
 // El proxy de Vite siempre debe apuntar a localhost porque
 // Express y Vite corren en la MISMA computadora.
-// VITE_SERVER_HOST se usa SOLO para que el frontend (api.js)
-// sepa a qué IP conectarse desde el móvil (Capacitor).
+// VITE_SERVER_HOST permite configurar una API remota cuando la web
+// no comparte origen con el servidor.
 const PROXY_TARGET = `http://localhost:${BACKEND_PORT}`;
 
 console.log('🌐 IP de red local detectada:', localIP);

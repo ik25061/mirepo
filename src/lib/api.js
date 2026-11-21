@@ -11,12 +11,15 @@ async function probeServer(baseUrl) {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 1500);
-    const response = await fetch(`${baseUrl}/api/test`, {
-      method: 'GET',
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    return response.ok;
+    try {
+      const response = await fetch(`${baseUrl}/api/test`, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      return response.ok;
+    } finally {
+      clearTimeout(timeout);
+    }
   } catch {
     return false;
   }
@@ -27,49 +30,51 @@ export async function detectServerIP() {
     return '';
   }
 
-  const storedUrl = window.localStorage.getItem(API_URL_STORAGE_KEY);
+  let storedUrl = window.localStorage.getItem(API_URL_STORAGE_KEY);
   if (storedUrl) {
     try {
       const storedPort = new URL(storedUrl).port;
       if (storedPort && storedPort !== DEFAULT_PORT) {
         console.warn(`⚠️ Puerto guardado (${storedPort}) obsoleto. Se re-detectará el servidor en el puerto ${DEFAULT_PORT}.`);
         window.localStorage.removeItem(API_URL_STORAGE_KEY);
-      } else {
+        storedUrl = null;
+      } else if (!navigator.onLine || await probeServer(storedUrl)) {
         API_URL = storedUrl.replace(/\/$/, '');
         return API_URL;
+      } else {
+        console.warn('[API] El servidor guardado no responde; se intentará detectar de nuevo.');
+        window.localStorage.removeItem(API_URL_STORAGE_KEY);
+        storedUrl = null;
       }
     } catch {
       window.localStorage.removeItem(API_URL_STORAGE_KEY);
+      storedUrl = null;
     }
   }
 
-  const isCapacitor = window.location.protocol === 'capacitor:' || window.Capacitor?.isNativePlatform?.();
-  if (!isCapacitor) {
-    API_URL = '';
+  // La web utiliza rutas relativas (mismo origen o proxy de Vite).
+  // Solo se usa una URL absoluta cuando se configura VITE_SERVER_HOST.
+  // No se sondea localhost ni se muestran prompts al usuario.
+  if (!navigator.onLine || !DEFAULT_HOST.trim()) return '';
+
+  let configuredUrl;
+  try {
+    const host = DEFAULT_HOST.includes('://') ? DEFAULT_HOST : `http://${DEFAULT_HOST}`;
+    const parsedUrl = new URL(host);
+    if (!parsedUrl.port) parsedUrl.port = DEFAULT_PORT;
+    configuredUrl = parsedUrl.origin;
+  } catch {
+    console.warn('[API] VITE_SERVER_HOST no contiene una dirección válida.');
+    return '';
+  }
+
+  if (await probeServer(configuredUrl)) {
+    API_URL = configuredUrl;
+    window.localStorage.setItem(API_URL_STORAGE_KEY, API_URL);
     return API_URL;
   }
 
-  const candidates = [
-    `http://localhost:${DEFAULT_PORT}`,
-    `http://127.0.0.1:${DEFAULT_PORT}`,
-    `http://10.0.2.2:${DEFAULT_PORT}`,
-    `http://${window.location.hostname}:${DEFAULT_PORT}`,
-  ];
-
-  for (const candidate of candidates) {
-    if (await probeServer(candidate)) {
-      API_URL = candidate;
-      window.localStorage.setItem(API_URL_STORAGE_KEY, API_URL);
-      return API_URL;
-    }
-  }
-
-  const defaultHost = import.meta.env.VITE_SERVER_HOST || DEFAULT_HOST || 'localhost';
-  const enteredIp = window.prompt('Ingresa la IP de tu computadora (WiFi):', defaultHost);
-  const normalizedIp = enteredIp ? enteredIp.replace(/^https?:\/\//, '').replace(/\/$/, '') : defaultHost;
-  API_URL = `http://${normalizedIp}:${DEFAULT_PORT}`;
-  window.localStorage.setItem(API_URL_STORAGE_KEY, API_URL);
-  return API_URL;
+  return '';
 }
 
 export function getApiUrl() {
@@ -79,12 +84,24 @@ export function getApiUrl() {
 async function ensureApiUrl() {
   if (API_URL) return API_URL;
   if (!apiUrlPromise) {
-    apiUrlPromise = detectServerIP().catch((err) => {
-      console.warn('No se pudo inicializar la URL del servidor:', err);
-      return '';
-    });
+    apiUrlPromise = detectServerIP()
+      .catch((err) => {
+        console.warn('No se pudo inicializar la URL del servidor:', err);
+        return '';
+      })
+      .finally(() => {
+        // Si el inicio ocurrió offline, permitir un nuevo intento al reconectar.
+        if (!API_URL) apiUrlPromise = null;
+      });
   }
   return apiUrlPromise;
+}
+// Si la conexión vuelve, descartar una URL fallida o una detección vacía.
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    API_URL = '';
+    apiUrlPromise = null;
+  });
 }
 
 // ====== FUNCIONES DE API ======
@@ -95,10 +112,17 @@ async function request(url, options = {}) {
   console.log('📡 Petición a:', fullUrl || url);
   
   try {
+    // El token se lee en cada petición para reflejar inmediatamente login/logout
+    // sin reconstruir el cliente ni mantener una copia obsoleta en memoria.
+    const token = typeof window !== 'undefined'
+      ? window.localStorage.getItem('mirepo_token')
+      : null;
+
     const response = await fetch(fullUrl, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
     });
@@ -179,7 +203,16 @@ export const api = {
   },
 
   rescan: () => request('/api/rescan', { method: 'POST' }),
-  rescanStreamUrl: () => `${getApiUrl() || ''}/api/rescan-stream`,
+  getLyrics: (songId) => request(`/api/lyrics/${encodeURIComponent(songId)}`),
+  // EventSource no admite cabeceras Authorization; el token se pasa solo
+  // para este flujo SSE y el servidor lo valida antes de abrir la conexión.
+  rescanStreamUrl: () => {
+    const token = typeof window !== 'undefined'
+      ? window.localStorage.getItem('mirepo_token')
+      : null;
+    const query = token ? `?token=${encodeURIComponent(token)}` : '';
+    return `${getApiUrl() || ''}/api/rescan-stream${query}`;
+  },
 
   like: (id, liked, userId) => 
     request(`/api/songs/${id}/like`, {
