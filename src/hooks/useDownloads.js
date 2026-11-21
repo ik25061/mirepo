@@ -14,7 +14,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { audioUrl, coverUrl } from '../lib/api.js';
+import { api, audioUrl, coverUrl } from '../lib/api.js';
 
 const DB_NAME = 'mirepo_downloads';
 const DB_VERSION = 1;
@@ -354,8 +354,7 @@ export function useDownloads() {
 
   const downloadLyricsForSong = async (songId) => {
     try {
-      const response = await fetch(`/api/lyrics/${songId}`);
-      const data = await response.json();
+      const data = await api.getLyrics(songId);
       
       if (data.success && data.hasLyrics) {
         await saveLyricsForSong(songId, {
@@ -497,18 +496,8 @@ export function useDownloads() {
       // Sincronizar una por una para mostrar progreso
       for (let i = 0; i < pending.length; i++) {
         const { songId } = pending[i];
-        const likeResponse = await fetch('/api/songs/' + songId + '/like', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ liked: false, userId })
-        });
-        if (!likeResponse.ok) throw new Error(`No se pudo quitar el like de ${songId}`);
-        const deletionResponse = await fetch('/api/songs/' + songId + '/deferred-deletion', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, marked: true })
-        });
-        if (!deletionResponse.ok) throw new Error(`No se pudo marcar ${songId} para eliminar`);
+        await api.like(songId, false, userId);
+        await api.setDeferredDeletion(songId, userId, true);
       }
 
       savePendingDeletions([]);
@@ -526,12 +515,7 @@ export function useDownloads() {
     if (!userId || pendingDislikesRef.current.length === 0) return;
     const pending = pendingDislikesRef.current;
     for (const { songId } of pending) {
-      const response = await fetch('/api/songs/' + songId + '/hide', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, hidden: true })
-      });
-      if (!response.ok) throw new Error(`No se pudo guardar el dislike de ${songId}`);
+      await api.hideSong(songId, userId, true);
     }
     savePendingDislikes([]);
   }, [savePendingDislikes]);
@@ -600,11 +584,7 @@ export function useDownloads() {
           // Actualizar la canción actual que se está sincronizando
           setCurrentlySyncingSong(songId);
 
-          await fetch('/api/songs/' + songId + '/like', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ liked, userId })
-          });
+          await api.like(songId, liked, userId);
         }
 
         savePendingLikeChanges([]);
