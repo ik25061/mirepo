@@ -1,0 +1,3 @@
+faster-whisper>=1.2.1,<2.0
+deep-translator>=1.11.4
+mutagen>=1.47.0
