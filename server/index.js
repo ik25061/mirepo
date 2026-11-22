@@ -1126,9 +1126,19 @@ app.post('/api/admin/lyrics/jobs', requireLyricsAdmin, async (req, res) => {
 
         // LRCLIB sincronizado tiene prioridad. Si solo hay texto plano o no hay
         // letra, recurrimos al Whisper local para obtener tiempos desde el audio.
-        if (!result?.syncedLines?.length) {
+        const lrcPath = songPath.replace(/\.[^/.]+$/, '.lrc');
+        let isAutoWhisperFile = false;
+        try {
+          isAutoWhisperFile = fs.existsSync(lrcPath) &&
+            fs.readFileSync(lrcPath, 'utf8').includes('[by:auto-whisper]');
+        } catch {}
+        // No pisar una letra manual local sin autorización. Las letras auto-Whisper
+        // sí se validan de nuevo; las fuentes externas planas pueden sincronizarse.
+        const shouldRunWhisper = options.force === true ||
+          result?.source !== 'local-file' || isAutoWhisperFile;
+        if (shouldRunWhisper && (!result?.syncedLines?.length || isAutoWhisperFile)) {
           try {
-            const whisper = await transcribeSong(songPath, { force: options.force });
+            const whisper = await transcribeSong(songPath, { force: options.force === true });
             if (whisper?.lyrics || whisper?.instrumental) {
               if (whisper.instrumental && result?.lyrics) {
                 // Conserva la letra externa; se marcará para revisión por falta de sincronía.
