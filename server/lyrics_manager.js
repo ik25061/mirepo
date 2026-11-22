@@ -50,7 +50,7 @@ export function getLyricsManagerStatus(songs = []) {
     if (status !== 'reviewed') counts[status] = (counts[status] || 0) + 1;
     if (record?.reviewed) counts.reviewed++;
     if (record?.needsReview) counts.needsReview++;
-    return { songId: song.id, title: song.title, artist: song.artist, status, reviewed: !!record?.reviewed, needsReview: !!record?.needsReview, hasSynced: !!record?.hasSynced, source: record?.source || null, lastAttemptAt: record?.lastAttemptAt || null, error: record?.error || null };
+    return { songId: song.id, title: song.title, artist: song.artist, status, reviewed: !!record?.reviewed, needsReview: !!record?.needsReview, hasSynced: !!record?.hasSynced, source: record?.source || null, reviewReason: record?.reviewReason || null, lastAttemptAt: record?.lastAttemptAt || null, error: record?.error || null };
   });
   return { counts, items };
 }
