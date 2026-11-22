@@ -14,3 +14,9 @@ server/localfy.db-wal
 server/*.db
 server/*.db.bak-*
 server/songs_cache.json
+
+# Estado operativo del gestor de letras (se genera en el servidor)
+server/lyrics_state.json
+server/lyrics_job.json
+server/lyrics_state.json.tmp
+server/lyrics_job.json.tmp
