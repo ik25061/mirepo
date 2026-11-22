@@ -156,14 +156,42 @@ def process(request):
     if lrc_path.exists() and not force and lrc_is_valid(lrc_path, duration):
         text = lrc_path.read_text(encoding="utf-8-sig")
         rows = parse_lrc(text)
+        is_auto = "[by:auto-whisper]" in text
+        language = next((line[4:-1].strip() for line in text.splitlines()
+                         if line.startswith("[la:") and line.endswith("]")), None)
+        if is_auto:
+            grouped = {}
+            for timestamp, lyric in rows:
+                grouped.setdefault(timestamp, []).append(lyric)
+            original_rows = []
+            translated_rows = []
+            has_translation = False
+            for timestamp, pair in grouped.items():
+                original_rows.append((timestamp, pair[0]))
+                translation = pair[1] if len(pair) > 1 else ""
+                if translation and translation.lower() != pair[0].lower():
+                    has_translation = True
+                else:
+                    translation = ""
+                translated_rows.append(translation)
+            lyrics = "\\n".join(row[1] for row in original_rows)
+            synced = [{"time": row[0], "text": row[1]} for row in original_rows]
+            translated = "\\n".join(translated_rows) if has_translation else None
+            translation_complete = language == "es" or (has_translation and all(translated_rows))
+        else:
+            lyrics = "\\n".join(row[1] for row in rows)
+            synced = [{"time": row[0], "text": row[1]} for row in rows]
+            translated = None
+            translation_complete = language == "es" or language is None
         return {
             "status": "generated",
             "source": "local-file",
-            "lyrics": "\n".join(row[1] for row in rows),
-            "syncedLines": [{"time": row[0], "text": row[1]} for row in rows],
-            "translatedLyrics": None,
-            "language": None,
-            "quality": {"lineCount": len(rows), "structurallyValid": True}
+            "lyrics": lyrics,
+            "syncedLines": synced,
+            "translatedLyrics": translated,
+            "translationComplete": translation_complete,
+            "language": language,
+            "quality": {"lineCount": len(synced), "structurallyValid": True}
         }
 
     model = load_model(request)
