@@ -16,6 +16,7 @@ import { Meilisearch } from 'meilisearch';
 import { MUSIC_DIR, TRASH_DIR, absolutePath } from './scanner.js';
 import * as pods from './podcasts.js';
 import { getLyrics as getLyricsFromService } from './lyrics.js';
+import { getLyricsManagerStatus, getLyricsJob, startLyricsJob, cancelLyricsJob, markLyricsReviewed } from './lyrics_manager.js';
 import { runBuildDbPython } from './rescan-python.js';
 import { getAiQualityStatus, runAiQualityPlaylists } from './ai_quality_playlists.js';
 
@@ -1056,6 +1057,103 @@ app.get('/podcast-cover/:id', async (req, res) => {
     if (pic) { res.set('Content-Type', pic.format || 'image/jpeg'); return res.send(pic.data); }
   } catch (e) {}
   res.status(404).end();
+});
+
+// ============================================================
+// ADMINISTRACIÓN DE LETRAS - tareas por lotes y revisión
+// ============================================================
+
+async function requireLyricsAdmin(req, res, next) {
+  try {
+    const raw = String(req.headers.authorization || '');
+    const token = raw.startsWith('Bearer ') ? raw.slice(7).trim() : '';
+    if (!token) return res.status(401).json({ error: 'Se requiere autenticación de administrador' });
+    const user = await db.getUserByToken(token);
+    if (!user) return res.status(401).json({ error: 'Sesión no válida' });
+    if (String(user.role || '').toUpperCase() !== 'ADMIN') {
+      return res.status(403).json({ error: 'Esta operación requiere permisos de administrador' });
+    }
+    req.adminUser = user;
+    next();
+  } catch (error) {
+    res.status(500).json({ error: 'No se pudo verificar el administrador' });
+  }
+}
+
+app.get('/api/admin/lyrics/status', requireLyricsAdmin, (req, res) => {
+  try {
+    const { counts, items } = getLyricsManagerStatus(songCache);
+    const q = String(req.query.q || '').trim().toLowerCase();
+    const status = String(req.query.status || '').trim().toLowerCase();
+    const filtered = items.filter(item =>
+      (!status || item.status === status) &&
+      (!q || String(item.title || '').toLowerCase().includes(q) || String(item.artist || '').toLowerCase().includes(q))
+    );
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+    const offset = Math.max(0, Number(req.query.offset) || 0);
+    res.json({ success: true, counts, totalFiltered: filtered.length, items: filtered.slice(offset, offset + limit) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/lyrics/job', requireLyricsAdmin, (req, res) => {
+  res.json({ success: true, job: getLyricsJob() });
+});
+
+app.post('/api/admin/lyrics/jobs', requireLyricsAdmin, async (req, res) => {
+  try {
+    const mode = String(req.body?.mode || 'new');
+    const allowed = new Set(['all', 'new', 'pending', 'review', 'stale']);
+    if (!allowed.has(mode) && !req.body?.songId && !Array.isArray(req.body?.songIds)) {
+      return res.status(400).json({ error: 'Modo de procesamiento no válido' });
+    }
+    const songIds = req.body?.songId ? [String(req.body.songId)] : (Array.isArray(req.body?.songIds) ? req.body.songIds.map(String) : null);
+    if (songIds && songIds.some(id => !songMap.has(id))) {
+      return res.status(404).json({ error: 'Una o varias canciones no existen en la biblioteca' });
+    }
+    const result = await startLyricsJob({
+      songs: songCache,
+      mode,
+      songIds,
+      force: req.body?.force === true,
+      processor: async (song, options) => {
+        const result = await getLyricsFromService(
+          song.id, song.title, song.artist, absolutePath(song.relPath), options
+        );
+        if (result?.lyrics) {
+          const syncedText = result.syncedLines?.map(line => {
+            const total = Math.max(0, Number(line.time) || 0);
+            const minutes = Math.floor(total / 60);
+            const seconds = (total - minutes * 60).toFixed(2).padStart(5, '0');
+            return `[${String(minutes).padStart(2, '0')}:${seconds}]${line.text}`;
+          }).join('\n') || null;
+          await db.saveLyrics(song.id, {
+            text: result.lyrics,
+            syncedText,
+            translatedText: result.translatedLyrics || null
+          });
+          await db.setSongHasLyrics(song.id);
+        }
+        return result;
+      }
+    });
+    res.status(result.accepted ? 202 : 200).json({ success: true, ...result });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/lyrics/jobs/cancel', requireLyricsAdmin, (req, res) => {
+  const accepted = cancelLyricsJob();
+  res.json({ success: accepted, message: accepted ? 'Cancelación solicitada' : 'No hay ningún trabajo activo' });
+});
+
+app.post('/api/admin/lyrics/songs/:id/review', requireLyricsAdmin, (req, res) => {
+  if (!songMap.has(req.params.id)) return res.status(404).json({ error: 'Canción no encontrada' });
+  const reviewed = req.body?.reviewed !== false;
+  const state = markLyricsReviewed(req.params.id, reviewed);
+  res.json({ success: true, state });
 });
 
 // ============================================================
