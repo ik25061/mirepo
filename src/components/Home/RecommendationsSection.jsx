@@ -7,6 +7,7 @@ import SongRow from '../SongRow.jsx';
 export default function RecommendationsSection({ songs, likedIds, onLike, onDislike, onDislikeArtist, onDelete, favoriteArtists = [] }) {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const prevDepsRef = useRef(null);
   const { addToQueue, listeningHistory = [] } = usePlayer();
 
@@ -54,7 +55,7 @@ export default function RecommendationsSection({ songs, likedIds, onLike, onDisl
     } finally {
       setLoading(false);
     }
-  }, [songs, likedIds, favoriteArtists, listeningHistory]);
+  }, [songs, likedIds, favoriteArtists, listeningHistory, refreshKey]);
 
   const addAllToQueue = () => {
     recommendations.forEach(song => addToQueue(song, 'later'));
@@ -73,6 +74,7 @@ export default function RecommendationsSection({ songs, likedIds, onLike, onDisl
           onClick={() => {
             setRecommendations([]);
             prevDepsRef.current = null;
+            setRefreshKey(value => value + 1);
           }}
           disabled={loading}
           className="text-xs text-primary hover:underline disabled:opacity-50"
