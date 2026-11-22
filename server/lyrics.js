@@ -25,6 +25,17 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LYRICS_CACHE_PATH = path.join(__dirname, 'lyrics_cache.json');
 const CACHE_EXPIRY_DAYS = 30;
+const LYRICS_FETCH_TIMEOUT_MS = 12000;
+
+async function fetchLyrics(url, options = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), LYRICS_FETCH_TIMEOUT_MS);
+  try {
+    return await fetchLyrics(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 // ============================================================
 // GESTIÓN DE CACHÉ JSON (caché secundario)
