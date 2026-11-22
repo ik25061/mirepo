@@ -553,9 +553,10 @@ async function translateLyrics(text, targetLang = 'es') {
 // FUNCIÓN PRINCIPAL - OBTENER LETRA
 // ============================================================
 
-export async function getLyrics(songId, title, artist, songPath) {
-  // 1. Intentar leer desde archivo .lrc junto a la canción
-  if (songPath) {
+export async function getLyrics(songId, title, artist, songPath, options = {}) {
+  const force = options.force === true;
+  // 1. Leer el .lrc existente solo si no se ha solicitado una regeneración forzada.
+  if (!force && songPath) {
     const lrcContent = readLrcFile(songPath);
     if (lrcContent) {
       console.log('[lyrics] 📂 Letra desde .lrc local');
@@ -579,7 +580,7 @@ export async function getLyrics(songId, title, artist, songPath) {
   // 2. Intentar desde caché JSON
   const cache = loadCache();
   const cacheKey = songId;
-  if (cache[cacheKey]) {
+  if (!force && cache[cacheKey]) {
     console.log('[lyrics] 📦 Letra desde caché');
     return cache[cacheKey];
   }
