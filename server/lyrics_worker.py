@@ -203,11 +203,14 @@ def process(request):
     original_lines = [row[2] for row in rows]
     translations = translate_lines(original_lines, language) if request.get("translate", True) else None
 
-    output = [
-        f"[ti:{path.stem}]",
-        f"[la:{language}]",
-        "[by:auto-whisper]"
-    ]
+    title = str(request.get("title") or path.stem).strip()
+    artist = str(request.get("artist") or "").strip()
+    output = [f"[ti:{title}]"]
+    if artist:
+        output.append(f"[ar:{artist}]")
+    if duration:
+        output.append(f"[length:{int(duration // 60):02d}:{int(duration % 60):02d}]")
+    output.extend([f"[la:{language}]", "[by:auto-whisper]"])
     synced = []
     for index, (start, _end, text) in enumerate(rows):
         output.append(f"{format_lrc_time(start)}{text}")
