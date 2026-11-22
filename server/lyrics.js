@@ -292,7 +292,7 @@ async function searchLyrics(title, artist) {
           if (songPath) {
             const result = await scrapeGeniusLyrics(songPath);
             if (result) {
-              return result;
+              return { ...result, source: 'genius' };
             }
           }
         }
@@ -313,7 +313,7 @@ async function searchLyrics(title, artist) {
       const data = await response.json();
       if (data.lyrics) {
         console.log('[lyrics] ✅ Letra encontrada en Lyrics.ovh');
-        return { lyrics: data.lyrics, syncedLyrics: null };
+        return { lyrics: data.lyrics, syncedLyrics: null, source: 'lyrics.ovh' };
       }
     }
   } catch (err) {
@@ -352,7 +352,7 @@ async function searchLyrics(title, artist) {
       
       if (lyrics) {
         console.log('[lyrics] ✅ Letra encontrada en LRCLib.net' + (validSynced ? ' (con timestamps)' : ''));
-        return { lyrics, syncedLyrics: validSynced || null };
+        return { lyrics, syncedLyrics: validSynced || null, source: 'lrclib' };
       }
     }
   } catch (err) {
@@ -382,7 +382,7 @@ async function searchLyrics(title, artist) {
           const lyrics = stripHtml(lyricsMatch[1]);
           if (lyrics.length > 50) {
             console.log('[lyrics] ✅ Letra encontrada en AZLyrics');
-            return { lyrics, syncedLyrics: null };
+            return { lyrics, syncedLyrics: null, source: 'web-lyrics' };
           }
         }
         
@@ -571,7 +571,8 @@ export async function getLyrics(songId, title, artist, songPath, options = {}) {
         translatedLyrics: null,
         title,
         artist,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        source: 'local-file'
       };
       return entry;
     }
@@ -637,7 +638,8 @@ export async function getLyrics(songId, title, artist, songPath, options = {}) {
     translatedLyrics,
     title,
     artist,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    source: result?.source || null
   };
   
   cache[cacheKey] = entry;
