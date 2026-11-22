@@ -130,6 +130,37 @@ C:\Users\TU_USUARIO\Music\
 └── Canción2_artist.jpg
 ```
 
+## 🎤 Letras sincronizadas con Whisper (LocalFly)
+
+El backend incluye un trabajador Python persistente para transcribir canciones con faster-whisper. El modelo se carga una vez por trabajo de administración y se reutiliza para las canciones del lote.
+
+### Instalar dependencias
+
+Desde la raíz del repositorio:
+
+```bash
+python -m pip install -r server/requirements-lyrics.txt
+```
+
+También se recomienda tener FFmpeg instalado y disponible en PATH. Para NVIDIA, instala una versión compatible de CUDA/cuDNN con CTranslate2.
+
+### Configuración opcional
+
+Variables de entorno:
+
+- `PYTHON_EXECUTABLE`: ejecutable Python (por defecto `python` en Windows y `python3` en Linux/macOS).
+- `LYRICS_MODEL`: modelo Whisper (por defecto `large-v3`).
+- `LYRICS_DEVICE`: `auto`, `cuda` o `cpu` (por defecto `auto`).
+- `LYRICS_COMPUTE_TYPE`: tipo de cálculo (por defecto `auto`).
+- `LYRICS_CPU_MODEL`: modelo para CPU (por defecto `medium` cuando se solicita `large-v3` en CPU).
+- `LYRICS_FORCE_LARGE_CPU=1`: fuerza large-v3 en CPU, aunque será mucho más lento.
+
+### Administración desde Android
+
+En Panel de Administrador → Gestión y generación de letras puedes procesar la biblioteca, canciones nuevas, pendientes, letras marcadas para revisión o una canción concreta. El estado se conserva en `server/lyrics_state.json` y el último trabajo en `server/lyrics_job.json`.
+
+Las letras generadas conservan una copia de seguridad anterior (`.lrc.bak`; las siguientes copias reciben fecha). Las canciones sin voz se registran como instrumentales. Una marca de Whisper no se considera prueba suficiente de que una letra sea correcta: se aplican comprobaciones estructurales y las letras dudosas quedan pendientes de revisión.
+
 ## 🔌 APIs Externas Utilizadas
 
 | API | Propósito | Endpoint |
