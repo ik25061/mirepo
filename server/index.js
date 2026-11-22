@@ -1197,7 +1197,7 @@ app.get('/api/lyrics/:id', async (req, res) => {
     const song = songMap.get(req.params.id);
     if (!song) return res.status(404).end();
     const dbLyrics = await db.getLyrics(song.id);
-    if (dbLyrics) return res.json({ success: true, lyrics: dbLyrics.text, syncedLines: dbLyrics.synced_text ? parseSyncedLines(dbLyrics.synced_text) : null });
+    if (dbLyrics) return res.json({ success: true, lyrics: dbLyrics.text, syncedLines: dbLyrics.synced_text ? parseSyncedLines(dbLyrics.synced_text) : null, translatedLyrics: dbLyrics.translated_text || null });
     const result = await getLyricsFromService(song.id, song.title, song.artist, absolutePath(song.relPath));
     if (result.lyrics) await db.saveLyrics(song.id, { text: result.lyrics, syncedText: result.syncedLines?.map(l => `[${l.time}] ${l.text}`).join('\n') });
     res.json({ success: true, ...result });
