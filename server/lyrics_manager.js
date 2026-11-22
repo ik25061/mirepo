@@ -113,6 +113,7 @@ export async function startLyricsJob({ songs, mode = 'new', songIds = null, forc
     succeeded: 0,
     needsReview: 0,
     notFound: 0,
+    instrumental: 0,
     failed: 0,
     currentSong: null,
     results: []
