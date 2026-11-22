@@ -47,7 +47,7 @@ export function getLyricsManagerStatus(songs = []) {
     const fingerprint = [song.title, song.artist, song.relPath].join('|');
     const stale = !!record?.fingerprint && record.fingerprint !== fingerprint;
     const status = stale ? 'stale' : (record?.status || 'new');
-    counts[status] = (counts[status] || 0) + 1;
+    if (status !== 'reviewed') counts[status] = (counts[status] || 0) + 1;
     if (record?.reviewed) counts.reviewed++;
     if (record?.needsReview) counts.needsReview++;
     return { songId: song.id, title: song.title, artist: song.artist, status, reviewed: !!record?.reviewed, needsReview: !!record?.needsReview, hasSynced: !!record?.hasSynced, source: record?.source || null, lastAttemptAt: record?.lastAttemptAt || null, error: record?.error || null };
@@ -65,7 +65,7 @@ function selectSongs(songs, mode, songIds, force) {
     if (selected) return selected.has(String(song.id));
     if (mode === 'all') return true;
     if (mode === 'new') return !record || record.status === 'new' || stale;
-    if (mode === 'pending') return !record || ['new', 'pending', 'error', 'not_found'].includes(record.status) || stale;
+    if (mode === 'pending') return !record || ['new', 'pending', 'error', 'not_found', 'processing'].includes(record.status) || stale;
     if (mode === 'review') return !!record?.needsReview || record?.status === 'review';
     if (mode === 'stale') return stale;
     return force ? true : (!record || record.status !== 'generated');
@@ -73,7 +73,16 @@ function selectSongs(songs, mode, songIds, force) {
 }
 
 export function getLyricsJob() {
-  return job || readJson(JOB_FILE, { id: null, status: 'idle', processed: 0, total: 0, currentSong: null, results: {} });
+  if (job) return job;
+  const saved = readJson(JOB_FILE, { id: null, status: 'idle', processed: 0, total: 0, currentSong: null, results: {} });
+  if (saved.status === 'running') {
+    saved.status = 'interrupted';
+    saved.currentSong = null;
+    saved.finishedAt = new Date().toISOString();
+    saved.error = 'El servidor se reinició durante el procesamiento. Las canciones en proceso se pueden reintentar.';
+    atomicWrite(JOB_FILE, saved);
+  }
+  return saved;
 }
 
 export function cancelLyricsJob() {
