@@ -338,7 +338,7 @@ async function searchLyrics(title, artist) {
         const data = await response.json();
         const hits = data.response?.hits || [];
         const normalizeMatch = value => String(value || '')
-          .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
           .replace(/[^a-z0-9]+/g, ' ').trim();
         const wantedTitle = normalizeMatch(title);
         const wantedArtist = normalizeMatch(artist);
