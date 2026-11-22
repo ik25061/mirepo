@@ -337,14 +337,26 @@ async function searchLyrics(title, artist) {
       if (response.ok) {
         const data = await response.json();
         const hits = data.response?.hits || [];
-        
-        if (hits.length > 0) {
-          const songPath = hits[0].result?.path;
+        const normalizeMatch = value => String(value || '')
+          .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
+          .replace(/[^a-z0-9]+/g, ' ').trim();
+        const wantedTitle = normalizeMatch(title);
+        const wantedArtist = normalizeMatch(artist);
+        const rankedHits = hits.map(hit => {
+          const candidateTitle = normalizeMatch(hit.result?.title);
+          const candidateArtist = normalizeMatch(hit.result?.primary_artist?.name);
+          const titleScore = candidateTitle === wantedTitle ? 3
+            : (candidateTitle.includes(wantedTitle) || wantedTitle.includes(candidateTitle) ? 2 : 0);
+          const artistScore = candidateArtist === wantedArtist ? 3
+            : (candidateArtist.includes(wantedArtist) || wantedArtist.includes(candidateArtist) ? 2 : 0);
+          return { hit, score: titleScore + artistScore };
+        }).sort((a, b) => b.score - a.score);
+        const bestHit = rankedHits[0];
+        if (bestHit && bestHit.score >= 3) {
+          const songPath = bestHit.hit.result?.path;
           if (songPath) {
             const result = await scrapeGeniusLyrics(songPath);
-            if (result) {
-              return { ...result, source: 'genius' };
-            }
+            if (result) return { ...result, source: 'genius' };
           }
         }
       }
