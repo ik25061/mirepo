@@ -16,6 +16,7 @@ import { Meilisearch } from 'meilisearch';
 import { MUSIC_DIR, TRASH_DIR, absolutePath } from './scanner.js';
 import * as pods from './podcasts.js';
 import { getLyrics as getLyricsFromService } from './lyrics.js';
+import { transcribeSong, shutdownLyricsWorker } from './lyrics_transcriber.js';
 import { getLyricsManagerStatus, getLyricsJob, startLyricsJob, cancelLyricsJob, markLyricsReviewed } from './lyrics_manager.js';
 import { runBuildDbPython } from './rescan-python.js';
 import { getAiQualityStatus, runAiQualityPlaylists } from './ai_quality_playlists.js';
@@ -1118,9 +1119,29 @@ app.post('/api/admin/lyrics/jobs', requireLyricsAdmin, async (req, res) => {
       songIds,
       force: req.body?.force === true,
       processor: async (song, options) => {
-        const result = await getLyricsFromService(
-          song.id, song.title, song.artist, absolutePath(song.relPath), options
+        const songPath = absolutePath(song.relPath);
+        let result = await getLyricsFromService(
+          song.id, song.title, song.artist, songPath, options
         );
+
+        // LRCLIB sincronizado tiene prioridad. Si solo hay texto plano o no hay
+        // letra, recurrimos al Whisper local para obtener tiempos desde el audio.
+        if (!result?.syncedLines?.length) {
+          try {
+            const whisper = await transcribeSong(songPath, { force: options.force });
+            if (whisper?.lyrics || whisper?.instrumental) {
+              if (whisper.instrumental && result?.lyrics) {
+                // Conserva la letra externa; se marcará para revisión por falta de sincronía.
+              } else {
+                result = whisper;
+              }
+            }
+          } catch (error) {
+            if (!result?.lyrics) throw error;
+            console.warn('[lyrics] Whisper no disponible; se conserva la letra externa:', error.message);
+          }
+        }
+
         if (result?.lyrics) {
           const syncedText = result.syncedLines?.map(line => {
             const total = Math.max(0, Number(line.time) || 0);
@@ -1136,7 +1157,8 @@ app.post('/api/admin/lyrics/jobs', requireLyricsAdmin, async (req, res) => {
           await db.setSongHasLyrics(song.id);
         }
         return result;
-      }
+      },
+      onComplete: shutdownLyricsWorker
     });
     res.status(result.accepted ? 202 : 200).json({ success: true, ...result });
   } catch (error) {
