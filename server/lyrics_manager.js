@@ -200,6 +200,6 @@ export function markLyricsReviewed(songId, reviewed = true, fingerprint = null) 
     ...(fingerprint ? { fingerprint } : {}),
     reviewed: !!reviewed,
     needsReview: !reviewed,
-    status: reviewed ? 'reviewed' : (current.status === 'generated' ? 'review' : current.status)
+    status: reviewed ? 'reviewed' : (['generated', 'reviewed'].includes(current.status) ? 'review' : current.status)
   });
 }
