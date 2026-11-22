@@ -91,7 +91,7 @@ export function cancelLyricsJob() {
   return true;
 }
 
-export async function startLyricsJob({ songs, mode = 'new', songIds = null, force = false, processor }) {
+export async function startLyricsJob({ songs, mode = 'new', songIds = null, force = false, processor, onComplete = null }) {
   if (job?.status === 'running') {
     const error = new Error('Ya hay un trabajo de letras en ejecución');
     error.statusCode = 409;
@@ -119,6 +119,13 @@ export async function startLyricsJob({ songs, mode = 'new', songIds = null, forc
   };
   atomicWrite(JOB_FILE, job);
 
+  let cleanupCalled = false;
+  const cleanup = async () => {
+    if (cleanupCalled) return;
+    cleanupCalled = true;
+    if (typeof onComplete === 'function') await onComplete();
+  };
+
   (async () => {
     for (const song of queue) {
       if (cancelRequested) break;
@@ -133,7 +140,10 @@ export async function startLyricsJob({ songs, mode = 'new', songIds = null, forc
       try {
         const result = await processor(song, { force: !!force });
         const lyrics = String(result?.lyrics || '').trim();
-        if (!lyrics) {
+        if (result?.instrumental || result?.status === 'instrumental') {
+          updateLyricsSongState(id, { status: 'instrumental', fingerprint, source: result?.source || 'whisper', hasSynced: false, needsReview: false, error: null });
+          job.instrumental++;
+        } else if (!lyrics) {
           updateLyricsSongState(id, { status: 'not_found', fingerprint, source: result?.source || null, hasSynced: false, error: 'No se encontró una letra válida' });
           job.notFound++;
         } else {
@@ -161,11 +171,13 @@ export async function startLyricsJob({ songs, mode = 'new', songIds = null, forc
       job.processed++;
       atomicWrite(JOB_FILE, job);
     }
+    await cleanup();
     job.currentSong = null;
     job.status = cancelRequested ? 'cancelled' : 'completed';
     job.finishedAt = new Date().toISOString();
     atomicWrite(JOB_FILE, job);
-  })().catch(error => {
+  })().catch(async error => {
+    try { await cleanup(); } catch (cleanupError) { if (job) job.cleanupError = String(cleanupError?.message || cleanupError); }
     if (job) {
       job.status = 'error';
       job.error = String(error?.message || error);
