@@ -187,7 +187,7 @@ def process(request):
         rows.append((float(segment.start), float(segment.end), text))
     rows = remove_repeated_segments(rows)
 
-    if len(rows) < 3:
+    if not rows:
         return {
             "status": "instrumental",
             "instrumental": True,
