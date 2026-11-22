@@ -8,7 +8,7 @@ export default function RecommendationsSection({ songs, likedIds, onLike, onDisl
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
   const prevDepsRef = useRef(null);
-  const { addToQueue } = usePlayer();
+  const { addToQueue, listeningHistory = [] } = usePlayer();
 
   // handleFixMetadata definido dentro del componente como en HomeView.jsx
   const handleFixMetadata = async (song) => {
@@ -37,7 +37,8 @@ export default function RecommendationsSection({ songs, likedIds, onLike, onDisl
       songsLength: songs.length,
       songsIds: songs.map(s => s.id).join(','),
       likedIds: Array.from(likedIds).join(','),
-      favoriteArtists: favoriteArtists.join(',')
+      favoriteArtists: favoriteArtists.join(','),
+      recentHistory: listeningHistory.slice(0, 30).map(item => item.songId).join(',')
     };
     const depsStr = JSON.stringify(deps);
     if (prevDepsRef.current === depsStr) return;
@@ -45,7 +46,7 @@ export default function RecommendationsSection({ songs, likedIds, onLike, onDisl
 
     setLoading(true);
     try {
-      const recs = RecommendationEngine.recommend(songs, likedIds, favoriteArtists, [], 10);
+      const recs = RecommendationEngine.recommend(songs, likedIds, favoriteArtists, listeningHistory, 10);
       setRecommendations(Array.isArray(recs) ? recs : []);
     } catch (err) {
       console.error('Error generating recommendations:', err);
@@ -53,7 +54,7 @@ export default function RecommendationsSection({ songs, likedIds, onLike, onDisl
     } finally {
       setLoading(false);
     }
-  }, [songs, likedIds, favoriteArtists]);
+  }, [songs, likedIds, favoriteArtists, listeningHistory]);
 
   const addAllToQueue = () => {
     recommendations.forEach(song => addToQueue(song, 'later'));
