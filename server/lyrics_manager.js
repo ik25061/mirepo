@@ -151,11 +151,15 @@ export async function startLyricsJob({ songs, mode = 'new', songIds = null, forc
           const lines = lyrics.split(/\\r?\\n/).map(x => x.trim()).filter(Boolean);
           const unique = new Set(lines.map(x => x.toLowerCase()));
           const suspicious = lyrics.length < 80 || lines.length < 4 || unique.size < Math.max(2, lines.length * 0.45);
-          const needsReview = suspicious || !result.syncedLines?.length;
+          const translationMissing = !!result.language && result.language !== 'es' && !result.translatedLyrics;
+          const needsReview = suspicious || translationMissing || !result.syncedLines?.length;
           updateLyricsSongState(id, {
             status: needsReview ? 'review' : 'generated',
             fingerprint,
             source: result.source || 'external',
+            language: result.language || null,
+            quality: result.quality || null,
+            reviewReason: translationMissing ? 'Falta la traducción al español' : (suspicious ? 'La estructura de la letra requiere comprobación' : (!result.syncedLines?.length ? 'No hay sincronización karaoke' : null)),
             hasSynced: !!result.syncedLines?.length,
             needsReview,
             reviewed: false,
