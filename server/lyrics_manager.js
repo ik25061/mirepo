@@ -41,7 +41,7 @@ export function updateLyricsSongState(songId, patch) {
 
 export function getLyricsManagerStatus(songs = []) {
   const state = readState();
-  const counts = { total: songs.length, new: 0, pending: 0, generated: 0, reviewed: 0, needsReview: 0, error: 0, instrumental: 0, stale: 0 };
+  const counts = { total: songs.length, new: 0, pending: 0, generated: 0, reviewed: 0, needsReview: 0, error: 0, instrumental: 0, stale: 0, review: 0, processing: 0, not_found: 0 };
   const items = songs.map(song => {
     const record = state.songs[String(song.id)] || null;
     const fingerprint = [song.title, song.artist, song.relPath].join('|');
