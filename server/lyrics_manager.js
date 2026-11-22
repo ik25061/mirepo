@@ -151,7 +151,7 @@ export async function startLyricsJob({ songs, mode = 'new', songIds = null, forc
           const lines = lyrics.split(/\\r?\\n/).map(x => x.trim()).filter(Boolean);
           const unique = new Set(lines.map(x => x.toLowerCase()));
           const suspicious = lyrics.length < 80 || lines.length < 4 || unique.size < Math.max(2, lines.length * 0.45);
-          const translationMissing = !!result.language && result.language !== 'es' && !result.translatedLyrics;
+          const translationMissing = !!result.language && result.language !== 'es' && (!result.translatedLyrics || result.translationComplete === false);
           const needsReview = suspicious || translationMissing || !result.syncedLines?.length;
           updateLyricsSongState(id, {
             status: needsReview ? 'review' : 'generated',
