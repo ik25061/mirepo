@@ -1184,7 +1184,9 @@ app.post('/api/admin/lyrics/jobs/cancel', requireLyricsAdmin, (req, res) => {
 app.post('/api/admin/lyrics/songs/:id/review', requireLyricsAdmin, (req, res) => {
   if (!songMap.has(req.params.id)) return res.status(404).json({ error: 'Canción no encontrada' });
   const reviewed = req.body?.reviewed !== false;
-  const state = markLyricsReviewed(req.params.id, reviewed);
+  const song = songMap.get(req.params.id);
+  const fingerprint = [song.title, song.artist, song.relPath].join('|');
+  const state = markLyricsReviewed(req.params.id, reviewed, fingerprint);
   res.json({ success: true, state });
 });
 
