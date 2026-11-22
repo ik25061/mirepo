@@ -63,6 +63,8 @@ export function transcribeSong(songPath, options = {}) {
   const payload = {
     requestId,
     path: songPath,
+    title: options.title || null,
+    artist: options.artist || null,
     force: options.force === true,
     translate: options.translate !== false,
     model: process.env.LYRICS_MODEL || 'large-v3',
