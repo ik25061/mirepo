@@ -283,6 +283,46 @@ async function searchLyrics(title, artist) {
   console.log('[lyrics] 🔍 Buscando:', artist, '-', title);
   
   // ============================================================
+  // FUENTE 1: LRCLib.net (gratuita, sincronizadas, sin token)
+  // ============================================================
+  try {
+    const url = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`;
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'MirepoMusicApp/2.0 (github.com/ik25061/mirepo)',
+        'Accept': 'application/json',
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      const plainLyrics = data.plainLyrics || null;
+      const syncedLyrics = data.syncedLyrics || null;
+      
+      // Filtrar texto basura de LRCLib (como "7 Contributors" o metadatos)
+      const isValidLyrics = (text) => {
+        if (!text || text.length < 50) return false;
+        const firstLines = text.split('\n').slice(0, 5).join(' ').toLowerCase();
+        if (firstLines.includes('contributor')) return false;
+        if (/^\d+\s+\w+\s+\w+/.test(text.split('\n')[0]?.trim() || '')) return false;
+        return true;
+      };
+      
+      const validPlain = plainLyrics && isValidLyrics(plainLyrics) ? plainLyrics : null;
+      const validSynced = syncedLyrics && isValidLyrics(syncedLyrics) ? syncedLyrics : null;
+      const lyrics = validPlain || validSynced || null;
+      
+      if (lyrics) {
+        console.log('[lyrics] ✅ Letra encontrada en LRCLib.net' + (validSynced ? ' (con timestamps)' : ''));
+        return { lyrics, syncedLyrics: validSynced || null, source: 'lrclib' };
+      }
+    }
+  } catch (err) {
+    console.warn('[lyrics] Error en LRCLib.net:', err.message);
+  }
+  
+
+    // ============================================================
   // FUENTE 1: API de Genius (requiere token)
   // ============================================================
   const GENIUS_ACCESS_TOKEN = process.env.GENIUS_ACCESS_TOKEN || '';
@@ -329,45 +369,6 @@ async function searchLyrics(title, artist) {
     }
   } catch (err) {
     console.warn('[lyrics] Error en Lyrics.ovh:', err.message);
-  }
-  
-  // ============================================================
-  // FUENTE 3: LRCLib.net (gratuita, sincronizadas, sin token)
-  // ============================================================
-  try {
-    const url = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`;
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'MirepoMusicApp/2.0 (github.com/ik25061/mirepo)',
-        'Accept': 'application/json',
-      }
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      const plainLyrics = data.plainLyrics || null;
-      const syncedLyrics = data.syncedLyrics || null;
-      
-      // Filtrar texto basura de LRCLib (como "7 Contributors" o metadatos)
-      const isValidLyrics = (text) => {
-        if (!text || text.length < 50) return false;
-        const firstLines = text.split('\n').slice(0, 5).join(' ').toLowerCase();
-        if (firstLines.includes('contributor')) return false;
-        if (/^\d+\s+\w+\s+\w+/.test(text.split('\n')[0]?.trim() || '')) return false;
-        return true;
-      };
-      
-      const validPlain = plainLyrics && isValidLyrics(plainLyrics) ? plainLyrics : null;
-      const validSynced = syncedLyrics && isValidLyrics(syncedLyrics) ? syncedLyrics : null;
-      const lyrics = validPlain || validSynced || null;
-      
-      if (lyrics) {
-        console.log('[lyrics] ✅ Letra encontrada en LRCLib.net' + (validSynced ? ' (con timestamps)' : ''));
-        return { lyrics, syncedLyrics: validSynced || null, source: 'lrclib' };
-      }
-    }
-  } catch (err) {
-    console.warn('[lyrics] Error en LRCLib.net:', err.message);
   }
   
   // ============================================================
