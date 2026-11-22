@@ -270,6 +270,7 @@ def process(request):
         "lyrics": "\n".join(original_lines),
         "syncedLines": synced,
         "translatedLyrics": "\n".join(translations) if translations else None,
+        "translationComplete": language == "es" or bool(translations and len(translations) == len(original_lines) and all(translations)),
         "language": language,
         "quality": quality
     }
