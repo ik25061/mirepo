@@ -1,109 +1,55 @@
-// src/services/AIWriter.js
-import { pipeline } from '@xenova/transformers';
+// Generación contextual ligera: evita cargar un modelo GPT-2 en el navegador.
+// Estas funciones trabajan con estadísticas reales para no inventar datos del usuario.
 
-let textGenerator = null;
-let loadingPromise = null;
+const pick = (items, fallback) => items.length ? items[0] : fallback;
+const clean = value => String(value || '').trim();
 
 export async function loadAIModel() {
-  if (textGenerator) return textGenerator;
-  if (loadingPromise) return loadingPromise;
+  // Compatibilidad con llamadas antiguas. Ya no descargamos un modelo inadecuado
+  // para español ni consumimos memoria del dispositivo para textos deterministas.
+  return null;
+}
 
-  loadingPromise = (async () => {
-    try {
-      console.log('🧠 Cargando modelo de IA (Transformers)...');
-      // Usamos un modelo pequeño para generación de texto (inglés/espanglés)
-      // 'Xenova/distilgpt2' es ligero y funciona offline
-      const generator = await pipeline('text-generation', 'Xenova/distilgpt2', {
-        // Opcional: reducir el tamaño para mejor rendimiento
-        // quantized: true,
-      });
-      textGenerator = generator;
-      console.log('✅ Modelo de IA cargado correctamente');
-      return generator;
-    } catch (err) {
-      console.warn('❌ Error cargando modelo:', err);
-      textGenerator = null;
-      return null;
-    } finally {
-      loadingPromise = null;
+export async function generateMonthlySummary(data = {}) {
+  const totalSongs = Math.max(0, Number(data.totalSongs) || 0);
+  const minutes = Math.max(0, Number(data.totalMinutes) || 0);
+  const artist = clean(data.topArtist) || 'tus artistas favoritos';
+  const genre = clean(data.topGenre) || 'varios estilos';
+  const unique = Math.max(0, Number(data.uniqueSongs) || 0);
+
+  if (!totalSongs) return 'Todavía no hay suficientes escuchas este mes para preparar tu resumen. ¡Empieza a explorar tu biblioteca!';
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  const time = hours ? `${hours} h y ${remainder} min` : `${minutes} minutos`;
+  const discovery = unique > 0 && unique < totalSongs
+    ? ` Has vuelto a algunas de tus canciones conocidas (${unique} temas distintos).`
+    : ' Has mantenido una escucha variada.';
+  return `Este mes has reproducido ${totalSongs} canciones y disfrutado de ${time}. ${artist} ha sido tu artista más escuchado y ${genre} tu estilo destacado.${discovery}`;
+}
+
+export async function generatePlaylistName(songs = [], options = {}) {
+  const valid = Array.isArray(songs) ? songs : [];
+  if (!valid.length) return 'Mi selección musical';
+
+  const artists = [...new Set(valid.map(song => clean(song.artist)).filter(Boolean))];
+  const genreCounts = new Map();
+  for (const song of valid) {
+    const genres = Array.isArray(song.genre) ? song.genre : [song.genre];
+    for (const genre of genres.filter(Boolean)) {
+      const label = clean(genre);
+      genreCounts.set(label, (genreCounts.get(label) || 0) + 1);
     }
-  })();
-
-  return loadingPromise;
-}
-
-/**
- * Genera un resumen mensual usando IA
- */
-export async function generateMonthlySummary(summaryData) {
-  try {
-    const generator = await loadAIModel();
-    if (!generator) return getFallbackSummary(summaryData);
-
-    // Prompt en español (aunque el modelo sea en inglés, puede entender algo)
-    const prompt = `
-      You are a music assistant. Monthly summary:
-      - Songs listened: ${summaryData.totalSongs}
-      - Minutes: ${summaryData.totalMinutes}
-      - Top artist: ${summaryData.topArtist}
-      - Top genre: ${summaryData.topGenre}
-      Write a warm, encouraging summary in Spanish (max 40 words).
-    `;
-
-    const result = await generator(prompt, {
-      max_new_tokens: 60,
-      temperature: 0.7,
-      do_sample: true,
-    });
-
-    // Limpiar la salida (a veces repite el prompt)
-    let text = result[0].generated_text;
-    text = text.replace(prompt, '').trim();
-    if (text.length < 10) text = getFallbackSummary(summaryData);
-    return text;
-
-  } catch (err) {
-    console.warn('⚠️ Error en IA, usando resumen por defecto:', err);
-    return getFallbackSummary(summaryData);
   }
+  const topGenre = [...genreCounts.entries()].sort((a,b) => b[1]-a[1])[0]?.[0];
+  const mood = clean(options.mood);
+  if (mood) return `${mood.charAt(0).toUpperCase() + mood.slice(1)} en reproducción`;
+  if (topGenre && artists.length >= 2) return `${topGenre}: nuevos sonidos`;
+  if (topGenre) return `Lo mejor del ${topGenre}`;
+  if (artists.length === 1) return `Selección de ${artists[0]}`;
+  if (artists.length > 1) return `${artists[0]} y compañía`;
+  return 'Mi selección musical';
 }
 
-/**
- * Fallback cuando la IA no está disponible
- */
-function getFallbackSummary(data) {
-  return `🎵 Este mes escuchaste ${data.totalSongs} canciones (${data.totalMinutes} min). Tu artista favorito fue ${data.topArtist} y tu género preferido ${data.topGenre}. ¡Sigue explorando música!`;
-}
-
-/**
- * Genera un nombre creativo para una playlist
- */
-export async function generatePlaylistName(songs) {
-  try {
-    const generator = await loadAIModel();
-    if (!generator) return 'Playlist recomendada';
-
-    const artists = [...new Set(songs.map(s => s.artist))].slice(0, 2).join(' and ');
-    const prompt = `Write a catchy short playlist name (max 5 words) for songs by ${artists}:`;
-
-    const result = await generator(prompt, {
-      max_new_tokens: 15,
-      temperature: 0.8,
-      do_sample: true,
-    });
-
-    let name = result[0].generated_text.replace(prompt, '').trim();
-    if (!name || name.length < 2) return 'Playlist recomendada';
-    return name;
-  } catch {
-    return 'Playlist recomendada';
-  }
-}
-
-/**
- * Función para liberar el modelo (si se desea)
- */
 export function unloadAIModel() {
-  textGenerator = null;
-  loadingPromise = null;
+  // Se conserva como no-op por compatibilidad con versiones anteriores.
 }
