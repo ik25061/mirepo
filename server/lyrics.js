@@ -287,7 +287,7 @@ async function searchLyrics(title, artist) {
   // ============================================================
   try {
     const url = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`;
-    const response = await fetch(url, {
+    const response = await fetchLyrics(url, {
       headers: {
         'User-Agent': 'MirepoMusicApp/2.0 (github.com/ik25061/mirepo)',
         'Accept': 'application/json',
@@ -322,15 +322,15 @@ async function searchLyrics(title, artist) {
   }
   
 
-    // ============================================================
-  // FUENTE 1: API de Genius (requiere token)
+  // ============================================================
+  // FUENTE 2: API de Genius (requiere token)
   // ============================================================
   const GENIUS_ACCESS_TOKEN = process.env.GENIUS_ACCESS_TOKEN || '';
   
   if (GENIUS_ACCESS_TOKEN) {
     try {
       const searchUrl = `https://api.genius.com/search?q=${encodeURIComponent(title + ' ' + artist)}`;
-      const response = await fetch(searchUrl, {
+      const response = await fetchLyrics(searchUrl, {
         headers: { 'Authorization': `Bearer ${GENIUS_ACCESS_TOKEN}` }
       });
       
@@ -354,11 +354,11 @@ async function searchLyrics(title, artist) {
   }
   
   // ============================================================
-  // FUENTE 2: API de Lyrics.ovh (gratuita, sin token)
+  // FUENTE 3: API de Lyrics.ovh (gratuita, sin token)
   // ============================================================
   try {
     const url = `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`;
-    const response = await fetch(url);
+    const response = await fetchLyrics(url);
     
     if (response.ok) {
       const data = await response.json();
@@ -380,7 +380,7 @@ async function searchLyrics(title, artist) {
     
     if (azArtist && azTitle && azArtist.length > 1 && azTitle.length > 1) {
       const url = `https://www.azlyrics.com/lyrics/${azArtist}/${azTitle}.html`;
-      const response = await fetch(url, {
+      const response = await fetchLyrics(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'text/html',
@@ -418,7 +418,7 @@ async function searchLyrics(title, artist) {
   try {
     const searchQuery = encodeURIComponent(`${artist} ${title}`);
     const searchUrl = `https://www.lyrics.com/lyrics/${searchQuery}`;
-    const response = await fetch(searchUrl, {
+    const response = await fetchLyrics(searchUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'text/html',
@@ -430,7 +430,7 @@ async function searchLyrics(title, artist) {
       const linkMatch = html.match(/href="(\/lyric\/[^"]+)"/);
       if (linkMatch) {
         const lyricUrl = `https://www.lyrics.com${linkMatch[1]}`;
-        const lyricResponse = await fetch(lyricUrl, {
+        const lyricResponse = await fetchLyrics(lyricUrl, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'text/html',
@@ -473,7 +473,7 @@ async function searchLyrics(title, artist) {
 async function scrapeGeniusLyrics(songPath) {
   try {
     const url = `https://genius.com${songPath}`;
-    const response = await fetch(url, {
+    const response = await fetchLyrics(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       }
@@ -547,7 +547,7 @@ async function scrapeGeniusLyrics(songPath) {
 async function translateLyrics(text, targetLang = 'es') {
   try {
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`;
-    const response = await fetch(url);
+    const response = await fetchLyrics(url);
     
     if (response.ok) {
       const data = await response.json();
