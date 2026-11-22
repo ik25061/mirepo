@@ -55,6 +55,12 @@ export function PlayerProvider({ children }) {
   const [volume, setVolume] = useState(0.9);
   const [crossfadeSec, setCrossfadeSec] = useState(1.5);
   const [repeatMode, setRepeatMode] = useState(0);
+  const [listeningHistory, setListeningHistory] = useState(() => {
+    try {
+      const saved = typeof window !== 'undefined' ? JSON.parse(window.localStorage.getItem('mirepo_listening_history_v1') || '[]') : [];
+      return Array.isArray(saved) ? saved.slice(0, 200) : [];
+    } catch { return []; }
+  });
 
   // ============================================================
   // 3.2 REFERENCIAS (useRef)
@@ -141,6 +147,10 @@ export function PlayerProvider({ children }) {
     const q = queueRef.current;
     if (idx < 0 || idx >= q.length) return;
     const song = q[idx];
+    setListeningHistory(previous => {
+      const next = [{ songId: String(song.id), timestamp: Date.now() }, ...previous.filter(item => String(item.songId) !== String(song.id))].slice(0, 200);
+      return next;
+    });
     indexRef.current = idx;
     setCurrent(song);
     setDuration(0);
@@ -462,6 +472,11 @@ export function PlayerProvider({ children }) {
     if (current) { const a = getActive(); if (a && a.duration) setDuration(a.duration); }
   }, [current]);
 
+  // Historial local para personalizar recomendaciones sin enviar datos fuera del dispositivo.
+  useEffect(() => {
+    try { window.localStorage.setItem('mirepo_listening_history_v1', JSON.stringify(listeningHistory)); } catch {}
+  }, [listeningHistory]);
+
   // Media Session API
   useEffect(() => {
     const a = getActive();
@@ -483,7 +498,7 @@ export function PlayerProvider({ children }) {
   const getActiveAudio = useCallback(() => getActive(), []);
 
   const value = {
-    queue, upNextQueue, current, isPlaying, progress, duration, volume, crossfadeSec, repeatMode,
+    queue, upNextQueue, current, isPlaying, progress, duration, volume, crossfadeSec, repeatMode, listeningHistory,
     setVolume, setCrossfadeSec, setRepeatMode,
     play, shufflePlay, next, prev, togglePlay, seek, stop, addToQueue, removeFromQueue, getActiveAudio,
   };
