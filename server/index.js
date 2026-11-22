@@ -1138,7 +1138,7 @@ app.post('/api/admin/lyrics/jobs', requireLyricsAdmin, async (req, res) => {
           result?.source !== 'local-file' || isAutoWhisperFile;
         if (shouldRunWhisper && (!result?.syncedLines?.length || isAutoWhisperFile)) {
           try {
-            const whisper = await transcribeSong(songPath, { force: options.force === true });
+            const whisper = await transcribeSong(songPath, { force: options.force === true, title: song.title, artist: song.artist });
             if (whisper?.lyrics || whisper?.instrumental) {
               if (whisper.instrumental && result?.lyrics) {
                 // Conserva la letra externa; se marcará para revisión por falta de sincronía.
