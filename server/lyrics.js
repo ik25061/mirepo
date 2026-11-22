@@ -31,7 +31,7 @@ async function fetchLyrics(url, options = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), LYRICS_FETCH_TIMEOUT_MS);
   try {
-    return await fetchLyrics(url, { ...options, signal: controller.signal });
+    return await fetch(url, { ...options, signal: controller.signal });
   } finally {
     clearTimeout(timeout);
   }
