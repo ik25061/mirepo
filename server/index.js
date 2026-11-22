@@ -1197,9 +1197,9 @@ app.post('/api/lyrics/:id/refresh', async (req, res) => {
     const song = songMap.get(id);
     if (!song) return res.status(404).json({ error: 'Cancion no encontrada' });
 
-    await db.deleteLyrics(id);
     const songPath = absolutePath(song.relPath);
-    const result = await getLyricsFromService(id, song.title, song.artist, songPath);
+    // Bypass .lrc and cache; retain the previous database lyrics if no replacement is found.
+    const result = await getLyricsFromService(id, song.title, song.artist, songPath, { force: true });
 
     if (result.lyrics) {
       await db.saveLyrics(id, {
@@ -1207,6 +1207,7 @@ app.post('/api/lyrics/:id/refresh', async (req, res) => {
         syncedText: result.syncedLines ? result.syncedLines.map(l => `[${l.time}] ${l.text}`).join('\n') : null,
         translatedText: result.translatedLyrics || null
       });
+      await db.setSongHasLyrics(id);
     }
 
     res.json({
