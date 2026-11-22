@@ -174,12 +174,12 @@ def process(request):
                 else:
                     translation = ""
                 translated_rows.append(translation)
-            lyrics = "\\n".join(row[1] for row in original_rows)
+            lyrics = "\n".join(row[1] for row in original_rows)
             synced = [{"time": row[0], "text": row[1]} for row in original_rows]
-            translated = "\\n".join(translated_rows) if has_translation else None
+            translated = "\n".join(translated_rows) if has_translation else None
             translation_complete = language == "es" or (has_translation and all(translated_rows))
         else:
-            lyrics = "\\n".join(row[1] for row in rows)
+            lyrics = "\n".join(row[1] for row in rows)
             synced = [{"time": row[0], "text": row[1]} for row in rows]
             translated = None
             translation_complete = language == "es" or language is None
