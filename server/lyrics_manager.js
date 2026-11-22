@@ -194,9 +194,10 @@ export async function startLyricsJob({ songs, mode = 'new', songIds = null, forc
   return { accepted: true, jobId: job.id, total: queue.length };
 }
 
-export function markLyricsReviewed(songId, reviewed = true) {
+export function markLyricsReviewed(songId, reviewed = true, fingerprint = null) {
   const current = getLyricsSongState(songId) || {};
   return updateLyricsSongState(songId, {
+    ...(fingerprint ? { fingerprint } : {}),
     reviewed: !!reviewed,
     needsReview: !reviewed,
     status: reviewed ? 'reviewed' : (current.status === 'generated' ? 'review' : current.status)
