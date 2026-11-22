@@ -248,6 +248,7 @@ def main():
     if hasattr(sys.stdin, "reconfigure"):
         sys.stdin.reconfigure(encoding="utf-8")
     for raw in sys.stdin:
+        request = {}
         try:
             request = json.loads(raw)
             request_id = request.get("requestId")
