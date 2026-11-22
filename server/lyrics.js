@@ -391,7 +391,7 @@ async function searchLyrics(title, artist) {
           const lyrics = stripHtml(ringtoneMatch[1]);
           if (lyrics.length > 50) {
             console.log('[lyrics] ✅ Letra encontrada en AZLyrics (fallback)');
-            return { lyrics, syncedLyrics: null };
+            return { lyrics, syncedLyrics: null, source: 'azlyrics' };
           }
         }
       }
@@ -432,7 +432,7 @@ async function searchLyrics(title, artist) {
             const lyrics = stripHtml(preMatch[1]);
             if (lyrics.length > 30) {
               console.log('[lyrics] ✅ Letra encontrada en Lyrics.com');
-              return { lyrics, syncedLyrics: null };
+              return { lyrics, syncedLyrics: null, source: 'lyrics.com' };
             }
           }
           
@@ -441,7 +441,7 @@ async function searchLyrics(title, artist) {
             const lyrics = stripHtml(fallbackMatch[1]);
             if (lyrics.length > 30) {
               console.log('[lyrics] ✅ Letra encontrada en Lyrics.com (fallback)');
-              return { lyrics, syncedLyrics: null };
+              return { lyrics, syncedLyrics: null, source: 'lyrics.com' };
             }
           }
         }
@@ -504,7 +504,7 @@ async function scrapeGeniusLyrics(songPath) {
             !firstLines.includes('contributor') && 
             !firstLines.includes('contributors') &&
             !/^\d+\s+\w+\s+\w+/.test(lyrics.split('\n')[0]?.trim() || '')) {
-          return { lyrics, syncedLyrics: null };
+          return { lyrics, syncedLyrics: null, source: 'genius' };
         }
       }
       
@@ -519,7 +519,7 @@ async function scrapeGeniusLyrics(songPath) {
         lyrics = lyrics.replace(/</g, '<');
         lyrics = lyrics.replace(/>/g, '>');
         lyrics = lyrics.trim();
-        if (lyrics.length > 50) return { lyrics, syncedLyrics: null };
+        if (lyrics.length > 50) return { lyrics, syncedLyrics: null, source: 'genius' };
       }
     }
   } catch (err) {
